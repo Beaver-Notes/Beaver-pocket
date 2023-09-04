@@ -1,0 +1,9 @@
+{
+	"appId": "beaver.notes.pocket",
+	"appName": "beaver-notes-pocket",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https",
+		"url": "http://192.168.1.179:8100"
+	}
+}
