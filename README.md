@@ -2,13 +2,44 @@
 
 Hey there! 👋 
 
-Welcome to the Beaver Notes Pocket repository. I am the sole developer behind Beaver Notes, and currently, this mobile app operates as a basic text editor. It offers a sneak peek into the potential future of Beaver Notes on mobile devices. Any contribution to the Beaver Notes project is highly welcomed, as more than one person is needed to maintain both the desktop and mobile app. So, if you happen to be of help, please don't hesitate to tinker with the mobile app; your contribution might be crucial for the continuation of the Beaver Notes Pocket project and even Beaver Notes itself.
+Welcome to the Beaver Notes Pocket repository. This app is your note-taking companion, much like Beaver Notes on your PC but for your phone. It should support exporting and importing data between the desktop and mobile client so that you can access your notes wherever you want.
 
-> [!WARNING] 
-> Please be aware that this application is not suitable for use as a note-taking app in its current state.
-> This repository is primarily for demonstration and development purposes only. It should not be relied upon as a functional note-taking app until further development has been completed.
+> 🔩 Please be aware that this application is still under heavy development. Therefore, you might want to backup the notes you take with it and check this repository weekly for updates and new features. Not everything works, so just scroll below to see if the state of the app fits your needs or not.
 
- <img width="492" alt="Screenshot 2023-09-04 at 12 26 12 PM" src="https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/fe0bae83-e2bc-4137-8821-1b80087bc0f9">
+
+![Slice](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/05e6a41c-3113-46b6-8574-7cf97d6e2722)
+
+## What Works 
+
+- [x] Exporting data to Beavernotes
+- [x] Headind 1
+- [x] CodeBlock
+- [x] Paragraphs
+- [x] Highlight
+- [x] Bold
+- [x] Underline
+- [x] Strikethorugh
+- [x] Inline Block
+- [x] Dark Mode
+
+## Kinda Works
+
+- [ ] Importing data from Beavernotes (Works only if the note is plain text withouth tags, linked notes, images).
+- [ ] Images (Can be added through a link; this is going to change in the future)
+- [ ] Links (They Work, but the way they are added will be modified)
+- [ ] ToolBar (Works but will be adapted to follow the user)
+- [ ] Search and Buttons below (Work but will be adapted to follow the user)
+- [ ] Other Headings (missing css)
+- [ ] Lists (missing css)
+- [ ] QuoteBlock (missing css)
+
+## Doesn't work / not implemented 
+
+- [ ] Note Linking
+- [ ] Tags
+- [ ] Archive
+- [ ] Bookmark
+  
 
 ## To set up your machine for running Beaver Notes Pocket, follow these steps:
 
