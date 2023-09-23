@@ -6,6 +6,7 @@ import {
   JSONContent,
   generateText,
 } from "@tiptap/react";
+import Document from '@tiptap/extension-document'
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import styles from "./NoteEditor.module.css";
@@ -21,6 +22,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import Blockquote from '@tiptap/extension-blockquote';
 import Link from '@tiptap/extension-link';
+import Text from '@tiptap/extension-text'
 
 // Remix Icons
 
@@ -43,6 +45,8 @@ import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkIcon";
 
 const extensions = [
+  Document,
+  Text,
   StarterKit,
   Link,
   Highlight,
@@ -57,10 +61,12 @@ const extensions = [
   ListItem,
   Blockquote,
   TaskList,
-      TaskItem.configure({
-        nested: true,
-      }),
-  Image,
+  TaskItem.configure({
+    nested: true,
+  }),
+  Image.configure({
+    allowBase64: true, // Configure Image extension to allow base64 images
+  }),
 ];
 
 type Props = {
@@ -68,6 +74,7 @@ type Props = {
   onChange: (content: JSONContent, title?: string) => void;
   isFullScreen?: boolean; // Add the isFullScreen prop
 };
+
 
 function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
   const editor = useEditor(
@@ -90,6 +97,30 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
     },
     [note.id]
   );
+
+  const handleImageUpload = (file: File) => {
+    const reader = new FileReader();
+  
+    reader.onload = (event) => {
+      const base64Image = event.target?.result as string;
+      const imageSrc = `data:${file.type};base64,${base64Image}`;
+  
+      // Insert the image into the editor
+      editor?.chain().focus().setImage({ src: imageSrc }).run();
+  
+      // Save the image in base64 format to localStorage
+      saveImageToLocalStorage(file.name, base64Image);
+    };
+  
+    reader.readAsDataURL(file);
+  };
+  
+  // Function to save the image in base64 format to localStorage
+  const saveImageToLocalStorage = (imageName: string, base64Image: string) => {
+    const images = JSON.parse(localStorage.getItem('uploadedImages') || '[]');
+    images.push({ name: imageName, data: base64Image });
+    localStorage.setItem('uploadedImages', JSON.stringify(images));
+  };
 
   const toggleParagraph = () => {
     editor?.commands.setParagraph();
@@ -120,15 +151,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
   };
 
   const toggleOrderedList = () => {
-    editor?.commands.toggleOrderedList()
-  };
-
-  const addImage = () => {
-    const imageUrl = window.prompt("Enter the URL of the image:");
-
-    if (imageUrl) {
-      editor?.chain().focus().setImage({ src: imageUrl }).run();
-    }
+    editor?.chain().focus().toggleOrderedList().run();
   };
 
   const toggleUnorderedList = () => {
@@ -332,13 +355,24 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
           <button onClick={setLink} className={editor?.isActive('link') ? 'is-active' : ''}>
         <LinkIcon className='toolbarIcon' />
       </button>
-          <button onClick={addImage} className={
-              editor?.isActive("image")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-          }>
-            <ImageLineIcon className="toolbarIcon" />
-          </button>
+          <input
+      type="file"
+      accept="image/*"
+      onChange={(e) => {
+        if (e.target.files) {
+          handleImageUpload(e.target.files[0]);
+        }
+      }}
+      style={{ display: 'none' }}
+      ref={(input) => {
+        if (input) {
+          input.setAttribute('id', 'image-upload-input');
+        }
+      }}
+    />
+    <label htmlFor="image-upload-input">
+      <ImageLineIcon className={styles.toolbarIcon} />
+    </label>
         </div>
       </div>
       <EditorContent editor={editor} className={styles.textEditorContent} />
