@@ -1,0 +1,25 @@
+{
+    "name": "@types/object.pick",
+    "version": "1.3.2",
+    "description": "TypeScript definitions for object.pick",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/object.pick",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Ifiok Jr.",
+            "url": "https://github.com/ifiokjr",
+            "githubUsername": "ifiokjr"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/object.pick"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "22fa66d299efc7e6237e0c73bc9b76b25015e39b99d08de3f5af3b29a7355561",
+    "typeScriptVersion": "3.9"
+}

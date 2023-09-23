@@ -1,0 +1,521 @@
+{
+  "api": {
+    "name": "KeyboardPlugin",
+    "slug": "keyboardplugin",
+    "docs": "",
+    "tags": [],
+    "methods": [
+      {
+        "name": "show",
+        "signature": "() => Promise<void>",
+        "parameters": [],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Show the keyboard. This method is alpha and may have issues.\n\nThis method is only supported on Android.",
+        "complexTypes": [],
+        "slug": "show"
+      },
+      {
+        "name": "hide",
+        "signature": "() => Promise<void>",
+        "parameters": [],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Hide the keyboard.",
+        "complexTypes": [],
+        "slug": "hide"
+      },
+      {
+        "name": "setAccessoryBarVisible",
+        "signature": "(options: { isVisible: boolean; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ isVisible: boolean; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Set whether the accessory bar should be visible on the keyboard. We recommend disabling\nthe accessory bar for short forms (login, signup, etc.) to provide a cleaner UI.\n\nThis method is only supported on iPhone devices.",
+        "complexTypes": [],
+        "slug": "setaccessorybarvisible"
+      },
+      {
+        "name": "setScroll",
+        "signature": "(options: { isDisabled: boolean; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "{ isDisabled: boolean; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Programmatically enable or disable the WebView scroll.\n\nThis method is only supported on iOS.",
+        "complexTypes": [],
+        "slug": "setscroll"
+      },
+      {
+        "name": "setStyle",
+        "signature": "(options: KeyboardStyleOptions) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "KeyboardStyleOptions"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Programmatically set the keyboard style.\n\nThis method is only supported on iOS.",
+        "complexTypes": [
+          "KeyboardStyleOptions"
+        ],
+        "slug": "setstyle"
+      },
+      {
+        "name": "setResizeMode",
+        "signature": "(options: KeyboardResizeOptions) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "KeyboardResizeOptions"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Programmatically set the resize mode.\n\nThis method is only supported on iOS.",
+        "complexTypes": [
+          "KeyboardResizeOptions"
+        ],
+        "slug": "setresizemode"
+      },
+      {
+        "name": "getResizeMode",
+        "signature": "() => Promise<KeyboardResizeOptions>",
+        "parameters": [],
+        "returns": "Promise<KeyboardResizeOptions>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "4.0.0"
+          }
+        ],
+        "docs": "Get the currently set resize mode.\n\nThis method is only supported on iOS.",
+        "complexTypes": [
+          "KeyboardResizeOptions"
+        ],
+        "slug": "getresizemode"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'keyboardWillShow', listenerFunc: (info: KeyboardInfo) => void) => Promise<PluginListenerHandle> & PluginListenerHandle",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'keyboardWillShow'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(info: KeyboardInfo) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle> & PluginListenerHandle",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Listen for when the keyboard is about to be shown.\n\nOn Android keyboardWillShow and keyboardDidShow fire almost at the same time.",
+        "complexTypes": [
+          "PluginListenerHandle",
+          "KeyboardInfo"
+        ],
+        "slug": "addlistenerkeyboardwillshow"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'keyboardDidShow', listenerFunc: (info: KeyboardInfo) => void) => Promise<PluginListenerHandle> & PluginListenerHandle",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'keyboardDidShow'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(info: KeyboardInfo) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle> & PluginListenerHandle",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Listen for when the keyboard is shown.\n\nOn Android keyboardWillShow and keyboardDidShow fire almost at the same time.",
+        "complexTypes": [
+          "PluginListenerHandle",
+          "KeyboardInfo"
+        ],
+        "slug": "addlistenerkeyboarddidshow"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'keyboardWillHide', listenerFunc: () => void) => Promise<PluginListenerHandle> & PluginListenerHandle",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'keyboardWillHide'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "() => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle> & PluginListenerHandle",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Listen for when the keyboard is about to be hidden.\n\nOn Android keyboardWillHide and keyboardDidHide fire almost at the same time.",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerkeyboardwillhide"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'keyboardDidHide', listenerFunc: () => void) => Promise<PluginListenerHandle> & PluginListenerHandle",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'keyboardDidHide'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "() => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle> & PluginListenerHandle",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Listen for when the keyboard is hidden.\n\nOn Android keyboardWillHide and keyboardDidHide fire almost at the same time.",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerkeyboarddidhide"
+      },
+      {
+        "name": "removeAllListeners",
+        "signature": "() => Promise<void>",
+        "parameters": [],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Remove all native listeners for this plugin.",
+        "complexTypes": [],
+        "slug": "removealllisteners"
+      }
+    ],
+    "properties": []
+  },
+  "interfaces": [
+    {
+      "name": "KeyboardStyleOptions",
+      "slug": "keyboardstyleoptions",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "style",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            },
+            {
+              "text": "KeyboardStyle.Default",
+              "name": "default"
+            }
+          ],
+          "docs": "Style of the keyboard.",
+          "complexTypes": [
+            "KeyboardStyle"
+          ],
+          "type": "KeyboardStyle"
+        }
+      ]
+    },
+    {
+      "name": "KeyboardResizeOptions",
+      "slug": "keyboardresizeoptions",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "mode",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Mode used to resize elements when the keyboard appears.",
+          "complexTypes": [
+            "KeyboardResize"
+          ],
+          "type": "KeyboardResize"
+        }
+      ]
+    },
+    {
+      "name": "PluginListenerHandle",
+      "slug": "pluginlistenerhandle",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "remove",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "() => Promise<void>"
+        }
+      ]
+    },
+    {
+      "name": "KeyboardInfo",
+      "slug": "keyboardinfo",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "keyboardHeight",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Height of the heyboard.",
+          "complexTypes": [],
+          "type": "number"
+        }
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "KeyboardStyle",
+      "slug": "keyboardstyle",
+      "members": [
+        {
+          "name": "Dark",
+          "value": "'DARK'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Dark keyboard."
+        },
+        {
+          "name": "Light",
+          "value": "'LIGHT'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Light keyboard."
+        },
+        {
+          "name": "Default",
+          "value": "'DEFAULT'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "On iOS 13 and newer the keyboard style is based on the device appearance.\nIf the device is using Dark mode, the keyboard will be dark.\nIf the device is using Light mode, the keyboard will be light.\nOn iOS 12 the keyboard will be light."
+        }
+      ]
+    },
+    {
+      "name": "KeyboardResize",
+      "slug": "keyboardresize",
+      "members": [
+        {
+          "name": "Body",
+          "value": "'body'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Only the `body` HTML element will be resized.\nRelative units are not affected, because the viewport does not change."
+        },
+        {
+          "name": "Ionic",
+          "value": "'ionic'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Only the `ion-app` HTML element will be resized.\nUse it only for Ionic Framework apps."
+        },
+        {
+          "name": "Native",
+          "value": "'native'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The whole native Web View will be resized when the keyboard shows/hides.\nThis affects the `vh` relative unit."
+        },
+        {
+          "name": "None",
+          "value": "'none'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Neither the app nor the Web View are resized."
+        }
+      ]
+    }
+  ],
+  "typeAliases": [],
+  "pluginConfigs": [
+    {
+      "name": "Keyboard",
+      "slug": "keyboard",
+      "properties": [
+        {
+          "name": "resize",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            },
+            {
+              "text": "native",
+              "name": "default"
+            },
+            {
+              "text": "\"body\"",
+              "name": "example"
+            }
+          ],
+          "docs": "Configure the way the app is resized when the Keyboard appears.\n\nOnly available on iOS.",
+          "complexTypes": [
+            "KeyboardResize"
+          ],
+          "type": "KeyboardResize"
+        },
+        {
+          "name": "style",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            },
+            {
+              "text": "\"DARK\"",
+              "name": "example"
+            }
+          ],
+          "docs": "Override the keyboard style if your app doesn't support dark/light theme changes.\nIf not set, the keyboard style will depend on the device appearance.\n\nOnly available on iOS.",
+          "complexTypes": [
+            "KeyboardStyle"
+          ],
+          "type": "KeyboardStyle"
+        },
+        {
+          "name": "resizeOnFullScreen",
+          "tags": [
+            {
+              "text": "1.1.0",
+              "name": "since"
+            },
+            {
+              "text": "true",
+              "name": "example"
+            }
+          ],
+          "docs": "There is an Android bug that prevents the keyboard from resizing the WebView\nwhen the app is in full screen (i.e. if StatusBar plugin is used to overlay the status bar).\nThis setting, if set to true, add a workaround that resizes the WebView even when the app is in full screen.\n\nOnly available for Android",
+          "complexTypes": [],
+          "type": "boolean | undefined"
+        }
+      ],
+      "docs": "On iOS, the keyboard can be configured with the following options:"
+    }
+  ]
+}

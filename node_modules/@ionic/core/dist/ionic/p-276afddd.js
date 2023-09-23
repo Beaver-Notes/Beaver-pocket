@@ -1,0 +1,4 @@
+/*!
+ * (C) Ionic http://ionicframework.com - MIT License
+ */
+import{w as o}from"./p-b347cfd1.js";import{r}from"./p-63eb0acd.js";import{a as t}from"./p-1b8e1d03.js";const e=(t,e,i)=>{let n,s;void 0!==o&&"MutationObserver"in o&&(n=new MutationObserver((o=>{for(const t of o)for(const o of t.addedNodes)if(o.nodeType===Node.ELEMENT_NODE&&o.slot===e)return i(),void r((()=>d(o)))})),n.observe(t,{childList:!0}));const d=o=>{var r;s&&(s.disconnect(),s=void 0),s=new MutationObserver((o=>{i();for(const r of o)for(const o of r.removedNodes)o.nodeType===Node.ELEMENT_NODE&&o.slot===e&&c()})),s.observe(null!==(r=o.parentElement)&&void 0!==r?r:o,{subtree:!0,childList:!0})},c=()=>{s&&(s.disconnect(),s=void 0)};return{destroy:()=>{n&&(n.disconnect(),n=void 0),c()}}},i=(o,r,e)=>{const i=null==o?0:o.toString().length,s=n(i,r);if(void 0===e)return s;try{return e(i,r)}catch(o){return t("Exception in provided `counterFormatter`.",o),s}},n=(o,r)=>`${o} / ${r}`;export{e as c,i as g}

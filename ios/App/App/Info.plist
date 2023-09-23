@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>beaver-notes-pocket</string>
+	<string>beaver-notes-pocket</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -43,6 +43,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 </dict>
