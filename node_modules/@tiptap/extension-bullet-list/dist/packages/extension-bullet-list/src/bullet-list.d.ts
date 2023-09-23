@@ -1,0 +1,19 @@
+import { Node } from '@tiptap/core';
+export interface BulletListOptions {
+    itemTypeName: string;
+    HTMLAttributes: Record<string, any>;
+    keepMarks: boolean;
+    keepAttributes: boolean;
+}
+declare module '@tiptap/core' {
+    interface Commands<ReturnType> {
+        bulletList: {
+            /**
+             * Toggle a bullet list
+             */
+            toggleBulletList: () => ReturnType;
+        };
+    }
+}
+export declare const inputRegex: RegExp;
+export declare const BulletList: Node<BulletListOptions, any>;

@@ -1,0 +1,1 @@
+"use strict";function get(e,r,t){if(!e||!r)return t;for(var l=Array.isArray(r)?r:r.split("."),n=e,u=0;u<l.length&&null!=n;)n=n[l[u]],u++;return u===l.length?void 0!==n?n:t:null!=n?n:t}Object.defineProperty(exports,"__esModule",{value:!0}),exports.default=get;

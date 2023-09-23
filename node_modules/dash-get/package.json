@@ -1,0 +1,44 @@
+{
+  "name": "dash-get",
+  "version": "1.0.2",
+  "description": "A tiny get function, similar to Lodash.get",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npm run clean && npm run build:ts && npm run build:minify && npm run build:postclean",
+    "build:ts": "tsc",
+    "build:minify": "uglifyjs dist/index.js --output dist/index.js --compress --mangle",
+    "build:postclean": "rm -rf dist/__tests__",
+    "clean": "rm -rf dist",
+    "dev": "npm run test -- --watch",
+    "git:push": "git push --follow-tags",
+    "release": "npm version",
+    "version": "npm run build",
+    "postversion": "npm publish && npm run git:push",
+    "test": "jest"
+  },
+  "author": "Jon Quach <hello@jonquach.com> (https://jonquach.com)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsjonq/dash-get.git"
+  },
+  "bugs": {
+    "url": "https://github.com/itsjonq/dash-get/issues"
+  },
+  "keywords": [
+    "get",
+    "dash",
+    "tiny",
+    "lodash",
+    "dash-get",
+    "object",
+    "value"
+  ],
+  "devDependencies": {
+    "@types/jest": "23.3.10",
+    "jest": "23.6.0",
+    "ts-jest": "23.10.5",
+    "typescript": "3.2.1",
+    "uglify-js": "3.4.9"
+  }
+}

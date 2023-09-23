@@ -1,7 +1,0 @@
-{
-  "name": "beaver-notes-pocket",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "custom"
-}

@@ -1,0 +1,382 @@
+{
+  "api": {
+    "name": "StatusBarPlugin",
+    "slug": "statusbarplugin",
+    "docs": "",
+    "tags": [],
+    "methods": [
+      {
+        "name": "setStyle",
+        "signature": "(options: StyleOptions) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "StyleOptions"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Set the current style of the status bar.",
+        "complexTypes": [
+          "StyleOptions"
+        ],
+        "slug": "setstyle"
+      },
+      {
+        "name": "setBackgroundColor",
+        "signature": "(options: BackgroundColorOptions) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "BackgroundColorOptions"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Set the background color of the status bar.\n\nThis method is only supported on Android.",
+        "complexTypes": [
+          "BackgroundColorOptions"
+        ],
+        "slug": "setbackgroundcolor"
+      },
+      {
+        "name": "show",
+        "signature": "(options?: AnimationOptions | undefined) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "AnimationOptions | undefined"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Show the status bar.\nOn iOS, if the status bar is initially hidden and the initial style is set to\n`UIStatusBarStyleLightContent`, first show call might present a glitch on the\nanimation showing the text as dark and then transition to light. It's recommended\nto use `Animation.None` as the animation on the first call.",
+        "complexTypes": [
+          "AnimationOptions"
+        ],
+        "slug": "show"
+      },
+      {
+        "name": "hide",
+        "signature": "(options?: AnimationOptions | undefined) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "AnimationOptions | undefined"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Hide the status bar.",
+        "complexTypes": [
+          "AnimationOptions"
+        ],
+        "slug": "hide"
+      },
+      {
+        "name": "getInfo",
+        "signature": "() => Promise<StatusBarInfo>",
+        "parameters": [],
+        "returns": "Promise<StatusBarInfo>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Get info about the current state of the status bar.",
+        "complexTypes": [
+          "StatusBarInfo"
+        ],
+        "slug": "getinfo"
+      },
+      {
+        "name": "setOverlaysWebView",
+        "signature": "(options: SetOverlaysWebViewOptions) => Promise<void>",
+        "parameters": [
+          {
+            "name": "options",
+            "docs": "",
+            "type": "SetOverlaysWebViewOptions"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Set whether or not the status bar should overlay the webview to allow usage\nof the space underneath it.\n\nThis method is only supported on Android.",
+        "complexTypes": [
+          "SetOverlaysWebViewOptions"
+        ],
+        "slug": "setoverlayswebview"
+      }
+    ],
+    "properties": []
+  },
+  "interfaces": [
+    {
+      "name": "StyleOptions",
+      "slug": "styleoptions",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "style",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Style of the text of the status bar.",
+          "complexTypes": [
+            "Style"
+          ],
+          "type": "Style"
+        }
+      ]
+    },
+    {
+      "name": "BackgroundColorOptions",
+      "slug": "backgroundcoloroptions",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "color",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "A hex color to which the status bar color is set.\n\nThis option is only supported on Android.",
+          "complexTypes": [],
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "AnimationOptions",
+      "slug": "animationoptions",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "animation",
+          "tags": [
+            {
+              "text": "Animation.Fade",
+              "name": "default"
+            },
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The type of status bar animation used when showing or hiding.\n\nThis option is only supported on iOS.",
+          "complexTypes": [
+            "Animation"
+          ],
+          "type": "Animation"
+        }
+      ]
+    },
+    {
+      "name": "StatusBarInfo",
+      "slug": "statusbarinfo",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "visible",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Whether the status bar is visible or not.",
+          "complexTypes": [],
+          "type": "boolean"
+        },
+        {
+          "name": "style",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The current status bar style.",
+          "complexTypes": [
+            "Style"
+          ],
+          "type": "Style"
+        },
+        {
+          "name": "color",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The current status bar color.\n\nThis option is only supported on Android.",
+          "complexTypes": [],
+          "type": "string | undefined"
+        },
+        {
+          "name": "overlays",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Whether the statusbar is overlaid or not.\n\nThis option is only supported on Android.",
+          "complexTypes": [],
+          "type": "boolean | undefined"
+        }
+      ]
+    },
+    {
+      "name": "SetOverlaysWebViewOptions",
+      "slug": "setoverlayswebviewoptions",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "overlay",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Whether to overlay the status bar or not.",
+          "complexTypes": [],
+          "type": "boolean"
+        }
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "Style",
+      "slug": "style",
+      "members": [
+        {
+          "name": "Dark",
+          "value": "'DARK'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Light text for dark backgrounds."
+        },
+        {
+          "name": "Light",
+          "value": "'LIGHT'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Dark text for light backgrounds."
+        },
+        {
+          "name": "Default",
+          "value": "'DEFAULT'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The style is based on the device appearance.\nIf the device is using Dark mode, the statusbar text will be light.\nIf the device is using Light mode, the statusbar text will be dark.\nOn Android the default will be the one the app was launched with."
+        }
+      ]
+    },
+    {
+      "name": "Animation",
+      "slug": "animation",
+      "members": [
+        {
+          "name": "None",
+          "value": "'NONE'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "No animation during show/hide."
+        },
+        {
+          "name": "Slide",
+          "value": "'SLIDE'",
+          "tags": [
+            {
+              "text": "Use Animation.Fade or Animation.None instead.",
+              "name": "deprecated"
+            },
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Slide animation during show/hide.\nIt doesn't work on iOS 15+."
+        },
+        {
+          "name": "Fade",
+          "value": "'FADE'",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Fade animation during show/hide."
+        }
+      ]
+    }
+  ],
+  "typeAliases": [],
+  "pluginConfigs": []
+}

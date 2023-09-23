@@ -1,0 +1,8 @@
+{
+  "name": "ionicons/icons",
+  "version": "7.1.2",
+  "module": "index.mjs",
+  "main": "index.js",
+  "typings": "index.d.ts",
+  "private": true
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        id="com.wmjalak.cordova.fileopener" version="1.0.0">
+
+    <engines>
+        <engine name="cordova" version=">=3.0.0" />
+    </engines>
+
+    <name>File Opener</name>
+    <description>File Opener</description>
+    <license>MIT</license>
+    <keywords>cordova,file</keywords>
+    <repo>https://github.com/wmjalak/cordova-plugin-file-opener.git</repo>
+
+    <!-- JavaScript Interface -->
+    <js-module src="www/fileopener.js" name="FileOpener">
+        <clobbers target="fileOpener" />
+    </js-module>
+
+    <!-- Android Configuration -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="FileOpener">
+                <param name="android-package" value="com.wmjalak.cordova.fileopener.FileOpener"/>
+            </feature>
+        </config-file>
+        <source-file src="src/android/FileOpener.java" target-dir="src/com/wmjalak/cordova/fileopener" />
+    </platform>
+</plugin>

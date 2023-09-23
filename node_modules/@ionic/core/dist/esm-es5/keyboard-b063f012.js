@@ -1,0 +1,4 @@
+/*!
+ * (C) Ionic http://ionicframework.com - MIT License
+ */
+import{g as getCapacitor}from"./capacitor-b4979570.js";var ExceptionCode;(function(e){e["Unimplemented"]="UNIMPLEMENTED";e["Unavailable"]="UNAVAILABLE"})(ExceptionCode||(ExceptionCode={}));var KeyboardResize;(function(e){e["Body"]="body";e["Ionic"]="ionic";e["Native"]="native";e["None"]="none"})(KeyboardResize||(KeyboardResize={}));var Keyboard={getEngine:function(){var e=getCapacitor();if(e===null||e===void 0?void 0:e.isPluginAvailable("Keyboard")){return e.Plugins.Keyboard}return undefined},getResizeMode:function(){var e=this.getEngine();if(!(e===null||e===void 0?void 0:e.getResizeMode)){return Promise.resolve(undefined)}return e.getResizeMode().catch((function(e){if(e.code===ExceptionCode.Unimplemented){return undefined}throw e}))}};export{Keyboard as K,KeyboardResize as a};

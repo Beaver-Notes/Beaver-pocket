@@ -1,0 +1,39 @@
+{
+  "name": "@remirror/core-constants",
+  "version": "2.0.2",
+  "description": "The core constants used throughout the remirror codebase",
+  "homepage": "https://github.com/remirror/remirror/tree/HEAD/packages/remirror__core-constants",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remirror/remirror.git",
+    "directory": "packages/remirror__core-constants"
+  },
+  "license": "MIT",
+  "contributors": [
+    "Ifiok Jr. <ifiokotung@gmail.com>"
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/remirror-core-constants.d.ts",
+      "import": "./dist/remirror-core-constants.js",
+      "require": "./dist/remirror-core-constants.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/remirror-core-constants.cjs",
+  "module": "./dist/remirror-core-constants.js",
+  "types": "./dist/remirror-core-constants.d.ts",
+  "files": [
+    "dist",
+    "dist-types"
+  ],
+  "dependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "@remirror": {
+    "sizeLimit": "2 KB"
+  }
+}

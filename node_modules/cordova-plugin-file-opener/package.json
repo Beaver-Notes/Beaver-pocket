@@ -1,0 +1,19 @@
+{
+  "name": "cordova-plugin-file-opener",
+  "version": "1.0.0",
+  "description": "This plugin allows you to open files in Android. Plugin is especially made to handle application package (.apk) installation process by providing functionality for opening the application after the installation has finished.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wmjalak/cordova-plugin-file-opener.git"
+  },
+  "author": "wmjalak <wmjalak@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wmjalak/cordova-plugin-file-opener/issues"
+  },
+  "homepage": "https://github.com/wmjalak/cordova-plugin-file-opener#readme"
+}

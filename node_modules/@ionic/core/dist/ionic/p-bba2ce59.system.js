@@ -1,0 +1,4 @@
+/*!
+ * (C) Ionic http://ionicframework.com - MIT License
+ */
+System.register(["./p-ccdcb022.system.js"],(function(e){"use strict";var n;return{setters:[function(e){n=e.g}],execute:function(){e("a",void 0);var i;(function(e){e["Unimplemented"]="UNIMPLEMENTED";e["Unavailable"]="UNAVAILABLE"})(i||(i={}));var t;(function(e){e["Body"]="body";e["Ionic"]="ionic";e["Native"]="native";e["None"]="none"})(t||(t=e("a",{})));var o=e("K",{getEngine:function(){var e=n();if(e===null||e===void 0?void 0:e.isPluginAvailable("Keyboard")){return e.Plugins.Keyboard}return undefined},getResizeMode:function(){var e=this.getEngine();if(!(e===null||e===void 0?void 0:e.getResizeMode)){return Promise.resolve(undefined)}return e.getResizeMode().catch((function(e){if(e.code===i.Unimplemented){return undefined}throw e}))}})}}}));

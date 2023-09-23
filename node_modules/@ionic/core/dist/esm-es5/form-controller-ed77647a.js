@@ -1,0 +1,4 @@
+/*!
+ * (C) Ionic http://ionicframework.com - MIT License
+ */
+import{h as findItemLabel}from"./helpers-3379ba19.js";var createLegacyFormController=function(e){var a=e;var r;var t=function(){if(r===undefined){var e=a.label!==undefined||hasLabelSlot(a);var t=a.hasAttribute("aria-label")||a.hasAttribute("aria-labelledby")&&a.shadowRoot===null;var l=findItemLabel(a);r=a.legacy===true||!e&&!t&&l!==null}return r};return{hasLegacyControl:t}};var hasLabelSlot=function(e){var a=e.shadowRoot;if(a===null){return false}if(NAMED_LABEL_SLOT_COMPONENTS.includes(e.tagName)&&e.querySelector('[slot="label"]')!==null){return true}if(UNNAMED_LABEL_SLOT_COMPONENTS.includes(e.tagName)&&e.textContent!==""){return true}return false};var NAMED_LABEL_SLOT_COMPONENTS=["ION-RANGE"];var UNNAMED_LABEL_SLOT_COMPONENTS=["ION-TOGGLE","ION-CHECKBOX","ION-RADIO"];export{createLegacyFormController as c};
