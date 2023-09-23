@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Arimo&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    @apply bg-white py-12 lg:py-4 dark:text-white dark:bg-[#353333];
+    font-family: 'Arimo', sans-serif;
+}
+
+.pageContainer {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+}
+
+.topContainer {
+    @apply sticky top-0 z-50 bg-white dark:bg-[#353333];
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: center; /* Adjust this to control the space between buttons */
+  }  
+
+.sidebar {
+ @apply w-full flex flex-col border-r border-gray-300 overflow-auto
+}
+
+.sidebarButton {
+   @apply m-1 p-2 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center
+}
+
+.sidebarList {
+   @apply grid grid-cols-1 sm:grid-cols-4 gap-4 p-2 ml-6 mr-6 cursor-pointer rounded-md items-center justify-center
+}
+
+.sidebarItem {
+  @apply p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]
+}
+
+.sidebarTitle {
+   @apply text-lg font-bold
+}
+
+.buttons {
+    @apply text-[#52525C] py-2 hover:text-red-500 dark:text-white
+}
+
+.searchContainer {
+    display: flex;
+    justify-content: center; /* Adjust this to control the space between buttons */
+}
+
+.searchBar {
+    @apply w-64 p-2 mb-1 bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl font-semibold text-gray-800 cursor-pointer flex items-center justify-center dark:text-white
+}
+
+.searchBarInput {
+    @apply text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white
+}
+
+.sidebarItemActive {
+    composes: sidebarItem;
+    background-color:#e2e8f0;
+}
+
+.ProseMirror:focus {
+    outline: none;
+}
+
