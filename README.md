@@ -6,8 +6,8 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 
 > 🔩 Please be aware that this application is still under heavy development. Therefore, you might want to backup the notes you take with it and check this repository weekly for updates and new features. Not everything works, so just scroll below to see if the state of the app fits your needs or not.
 
+![Slice](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/93325d9a-291b-4e01-9461-bdff81ce6330)
 
-![Slice](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/05e6a41c-3113-46b6-8574-7cf97d6e2722)
 
 ## What Works 
 
