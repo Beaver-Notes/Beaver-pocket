@@ -7,11 +7,6 @@
   font-family: 'Arimo', sans-serif;
 }
 
-blockquote {
-  border-left: 3px solid rgba(#ffff, 0.6);
-  padding-left: 1rem;
-}
-
 mark {
   @apply bg-yellow-200 dark:bg-yellow-100;
 }
@@ -41,19 +36,19 @@ h6 {
 }
 
 .pageContainer {
-  @apply overflow-auto h-full justify-center items-start w-screen px-4 text-black dark:text-white lg:px-60 text-base py-4 
+  @apply overflow-auto h-full justify-center items-start w-screen px-4 text-black dark:text-white lg:px-60 text-base
 }
 
 .toolbar {
-   @apply flex overflow-x-scroll overflow-y-hidden items-center justify-center max-h-8 gap-1 md:justify-center w-fit md:w-full
+   @apply flex overflow-x-scroll overflow-y-hidden items-center justify-center max-h-8 w-fit md:w-full p-8 w-fit
 }
 
 .toolbarIcon {
-   @apply border-none text-gray-800 dark:text-white
+   @apply border-none text-gray-800 dark:text-white text-xl
 }
 
 .editorContainer {
-    @apply overflow-auto h-auto w-full justify-center py-4
+    @apply sticky top-0 z-50 overflow-auto h-auto w-full bg-white dark:bg-[#353333] md:mt-4 mb-2
 }
 
 .styles.fullScreenEditor{
@@ -65,7 +60,7 @@ h6 {
 }
 
 .textEditorcontent {
-  @apply overflow-auto h-auto pl-6 pr-6
+  @apply overflow-auto h-auto pl-6 pr-6;
 }
 
 .toolbarButton {
@@ -73,7 +68,7 @@ h6 {
 }
 
 .toolbarButtonActive { 
-    @apply p-2 rounded-md text-amber-400 bg-gray-100 dark:bg-[#2D2C2C] cursor-pointer
+    @apply p-2 rounded-md text-amber-400 bg-gray-100 dark:bg-[#353333] cursor-pointer
 }
 
 pre {
@@ -95,13 +90,30 @@ blockquote {
  @apply border-l-4 border-[#E4E4E6] dark:border-[#3F3F46];
 }
 
-.tiptap {
-  > * + * {
-    margin-top: 0.75em;
-  }
+ol {
+  @apply px-6 list-decimal
+}
 
-  ul,
-  ol {
-    padding: 0 1rem;
+ul {
+  @apply px-6 list-disc
+}
+
+ul[data-type="taskList"] {
+  @apply list-none;
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.3s;
   }
+}
+
+.ProseMirror {
+  position: relative;
+  outline: none;
 }
