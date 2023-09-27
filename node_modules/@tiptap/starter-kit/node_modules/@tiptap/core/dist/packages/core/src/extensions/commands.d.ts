@@ -1,3 +1,0 @@
-import { Extension } from '../Extension.js';
-export * from '../commands/index.js';
-export declare const Commands: Extension<any, any>;
