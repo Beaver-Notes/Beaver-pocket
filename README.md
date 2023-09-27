@@ -23,22 +23,23 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Dark Mode
 - [x] Search and Buttons below
 - [x] Quote Block
+- [x] ToolBar 
+- [x] Lists
+- [x] Images
+- [x] Bookmarks
 
 ## Kinda Works
 
 - [ ] Importing data from Beavernotes (Works only if the note is plain text withouth tags, linked notes, images).
-- [ ] Images (Can be added through a link; this is going to change in the future)
 - [ ] Links (They Work, but the way they are added will be modified)
-- [ ] ToolBar (Works but will be adapted to follow the user)
-- [ ] Lists (missing css)
 - [ ] Katex (not implemented yet)
+- [ ] Check Lists
       
 ## Doesn't work / not implemented 
 
 - [ ] Note Linking
 - [ ] Tags
 - [ ] Archive
-- [ ] Bookmark
   
 
 ## To set up your machine for running Beaver Notes Pocket, follow these steps:
