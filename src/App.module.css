@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+:root {
     @apply bg-white py-12 lg:py-4 dark:text-white dark:bg-[#353333];
     font-family: 'Arimo', sans-serif;
 }
@@ -16,36 +16,69 @@ body {
 }
 
 .topContainer {
-    @apply sticky top-0 z-50 bg-white dark:bg-[#353333];
+    @apply bg-white dark:bg-[#353333] gap-4 p-2 ml-6 mr-6;
+}
+
+.icon {
+    @apply text-amber-400 pr-1;
 }
 
 .buttonContainer {
     display: flex;
-    justify-content: center; /* Adjust this to control the space between buttons */
-  }  
+    justify-content: center; 
+}
 
 .sidebar {
- @apply w-full flex flex-col border-r border-gray-300 overflow-auto
+    @apply w-full flex flex-col border-r border-gray-300 overflow-auto;
 }
 
 .sidebarButton {
-   @apply m-1 p-2 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center
+    @apply m-1 p-2 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center;
 }
 
 .sidebarList {
-   @apply grid grid-cols-1 sm:grid-cols-4 gap-4 p-2 ml-6 mr-6 cursor-pointer rounded-md items-center justify-center
+    @apply gap-4 p-2 ml-6 mr-6 cursor-pointer rounded-md items-center justify-center h-full;
+}
+
+.bookmarkedSection {
+   @apply py-8 md:px-4
+}
+
+.allNotesSection {
+    @apply md:px-4
+}
+
+.categories {
+    @apply grid grid-cols-1 sm:grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center;
+}
+
+.sectiontitle {
+   @apply w-full p-2
+}
+
+.title {
+    font-family: 'Arimo', sans-serif;
+    @apply font-bold mb-1;
 }
 
 .sidebarItem {
-  @apply p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]
+    @apply p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C];
+}
+
+.bookmarkedsidebarItem {
+    @apply p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C];
 }
 
 .sidebarTitle {
-   @apply text-lg font-bold
+    @apply text-lg font-bold;
 }
 
-.buttons {
-    @apply text-[#52525C] py-2 hover:text-red-500 dark:text-white
+.trash {
+    @apply text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto;
+}
+
+.button {
+    @apply text-[#52525C] py-2 dark:text-white w-auto;
 }
 
 .searchContainer {
@@ -54,19 +87,19 @@ body {
 }
 
 .searchBar {
-    @apply w-64 p-2 mb-1 bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl font-semibold text-gray-800 cursor-pointer flex items-center justify-center dark:text-white
+    @apply md:w-[16.5em] w-full p-2 mb-1 bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl font-semibold text-gray-800 cursor-pointer flex md:items-center md:justify-center dark:text-white;
 }
 
 .searchBarInput {
-    @apply text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white
+    @apply text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white;
 }
 
 .sidebarItemActive {
     composes: sidebarItem;
-    background-color:#e2e8f0;
+    background-color: #e2e8f0;
 }
 
-.ProseMirror:focus {
-    outline: none;
+.bookmarkedsidebarItemActive {
+    composes: sidebarItem;
+    background-color: #e2e8f0;
 }
-

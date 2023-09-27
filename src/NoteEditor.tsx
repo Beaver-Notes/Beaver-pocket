@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 import { Note } from "./types";
 import {
   EditorContent,
@@ -6,7 +6,7 @@ import {
   JSONContent,
   generateText,
 } from "@tiptap/react";
-import Document from '@tiptap/extension-document'
+import Document from "@tiptap/extension-document";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import styles from "./NoteEditor.module.css";
@@ -18,11 +18,16 @@ import Code from "@tiptap/extension-code";
 import OrderedList from "@tiptap/extension-list-item";
 import { ListItem } from "@tiptap/extension-list-item";
 import CodeBlock from "@tiptap/extension-code-block";
-import TaskItem from '@tiptap/extension-task-item';
-import TaskList from '@tiptap/extension-task-list';
-import Blockquote from '@tiptap/extension-blockquote';
-import Link from '@tiptap/extension-link';
-import Text from '@tiptap/extension-text'
+import TaskItem from "@tiptap/extension-task-item";
+import TaskList from "@tiptap/extension-task-list";
+import Blockquote from "@tiptap/extension-blockquote";
+import Link from "@tiptap/extension-link";
+import Text from "@tiptap/extension-text";
+import {
+  Filesystem,
+  Directory,
+  FilesystemEncoding,
+} from "@capacitor/filesystem";
 
 // Remix Icons
 
@@ -64,9 +69,7 @@ const extensions = [
   TaskItem.configure({
     nested: true,
   }),
-  Image.configure({
-    allowBase64: true, // Configure Image extension to allow base64 images
-  }),
+  Image.configure({}),
 ];
 
 type Props = {
@@ -74,7 +77,6 @@ type Props = {
   onChange: (content: JSONContent, title?: string) => void;
   isFullScreen?: boolean; // Add the isFullScreen prop
 };
-
 
 function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
   const editor = useEditor(
@@ -98,28 +100,58 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
     [note.id]
   );
 
-  const handleImageUpload = (file: File) => {
-    const reader = new FileReader();
+  const handleImageUpload = async (file: File) => {
+    try {
+      // Generate a unique file name for the image (you can customize this)
+      const imageName = `image_${Date.now()}.jpg`;
   
-    reader.onload = (event) => {
-      const base64Image = event.target?.result as string;
-      const imageSrc = `data:${file.type};base64,${base64Image}`;
+      // Directory name for your images
+      const imagesDirectory = "images";
+  
+      // Check if the directory exists (or attempt to create it)
+      try {
+        await Filesystem.mkdir({
+          path: imagesDirectory,
+          directory: Directory.Data,
+          recursive: true, // Create parent directories if they don't exist
+        });
+      } catch (createDirectoryError) {
+        // Directory likely already exists, ignore the error
+      }
+  
+      // Fetch the image as a binary blob
+      const response = await fetch(URL.createObjectURL(file));
+      const blob = await response.blob();
+  
+      // Convert the binary blob to an ArrayBuffer
+      const arrayBuffer = await new Response(blob).arrayBuffer();
+  
+      // Convert ArrayBuffer to Uint8Array
+      const uint8Array = new Uint8Array(arrayBuffer);
+  
+      // Convert the Uint8Array to a regular array of numbers
+      const dataArray = Array.from(uint8Array);
+  
+      // Encode the array of numbers as Base64
+      const base64Data = btoa(
+        dataArray.map((byte) => String.fromCharCode(byte)).join("")
+      );
+  
+      // Write the Base64 image data to the app's data directory
+      await Filesystem.writeFile({
+        path: `${imagesDirectory}/${imageName}`,
+        data: base64Data,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+  
+      const imageSrc = `data:image/jpeg;base64,${base64Data}`;
   
       // Insert the image into the editor
       editor?.chain().focus().setImage({ src: imageSrc }).run();
-  
-      // Save the image in base64 format to localStorage
-      saveImageToLocalStorage(file.name, base64Image);
-    };
-  
-    reader.readAsDataURL(file);
-  };
-  
-  // Function to save the image in base64 format to localStorage
-  const saveImageToLocalStorage = (imageName: string, base64Image: string) => {
-    const images = JSON.parse(localStorage.getItem('uploadedImages') || '[]');
-    images.push({ name: imageName, data: base64Image });
-    localStorage.setItem('uploadedImages', JSON.stringify(images));
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    }
   };
 
   const toggleParagraph = () => {
@@ -171,26 +203,29 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
   };
 
   const setLink = useCallback(() => {
-    const previousUrl = editor?.getAttributes('link').href
-    const url = window.prompt('URL', previousUrl)
+    const previousUrl = editor?.getAttributes("link").href;
+    const url = window.prompt("URL", previousUrl);
 
     // cancelled
     if (url === null) {
-      return
+      return;
     }
 
     // empty
-    if (url === '') {
-      editor?.chain().focus().extendMarkRange('link').unsetLink()
-        .run()
+    if (url === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
 
-      return
+      return;
     }
 
     // update link
-    editor?.chain().focus().extendMarkRange('link').setLink({ href: url })
-      .run()
-  }, [editor])
+    editor
+      ?.chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({ href: url })
+      .run();
+  }, [editor]);
 
   return (
     <div className={styles.pageContainer}>
@@ -199,10 +234,11 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
           isFullScreen ? styles.fullScreenEditor : styles.editorContainer
         }
       >
+        <div className={styles.editorContainer}>
         <div className={styles.toolbar}>
           <button
             className={styles.toolbarButton}
-            onClick={() => window.location.reload()} 
+            onClick={() => window.location.reload()}
           >
             <ArrowLeftSLineIcon className={styles.toolbarIcon} />
           </button>
@@ -218,28 +254,30 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             <ParagraphIcon className={styles.toolbarIcon} />
           </button>
           <button
-  onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-  className={
-    editor?.isActive("heading", { level: 1 })
-      ? styles.toolbarButtonActive
-      : styles.toolbarButton
-  }
->
-  <H1Icon className={styles.toolbarIcon} />
-</button>
-<button
-  onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-  className={
-    editor?.isActive("heading", { level: 2 })
-      ? styles.toolbarButtonActive
-      : styles.toolbarButton
-  }
->
-  <H2Icon className={styles.toolbarIcon} />
-</button>
-          <div className={styles.separator}>
-          |
-          </div>
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 1 }).run()
+            }
+            className={
+              editor?.isActive("heading", { level: 1 })
+                ? styles.toolbarButtonActive
+                : styles.toolbarButton
+            }
+          >
+            <H1Icon className={styles.toolbarIcon} />
+          </button>
+          <button
+            onClick={() =>
+              editor?.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            className={
+              editor?.isActive("heading", { level: 2 })
+                ? styles.toolbarButtonActive
+                : styles.toolbarButton
+            }
+          >
+            <H2Icon className={styles.toolbarIcon} />
+          </button>
+          <div className={styles.separator}>|</div>
           <button
             className={
               editor?.isActive("bold")
@@ -248,7 +286,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleBold}
           >
-            <BoldIcon className="toolbarIcon" />
+            <BoldIcon className={styles.toolbarIcon}  />
           </button>
           <button
             className={
@@ -258,7 +296,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleItalic}
           >
-            <ItalicIcon className="toolbarIcon" />
+            <ItalicIcon className={styles.toolbarIcon} />
           </button>
           <button
             className={
@@ -268,7 +306,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleUnderline}
           >
-            <UnderlineIcon className="toolbarIcon" />
+            <UnderlineIcon className={styles.toolbarIcon}  />
           </button>
           <button
             className={
@@ -278,7 +316,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleStrike}
           >
-            <StrikethroughIcon className="toolbarIcon" />
+            <StrikethroughIcon className={styles.toolbarIcon}  />
           </button>
           <button
             className={
@@ -288,7 +326,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleCode}
           >
-            <CodeFillIcon className="toolbarIcon" />
+            <CodeFillIcon className={styles.toolbarIcon}  />
           </button>
           <button
             className={
@@ -298,7 +336,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleHighlight}
           >
-            <MarkPenLineIcon className="toolbarIcon" />
+            <MarkPenLineIcon className={styles.toolbarIcon}  />
           </button>
           |
           <button
@@ -309,7 +347,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleOrderedList}
           >
-            <ListOrderedIcon className="toolbarIcon" />
+            <ListOrderedIcon className={styles.toolbarIcon}  />
           </button>
           <button
             className={
@@ -319,7 +357,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleUnorderedList}
           >
-            <ListUnorderedIcon className="toolbarIcon" />
+            <ListUnorderedIcon className={styles.toolbarIcon}  />
           </button>
           <button
             className={
@@ -329,7 +367,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleTaskList}
           >
-            <ListCheck2Icon className="toolbarIcon" />
+            <ListCheck2Icon className={styles.toolbarIcon}  />
           </button>
           <button
             className={
@@ -339,7 +377,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleBlockquote}
           >
-            <DoubleQuotesLIcon className="toolbarIcon" />
+            <DoubleQuotesLIcon className={styles.toolbarIcon}  />
           </button>
           <button
             className={
@@ -349,32 +387,43 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
             }
             onClick={toggleCodeBlock}
           >
-            <CodeBoxLineIcon className="toolbarIcon" />
+            <CodeBoxLineIcon className={styles.toolbarIcon}  />
           </button>
           |
-          <button onClick={setLink} className={editor?.isActive('link') ? 'is-active' : ''}>
-        <LinkIcon className='toolbarIcon' />
-      </button>
-          <input
-      type="file"
-      accept="image/*"
-      onChange={(e) => {
-        if (e.target.files) {
-          handleImageUpload(e.target.files[0]);
-        }
-      }}
-      style={{ display: 'none' }}
-      ref={(input) => {
-        if (input) {
-          input.setAttribute('id', 'image-upload-input');
-        }
-      }}
-    />
-    <label htmlFor="image-upload-input">
-      <ImageLineIcon className={styles.toolbarIcon} />
-    </label>
+          <button
+            onClick={setLink}
+            className={editor?.isActive("link") ? "is-active" : ""}
+          >
+            <LinkIcon className={styles.toolbarIcon}  />
+          </button>
+          <button
+              className={styles.toolbarButton}
+              onClick={() => {
+                const imageInput = document.getElementById(
+                  "image-upload-input"
+                );
+                if (imageInput) {
+                  imageInput.click();
+                }
+              }}
+            >
+              {/* Add an icon for image upload button */}
+              <ImageLineIcon className={styles.toolbarIcon} />
+            </button>
+            <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          if (e.target.files) {
+            handleImageUpload(e.target.files[0]);
+          }
+        }}
+        style={{ display: "none" }}
+        id="image-upload-input" // Add this ID
+      />
         </div>
-      </div>
+        </div>
+        </div>
       <EditorContent editor={editor} className={styles.textEditorContent} />
     </div>
   );

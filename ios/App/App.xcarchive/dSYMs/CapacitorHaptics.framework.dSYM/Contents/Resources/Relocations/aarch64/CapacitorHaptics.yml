@@ -1,0 +1,83 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/danielerolli/Library/Developer/Xcode/DerivedData/App-gjcfuzirvuhtsuesqcjqpuxnarhl/Build/Intermediates.noindex/ArchiveIntermediates/App/IntermediateBuildFilesPath/UninstalledProducts/iphoneos/CapacitorHaptics.framework/CapacitorHaptics'
+relocations:
+  - { offsetInCU: 0x34, offset: 0x668E6, size: 0x8, addend: 0x0, symName: _CapacitorHapticsVersionString, symObjAddr: 0x0, symBinAddr: 0x8270, symSize: 0x0 }
+  - { offsetInCU: 0x69, offset: 0x6691B, size: 0x8, addend: 0x0, symName: _CapacitorHapticsVersionNumber, symObjAddr: 0x30, symBinAddr: 0x82A0, symSize: 0x0 }
+  - { offsetInCU: 0x27, offset: 0x66958, size: 0x8, addend: 0x0, symName: '-[HapticsPlugin(CAPPluginCategory) pluginMethods]', symObjAddr: 0x0, symBinAddr: 0x4000, symSize: 0x160 }
+  - { offsetInCU: 0x4A, offset: 0x6697B, size: 0x8, addend: 0x0, symName: '-[HapticsPlugin(CAPPluginCategory) pluginMethods]', symObjAddr: 0x0, symBinAddr: 0x4000, symSize: 0x160 }
+  - { offsetInCU: 0x8D, offset: 0x669BE, size: 0x8, addend: 0x0, symName: '-[HapticsPlugin(CAPPluginCategory) identifier]', symObjAddr: 0x160, symBinAddr: 0x4160, symSize: 0xC }
+  - { offsetInCU: 0xC0, offset: 0x669F1, size: 0x8, addend: 0x0, symName: '-[HapticsPlugin(CAPPluginCategory) jsName]', symObjAddr: 0x16C, symBinAddr: 0x416C, symSize: 0xC }
+  - { offsetInCU: 0x3F, offset: 0x66A9F, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C26selectionFeedbackGeneratorSo011UISelectiondE0CSgvpfi', symObjAddr: 0x0, symBinAddr: 0x4178, symSize: 0x8 }
+  - { offsetInCU: 0x63, offset: 0x66AC3, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C6impactyySo21UIImpactFeedbackStyleVF', symObjAddr: 0x8, symBinAddr: 0x4180, symSize: 0x4C }
+  - { offsetInCU: 0x111, offset: 0x66B71, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C6impactyySo21UIImpactFeedbackStyleVFTo', symObjAddr: 0x54, symBinAddr: 0x41CC, symSize: 0x78 }
+  - { offsetInCU: 0x181, offset: 0x66BE1, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C12notificationyySo26UINotificationFeedbackTypeVF', symObjAddr: 0xCC, symBinAddr: 0x4244, symSize: 0x4C }
+  - { offsetInCU: 0x22F, offset: 0x66C8F, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C12notificationyySo26UINotificationFeedbackTypeVFTo', symObjAddr: 0x118, symBinAddr: 0x4290, symSize: 0x78 }
+  - { offsetInCU: 0x2E7, offset: 0x66D47, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C14selectionStartyyF', symObjAddr: 0x190, symBinAddr: 0x4308, symSize: 0x64 }
+  - { offsetInCU: 0x392, offset: 0x66DF2, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C14selectionStartyyFTo', symObjAddr: 0x1F4, symBinAddr: 0x436C, symSize: 0x84 }
+  - { offsetInCU: 0x414, offset: 0x66E74, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C16selectionChangedyyF', symObjAddr: 0x278, symBinAddr: 0x43F0, symSize: 0x74 }
+  - { offsetInCU: 0x49E, offset: 0x66EFE, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C16selectionChangedyyFTo', symObjAddr: 0x2EC, symBinAddr: 0x4464, symSize: 0x84 }
+  - { offsetInCU: 0x500, offset: 0x66F60, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C12selectionEndyyF', symObjAddr: 0x370, symBinAddr: 0x44E8, symSize: 0x14 }
+  - { offsetInCU: 0x520, offset: 0x66F80, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C12selectionEndyyF', symObjAddr: 0x370, symBinAddr: 0x44E8, symSize: 0x14 }
+  - { offsetInCU: 0x560, offset: 0x66FC0, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C12selectionEndyyFTo', symObjAddr: 0x384, symBinAddr: 0x44FC, symSize: 0x18 }
+  - { offsetInCU: 0x580, offset: 0x66FE0, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C12selectionEndyyFTo', symObjAddr: 0x384, symBinAddr: 0x44FC, symSize: 0x18 }
+  - { offsetInCU: 0x59D, offset: 0x66FFD, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C12selectionEndyyFTo', symObjAddr: 0x384, symBinAddr: 0x44FC, symSize: 0x18 }
+  - { offsetInCU: 0x5C0, offset: 0x67020, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C7vibrateyyF', symObjAddr: 0x39C, symBinAddr: 0x4514, symSize: 0x8 }
+  - { offsetInCU: 0x5F9, offset: 0x67059, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C7vibrateyyFTo', symObjAddr: 0x3A4, symBinAddr: 0x451C, symSize: 0x8 }
+  - { offsetInCU: 0x619, offset: 0x67079, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C7vibrateyyFTo', symObjAddr: 0x3A4, symBinAddr: 0x451C, symSize: 0x8 }
+  - { offsetInCU: 0x636, offset: 0x67096, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C7vibrateyySdF', symObjAddr: 0x3AC, symBinAddr: 0x4524, symSize: 0x560 }
+  - { offsetInCU: 0x88D, offset: 0x672ED, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C7vibrateyySdFyycfU_', symObjAddr: 0x90C, symBinAddr: 0x4A84, symSize: 0xD8 }
+  - { offsetInCU: 0x8DE, offset: 0x6733E, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C7vibrateyySdFTo', symObjAddr: 0xA5C, symBinAddr: 0x4BD4, symSize: 0x3C }
+  - { offsetInCU: 0x8FA, offset: 0x6735A, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0CACycfC', symObjAddr: 0xA98, symBinAddr: 0x4C10, symSize: 0x20 }
+  - { offsetInCU: 0x90E, offset: 0x6736E, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0CACycfc', symObjAddr: 0xAB8, symBinAddr: 0x4C30, symSize: 0x3C }
+  - { offsetInCU: 0x949, offset: 0x673A9, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0CACycfcTo', symObjAddr: 0xAF4, symBinAddr: 0x4C6C, symSize: 0x48 }
+  - { offsetInCU: 0x984, offset: 0x673E4, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0CfD', symObjAddr: 0xB3C, symBinAddr: 0x4CB4, symSize: 0x30 }
+  - { offsetInCU: 0xA1B, offset: 0x6747B, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0C7vibrateyySdFyycfU_TA', symObjAddr: 0xA10, symBinAddr: 0x4B88, symSize: 0x8 }
+  - { offsetInCU: 0xA2F, offset: 0x6748F, size: 0x8, addend: 0x0, symName: '_$sIeg_IeyB_TR', symObjAddr: 0xA18, symBinAddr: 0x4B90, symSize: 0x2C }
+  - { offsetInCU: 0xA47, offset: 0x674A7, size: 0x8, addend: 0x0, symName: _block_copy_helper, symObjAddr: 0xA44, symBinAddr: 0x4BBC, symSize: 0x10 }
+  - { offsetInCU: 0xA5B, offset: 0x674BB, size: 0x8, addend: 0x0, symName: _block_destroy_helper, symObjAddr: 0xA54, symBinAddr: 0x4BCC, symSize: 0x8 }
+  - { offsetInCU: 0xA6F, offset: 0x674CF, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0CfETo', symObjAddr: 0xB6C, symBinAddr: 0x4CE4, symSize: 0x10 }
+  - { offsetInCU: 0xA9E, offset: 0x674FE, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC14implementation33_A9C68EC01C54EFB1A27799A130670B29LLAA0B0Cvpfi', symObjAddr: 0xB7C, symBinAddr: 0x4CF4, symSize: 0x20 }
+  - { offsetInCU: 0xAD7, offset: 0x67537, size: 0x8, addend: 0x0, symName: '_$ss29getContiguousArrayStorageType3fors01_bcD0CyxGmxm_tlFSo22CHHapticEventParameterC_Tg5Tf4d_n', symObjAddr: 0xCE0, symBinAddr: 0x4E58, symSize: 0x64 }
+  - { offsetInCU: 0xB04, offset: 0x67564, size: 0x8, addend: 0x0, symName: '_$ss29getContiguousArrayStorageType3fors01_bcD0CyxGmxm_tlFSo13CHHapticEventC_Tg5Tf4d_n', symObjAddr: 0xD44, symBinAddr: 0x4EBC, symSize: 0x64 }
+  - { offsetInCU: 0xB31, offset: 0x67591, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B0CMa', symObjAddr: 0xDA8, symBinAddr: 0x4F20, symSize: 0x20 }
+  - { offsetInCU: 0xB45, offset: 0x675A5, size: 0x8, addend: 0x0, symName: ___swift_instantiateConcreteTypeFromMangledName, symObjAddr: 0xE6C, symBinAddr: 0x4FE4, symSize: 0x40 }
+  - { offsetInCU: 0xDA9, offset: 0x67809, size: 0x8, addend: 0x0, symName: '_$sSo15CHHapticPatternC6events10parametersABSaySo0A5EventCG_SaySo0A16DynamicParameterCGtKcfcTO', symObjAddr: 0xB9C, symBinAddr: 0x4D14, symSize: 0x144 }
+  - { offsetInCU: 0x65, offset: 0x6798E, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC6impactyySo13CAPPluginCallCF', symObjAddr: 0x0, symBinAddr: 0x5024, symSize: 0x3F8 }
+  - { offsetInCU: 0x198, offset: 0x67AC1, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC6impactyySo13CAPPluginCallCFyyScMYccfU_Tf2ni_n', symObjAddr: 0x3F8, symBinAddr: 0x541C, symSize: 0x4C }
+  - { offsetInCU: 0x235, offset: 0x67B5E, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC6impactyySo13CAPPluginCallCFTo', symObjAddr: 0x444, symBinAddr: 0x5468, symSize: 0x50 }
+  - { offsetInCU: 0x251, offset: 0x67B7A, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC12notificationyySo13CAPPluginCallCF', symObjAddr: 0x494, symBinAddr: 0x54B8, symSize: 0x3FC }
+  - { offsetInCU: 0x384, offset: 0x67CAD, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC12notificationyySo13CAPPluginCallCFyyScMYccfU_Tf2ni_n', symObjAddr: 0x890, symBinAddr: 0x58B4, symSize: 0x4C }
+  - { offsetInCU: 0x421, offset: 0x67D4A, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC12notificationyySo13CAPPluginCallCFTo', symObjAddr: 0x8DC, symBinAddr: 0x5900, symSize: 0x50 }
+  - { offsetInCU: 0x43F, offset: 0x67D68, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC14selectionStartyySo13CAPPluginCallCFyyScMYccfU_', symObjAddr: 0x948, symBinAddr: 0x596C, symSize: 0x74 }
+  - { offsetInCU: 0x48E, offset: 0x67DB7, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC14selectionStartyySo13CAPPluginCallCFTo', symObjAddr: 0x9BC, symBinAddr: 0x59E0, symSize: 0x50 }
+  - { offsetInCU: 0x4AC, offset: 0x67DD5, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC16selectionChangedyySo13CAPPluginCallCFyyScMYccfU_', symObjAddr: 0xC4C, symBinAddr: 0x5C70, symSize: 0x84 }
+  - { offsetInCU: 0x4E2, offset: 0x67E0B, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC16selectionChangedyySo13CAPPluginCallCFTo', symObjAddr: 0xCD0, symBinAddr: 0x5CF4, symSize: 0x50 }
+  - { offsetInCU: 0x4FE, offset: 0x67E27, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC12selectionEndyySo13CAPPluginCallCFTo', symObjAddr: 0xD3C, symBinAddr: 0x5D60, symSize: 0x50 }
+  - { offsetInCU: 0x51A, offset: 0x67E43, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC7vibrateyySo13CAPPluginCallCF', symObjAddr: 0xD8C, symBinAddr: 0x5DB0, symSize: 0x2AC }
+  - { offsetInCU: 0x5EA, offset: 0x67F13, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC7vibrateyySo13CAPPluginCallCFTo', symObjAddr: 0x1038, symBinAddr: 0x605C, symSize: 0x50 }
+  - { offsetInCU: 0x606, offset: 0x67F2F, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC6bridge8pluginId0E4NameAC0A017CAPBridgeProtocol_p_S2StcfC', symObjAddr: 0x1088, symBinAddr: 0x60AC, symSize: 0xB4 }
+  - { offsetInCU: 0x624, offset: 0x67F4D, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC6bridge8pluginId0E4NameAC0A017CAPBridgeProtocol_p_S2Stcfc', symObjAddr: 0x113C, symBinAddr: 0x6160, symSize: 0x110 }
+  - { offsetInCU: 0x6AA, offset: 0x67FD3, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC6bridge8pluginId0E4NameAC0A017CAPBridgeProtocol_p_S2StcfcTo', symObjAddr: 0x124C, symBinAddr: 0x6270, symSize: 0x12C }
+  - { offsetInCU: 0x708, offset: 0x68031, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginCACycfC', symObjAddr: 0x1378, symBinAddr: 0x639C, symSize: 0x20 }
+  - { offsetInCU: 0x726, offset: 0x6804F, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginCACycfc', symObjAddr: 0x1398, symBinAddr: 0x63BC, symSize: 0x88 }
+  - { offsetInCU: 0x770, offset: 0x68099, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginCACycfcTo', symObjAddr: 0x1420, symBinAddr: 0x6444, symSize: 0x8C }
+  - { offsetInCU: 0x7B0, offset: 0x680D9, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginCfD', symObjAddr: 0x14AC, symBinAddr: 0x64D0, symSize: 0x30 }
+  - { offsetInCU: 0x92F, offset: 0x68258, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginCfETo', symObjAddr: 0x14DC, symBinAddr: 0x6500, symSize: 0x10 }
+  - { offsetInCU: 0x969, offset: 0x68292, size: 0x8, addend: 0x0, symName: '_$ss22__RawDictionaryStorageC4findys10_HashTableV6BucketV6bucket_Sb5foundtxSHRzlFs11AnyHashableV_Tg5', symObjAddr: 0x14EC, symBinAddr: 0x6510, symSize: 0x30 }
+  - { offsetInCU: 0x996, offset: 0x682BF, size: 0x8, addend: 0x0, symName: '_$ss11AnyHashableVWOh', symObjAddr: 0x151C, symBinAddr: 0x6540, symSize: 0x34 }
+  - { offsetInCU: 0x9AA, offset: 0x682D3, size: 0x8, addend: 0x0, symName: '_$sypSgWOh', symObjAddr: 0x1550, symBinAddr: 0x6574, symSize: 0x40 }
+  - { offsetInCU: 0x9BE, offset: 0x682E7, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC6impactyySo13CAPPluginCallCFyyScMYccfU_Tf2ni_nTA', symObjAddr: 0x15F4, symBinAddr: 0x65D8, symSize: 0x8 }
+  - { offsetInCU: 0x9D2, offset: 0x682FB, size: 0x8, addend: 0x0, symName: _block_copy_helper, symObjAddr: 0x15FC, symBinAddr: 0x65E0, symSize: 0x10 }
+  - { offsetInCU: 0x9E6, offset: 0x6830F, size: 0x8, addend: 0x0, symName: _block_destroy_helper, symObjAddr: 0x160C, symBinAddr: 0x65F0, symSize: 0x8 }
+  - { offsetInCU: 0x9FA, offset: 0x68323, size: 0x8, addend: 0x0, symName: '_$sSay8Dispatch0A13WorkItemFlagsVGMa', symObjAddr: 0x1654, symBinAddr: 0x6638, symSize: 0x54 }
+  - { offsetInCU: 0xA0E, offset: 0x68337, size: 0x8, addend: 0x0, symName: '_$sypWOc', symObjAddr: 0x16A8, symBinAddr: 0x668C, symSize: 0x3C }
+  - { offsetInCU: 0xA22, offset: 0x6834B, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC12notificationyySo13CAPPluginCallCFyyScMYccfU_Tf2ni_nTA', symObjAddr: 0x16E4, symBinAddr: 0x66C8, symSize: 0x8 }
+  - { offsetInCU: 0xA36, offset: 0x6835F, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC14selectionStartyySo13CAPPluginCallCFyyScMYccfU_TA', symObjAddr: 0x16EC, symBinAddr: 0x66D0, symSize: 0x8 }
+  - { offsetInCU: 0xA4A, offset: 0x68373, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC16selectionChangedyySo13CAPPluginCallCFyyScMYccfU_TA', symObjAddr: 0x1718, symBinAddr: 0x66FC, symSize: 0x8 }
+  - { offsetInCU: 0xA5E, offset: 0x68387, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC12selectionEndyySo13CAPPluginCallCFyyScMYccfU_TA', symObjAddr: 0x1720, symBinAddr: 0x6704, symSize: 0x28 }
+  - { offsetInCU: 0xABB, offset: 0x683E4, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginC7vibrateyySo13CAPPluginCallCFyyScMYccfU_TA', symObjAddr: 0x1780, symBinAddr: 0x6764, symSize: 0x30 }
+  - { offsetInCU: 0xAEE, offset: 0x68417, size: 0x8, addend: 0x0, symName: '_$s16CapacitorHaptics0B6PluginCMa', symObjAddr: 0x17B0, symBinAddr: 0x6794, symSize: 0x20 }
+  - { offsetInCU: 0xB0D, offset: 0x68436, size: 0x8, addend: 0x0, symName: '_$ss22__RawDictionaryStorageC4find_9hashValues10_HashTableV6BucketV6bucket_Sb5foundtx_SitSHRzlFs11AnyHashableV_Tg5', symObjAddr: 0x17D0, symBinAddr: 0x67B4, symSize: 0xC4 }
+  - { offsetInCU: 0xB3A, offset: 0x68463, size: 0x8, addend: 0x0, symName: '_$ss11AnyHashableVWOc', symObjAddr: 0x1894, symBinAddr: 0x6878, symSize: 0x3C }
+...
