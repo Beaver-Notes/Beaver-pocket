@@ -26,7 +26,7 @@
 .buttonContainer {
     display: flex;
     justify-content: center; 
-}
+}  
 
 .sidebar {
     @apply w-full flex flex-col border-r border-gray-300 overflow-auto;
@@ -44,6 +44,10 @@
    @apply py-8 md:px-4
 }
 
+.ArchiveddSection {
+    @apply py-8 md:px-4 hidden
+}
+
 .allNotesSection {
     @apply md:px-4
 }
@@ -56,13 +60,17 @@
    @apply w-full p-2
 }
 
+.cardContent {
+  @apply h-32 overflow-hidden;
+}
+
 .title {
     font-family: 'Arimo', sans-serif;
     @apply font-bold mb-1;
 }
 
 .sidebarItem {
-    @apply p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C];
+    @apply p-3 h-auto cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C] h-48;
 }
 
 .bookmarkedsidebarItem {
@@ -71,6 +79,10 @@
 
 .sidebarTitle {
     @apply text-lg font-bold;
+}
+
+.sidebarParagraph {
+    @apply text-base;
 }
 
 .trash {

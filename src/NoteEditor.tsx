@@ -23,6 +23,7 @@ import TaskList from "@tiptap/extension-task-list";
 import Blockquote from "@tiptap/extension-blockquote";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
+import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import {
   Filesystem,
   Directory,
@@ -51,6 +52,7 @@ import LinkIcon from "remixicon-react/LinkIcon";
 
 const extensions = [
   Document,
+  NoteLabel,
   Text,
   StarterKit,
   Link,

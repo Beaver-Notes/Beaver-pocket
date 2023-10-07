@@ -19,6 +19,8 @@ import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import Bookmark3LineIcon from "remixicon-react/Bookmark3LineIcon";
 import Bookmark3FillIcon from "remixicon-react/Bookmark3FillIcon";
+import ArchiveDrawerLineIcon from "remixicon-react/ArchiveLineIcon";
+import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 
 const STORAGE_KEY = "notes";
 
@@ -29,15 +31,18 @@ function App() {
     noteIds.forEach((id) => {
       let note = storage.get<Note>(`${STORAGE_KEY}:${id}`);
 
-      // Ensure updatedAt is a Date object
-      note.updatedAt =
-        note.updatedAt instanceof Date ? note.updatedAt : new Date(); // Add this line
-      note.createdAt =
-        note.createdAt instanceof Date ? note.createdAt : new Date(); // Add this line
+      // Check if note is defined
+      if (note) {
+        // Ensure updatedAt is a Date object
+        note.updatedAt = new Date(note.updatedAt);
 
-      // ... other property checks
+        // Ensure createdAt is a Date object
+        note.createdAt = new Date(note.createdAt);
 
-      notes[note.id] = note;
+        // ... other property checks
+
+        notes[note.id] = note;
+      }
     });
     return notes;
   };
@@ -91,8 +96,42 @@ function App() {
       const updatedNotes = { ...prevNotes };
       const updatedNote = { ...updatedNotes[noteId] };
 
-      // Toggle the 'isBookmarked' property
-      updatedNote.isBookmarked = !updatedNote.isBookmarked;
+      // Check if the note is archived
+      if (updatedNote.isArchived) {
+        // If it's archived, it cannot be bookmarked, so unarchive it
+        updatedNote.isArchived = false;
+      } else {
+        // Toggle the 'isBookmarked' property
+        updatedNote.isBookmarked = !updatedNote.isBookmarked;
+      }
+
+      // Update the note in the dictionary
+      updatedNotes[noteId] = updatedNote;
+
+      // Update local storage
+      const noteIds = Object.keys(updatedNotes);
+      storage.set(STORAGE_KEY, noteIds);
+      storage.set(`${STORAGE_KEY}:${noteId}`, updatedNote);
+
+      return updatedNotes;
+    });
+  };
+
+  const handleToggleArchive = (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event propagation
+
+    setNotesState((prevNotes) => {
+      const updatedNotes = { ...prevNotes };
+      const updatedNote = { ...updatedNotes[noteId] };
+
+      // Check if the note is bookmarked
+      if (updatedNote.isBookmarked) {
+        // If it's bookmarked, it cannot be archived, so unbookmark it
+        updatedNote.isBookmarked = false;
+      } else {
+        // Toggle the 'isArchived' property
+        updatedNote.isArchived = !updatedNote.isArchived;
+      }
 
       // Update the note in the dictionary
       updatedNotes[noteId] = updatedNote;
@@ -120,7 +159,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Update the filteredNotes when searchQuery changes
     const filtered = Object.values(notesState).filter((note) => {
       const titleMatch = note.title
         .toLowerCase()
@@ -210,7 +248,9 @@ function App() {
             const importedNote = importedNotes[noteId];
 
             // Remove the updatedAt property from the imported note
-            delete importedNote.updatedAt;
+            if (importedNote.hasOwnProperty("updatedAt")) {
+              delete importedNote.updatedAt;
+            }
 
             // Store the note in the notesToImport object
             notesToImport[noteId] = importedNote;
@@ -282,6 +322,8 @@ function App() {
     saveNote(newNote);
   };
 
+  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
+
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     const updatedAtA = a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
     const updatedAtB = b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
@@ -289,7 +331,7 @@ function App() {
     return updatedAtA.getTime() - updatedAtB.getTime();
   });
 
-  const MAX_CONTENT_PREVIEW_LENGTH = 50;
+  const MAX_CONTENT_PREVIEW_LENGTH = 150;
 
   function extractParagraphTextFromContent(content: JSONContent): string {
     if (!content || !Array.isArray(content.content)) {
@@ -382,57 +424,115 @@ function App() {
                   onChange={handleImportData}
                 />
               </div>
-              <button className={styles.sidebarButton}>
+              <button
+                className={styles.sidebarButton}
+                onClick={() => setIsArchiveVisible(!isArchiveVisible)}
+              >
                 <ArchiveLineIcon className={styles.icon} /> Archive
               </button>
             </div>
           </div>
           <div className={styles.sidebarList}>
             <div className={styles.bookmarkedSection}>
-              {notesList.filter((note) => note.isBookmarked).length > 0 && (
-                <h2>Bookmarked</h2>
-              )}
+              {notesList.filter((note) => note.isBookmarked && !note.isArchived)
+                .length > 0 && <h2>Bookmarked</h2>}
               <div className={styles.categories}>
-                {notesList
-                  .filter((note) => note.isBookmarked)
-                  .map((note) => (
-                    <div
-                      key={note.id}
-                      role="button"
-                      tabIndex={0}
-                      className={
-                        note.id === activeNoteId
-                          ? styles.bookmarkedsidebarItemActive
-                          : styles.bookmarkedsidebarItem
-                      }
-                      onClick={() => setActiveNoteId(note.id)}
-                    >
-                      <div className={styles.sidebarTitle}>
-                        {note.title}
-                        <div>
-                          {note.content && truncateContentPreview(note.content)}
+                {notesList.map((note) => {
+                  if (note.isBookmarked && !note.isArchived) {
+                    return (
+                      <div
+                        key={note.id}
+                        role="button"
+                        tabIndex={0}
+                        className={
+                          note.id === activeNoteId
+                            ? styles.bookmarkedsidebarItemActive
+                            : styles.bookmarkedsidebarItem
+                        }
+                        onClick={() => setActiveNoteId(note.id)}
+                      >
+                        <div className={styles.cardContent}>
+                          <div className={styles.sidebarTitle}>
+                            {note.title}
+                          </div>
+                          <div className={styles.sidebarParagraph}>
+                            {note.content &&
+                              truncateContentPreview(note.content)}
+                          </div>
                         </div>
+                        <button
+                          className={styles.button}
+                          onClick={(e) => handleToggleBookmark(note.id, e)}
+                        >
+                          {note.isBookmarked ? (
+                            <Bookmark3FillIcon />
+                          ) : (
+                            <Bookmark3LineIcon />
+                          )}
+                        </button>
+                        <button
+                          className={styles.trash}
+                          onClick={() => handleDeleteNote(note.id)}
+                        >
+                          <DeleteBinLineIcon />
+                        </button>
                       </div>
-                      <button
-                        className={styles.button}
-                        onClick={(e) => handleToggleBookmark(note.id, e)}
-                      >
-                        {note.isBookmarked ? (
-                          <Bookmark3FillIcon />
-                        ) : (
-                          <Bookmark3LineIcon />
-                        )}
-                      </button>
-                      <button
-                        className={styles.buttons}
-                        onClick={() => handleDeleteNote(note.id)}
-                      >
-                        <DeleteBinLineIcon />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  }
+                  return null; // Return null for notes that are not bookmarked or archived
+                })}
               </div>
             </div>
+            {isArchiveVisible ? (
+              <div className={styles.ArchivedSection}>
+                {notesList.filter((note) => note.isArchived).length > 0 && (
+                  <h2>Archived</h2>
+                )}
+                <div className={styles.categories}>
+                  {notesList
+                    .filter((note) => note.isArchived)
+                    .map((note) => (
+                      <div
+                        key={note.id}
+                        role="button"
+                        tabIndex={0}
+                        className={
+                          note.id === activeNoteId
+                            ? styles.bookmarkedsidebarItemActive
+                            : styles.bookmarkedsidebarItem
+                        }
+                        onClick={() => setActiveNoteId(note.id)}
+                      >
+                        <div className={styles.cardContent}>
+                          <div className={styles.sidebarTitle}>
+                            {note.title}
+                          </div>
+                          <div className={styles.sidebarParagraph}>
+                            {note.content &&
+                              truncateContentPreview(note.content)}
+                          </div>
+                        </div>
+                        <button
+                          className={styles.button}
+                          onClick={(e) => handleToggleArchive(note.id, e)}
+                        >
+                          {note.isArchived ? (
+                            <ArchiveDrawerFillIcon />
+                          ) : (
+                            <ArchiveDrawerLineIcon />
+                          )}
+                        </button>
+                        <button
+                          className={styles.trash}
+                          onClick={() => handleDeleteNote(note.id)}
+                        >
+                          <DeleteBinLineIcon />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ) : null}
             <div className={styles.allNotesSection}>
               <h2>All Notes</h2>
               <div className={styles.categories}>
@@ -450,9 +550,9 @@ function App() {
                       }
                       onClick={() => setActiveNoteId(note.id)}
                     >
-                      <div className={styles.sidebarTitle}>
-                        {note.title}
-                        <div>
+                      <div className={styles.cardContent}>
+                        <div className={styles.sidebarTitle}>{note.title}</div>
+                        <div className={styles.sidebarParagraph}>
                           {note.content && truncateContentPreview(note.content)}
                         </div>
                       </div>
@@ -461,9 +561,19 @@ function App() {
                         onClick={(e) => handleToggleBookmark(note.id, e)} // Pass the event
                       >
                         {note.isBookmarked ? (
-                          <Bookmark3FillIcon  />
+                          <Bookmark3FillIcon />
                         ) : (
-                          <Bookmark3LineIcon  />
+                          <Bookmark3LineIcon />
+                        )}
+                      </button>
+                      <button
+                        className={styles.button}
+                        onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
+                      >
+                        {note.isBookmarked ? (
+                          <ArchiveDrawerFillIcon />
+                        ) : (
+                          <ArchiveDrawerLineIcon />
                         )}
                       </button>
                       <button

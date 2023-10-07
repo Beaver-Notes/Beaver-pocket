@@ -6,13 +6,13 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 
 > 🔩 Please be aware that this application is still under heavy development. Therefore, you might want to backup the notes you take with it and check this repository weekly for updates and new features. Not everything works, so just scroll below to see if the state of the app fits your needs or not.
 
-![Slice](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/93325d9a-291b-4e01-9461-bdff81ce6330)
 
+![Slice](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/05e6a41c-3113-46b6-8574-7cf97d6e2722)
 
 ## What Works 
 
 - [x] Exporting data to Beavernotes
-- [x] Headings
+- [x] Headind 1
 - [x] CodeBlock
 - [x] Paragraphs
 - [x] Highlight
@@ -21,25 +21,24 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Strikethorugh
 - [x] Inline Block
 - [x] Dark Mode
-- [x] Search and Buttons below
-- [x] Quote Block
-- [x] ToolBar 
-- [x] Lists
-- [x] Images
-- [x] Bookmarks
 
 ## Kinda Works
 
 - [ ] Importing data from Beavernotes (Works only if the note is plain text withouth tags, linked notes, images).
+- [ ] Images (Can be added through a link; this is going to change in the future)
 - [ ] Links (They Work, but the way they are added will be modified)
-- [ ] Katex (not implemented yet)
-- [ ] Check Lists
-      
+- [ ] ToolBar (Works but will be adapted to follow the user)
+- [ ] Search and Buttons below (Work but will be adapted to follow the user)
+- [ ] Other Headings (missing css)
+- [ ] Lists (missing css)
+- [ ] QuoteBlock (missing css)
+
 ## Doesn't work / not implemented 
 
 - [ ] Note Linking
 - [ ] Tags
 - [ ] Archive
+- [ ] Bookmark
   
 
 ## To set up your machine for running Beaver Notes Pocket, follow these steps:
