@@ -12,7 +12,7 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 ## What Works 
 
 - [x] Exporting data to Beavernotes
-- [x] Headind 1
+- [x] Headinds
 - [x] CodeBlock
 - [x] Paragraphs
 - [x] Highlight
@@ -21,17 +21,15 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Strikethorugh
 - [x] Inline Block
 - [x] Dark Mode
-
+- [x] Toolbar
+- [x] Search and Buttons below
+- [x] Images
+- [x] QuoteBlock
+- [x] Lists (except check lists)
+      
 ## Kinda Works
-
-- [ ] Importing data from Beavernotes (Works only if the note is plain text withouth tags, linked notes, images).
-- [ ] Images (Can be added through a link; this is going to change in the future)
+- [ ] Importing data from Beavernotes (Works only if the note is plain text withouth linked notes, images).
 - [ ] Links (They Work, but the way they are added will be modified)
-- [ ] ToolBar (Works but will be adapted to follow the user)
-- [ ] Search and Buttons below (Work but will be adapted to follow the user)
-- [ ] Other Headings (missing css)
-- [ ] Lists (missing css)
-- [ ] QuoteBlock (missing css)
 
 ## Doesn't work / not implemented 
 
