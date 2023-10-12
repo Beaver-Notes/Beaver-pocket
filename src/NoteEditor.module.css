@@ -39,16 +39,24 @@ h6 {
   @apply overflow-auto h-full justify-center items-start w-screen px-4 text-black dark:text-white lg:px-60 text-base
 }
 
+img {
+  @apply rounded-xl
+}
+
 .toolbar {
-   @apply flex overflow-x-scroll overflow-y-hidden items-center justify-center max-h-8 w-fit md:w-full p-8 w-fit
+   @apply flex overflow-x-scroll overflow-y-hidden items-center justify-center max-h-6 w-fit md:w-full p-6 w-fit bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-full
 }
 
 .toolbarIcon {
    @apply border-none text-gray-800 dark:text-white text-xl
 }
 
-.editorContainer {
-    @apply sticky top-0 z-50 overflow-auto h-auto w-full bg-white dark:bg-[#353333] md:mt-4 mb-2
+.toolbarContainer {
+    @apply sticky top-0 z-50 overflow-auto h-auto w-full bg-white dark:bg-[#353333] pt-6
+  }
+
+.edtiorContainer {
+  @apply py-6
 }
 
 .styles.fullScreenEditor{
@@ -60,7 +68,7 @@ h6 {
 }
 
 .textEditorcontent {
-  @apply overflow-auto h-auto pl-6 pr-6;
+  @apply overflow-auto h-auto pl-6 pr-6 py-4;
 }
 
 .toolbarButton {
@@ -72,22 +80,23 @@ h6 {
 }
 
 pre {
-  background: #0d0d0d;
-  border-radius: 0.5rem;
-  color: #fff;
-  font-family: "JetBrainsMono", monospace;
-  padding: 0.75rem 1rem;
+@apply bg-[#F2F2F2] dark:bg-[#303033] rounded-md text-black dark:text-white font-mono py-3 px-4;
 
   code {
-    background: none;
-    color: inherit;
-    font-size: 0.8rem;
-    padding: 0;
+   @apply bg-[#F2F2F2] dark:bg-[#303033] text-inherit text-base p-0;
   }
 }
 
+code {
+  @apply bg-[#F2F2F2] dark:bg-[#303033] text-inherit text-base p-1 px-2 rounded-full;
+ }
+
 blockquote {
  @apply border-l-4 border-[#E4E4E6] dark:border-[#3F3F46];
+
+ p {
+  @apply ml-2
+ }
 }
 
 ol {
@@ -100,20 +109,49 @@ ul {
 
 ul[data-type="taskList"] {
   @apply list-none;
-  input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 2px solid #ccc;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.3s;
-  }
 }
 
+ul[data-type="taskList"] {
+  list-style: none; /* Remove default list-style */
+  padding-left: 0;  /* Remove default left padding */
+}
+
+ul[data-type="taskList"] li {
+  display: flex; /* Use flexbox to align checkbox and text */
+  align-items: center; /* Vertically align items in the flex container */
+}
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  outline: none;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: border-color 0.3s;
+  margin-top: 4px;
+}
+
+input[type="checkbox"]:checked {
+  border-color: #FBBF24;
+}
+
+input[type="checkbox"]:checked::before {
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(251,191,36,1)'%3E%3C/path%3E%3C/svg%3E");
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  line-height: 20px;
+  text-align: center;
+  color: #FBBF24;
+}
+
+
+
 .ProseMirror {
-  position: relative;
   outline: none;
 }
