@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { Note } from "./types";
+import {lowlight} from 'lowlight'
 import {
   EditorContent,
   useEditor,
@@ -7,9 +8,11 @@ import {
   generateText,
 } from "@tiptap/react";
 import Document from "@tiptap/extension-document";
+import { ReactNodeViewRenderer } from '@tiptap/react'
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import styles from "./NoteEditor.module.css";
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Highlight from "@tiptap/extension-highlight";
 import Heading from "@tiptap/extension-heading";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -29,28 +32,42 @@ import {
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
+import CodeBlockComponent from './CodeBlockComponent';
 
 // Remix Icons
 
 import BoldIcon from "remixicon-react/BoldIcon";
-import CodeFillIcon from "remixicon-react/CodeFillIcon";
 import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
 import ImageLineIcon from "remixicon-react/ImageLineIcon";
-import ParagraphIcon from "remixicon-react/ParagraphIcon";
-import H1Icon from "remixicon-react/H1Icon";
 import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
-import H2Icon from "remixicon-react/H2Icon";
 import ItalicIcon from "remixicon-react/ItalicIcon";
 import UnderlineIcon from "remixicon-react/UnderlineIcon";
 import StrikethroughIcon from "remixicon-react/StrikethroughIcon";
-import ArrowLeftSLineIcon from "remixicon-react/ArrowLeftSLineIcon";
+import ArrowLeftSLineIcon from "remixicon-react/ArrowLeftLineIcon";
 import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
-import CodeBoxLineIcon from "remixicon-react/CodeBoxLineIcon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkIcon";
 
+// Languages
+import css from 'highlight.js/lib/languages/css'
+import js from 'highlight.js/lib/languages/javascript'
+import ts from 'highlight.js/lib/languages/typescript'
+import html from 'highlight.js/lib/languages/xml'
+
+lowlight.registerLanguage('html', html)
+lowlight.registerLanguage('css', css)
+lowlight.registerLanguage('js', js)
+lowlight.registerLanguage('ts', ts)
+
 const extensions = [
+  CodeBlockLowlight
+        .extend({
+          addNodeView() {
+            return ReactNodeViewRenderer(CodeBlockComponent)
+          },
+        })
+        .configure({ lowlight }),
   Document,
   NoteLabel,
   Text,
@@ -106,10 +123,10 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
     try {
       // Generate a unique file name for the image (you can customize this)
       const imageName = `image_${Date.now()}.jpg`;
-  
+
       // Directory name for your images
       const imagesDirectory = "images";
-  
+
       // Check if the directory exists (or attempt to create it)
       try {
         await Filesystem.mkdir({
@@ -120,25 +137,25 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
       } catch (createDirectoryError) {
         // Directory likely already exists, ignore the error
       }
-  
+
       // Fetch the image as a binary blob
       const response = await fetch(URL.createObjectURL(file));
       const blob = await response.blob();
-  
+
       // Convert the binary blob to an ArrayBuffer
       const arrayBuffer = await new Response(blob).arrayBuffer();
-  
+
       // Convert ArrayBuffer to Uint8Array
       const uint8Array = new Uint8Array(arrayBuffer);
-  
+
       // Convert the Uint8Array to a regular array of numbers
       const dataArray = Array.from(uint8Array);
-  
+
       // Encode the array of numbers as Base64
       const base64Data = btoa(
         dataArray.map((byte) => String.fromCharCode(byte)).join("")
       );
-  
+
       // Write the Base64 image data to the app's data directory
       await Filesystem.writeFile({
         path: `${imagesDirectory}/${imageName}`,
@@ -146,18 +163,14 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
-  
+
       const imageSrc = `data:image/jpeg;base64,${base64Data}`;
-  
+
       // Insert the image into the editor
       editor?.chain().focus().setImage({ src: imageSrc }).run();
     } catch (error) {
       console.error("Error uploading image:", error);
     }
-  };
-
-  const toggleParagraph = () => {
-    editor?.commands.setParagraph();
   };
 
   const toggleBold = () => {
@@ -180,10 +193,6 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
     editor?.chain().focus().toggleHighlight().run();
   };
 
-  const toggleCode = () => {
-    editor?.chain().focus().toggleCode().run();
-  };
-
   const toggleOrderedList = () => {
     editor?.chain().focus().toggleOrderedList().run();
   };
@@ -194,10 +203,6 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
 
   const toggleTaskList = () => {
     editor?.chain().focus().toggleTaskList().run();
-  };
-
-  const toggleCodeBlock = () => {
-    editor?.chain().focus().toggleCodeBlock().run();
   };
 
   const toggleBlockquote = () => {
@@ -233,177 +238,120 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
     <div className={styles.pageContainer}>
       <div
         className={
-          isFullScreen ? styles.fullScreenEditor : styles.editorContainer
+          isFullScreen ? styles.fullScreenEditor : styles.toolbarContainer
         }
       >
-        <div className={styles.editorContainer}>
-        <div className={styles.toolbar}>
-          <button
-            className={styles.toolbarButton}
-            onClick={() => window.location.reload()}
-          >
-            <ArrowLeftSLineIcon className={styles.toolbarIcon} />
-          </button>
-          |
-          <button
-            className={
-              editor?.isActive("paragraph")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleParagraph}
-          >
-            <ParagraphIcon className={styles.toolbarIcon} />
-          </button>
-          <button
-            onClick={() =>
-              editor?.chain().focus().toggleHeading({ level: 1 }).run()
-            }
-            className={
-              editor?.isActive("heading", { level: 1 })
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-          >
-            <H1Icon className={styles.toolbarIcon} />
-          </button>
-          <button
-            onClick={() =>
-              editor?.chain().focus().toggleHeading({ level: 2 }).run()
-            }
-            className={
-              editor?.isActive("heading", { level: 2 })
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-          >
-            <H2Icon className={styles.toolbarIcon} />
-          </button>
-          <div className={styles.separator}>|</div>
-          <button
-            className={
-              editor?.isActive("bold")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleBold}
-          >
-            <BoldIcon className={styles.toolbarIcon}  />
-          </button>
-          <button
-            className={
-              editor?.isActive("italic")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleItalic}
-          >
-            <ItalicIcon className={styles.toolbarIcon} />
-          </button>
-          <button
-            className={
-              editor?.isActive("underline")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleUnderline}
-          >
-            <UnderlineIcon className={styles.toolbarIcon}  />
-          </button>
-          <button
-            className={
-              editor?.isActive("strike")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleStrike}
-          >
-            <StrikethroughIcon className={styles.toolbarIcon}  />
-          </button>
-          <button
-            className={
-              editor?.isActive("code")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleCode}
-          >
-            <CodeFillIcon className={styles.toolbarIcon}  />
-          </button>
-          <button
-            className={
-              editor?.isActive("highlight")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleHighlight}
-          >
-            <MarkPenLineIcon className={styles.toolbarIcon}  />
-          </button>
-          |
-          <button
-            className={
-              editor?.isActive("OrderedList")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleOrderedList}
-          >
-            <ListOrderedIcon className={styles.toolbarIcon}  />
-          </button>
-          <button
-            className={
-              editor?.isActive("UnorderedList")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleUnorderedList}
-          >
-            <ListUnorderedIcon className={styles.toolbarIcon}  />
-          </button>
-          <button
-            className={
-              editor?.isActive("Tasklist")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleTaskList}
-          >
-            <ListCheck2Icon className={styles.toolbarIcon}  />
-          </button>
-          <button
-            className={
-              editor?.isActive("Blockquote")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleBlockquote}
-          >
-            <DoubleQuotesLIcon className={styles.toolbarIcon}  />
-          </button>
-          <button
-            className={
-              editor?.isActive("codeblock")
-                ? styles.toolbarButtonActive
-                : styles.toolbarButton
-            }
-            onClick={toggleCodeBlock}
-          >
-            <CodeBoxLineIcon className={styles.toolbarIcon}  />
-          </button>
-          |
-          <button
-            onClick={setLink}
-            className={editor?.isActive("link") ? "is-active" : ""}
-          >
-            <LinkIcon className={styles.toolbarIcon}  />
-          </button>
-          <button
+        <div className={styles.toolbarContainer}>
+          <div className={styles.toolbar}>
+            <button
+              className={styles.toolbarButton}
+              onClick={() => window.location.reload()}
+            >
+              <ArrowLeftSLineIcon className={styles.toolbarIcon} />
+            </button>
+            <button
+              className={
+                editor?.isActive("bold")
+                  ? styles.toolbarButtonActive
+                  : styles.toolbarButton
+              }
+              onClick={toggleBold}
+            >
+              <BoldIcon className={styles.toolbarIcon} />
+            </button>
+            <button
+              className={
+                editor?.isActive("italic")
+                  ? styles.toolbarButtonActive
+                  : styles.toolbarButton
+              }
+              onClick={toggleItalic}
+            >
+              <ItalicIcon className={styles.toolbarIcon} />
+            </button>
+            <button
+              className={
+                editor?.isActive("underline")
+                  ? styles.toolbarButtonActive
+                  : styles.toolbarButton
+              }
+              onClick={toggleUnderline}
+            >
+              <UnderlineIcon className={styles.toolbarIcon} />
+            </button>
+            <button
+              className={
+                editor?.isActive("strike")
+                  ? styles.toolbarButtonActive
+                  : styles.toolbarButton
+              }
+              onClick={toggleStrike}
+            >
+              <StrikethroughIcon className={styles.toolbarIcon} />
+            </button>
+            <button
+              className={
+                editor?.isActive("highlight")
+                  ? styles.toolbarButtonActive
+                  : styles.toolbarButton
+              }
+              onClick={toggleHighlight}
+            >
+              <MarkPenLineIcon className={styles.toolbarIcon} />
+            </button>
+            
+            <button
+              className={
+                editor?.isActive("OrderedList")
+                  ? styles.toolbarButtonActive
+                  : styles.toolbarButton
+              }
+              onClick={toggleOrderedList}
+            >
+              <ListOrderedIcon className={styles.toolbarIcon} />
+            </button>
+            <button
+              className={
+                editor?.isActive("UnorderedList")
+                  ? styles.toolbarButtonActive
+                  : styles.toolbarButton
+              }
+              onClick={toggleUnorderedList}
+            >
+              <ListUnorderedIcon className={styles.toolbarIcon} />
+            </button>
+            <button
+              className={
+                editor?.isActive("Tasklist")
+                  ? styles.toolbarButtonActive
+                  : styles.toolbarButton
+              }
+              onClick={toggleTaskList}
+            >
+              <ListCheck2Icon className={styles.toolbarIcon} />
+            </button>
+            <button
+              className={
+                editor?.isActive("Blockquote")
+                  ? styles.toolbarButtonActive
+                  : styles.toolbarButton
+              }
+              onClick={toggleBlockquote}
+            >
+              <DoubleQuotesLIcon className={styles.toolbarIcon} />
+            </button>
+            
+            <button
+              onClick={setLink}
+              className={editor?.isActive("link") ? "is-active" : ""}
+            >
+              <LinkIcon className={styles.toolbarIcon} />
+            </button>
+            <button
               className={styles.toolbarButton}
               onClick={() => {
-                const imageInput = document.getElementById(
-                  "image-upload-input"
-                );
+                const imageInput =
+                  document.getElementById("image-upload-input");
                 if (imageInput) {
                   imageInput.click();
                 }
@@ -413,20 +361,22 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
               <ImageLineIcon className={styles.toolbarIcon} />
             </button>
             <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => {
-          if (e.target.files) {
-            handleImageUpload(e.target.files[0]);
-          }
-        }}
-        style={{ display: "none" }}
-        id="image-upload-input" // Add this ID
-      />
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files) {
+                  handleImageUpload(e.target.files[0]);
+                }
+              }}
+              style={{ display: "none" }}
+              id="image-upload-input" // Add this ID
+            />
+          </div>
         </div>
-        </div>
-        </div>
+      </div>
+      <div className={styles.edtiorContainer}>
       <EditorContent editor={editor} className={styles.textEditorContent} />
+      </div>
     </div>
   );
 }

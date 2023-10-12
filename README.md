@@ -14,6 +14,7 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Exporting data to Beavernotes
 - [x] Headinds
 - [x] CodeBlock
+- [x] Syntax highlighting
 - [x] Paragraphs
 - [x] Highlight
 - [x] Bold
@@ -25,7 +26,9 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Search and Buttons below
 - [x] Images
 - [x] QuoteBlock
-- [x] Lists (except check lists)
+- [x] Lists
+- [x] Archive
+- [x] Bookmark
       
 ## Kinda Works
 - [ ] Importing data from Beavernotes (Works only if the note is plain text withouth linked notes, images).
@@ -35,8 +38,6 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 
 - [ ] Note Linking
 - [ ] Tags
-- [ ] Archive
-- [ ] Bookmark
   
 
 ## To set up your machine for running Beaver Notes Pocket, follow these steps:

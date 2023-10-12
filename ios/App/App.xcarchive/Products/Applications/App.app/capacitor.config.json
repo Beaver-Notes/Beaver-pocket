@@ -1,8 +1,0 @@
-{
-	"appId": "beaver.notes.pocket",
-	"appName": "Beaver Notes Pocket",
-	"webDir": "dist",
-	"server": {
-		"androidScheme": "https"
-	}
-}

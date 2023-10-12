@@ -327,7 +327,6 @@ function App() {
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     const updatedAtA = a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
     const updatedAtB = b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
-    // Reverse the sorting order to sort from most recent (last edited) to oldest
     return updatedAtA.getTime() - updatedAtB.getTime();
   });
 
@@ -435,7 +434,7 @@ function App() {
           <div className={styles.sidebarList}>
             <div className={styles.bookmarkedSection}>
               {notesList.filter((note) => note.isBookmarked && !note.isArchived)
-                .length > 0 && <h2>Bookmarked</h2>}
+                .length > 0 && <h3>Bookmarked</h3>}
               <div className={styles.categories}>
                 {notesList.map((note) => {
                   if (note.isBookmarked && !note.isArchived) {
@@ -460,22 +459,24 @@ function App() {
                               truncateContentPreview(note.content)}
                           </div>
                         </div>
-                        <button
-                          className={styles.button}
-                          onClick={(e) => handleToggleBookmark(note.id, e)}
-                        >
-                          {note.isBookmarked ? (
-                            <Bookmark3FillIcon />
-                          ) : (
-                            <Bookmark3LineIcon />
-                          )}
-                        </button>
-                        <button
-                          className={styles.trash}
-                          onClick={() => handleDeleteNote(note.id)}
-                        >
-                          <DeleteBinLineIcon />
-                        </button>
+                        <div className={styles.Cardbutton}>
+                          <button
+                            className={styles.button}
+                            onClick={(e) => handleToggleBookmark(note.id, e)}
+                          >
+                            {note.isBookmarked ? (
+                              <Bookmark3FillIcon className={styles.cardIcon} />
+                            ) : (
+                              <Bookmark3LineIcon className={styles.cardIcon} />
+                            )}
+                          </button>
+                          <button
+                            className={styles.trash}
+                            onClick={() => handleDeleteNote(note.id)}
+                          >
+                            <DeleteBinLineIcon className={styles.cardIcon} />
+                          </button>
+                        </div>
                       </div>
                     );
                   }
@@ -486,7 +487,7 @@ function App() {
             {isArchiveVisible ? (
               <div className={styles.ArchivedSection}>
                 {notesList.filter((note) => note.isArchived).length > 0 && (
-                  <h2>Archived</h2>
+                  <h3>Archived</h3>
                 )}
                 <div className={styles.categories}>
                   {notesList
@@ -517,16 +518,20 @@ function App() {
                           onClick={(e) => handleToggleArchive(note.id, e)}
                         >
                           {note.isArchived ? (
-                            <ArchiveDrawerFillIcon />
+                            <ArchiveDrawerFillIcon
+                              className={styles.cardIcon}
+                            />
                           ) : (
-                            <ArchiveDrawerLineIcon />
+                            <ArchiveDrawerLineIcon
+                              className={styles.cardIcon}
+                            />
                           )}
                         </button>
                         <button
                           className={styles.trash}
                           onClick={() => handleDeleteNote(note.id)}
                         >
-                          <DeleteBinLineIcon />
+                          <DeleteBinLineIcon className={styles.cardIcon} />
                         </button>
                       </div>
                     ))}
@@ -534,10 +539,10 @@ function App() {
               </div>
             ) : null}
             <div className={styles.allNotesSection}>
-              <h2>All Notes</h2>
+              <h3>All Notes</h3>
               <div className={styles.categories}>
                 {notesList
-                  .filter((note) => !note.isBookmarked)
+                  .filter((note) => !note.isBookmarked && !note.isArchived)
                   .map((note) => (
                     <div
                       key={note.id}
@@ -561,9 +566,9 @@ function App() {
                         onClick={(e) => handleToggleBookmark(note.id, e)} // Pass the event
                       >
                         {note.isBookmarked ? (
-                          <Bookmark3FillIcon />
+                          <Bookmark3FillIcon className={styles.cardIcon} />
                         ) : (
-                          <Bookmark3LineIcon />
+                          <Bookmark3LineIcon className={styles.cardIcon} />
                         )}
                       </button>
                       <button
@@ -571,16 +576,16 @@ function App() {
                         onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
                       >
                         {note.isBookmarked ? (
-                          <ArchiveDrawerFillIcon />
+                          <ArchiveDrawerFillIcon className={styles.cardIcon} />
                         ) : (
-                          <ArchiveDrawerLineIcon />
+                          <ArchiveDrawerLineIcon className={styles.cardIcon} />
                         )}
                       </button>
                       <button
                         className={styles.trash}
                         onClick={() => handleDeleteNote(note.id)}
                       >
-                        <DeleteBinLineIcon />
+                        <DeleteBinLineIcon className={styles.cardIcon} />
                       </button>
                     </div>
                   ))}

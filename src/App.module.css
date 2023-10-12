@@ -4,7 +4,7 @@
 @tailwind utilities;
 
 :root {
-    @apply bg-white py-12 lg:py-4 dark:text-white dark:bg-[#353333];
+    @apply lg:py-4 dark:text-white dark:bg-[#353333];
     font-family: 'Arimo', sans-serif;
 }
 
@@ -16,16 +16,17 @@
 }
 
 .topContainer {
-    @apply bg-white dark:bg-[#353333] gap-4 p-2 ml-6 mr-6;
+    @apply bg-white dark:bg-[#353333] px-6;
 }
 
 .icon {
-    @apply text-amber-400 pr-1;
+    @apply text-amber-400 pr-1 h-8 w-8;
 }
 
 .buttonContainer {
     display: flex;
     justify-content: center; 
+    @apply gap-2 py-2;
 }  
 
 .sidebar {
@@ -33,23 +34,31 @@
 }
 
 .sidebarButton {
-    @apply m-1 p-2 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center;
+    @apply p-2 w-auto min-w-[4rem] h-auto bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center;
 }
 
 .sidebarList {
-    @apply gap-4 p-2 ml-6 mr-6 cursor-pointer rounded-md items-center justify-center h-full;
+    @apply p-2 ml-6 mr-6 cursor-pointer rounded-md items-center justify-center h-full;
 }
 
 .bookmarkedSection {
-   @apply py-8 md:px-4
+    @apply py-2 md:px-4
 }
 
-.ArchiveddSection {
-    @apply py-8 md:px-4 hidden
+.ArchivedSection {
+    @apply py-4 md:px-4
 }
 
 .allNotesSection {
-    @apply md:px-4
+    @apply py-4 md:px-4
+}
+
+.lastEditedDate {
+    @apply bottom-0 text-base text-gray-500 ml-auto;
+}
+
+.Cardbutton {
+    @apply py-2
 }
 
 .categories {
@@ -86,7 +95,11 @@
 }
 
 .trash {
-    @apply text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto;
+    @apply text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8;
+}
+
+.cardIcon {
+    @apply w-7 h-7
 }
 
 .button {
@@ -94,16 +107,17 @@
 }
 
 .searchContainer {
+    @apply pt-12;
     display: flex;
     justify-content: center; /* Adjust this to control the space between buttons */
 }
 
 .searchBar {
-    @apply md:w-[16.5em] w-full p-2 mb-1 bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl font-semibold text-gray-800 cursor-pointer flex md:items-center md:justify-center dark:text-white;
+    @apply w-full md:w-[22em] h-12 p-2 mb-1 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle rounded-full text-gray-800 cursor-pointer flex md:items-center md:justify-start dark:text-white;
 }
 
 .searchBarInput {
-    @apply text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white;
+    @apply text-lg text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white;
 }
 
 .sidebarItemActive {
