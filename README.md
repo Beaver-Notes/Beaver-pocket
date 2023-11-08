@@ -31,12 +31,12 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Bookmark
       
 ## Kinda Works
-- [ ] Importing data from Beavernotes (Doesn't work due to changes in the way notes are stored).
-- [ ] Exporting data to Beavernotes (Doesn't work due to changes in the way notes are stored)
 - [ ] Links (They Work, but the way they are added will be modified)
 
 ## Doesn't work / not implemented 
 
+- [ ] Importing data from Beavernotes (Doesn't work due to changes in the way notes are stored).
+- [ ] Exporting data to Beavernotes (Doesn't work due to changes in the way notes are stored)
 - [ ] Note Linking
 - [ ] Tags
   
