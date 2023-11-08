@@ -4,9 +4,15 @@
 @tailwind utilities;
 
 :root {
+    @apply lg:py-4 dark:text-white bg-white dark:bg-[#353333];
+    font-family: 'Arimo', sans-serif;
+}
+
+body {
     @apply lg:py-4 dark:text-white dark:bg-[#353333];
     font-family: 'Arimo', sans-serif;
 }
+
 
 .pageContainer {
     height: 100vh;
@@ -30,11 +36,11 @@
 }  
 
 .sidebar {
-    @apply w-full flex flex-col border-r border-gray-300 overflow-auto;
+    @apply w-full flex flex-col border-gray-300 overflow-auto;
 }
 
 .sidebarButton {
-    @apply p-2 w-auto min-w-[4rem] h-auto bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center;
+    @apply hidden md:p-2 w-auto min-w-[4rem] h-auto bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center md:flex;
 }
 
 .sidebarList {
@@ -46,11 +52,11 @@
 }
 
 .ArchivedSection {
-    @apply py-4 md:px-4
+    @apply md:px-4
 }
 
 .allNotesSection {
-    @apply py-4 md:px-4
+    @apply md:px-4
 }
 
 .lastEditedDate {
@@ -87,11 +93,11 @@
 }
 
 .sidebarTitle {
-    @apply text-lg font-bold;
+    @apply text-2xl font-bold;
 }
 
 .sidebarParagraph {
-    @apply text-base;
+    @apply text-lg;
 }
 
 .trash {
@@ -99,7 +105,7 @@
 }
 
 .cardIcon {
-    @apply w-7 h-7
+    @apply w-8 h-8 mr-2; 
 }
 
 .button {
@@ -109,23 +115,29 @@
 .searchContainer {
     @apply pt-12;
     display: flex;
-    justify-content: center; /* Adjust this to control the space between buttons */
+    justify-content: center;
 }
 
 .searchBar {
-    @apply w-full md:w-[22em] h-12 p-2 mb-1 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle rounded-full text-gray-800 cursor-pointer flex md:items-center md:justify-start dark:text-white;
+    @apply w-full md:w-[22em] h-12 p-4 mb-1 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white;
+}
+
+.input {
+    @apply hidden
 }
 
 .searchBarInput {
-    @apply text-lg text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white;
+    @apply text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white;
+}
+
+.searchIcon {
+    @apply text-gray-800 dark:text-white inline-flex h-8 w-8;
 }
 
 .sidebarItemActive {
     composes: sidebarItem;
-    background-color: #e2e8f0;
 }
 
 .bookmarkedsidebarItemActive {
     composes: sidebarItem;
-    background-color: #e2e8f0;
 }

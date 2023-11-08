@@ -8,6 +8,7 @@ import {
   generateText,
 } from "@tiptap/react";
 import Document from "@tiptap/extension-document";
+import Placeholder from "@tiptap/extension-placeholder";
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -26,13 +27,14 @@ import TaskList from "@tiptap/extension-task-list";
 import Blockquote from "@tiptap/extension-blockquote";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
-import { NoteLabel } from "./lib/tiptap/NoteLabel";
+import { NoteLabel } from './lib/tiptap/NoteLabel';
+import Mathblock from './lib/tiptap/math-block/Index';
 import {
   Filesystem,
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import CodeBlockComponent from './CodeBlockComponent';
+import CodeBlockComponent from './components/CodeBlockComponent';
 
 // Remix Icons
 
@@ -60,6 +62,7 @@ lowlight.registerLanguage('css', css)
 lowlight.registerLanguage('js', js)
 lowlight.registerLanguage('ts', ts)
 
+
 const extensions = [
   CodeBlockLowlight
         .extend({
@@ -73,6 +76,7 @@ const extensions = [
   Text,
   StarterKit,
   Link,
+  Mathblock,
   Highlight,
   Underline,
   Heading.configure({
@@ -81,6 +85,9 @@ const extensions = [
   Paragraph,
   CodeBlock,
   Code,
+   Placeholder.configure({
+    placeholder: 'Write something',
+  }),
   OrderedList,
   ListItem,
   Blockquote,
@@ -90,6 +97,7 @@ const extensions = [
   }),
   Image.configure({}),
 ];
+
 
 type Props = {
   note: Note;
@@ -243,12 +251,12 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
       >
         <div className={styles.toolbarContainer}>
           <div className={styles.toolbar}>
-            <button
+            <a
               className={styles.toolbarButton}
-              onClick={() => window.location.reload()}
+              href="/"
             >
               <ArrowLeftSLineIcon className={styles.toolbarIcon} />
-            </button>
+            </a>
             <button
               className={
                 editor?.isActive("bold")

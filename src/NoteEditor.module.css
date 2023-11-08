@@ -11,6 +11,14 @@ mark {
   @apply bg-yellow-200 dark:bg-yellow-100;
 }
 
+.tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 h1 {
   @apply font-bold leading-relaxed 
 }
@@ -36,23 +44,27 @@ h6 {
 }
 
 .pageContainer {
-  @apply overflow-auto h-full justify-center items-start w-screen px-4 text-black dark:text-white lg:px-60 text-base
+  @apply pt-6 overflow-auto h-full justify-center items-start w-screen px-4 text-black dark:text-white lg:px-60 text-base
 }
 
 img {
   @apply rounded-xl
 }
 
+a {
+  @apply text-amber-400 hover:text-amber-500 underline
+}
+
 .toolbar {
-   @apply flex overflow-x-scroll overflow-y-hidden items-center justify-center max-h-6 w-fit md:w-full p-6 w-fit bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-full
+   @apply flex overflow-y-hidden items-center justify-center w-fit md:w-full p-3 bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-full
 }
 
 .toolbarIcon {
-   @apply border-none text-gray-800 dark:text-white text-xl
+   @apply border-none text-gray-800 dark:text-white text-xl w-7 h-7
 }
 
 .toolbarContainer {
-    @apply sticky top-0 z-50 overflow-auto h-auto w-full bg-white dark:bg-[#353333] pt-6
+    @apply fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-white dark:bg-[#353333] md:sticky md:top-0 md:z-50
   }
 
 .edtiorContainer {
@@ -77,14 +89,6 @@ img {
 
 .toolbarButtonActive { 
     @apply p-2 rounded-md text-amber-400 bg-gray-100 dark:bg-[#353333] cursor-pointer
-}
-
-pre {
-@apply bg-[#F2F2F2] dark:bg-[#303033] rounded-md text-black dark:text-white font-mono py-3 px-4;
-
-  code {
-   @apply bg-[#F2F2F2] dark:bg-[#303033] text-inherit text-base p-0;
-  }
 }
 
 code {
