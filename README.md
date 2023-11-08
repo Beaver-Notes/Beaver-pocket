@@ -6,12 +6,12 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 
 > 🔩 Please be aware that this application is still under heavy development. Therefore, you might want to backup the notes you take with it and check this repository weekly for updates and new features. Not everything works, so just scroll below to see if the state of the app fits your needs or not.
 
+![Untitled](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/31e3f7e6-b152-4fd0-973f-5e3c281066be)
 
-![Slice](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/05e6a41c-3113-46b6-8574-7cf97d6e2722)
+
 
 ## What Works 
 
-- [x] Exporting data to Beavernotes
 - [x] Headinds
 - [x] CodeBlock
 - [x] Syntax highlighting
@@ -23,7 +23,7 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Inline Block
 - [x] Dark Mode
 - [x] Toolbar
-- [x] Search and Buttons below
+- [x] Search
 - [x] Images
 - [x] QuoteBlock
 - [x] Lists
@@ -31,11 +31,12 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Bookmark
       
 ## Kinda Works
-- [ ] Importing data from Beavernotes (Works only if the note is plain text withouth linked notes, images).
 - [ ] Links (They Work, but the way they are added will be modified)
 
 ## Doesn't work / not implemented 
 
+- [ ] Importing data from Beavernotes (Doesn't work due to changes in the way notes are stored).
+- [ ] Exporting data to Beavernotes (Doesn't work due to changes in the way notes are stored)
 - [ ] Note Linking
 - [ ] Tags
   
