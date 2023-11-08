@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import styles from "./App.module.css";
 import { Note } from "./types";
-import debounce from "./debounce";
 import storage from "./storage";
 import NoteEditor from "./NoteEditor";
 import { JSONContent } from "@tiptap/react";
+import BottomNavBar from './components/BottomNavBar';
 import {
   Filesystem,
   Directory,
@@ -24,138 +24,188 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 
 const STORAGE_KEY = "notes";
 
-function App() {
-  const loadNotes = () => {
-    const noteIds = storage.get<string[]>(STORAGE_KEY, []);
-    const notes: Record<string, Note> = {};
-    noteIds.forEach((id) => {
-      let note = storage.get<Note>(`${STORAGE_KEY}:${id}`);
+async function createNotesDirectory() {
+  const directoryPath = 'notes';
 
-      // Check if note is defined
-      if (note) {
-        // Ensure updatedAt is a Date object
-        note.updatedAt = new Date(note.updatedAt);
-
-        // Ensure createdAt is a Date object
-        note.createdAt = new Date(note.createdAt);
-
-        // ... other property checks
-
-        notes[note.id] = note;
-      }
+  try {
+    await Filesystem.mkdir({
+      path: directoryPath,
+      directory: Directory.Documents,
+      recursive: true,
     });
-    return notes;
-  };
+  } catch (error: any) {
+    console.error("Error creating the directory:", error);
+  }
+}
 
-  const handleDeleteNote = (noteId: string) => {
-    // Confirm with the user before deleting the note
+
+function App() {
+  const loadNotes = async () => {
+    try {
+      await createNotesDirectory(); // Create the directory before reading/writing
+  
+      const fileExists = await Filesystem.stat({
+        path: STORAGE_PATH,
+        directory: Directory.Documents,
+      });
+  
+      if (fileExists) {
+        const data = await Filesystem.readFile({
+          path: STORAGE_PATH,
+          directory: Directory.Documents,
+          encoding: FilesystemEncoding.UTF8,
+        });
+  
+        if (data.data) {
+          const parsedData = JSON.parse(data.data as string);
+  
+          if (parsedData?.data?.notes) {
+            return parsedData.data.notes;
+          } else {
+            console.log("The file is missing the 'notes' data. Returning an empty object.");
+            return {};
+          }
+        } else {
+          console.log("The file is empty. Returning an empty object.");
+          return {};
+        }
+      } else {
+        console.log("The file doesn't exist. Returning an empty object.");
+        return {};
+      }
+    } catch (error) {
+      console.error("Error loading notes:", error);
+      return {};
+    }
+  };
+  
+  const handleDeleteNote = async (noteId: string) => {
     const isConfirmed = window.confirm(
       "Are you sure you want to delete this note?"
     );
-
+  
     if (isConfirmed) {
-      // Remove the note from the notesState and local storage
-      const updatedNotes = { ...notesState };
-      delete updatedNotes[noteId];
-      setNotesState(updatedNotes);
-
-      // Update local storage
-      const noteIds = Object.keys(updatedNotes);
-      storage.set(STORAGE_KEY, noteIds);
-      storage.remove(`${STORAGE_KEY}:${noteId}`);
-
-      // If the deleted note was active, clear the activeNoteId
-      if (activeNoteId === noteId) {
-        setActiveNoteId(null);
+      try {
+        const notes = await loadNotes();
+  
+        if (notes[noteId]) {
+          delete notes[noteId];
+  
+          await Filesystem.writeFile({
+            path: STORAGE_PATH,
+            data: JSON.stringify({ data: { notes } }),
+            directory: Directory.Documents,
+            encoding: FilesystemEncoding.UTF8,
+          });
+  
+          setNotesState(notes); // Update the state
+          window.location.reload(); // Reload the app
+        } else {
+          console.log(`Note with id ${noteId} not found.`);
+        }
+      } catch (error) {
+        console.error("Error deleting note:", error);
+        alert("Error deleting note: " + (error as any).message);
       }
+    }
+  };  
 
-      // Reload the page
-      window.location.reload();
+  const STORAGE_PATH = "notes/data.json";
+
+  const saveNote = React.useCallback(
+    async (note: Note) => {
+      try {
+        const notes = await loadNotes();
+        notes[note.id] = note;
+  
+        const data = {
+          data: {
+            notes,
+          },
+        };
+  
+        await Filesystem.writeFile({
+          path: STORAGE_PATH,
+          data: JSON.stringify(data),
+          directory: Directory.Documents,
+          encoding: FilesystemEncoding.UTF8,
+        });
+      } catch (error) {
+        console.error("Error saving note:", error);
+      }
+    },
+    [loadNotes]
+  );
+
+  const handleToggleBookmark = async (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event propagation
+  
+    try {
+      const notes = await loadNotes();
+      const updatedNote = { ...notes[noteId] };
+  
+      // Toggle the 'isBookmarked' property
+      updatedNote.isBookmarked = !updatedNote.isBookmarked;
+  
+      // Update the note in the dictionary
+      notes[noteId] = updatedNote;
+  
+      await Filesystem.writeFile({
+        path: STORAGE_PATH,
+        data: JSON.stringify({ data: { notes } }),
+        directory: Directory.Documents,
+        encoding: FilesystemEncoding.UTF8,
+      });
+  
+      setNotesState(notes); // Update the state
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+      alert("Error toggling bookmark: " + (error as any).message);
+    }
+  };
+  
+
+  const handleToggleArchive = async (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event propagation
+  
+    try {
+      const notes = await loadNotes();
+      const updatedNote = { ...notes[noteId] };
+  
+      // Toggle the 'isArchived' property
+      updatedNote.isArchived = !updatedNote.isArchived;
+  
+      // Update the note in the dictionary
+      notes[noteId] = updatedNote;
+  
+      await Filesystem.writeFile({
+        path: STORAGE_PATH,
+        data: JSON.stringify({ data: { notes } }),
+        directory: Directory.Documents,
+        encoding: FilesystemEncoding.UTF8,
+      });
+  
+      setNotesState(notes); // Update the state
+    } catch (error) {
+      console.error("Error toggling archive:", error);
+      alert("Error toggling archive: " + (error as any).message);
     }
   };
 
-  const saveNote = debounce((note: Note) => {
-    const noteIds = storage.get<string[]>(STORAGE_KEY, []);
-    const noteIdsWithoutNote = noteIds.filter((id) => id !== note.id);
+  const [notesState, setNotesState] = useState<Record<string, Note>>({});
 
-    // Update the local storage with the note
-    storage.set(STORAGE_KEY, [...noteIdsWithoutNote, note.id]);
-    storage.set(`${STORAGE_KEY}:${note.id}`, note);
-
-    // Update the notesState with the note
-    setNotesState((prevNotes) => ({
-      ...prevNotes,
-      [note.id]: note,
-    }));
-  }, 200);
-
-  const handleToggleBookmark = (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent event propagation
-
-    setNotesState((prevNotes) => {
-      const updatedNotes = { ...prevNotes };
-      const updatedNote = { ...updatedNotes[noteId] };
-
-      // Check if the note is archived
-      if (updatedNote.isArchived) {
-        // If it's archived, it cannot be bookmarked, so unarchive it
-        updatedNote.isArchived = false;
-      } else {
-        // Toggle the 'isBookmarked' property
-        updatedNote.isBookmarked = !updatedNote.isBookmarked;
-      }
-
-      // Update the note in the dictionary
-      updatedNotes[noteId] = updatedNote;
-
-      // Update local storage
-      const noteIds = Object.keys(updatedNotes);
-      storage.set(STORAGE_KEY, noteIds);
-      storage.set(`${STORAGE_KEY}:${noteId}`, updatedNote);
-
-      return updatedNotes;
-    });
-  };
-
-  const handleToggleArchive = (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent event propagation
-
-    setNotesState((prevNotes) => {
-      const updatedNotes = { ...prevNotes };
-      const updatedNote = { ...updatedNotes[noteId] };
-
-      // Check if the note is bookmarked
-      if (updatedNote.isBookmarked) {
-        // If it's bookmarked, it cannot be archived, so unbookmark it
-        updatedNote.isBookmarked = false;
-      } else {
-        // Toggle the 'isArchived' property
-        updatedNote.isArchived = !updatedNote.isArchived;
-      }
-
-      // Update the note in the dictionary
-      updatedNotes[noteId] = updatedNote;
-
-      // Update local storage
-      const noteIds = Object.keys(updatedNotes);
-      storage.set(STORAGE_KEY, noteIds);
-      storage.set(`${STORAGE_KEY}:${noteId}`, updatedNote);
-
-      return updatedNotes;
-    });
-  };
-
-  const [notesState, setNotesState] = useState<Record<string, Note>>(() =>
-    loadNotes()
-  );
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
 
   useEffect(() => {
-    // Initialize notesState with the stored notes
-    setNotesState(loadNotes());
+    const loadNotesFromStorage = async () => {
+      const notes = await loadNotes();
+      setNotesState(notes);
+    };
+
+    loadNotesFromStorage();
   }, []);
 
   useEffect(() => {
@@ -363,28 +413,28 @@ function App() {
     return paragraphText || "no content"; // If no paragraph text, return "no content"
   }
 
-  function truncateContentPreview(
-    content: string | JSONContent | JSONContent[]
-  ): string {
+  function truncateContentPreview(content: JSONContent | string | JSONContent[]) {
     let text = "";
-
+  
     if (typeof content === "string") {
       text = content;
     } else if (Array.isArray(content)) {
       const jsonContent: JSONContent = { type: "doc", content };
-      text = JSON.stringify(jsonContent);
-    } else {
-      text = JSON.stringify(content);
+      text = extractParagraphTextFromContent(jsonContent);
+    } else if (content && content.content) {
+      // Exclude the title from the content when displaying
+      const { title, ...contentWithoutTitle } = content;
+      text = extractParagraphTextFromContent(contentWithoutTitle);
     }
-
-    if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
+  
+    if (text.trim() === "") {
+      return "No content"; // Show a placeholder for no content
+    } else if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
       return text;
     } else {
-      // Truncate the extracted paragraph text
-      const extractedText = extractParagraphTextFromContent(JSON.parse(text));
-      return extractedText.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
+      return text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
     }
-  }
+  }  
 
   return (
     <div className={styles.pageContainer}>
@@ -416,13 +466,13 @@ function App() {
               <div className={styles.sidebarButton}>
                 <label htmlFor="importData">Import</label>
                 <input
+                  className={styles.input}
                   type="file"
                   id="importData"
                   accept=".json"
-                  style={{ display: "none" }}
                   onChange={handleImportData}
                 />
-              </div>
+             </div>
               <button
                 className={styles.sidebarButton}
                 onClick={() => setIsArchiveVisible(!isArchiveVisible)}
@@ -480,7 +530,7 @@ function App() {
                       </div>
                     );
                   }
-                  return null; // Return null for notes that are not bookmarked or archived
+                  return null;
                 })}
               </div>
             </div>
@@ -539,7 +589,7 @@ function App() {
               </div>
             ) : null}
             <div className={styles.allNotesSection}>
-              <h3>All Notes</h3>
+              <h2>All Notes</h2>
               <div className={styles.categories}>
                 {notesList
                   .filter((note) => !note.isBookmarked && !note.isArchived)
@@ -592,7 +642,11 @@ function App() {
               </div>
             </div>
           </div>
-        </div>
+          <BottomNavBar
+                onCreateNewNote={handleCreateNewNote}
+                onToggleArchiveVisibility={() => setIsArchiveVisible(!isArchiveVisible)}
+              />        
+              </div>
       )}
       <div className={styles.noteContainer}>
         {activeNote && (

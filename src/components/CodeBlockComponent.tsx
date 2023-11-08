@@ -1,4 +1,4 @@
-import "./Codeblock.css";
+import "./css/Codeblock.css";
 import { FC } from 'react';
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 

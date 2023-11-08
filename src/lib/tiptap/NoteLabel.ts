@@ -6,7 +6,7 @@ export const NoteLabel = Node.create({
   inline: true,
   group: 'inline',
   parseHTML() {
-    return [{ tag: 'note-label' }];
+    return [{ tag: 'labels' }];
   },
   renderHTML({ HTMLAttributes }) {
     return ['note-label', HTMLAttributes, 0];
