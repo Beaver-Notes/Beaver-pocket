@@ -1,6 +1,6 @@
 import { Node, mergeAttributes, nodeInputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import MathBlock from './Mathblock';
+import MathBlock from './MathBlock';
 
 const inputRegex = /\$\$\s+$/;
 
@@ -35,6 +35,11 @@ export default Node.create({
     return ReactNodeViewRenderer(MathBlock);
   },
   addInputRules() {
-    return [nodeInputRule({ find: inputRegex, type: this.type })];
+    return [
+      nodeInputRule({
+        find: inputRegex,
+        type: this.type,
+      }),
+    ];
   },
 });

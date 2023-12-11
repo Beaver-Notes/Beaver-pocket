@@ -5,10 +5,15 @@
 
 .body {
   font-family: 'Arimo', sans-serif;
+  font-weight: 900;
 }
 
 mark {
-  @apply bg-yellow-200 dark:bg-yellow-100;
+  @apply bg-[#FDE68A];
+}
+
+.edtiorContainer {
+  @apply h-full
 }
 
 .tiptap p.is-editor-empty:first-child::before {
@@ -42,11 +47,6 @@ h5 {
 h6 {
   @apply text-base font-bold leading-relaxed 
 }
-
-.pageContainer {
-  @apply pt-6 overflow-auto h-full justify-center items-start w-screen px-4 text-black dark:text-white lg:px-60 text-base
-}
-
 img {
   @apply rounded-xl
 }
@@ -56,15 +56,15 @@ a {
 }
 
 .toolbar {
-   @apply flex overflow-y-hidden items-center justify-center w-fit md:w-full p-3 bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-full
+   @apply flex overflow-y-hidden items-center justify-center w-fit md:w-full p-2 bg-[#2D2C2C] rounded-full
 }
 
 .toolbarIcon {
-   @apply border-none text-gray-800 dark:text-white text-xl w-7 h-7
+   @apply border-none text-white text-xl w-7 h-7
 }
 
 .toolbarContainer {
-    @apply fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-white dark:bg-[#353333] md:sticky md:top-0 md:z-50
+    @apply fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar
   }
 
 .edtiorContainer {
@@ -80,15 +80,15 @@ a {
 }
 
 .textEditorcontent {
-  @apply overflow-auto h-auto pl-6 pr-6 py-4;
+  @apply overflow-auto h-full pl-6 pr-6 py-4;
 }
 
 .toolbarButton {
-    @apply p-2 rounded-md text-[#0f172a] dark:text-white bg-transparent cursor-pointer 
+    @apply p-2 rounded-md text-white bg-transparent cursor-pointer 
 }
 
 .toolbarButtonActive { 
-    @apply p-2 rounded-md text-amber-400 bg-gray-100 dark:bg-[#353333] cursor-pointer
+    @apply p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer
 }
 
 code {
@@ -154,8 +154,43 @@ input[type="checkbox"]:checked::before {
   color: #FBBF24;
 }
 
-
-
 .ProseMirror {
   outline: none;
 }
+
+.labels {
+  @apply flex flex-wrap gap-2 mt-4
+}
+
+.label {
+  @apply text-lg bg-amber-400 bg-opacity-10 text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md
+}
+
+.labelinput {
+  @apply text-lg flex dark:text-white bg-transparent w-auto dark:bg-[#232222] outline-none content-center;
+}
+
+.labelinput:empty:before {
+  content:attr(data-placeholder);
+  @apply dark:bg-[#232222] text-neutral-600 dark:text-neutral-400;
+}
+
+.editinput {
+  @apply min-w-0 flex-auto bg-transparent outline-none
+}
+
+@layer utilities {
+  @variants responsive {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+  }
+}
+
