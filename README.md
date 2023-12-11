@@ -21,7 +21,6 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Underline
 - [x] Strikethorugh
 - [x] Inline Block
-- [x] Dark Mode
 - [x] Toolbar
 - [x] Search
 - [x] Images
@@ -29,23 +28,23 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Lists
 - [x] Archive
 - [x] Bookmark
+- [x] Links
+- [x] Exporting data to Beavernotes 
       
 ## Kinda Works
-- [ ] Links (They Work, but the way they are added will be modified)
+- [ ] Tags (Needs tighter integration with Tiptap)
+- [ ] Dark Mode (No toggle is available)
 
 ## Doesn't work / not implemented 
 
-- [ ] Importing data from Beavernotes (Doesn't work due to changes in the way notes are stored).
-- [ ] Exporting data to Beavernotes (Doesn't work due to changes in the way notes are stored)
+- [ ] Importing data from Beavernotes (Might not work due to the lack of certain features).
 - [ ] Note Linking
-- [ ] Tags
-  
 
 ## To set up your machine for running Beaver Notes Pocket, follow these steps:
 
 ### Prerequisites:
 
-- Node.js 16 or higher
+- Node.js 18 or higher
 - Yarn
 - Visual Studio Code (VSCode) with the Ionic plugin
 - Xcode (for iOS development) and/or Android Studio (for Android development)
@@ -86,4 +85,3 @@ And for Android:
 ionic build android
 ```
 These commands will generate platform-specific build files in the respective platform directories.
-
