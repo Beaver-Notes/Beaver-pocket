@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { NodeViewWrapperProps, NodeViewWrapper } from '@tiptap/react';
-import Settings4LineIcon from 'remixicon-react/Settings4LineIcon'
-import katex from 'katex';
+import React, { useEffect, useRef, useState } from "react";
+import { NodeViewWrapperProps, NodeViewWrapper } from "@tiptap/react";
+import Settings4LineIcon from "remixicon-react/Settings4LineIcon";
+import katex from "katex";
 import "../../../css/main.css";
 
 interface MathBlockProps extends NodeViewWrapperProps {
@@ -15,7 +15,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
   const [showSecondTextarea, setShowSecondTextarea] = useState(false);
 
   useEffect(() => {
-    props.updateAttributes({ init: 'true' });
+    props.updateAttributes({ init: "true" });
     renderContent();
   }, []);
 
@@ -28,18 +28,27 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
       // Do nothing
     }
 
-    katex.render(
-      props.node.attrs.content || 'Empty',
-      contentRef.current as HTMLParagraphElement,
-      {
-        macros,
-        displayMode: true,
-        throwOnError: false,
-      }
-    );
+    const mathContent = props.node.attrs.content || "Empty";
+
+    // Use katex.renderToString with output: 'mathml'
+    const mathML = katex.renderToString(mathContent, {
+      macros,
+      displayMode: true,
+      throwOnError: false,
+      output: "mathml", // Specify MathML output
+    });
+
+    // Set the MathML content to the innerHTML of the paragraph element
+    if (contentRef.current) {
+      contentRef.current.innerHTML = mathML;
+    }
   };
 
-  const updateContent = (event: React.ChangeEvent<HTMLTextAreaElement>, key: string, isRenderContent: boolean) => {
+  const updateContent = (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+    key: string,
+    isRenderContent: boolean
+  ) => {
     setIsContentChange(true);
     props.updateAttributes({ [key]: event.target.value });
 
@@ -49,12 +58,12 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
   const handleKeydown = (event: React.KeyboardEvent) => {
     const { ctrlKey, shiftKey, metaKey, key } = event;
 
-    const isEnter = key === 'Enter';
-    const isMacrosShortcut = (metaKey || ctrlKey) && shiftKey && key === 'M';
+    const isEnter = key === "Enter";
+    const isMacrosShortcut = (metaKey || ctrlKey) && shiftKey && key === "M";
     const isNotEdited =
-      props.editor.isActive('mathBlock') &&
+      props.editor.isActive("mathBlock") &&
       !isContentChange &&
-      ['ArrowUp', 'ArrowDown'].includes(key);
+      ["ArrowUp", "ArrowDown"].includes(key);
 
     if (isEnter && !isMacrosShortcut && !isNotEdited) {
       // Save using Enter
@@ -83,7 +92,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
           contentEditable={useKatexMacros}
           suppressContentEditableWarning
           className={`${
-            isContentChange ? 'dark:text-purple-400 text-purple-500' : ''
+            isContentChange ? "dark:text-purple-400 text-purple-500" : ""
           }`}
         ></p>
         {useKatexMacros && (
@@ -94,7 +103,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                 value={props.node.attrs.content}
                 placeholder="Text here..."
                 className="bg-transparent flex-1"
-                onChange={(e) => updateContent(e, 'content', true)}
+                onChange={(e) => updateContent(e, "content", true)}
                 onKeyDown={handleKeydown}
               />
             </div>
@@ -105,29 +114,68 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                   value={props.node.attrs.macros}
                   placeholder="KaTeX macros"
                   className="bg-transparent flex-1"
-                  onChange={(e) => updateContent(e, 'macros', true)}
+                  onChange={(e) => updateContent(e, "macros", true)}
                   onKeyDown={handleKeydown}
                 />
               </div>
             )}
             <div className="flex border-t items-center pt-2 text-gray-600 dark:text-gray-300">
-              <svg className="text-neutral-800" xmlns="http://www.w3.org/2000/svg" version="1.0" viewBox="0 0 120 40.541"><path d="M4.618 27.925c-.299.299-.591.478-.874.538-.284.06-1.039.105-2.264.135H0v2.062h.493c.508-.09 2.66-.135 6.456-.135 3.796 0 5.948.045 6.456.135h.493v-2.062h-1.48c-1.764-.029-2.765-.209-3.004-.538-.09-.119-.135-1.584-.135-4.394v-4.259l2.062-2.018a83.544 83.544 0 0 0 2.063-1.972c.209-.209.388-.373.538-.493l3.901 5.873c2.331 3.587 3.661 5.62 3.99 6.098.09.179.135.359.135.538 0 .778-.688 1.166-2.062 1.166h-.359v2.062h.493c.628-.09 2.764-.135 6.412-.135.269 0 .673.008 1.211.022.538.015.956.022 1.255.022.298 0 .68.008 1.143.022.463.015.807.03 1.031.045.224.015.366.022.426.022h.359v-2.062h-.942c-1.255-.029-2.152-.194-2.69-.493a3.197 3.197 0 0 1-1.076-1.031l-5.179-7.779c-3.273-4.917-4.91-7.39-4.91-7.42 0-.029 1.33-1.33 3.99-3.901 2.66-2.57 4.065-3.93 4.215-4.08C26.6 2.817 28.379 2.219 30.62 2.1h.628V.037h-.269c-.03 0-.135.008-.314.022-.179.015-.434.03-.762.045a18.99 18.99 0 0 1-.852.022c-.209 0-.523.008-.942.022-.419.015-.747.022-.986.022-3.408 0-5.366-.045-5.873-.135h-.448v2.062h.179l.202.022.247.022c.836.209 1.255.643 1.255 1.3-.06.24-.12.404-.179.493-.06.12-2.272 2.317-6.636 6.591l-6.546 6.367-.045-6.95c0-4.663.015-7.024.045-7.084.06-.508.897-.762 2.511-.762h2.062V.037h-.493c-.509.09-2.661.135-6.456.135C3.152.172 1 .127.492.037H0v2.062h1.48c1.225.03 1.98.075 2.264.135.284.06.575.24.874.538v25.153zm34.924-16.858h1.793v-.269c.029-.119.074-.478.135-1.076.239-3.198.836-5.201 1.793-6.008.747-.628 1.763-1.046 3.049-1.255.298-.029 1.15-.045 2.556-.045h1.211c.687 0 1.113.022 1.278.067.164.045.291.202.381.471.029.06.045 4.23.045 12.509v12.375c-.24.329-.613.538-1.121.628-1.076.09-2.421.135-4.035.135h-1.345v2.062h.583c.628-.09 3.377-.135 8.25-.135 4.872 0 7.622.045 8.25.135h.583v-2.062h-1.345c-1.614 0-2.959-.045-4.035-.135-.509-.09-.882-.298-1.121-.628V15.461c0-8.279.015-12.449.045-12.509.09-.269.216-.426.381-.471.164-.045.59-.067 1.278-.067h1.211c1.674 0 2.825.075 3.452.224 1.136.329 1.957.807 2.466 1.435.747.867 1.225 2.75 1.435 5.649.06.598.104.957.135 1.076v.269h1.793v-.269c0-.06-.134-1.763-.404-5.111C67.97 2.34 67.82 .636 67.791 .576v-.27H40.394v.269c0 .06-.135 1.764-.404 5.111-.269 3.348-.419 5.052-.448 5.111v.27zm60.461 19.593v-2.062h-.359c-.658-.06-1.226-.254-1.704-.583-.478-.329-.717-.702-.717-1.121 0-.209.015-.329.045-.359.029-.09 1.031-1.629 3.004-4.618.448-.687.836-1.293 1.166-1.816.329-.523.605-.956.829-1.3.224-.343.411-.62.56-.829.149-.209.254-.343.314-.404l.135-.135 1.659 2.556a514.118 514.118 0 0 1 3.273 5.111c1.076 1.704 1.614 2.6 1.614 2.69 0 .209-.314.397-.942.56-.628.165-1.196.247-1.704.247h-.269v2.062h.493c.687-.09 2.869-.135 6.546-.135 3.318 0 5.201.045 5.649.135H120v-2.062h-1.39c-1.166-.029-1.958-.09-2.376-.179-.419-.09-.747-.269-.986-.538-.09-.09-1.667-2.526-4.73-7.308-3.064-4.782-4.596-7.203-4.596-7.263 0-.029.986-1.584 2.959-4.663 2.092-3.139 3.183-4.753 3.273-4.842 1.016-1.046 2.75-1.614 5.201-1.704h.762V.037h-.359c-.359.09-2.003.135-4.932.135-3.468 0-5.396-.045-5.784-.135h-.404v2.062h.359c.926.09 1.614.389 2.062.897.388.389.493.747.314 1.076 0 .03-.778 1.248-2.331 3.654-1.555 2.406-2.347 3.609-2.376 3.609-.06 0-.979-1.397-2.757-4.192-1.779-2.795-2.668-4.237-2.668-4.327.06-.149.404-.306 1.031-.471.628-.164 1.195-.247 1.704-.247h.224V.037h-.493c-.658.09-2.84.135-6.546.135C3.318.172 1.166.127.658.037H0v2.062h1.48c1.225.03 1.98.075 2.264.135.284.06.575.24.874.538v25.018z"/></svg>
-              <div className="flex-grow"></div>
-              <button
-                title="Toggle KaTeX Macros"
-                className={`riSettings3Line ml-2 cursor-pointer ${
-                  useKatexMacros ? 'text-primary' : ''
-                }`}
-                onClick={toggleSecondTextarea}
+              <svg
+                className="w-12 dark:fill-white"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <Settings4LineIcon className='active:text-amber-500 text-neutral-800 dark:text-white'/>
-              </button>
-              <p
-                className="text-sm"
-                style={{ margin: 0 }}
-              >
-                Press <strong>Enter</strong> to exit from the math block
-              </p>
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M18.525 31.482h-.482c-.192 1.966-.462 4.357-3.855 4.357h-1.562c-.905 0-.944-.136-.944-.772V24.831c0-.655 0-.925 1.812-.925h.636v-.578c-.694.058-2.429.058-3.22.058-.751 0-2.255 0-2.91-.058v.578h.443c1.485 0 1.523.212 1.523.906v10.12c0 .694-.038.907-1.523.907H8v.597h10.005l.52-4.954z"
+                    fill=""
+                  ></path>
+                  <path
+                    d="M18.198 23.308c-.078-.23-.116-.308-.367-.308-.25 0-.308.077-.385.308l-3.104 7.866c-.135.327-.366.925-1.561.925v.482h2.988v-.482c-.598 0-.964-.27-.964-.656 0-.096.02-.135.058-.27l.655-1.657h3.817l.771 1.966a.65.65 0 0 1 .077.231c0 .386-.732.386-1.099.386v.482h3.798v-.482h-.27c-.906 0-1.002-.135-1.137-.52l-3.277-8.27zm-.771 1.37 1.715 4.356h-3.431l1.716-4.357z"
+                    fill=""
+                  ></path>
+                  <path
+                    d="M33.639 23.443h-11.74l-.347 4.318h.463c.27-3.103.558-3.74 3.47-3.74.346 0 .848 0 1.04.04.405.076.405.288.405.732v10.12c0 .656 0 .926-2.024.926h-.771v.597c.79-.058 2.737-.058 3.624-.058s2.872 0 3.663.058v-.597h-.771c-2.024 0-2.024-.27-2.024-.926v-10.12c0-.386 0-.656.347-.733.212-.038.732-.038 1.098-.038 2.892 0 3.181.636 3.45 3.74h.483l-.366-4.319z"
+                    fill=""
+                  ></path>
+                  <path
+                    d="M43.971 35.82h-.482c-.482 2.949-.925 4.356-4.221 4.356h-2.545c-.906 0-.945-.135-.945-.771v-5.128h1.716c1.87 0 2.082.617 2.082 2.255h.482v-5.089h-.482c0 1.639-.212 2.236-2.082 2.236h-1.716v-4.607c0-.636.039-.77.945-.77h2.467c2.95 0 3.451 1.06 3.76 3.739h.481l-.54-4.318H32.097v.578h.444c1.484 0 1.523.212 1.523.906V39.27c0 .694-.039.906-1.523.906h-.444v.597h11.065l.81-4.954z"
+                    fill=""
+                  ></path>
+                  <path
+                    d="m49.773 29.014 2.641-3.855c.405-.617 1.06-1.234 2.776-1.253v-.578h-4.588v.578c.772.02 1.196.443 1.196.887 0 .192-.039.231-.174.443l-2.198 3.239-2.467-3.702c-.039-.057-.135-.212-.135-.289 0-.231.424-.559 1.234-.578v-.578c-.656.058-2.063.058-2.795.058-.598 0-1.793-.02-2.506-.058v.578h.366c1.06 0 1.426.135 1.793.675l3.527 5.34-3.142 4.645c-.27.386-.848 1.273-2.776 1.273v.597h4.588v-.597c-.886-.02-1.214-.54-1.214-.887 0-.174.058-.25.193-.463l2.718-4.029 3.045 4.588c.039.077.097.154.097.212 0 .232-.424.56-1.253.579v.597c.675-.058 2.082-.058 2.795-.058.81 0 1.696.02 2.506.058v-.597h-.366c-1.003 0-1.407-.097-1.812-.694l-4.049-6.13z"
+                    fill=""
+                  ></path>
+                </g>
+              </svg>
+
+              <div className="flex-grow ml-2 flex items-center justify-between">
+                {" "}
+                {/* Updated class and added 'justify-between' */}
+                <p className="text-sm" style={{ margin: 0 }}>
+                  Press <strong>Enter</strong> to exit
+                </p>
+                <button
+                  title="Toggle KaTeX Macros"
+                  className={`riSettings3Line cursor-pointer ${
+                    useKatexMacros ? "text-primary" : ""
+                  } ${
+                    showSecondTextarea
+                      ? "text-amber-400"
+                      : "text-neutral-800 dark:text-white"
+                  }`}
+                  onClick={toggleSecondTextarea}
+                >
+                  <Settings4LineIcon className="active:text-amber-500" />
+                </button>
+              </div>
             </div>
           </div>
         )}

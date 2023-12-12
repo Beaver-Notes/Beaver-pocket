@@ -14,6 +14,8 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
   onToggleArchiveVisibility,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
+  const [isVisible, setIsVisible] = useState(true);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const handleToggleArchiveClick = () => {
@@ -22,6 +24,18 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  const handleScroll = () => {
+    const currentScrollPos = window.pageYOffset;
+
+    if (prevScrollPos > currentScrollPos) {
+      setIsVisible(true);
+    } else {
+      setIsVisible(false);
+    }
+
+    setPrevScrollPos(currentScrollPos);
   };
 
   useEffect(() => {
@@ -38,8 +52,16 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [prevScrollPos]);
+
   return (
-    <div className="spacingdiv">
+    <div className={`spacingdiv ${isVisible ? 'visible' : 'hidden'}`}>
       <nav className={`BottomNavbar ${isMenuOpen ? 'open' : ''}`}>
         <div className="Navbardiv">
           <a href="#" className="navbarelement" onClick={onCreateNewNote}>
@@ -51,7 +73,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
           <a href="#" className="navbarelement" onClick={handleToggleArchiveClick}>
             <ArchiveDrawerLineIcon className="icon" />
           </a>
-          {/* Call the function to navigate to the settings page */}
         </div>
       </nav>
     </div>

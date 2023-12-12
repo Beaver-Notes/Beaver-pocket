@@ -535,7 +535,7 @@ const App: React.FC = () => {
   };  
 
   return (
-    <div className="grid grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
+    <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
       <div className="flex flex-col items-center justify-between p-2 h-full bg-[#F8F8F7] dark:bg-[#353333] hidden sm:flex">
         <div className="py-5">
           <button
@@ -645,7 +645,7 @@ const App: React.FC = () => {
               <div className="py-2 md:py-4">
                 {notesList.filter((note) => note.isBookmarked && !note.isArchived)
                   .length > 0 && <h2 className="text-3xl font-bold">Bookmarked</h2>}
-                <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList.map((note) => {
                     if (note.isBookmarked && !note.isArchived) {
                       return (
