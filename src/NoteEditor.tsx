@@ -29,7 +29,7 @@ import Blockquote from "@tiptap/extension-blockquote";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
-import Mathblock from "./lib/tiptap/math-block";
+import Mathblock from "./lib/tiptap/math-block/Index";
 import {
   Filesystem,
   Directory,

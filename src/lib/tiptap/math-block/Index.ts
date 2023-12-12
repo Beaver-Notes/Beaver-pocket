@@ -1,6 +1,6 @@
 import { Node, mergeAttributes, nodeInputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import MathBlock from './MathBlock';
+import MathBlock from './Mathblock';
 
 const inputRegex = /\$\$\s+$/;
 
