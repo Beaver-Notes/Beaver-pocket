@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    @apply dark:text-white bg-white dark:bg-[#232222];
+    font-family: 'Arimo', sans-serif;
+}
