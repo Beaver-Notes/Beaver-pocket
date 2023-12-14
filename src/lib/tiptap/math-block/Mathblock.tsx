@@ -96,32 +96,32 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
           }`}
         ></p>
         {useKatexMacros && (
-          <div className="bg-input transition rounded-lg p-2">
-            <div className="flex mb-2">
+          <div className="bg-[#F8F8F7] mt-2 dark:bg-[#353333] outline-none transition rounded-lg p-2">
+            <div className="flex">
               <textarea
                 autoFocus={!useKatexMacros}
                 value={props.node.attrs.content}
                 placeholder="Text here..."
-                className="bg-transparent flex-1"
+                className="bg-transparent flex-1 outline-none"
                 onChange={(e) => updateContent(e, "content", true)}
                 onKeyDown={handleKeydown}
               />
             </div>
             {showSecondTextarea && (
-              <div className="flex mb-2">
+              <div className="flex">
                 <textarea
                   autoFocus={useKatexMacros}
                   value={props.node.attrs.macros}
                   placeholder="KaTeX macros"
-                  className="bg-transparent flex-1"
+                  className="bg-transparent flex-1 outline-none"
                   onChange={(e) => updateContent(e, "macros", true)}
                   onKeyDown={handleKeydown}
                 />
               </div>
             )}
-            <div className="flex border-t items-center pt-2 text-gray-600 dark:text-gray-300">
+            <div className="flex border-t dark:border-neutral-600 border-neutral-200 items-center pt-2 text-gray-600 dark:text-gray-300">
               <svg
-                className="w-12 dark:fill-white"
+                className="w-12 fill-neutral-800 dark:fill-white"
                 viewBox="0 0 64 64"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -158,7 +158,6 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
 
               <div className="flex-grow ml-2 flex items-center justify-between">
                 {" "}
-                {/* Updated class and added 'justify-between' */}
                 <p className="text-sm" style={{ margin: 0 }}>
                   Press <strong>Enter</strong> to exit
                 </p>

@@ -200,7 +200,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
   const addLabelToNote = (labelToAdd: string) => {
     // Clone the note to avoid mutating the original state directly
     const updatedNote = { ...note };
-
+  
     // Create a noteLabel node
     const noteLabelNode = {
       type: "noteLabel",
@@ -209,7 +209,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
         label: null,
       },
     };
-
+  
     // Check if content is an array
     if (Array.isArray(updatedNote.content)) {
       // If it is an array, create a new content object with the noteLabelNode
@@ -238,17 +238,17 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
         content: [noteLabelNode],
       };
     }
-
+  
     // Add the label to the labels array
     if (!updatedNote.labels) {
       updatedNote.labels = [labelToAdd];
     } else {
       updatedNote.labels.push(labelToAdd);
     }
-
+  
     // Update the note using the onChange callback
     onChange(updatedNote.content, updatedNote.title);
-  };
+  };  
 
   const handleImageUpload = async (file: File) => {
     try {
