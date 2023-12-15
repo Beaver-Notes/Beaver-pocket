@@ -1,5 +1,5 @@
 .BottomNavbar {
-    @apply fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-5 shadow-lg rounded-full md:hidden;
+    @apply fixed inset-x-2 bottom-6 bg-[#F2F2F2] dark:bg-[#2D2C2C] p-3 rounded-full md:hidden;
     width: calc(100% - 1rem); /* Adjust the padding to fit within the screen width */
   }  
 
@@ -8,7 +8,7 @@
 }
 
 .icon {
-    @apply text-white hover:text-amber-400 h-8 w-8;
+    @apply text-gray-800 dark:text-white hover:text-amber-400 h-8 w-8;
 }
 
 .moreicon {
@@ -21,7 +21,7 @@ a {
 }
 
 .menu {
-    @apply absolute bottom-20 right-2 bg-[#F2F2F2] shadow-lg flex items-center space-x-4 dark:bg-[#2D2C2C] rounded-full p-4 transform transition-transform origin-top scale-y-0 opacity-0;
+    @apply absolute bottom-20 right-2 bg-[#F2F2F2] flex items-center space-x-4 dark:bg-[#2D2C2C] rounded-full p-4 transform transition-transform origin-top scale-y-0 opacity-0;
   }
   
   .BottomNavbar.open .menu {

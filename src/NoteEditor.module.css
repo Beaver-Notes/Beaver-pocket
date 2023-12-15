@@ -1,0 +1,161 @@
+@import url('https://fonts.googleapis.com/css2?family=Arimo&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.body {
+  font-family: 'Arimo', sans-serif;
+}
+
+mark {
+  @apply bg-yellow-200 dark:bg-yellow-100;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+h1 {
+  @apply font-bold leading-relaxed 
+}
+
+h2 {
+  @apply text-3xl font-bold leading-relaxed 
+}
+
+h3 {
+  @apply text-2xl font-bold leading-relaxed 
+}
+
+h4 {
+  @apply text-xl font-bold leading-relaxed 
+}
+
+h5 {
+  @apply text-lg font-bold leading-relaxed 
+}
+
+h6 {
+  @apply text-base font-bold leading-relaxed 
+}
+
+.pageContainer {
+  @apply pt-6 overflow-auto h-full justify-center items-start w-screen px-4 text-black dark:text-white lg:px-60 text-base
+}
+
+img {
+  @apply rounded-xl
+}
+
+a {
+  @apply text-amber-400 hover:text-amber-500 underline
+}
+
+.toolbar {
+   @apply flex overflow-y-hidden items-center justify-center w-fit md:w-full p-3 bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-full
+}
+
+.toolbarIcon {
+   @apply border-none text-gray-800 dark:text-white text-xl w-7 h-7
+}
+
+.toolbarContainer {
+    @apply fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-white dark:bg-[#353333] md:sticky md:top-0 md:z-50
+  }
+
+.edtiorContainer {
+  @apply py-6
+}
+
+.styles.fullScreenEditor{
+  @apply overflow-auto w-full
+}
+
+.textEditor {
+  @apply overflow-auto outline-none
+}
+
+.textEditorcontent {
+  @apply overflow-auto h-auto pl-6 pr-6 py-4;
+}
+
+.toolbarButton {
+    @apply p-2 rounded-md text-[#0f172a] dark:text-white bg-transparent cursor-pointer 
+}
+
+.toolbarButtonActive { 
+    @apply p-2 rounded-md text-amber-400 bg-gray-100 dark:bg-[#353333] cursor-pointer
+}
+
+code {
+  @apply bg-[#F2F2F2] dark:bg-[#303033] text-inherit text-base p-1 px-2 rounded-full;
+ }
+
+blockquote {
+ @apply border-l-4 border-[#E4E4E6] dark:border-[#3F3F46];
+
+ p {
+  @apply ml-2
+ }
+}
+
+ol {
+  @apply px-6 list-decimal
+}
+
+ul {
+  @apply px-6 list-disc
+}
+
+ul[data-type="taskList"] {
+  @apply list-none;
+}
+
+ul[data-type="taskList"] {
+  list-style: none; /* Remove default list-style */
+  padding-left: 0;  /* Remove default left padding */
+}
+
+ul[data-type="taskList"] li {
+  display: flex; /* Use flexbox to align checkbox and text */
+  align-items: center; /* Vertically align items in the flex container */
+}
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  outline: none;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: border-color 0.3s;
+  margin-top: 4px;
+}
+
+input[type="checkbox"]:checked {
+  border-color: #FBBF24;
+}
+
+input[type="checkbox"]:checked::before {
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(251,191,36,1)'%3E%3C/path%3E%3C/svg%3E");
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  line-height: 20px;
+  text-align: center;
+  color: #FBBF24;
+}
+
+
+
+.ProseMirror {
+  outline: none;
+}
