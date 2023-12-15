@@ -666,7 +666,7 @@ const App: React.FC = () => {
                                 {note.title}
                               </div>
                               {note.labels.length > 0 && (
-                                <div className="flex gap-8">
+                                <div className="flex gap-2">
                                   {note.labels.map((label) => (
                                     <span key={label} className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md">#{label}</span>
                                   ))}
@@ -729,7 +729,7 @@ const App: React.FC = () => {
                                 {note.title}
                               </div>
                               {note.labels.length > 0 && (
-                                <div className="flex gap-8">
+                                <div className="flex gap-2">
                                   {note.labels.map((label) => (
                                     <span key={label} className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md">#{label}</span>
                                   ))}
@@ -795,7 +795,7 @@ const App: React.FC = () => {
                               {note.title}
                             </div>
                             {note.labels.length > 0 && (
-                              <div className="flex gap-8">
+                              <div className="flex gap-2">
                                 {note.labels.map((label) => (
                                   <span key={label} className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md">#{label}</span>
                                 ))}
