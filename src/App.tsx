@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
+import styles from "./App.module.css";
 import { Note } from "./types";
+import storage from "./storage";
 import NoteEditor from "./NoteEditor";
 import { JSONContent } from "@tiptap/react";
 import BottomNavBar from './components/BottomNavBar';
-import "./css/main.css";
 import {
   Filesystem,
   Directory,
@@ -20,11 +21,8 @@ import Bookmark3LineIcon from "remixicon-react/Bookmark3LineIcon";
 import Bookmark3FillIcon from "remixicon-react/Bookmark3FillIcon";
 import ArchiveDrawerLineIcon from "remixicon-react/ArchiveLineIcon";
 import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
-import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
-import Download2LineIcon from "remixicon-react/Download2LineIcon";
-import BookletLineIcon from "remixicon-react/BookletLineIcon";
-import EditLineIcon from "remixicon-react/EditLineIcon";
-import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
+
+const STORAGE_KEY = "notes";
 
 async function createNotesDirectory() {
   const directoryPath = 'notes';
@@ -41,27 +39,26 @@ async function createNotesDirectory() {
 }
 
 
-const App: React.FC = () => {
-
+function App() {
   const loadNotes = async () => {
     try {
       await createNotesDirectory(); // Create the directory before reading/writing
-
+  
       const fileExists = await Filesystem.stat({
         path: STORAGE_PATH,
         directory: Directory.Documents,
       });
-
+  
       if (fileExists) {
         const data = await Filesystem.readFile({
           path: STORAGE_PATH,
           directory: Directory.Documents,
           encoding: FilesystemEncoding.UTF8,
         });
-
+  
         if (data.data) {
           const parsedData = JSON.parse(data.data as string);
-
+  
           if (parsedData?.data?.notes) {
             return parsedData.data.notes;
           } else {
@@ -81,26 +78,26 @@ const App: React.FC = () => {
       return {};
     }
   };
-
+  
   const handleDeleteNote = async (noteId: string) => {
     const isConfirmed = window.confirm(
       "Are you sure you want to delete this note?"
     );
-
+  
     if (isConfirmed) {
       try {
         const notes = await loadNotes();
-
+  
         if (notes[noteId]) {
           delete notes[noteId];
-
+  
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify({ data: { notes } }),
             directory: Directory.Documents,
             encoding: FilesystemEncoding.UTF8,
           });
-
+  
           setNotesState(notes); // Update the state
           window.location.reload(); // Reload the app
         } else {
@@ -111,52 +108,30 @@ const App: React.FC = () => {
         alert("Error deleting note: " + (error as any).message);
       }
     }
-  };
+  };  
 
   const STORAGE_PATH = "notes/data.json";
 
   const saveNote = React.useCallback(
-    async (note: unknown) => {
+    async (note: Note) => {
       try {
         const notes = await loadNotes();
-
-        if (typeof note === 'object' && note !== null) {
-          const typedNote = note as Note;
-
-          // Use getTime() to get the Unix timestamp in milliseconds
-          const createdAtTimestamp =
-            typedNote.createdAt instanceof Date
-              ? typedNote.createdAt.getTime()
-              : Date.now();
-
-          const updatedAtTimestamp =
-            typedNote.updatedAt instanceof Date
-              ? typedNote.updatedAt.getTime()
-              : Date.now();
-
-          notes[typedNote.id] = {
-            ...typedNote,
-            createdAt: createdAtTimestamp,
-            updatedAt: updatedAtTimestamp,
-          };
-
-          const data = {
-            data: {
-              notes,
-            },
-          };
-
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify(data),
-            directory: Directory.Documents,
-            encoding: FilesystemEncoding.UTF8,
-          });
-        } else {
-          console.error('Invalid note object:', note);
-        }
+        notes[note.id] = note;
+  
+        const data = {
+          data: {
+            notes,
+          },
+        };
+  
+        await Filesystem.writeFile({
+          path: STORAGE_PATH,
+          data: JSON.stringify(data),
+          directory: Directory.Documents,
+          encoding: FilesystemEncoding.UTF8,
+        });
       } catch (error) {
-        console.error('Error saving note:', error);
+        console.error("Error saving note:", error);
       }
     },
     [loadNotes]
@@ -164,52 +139,52 @@ const App: React.FC = () => {
 
   const handleToggleBookmark = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event propagation
-
+  
     try {
       const notes = await loadNotes();
       const updatedNote = { ...notes[noteId] };
-
+  
       // Toggle the 'isBookmarked' property
       updatedNote.isBookmarked = !updatedNote.isBookmarked;
-
+  
       // Update the note in the dictionary
       notes[noteId] = updatedNote;
-
+  
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
         directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
-
+  
       setNotesState(notes); // Update the state
     } catch (error) {
       console.error("Error toggling bookmark:", error);
       alert("Error toggling bookmark: " + (error as any).message);
     }
   };
-
+  
 
   const handleToggleArchive = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event propagation
-
+  
     try {
       const notes = await loadNotes();
       const updatedNote = { ...notes[noteId] };
-
+  
       // Toggle the 'isArchived' property
       updatedNote.isArchived = !updatedNote.isArchived;
-
+  
       // Update the note in the dictionary
       notes[noteId] = updatedNote;
-
+  
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
         directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
-
+  
       setNotesState(notes); // Update the state
     } catch (error) {
       console.error("Error toggling archive:", error);
@@ -250,110 +225,57 @@ const App: React.FC = () => {
   }, [searchQuery, notesState]);
 
   const exportData = async () => {
-    try {
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    console.log("Exporting data...");
 
-      // Create the parent export folder
-      const parentExportFolderPath = `export`;
-      await Filesystem.mkdir({
-        path: parentExportFolderPath,
-        directory: Directory.Documents,
-        recursive: true,
-      });
+    const notes = Object.values(notesState);
 
-      // Create the export folder structure
-      const exportFolderName = `Beaver Notes ${formattedDate}`;
-      const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
+    const exportedData: any = {
+      data: {
+        notes: {},
+      },
+    };
 
-      // Create the export folder
-      await Filesystem.mkdir({
-        path: exportFolderPath,
-        directory: Directory.Documents,
-        recursive: true,
-      });
-
-      // Export data.json
-      const exportedData: any = {
-        data: {
-          notes: {},
-        },
+    notes.forEach((note) => {
+      // Ensure updatedAt is in the correct format (number)
+      exportedData.data.notes[note.id] = {
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        labels: note.labels,
+        createdAt: note.createdAt.getTime(),
+        updatedAt: note.updatedAt.getTime(), // Ensure updatedAt is in the correct format
+        isBookmarked: note.isBookmarked,
+        isArchived: note.isArchived,
+        lastCursorPosition: note.lastCursorPosition,
       };
+    });
 
-      Object.values(notesState).forEach((note) => {
-        const createdAtTimestamp = note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
-        const updatedAtTimestamp = note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
+    const jsonData = JSON.stringify(exportedData, null, 2); // Indent JSON for readability
 
-        exportedData.data.notes[note.id] = {
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          labels: note.labels,
-          createdAt: createdAtTimestamp,
-          updatedAt: updatedAtTimestamp,
-          isBookmarked: note.isBookmarked,
-          isArchived: note.isArchived,
-          lastCursorPosition: note.lastCursorPosition,
-        };
-      });
+    console.log("Exported data:", exportedData);
 
-      const jsonData = JSON.stringify(exportedData, null, 2);
-      const jsonFilePath = `${exportFolderPath}/data.json`;
-
-      // Save data.json
-      await Filesystem.writeFile({
-        path: jsonFilePath,
+    // Use FileSaver.js to prompt the user to select a save location
+    try {
+      const { uri } = await Filesystem.writeFile({
+        path: "data.json",
         data: jsonData,
         directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
 
-      // Check if the images folder exists
-      const imagesFolderPath = `images`;
-      let imagesFolderExists = false;
+      console.log("File written successfully:", uri);
 
-
-      try {
-        const imagesFolderInfo = await (Filesystem as any).getInfo({
-          path: imagesFolderPath,
-          directory: Directory.Documents,
-        });
-        imagesFolderExists = imagesFolderInfo.type === 'directory';
-      } catch (error) {
-        console.error("Error checking images folder:", error);
-      }
-
-      if (imagesFolderExists) {
-        // Export images folder
-        const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-
-        // Create the images folder in the export directory
-        await Filesystem.mkdir({
-          path: exportImagesFolderPath,
-          directory: Directory.Documents,
-          recursive: true,
-        });
-
-        // Copy images folder to export folder
-        await Filesystem.copy({
-          from: imagesFolderPath,
-          to: exportImagesFolderPath,
-          directory: Directory.Documents,
-        });
-      }
-
-      console.log("Export completed successfully!");
-
-      // Notify the user
-      window.alert("Export completed successfully! Check your downloads.");
+      // Now, you can use the file opener plugin to open the file
+      // This is where you'd use the @capacitor-community/file-opener plugin
+      // to open the file, allowing the user to save it or open it with other apps.
+      // You can follow the plugin's documentation for usage.
     } catch (error) {
-      console.error("Error exporting data and images:", error);
-      alert("Error exporting data and images: " + (error as any).message);
+      console.error("Error exporting data:", error);
+      alert("Error exporting data: " + (error as any).message);
     }
   };
 
-
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) {
@@ -362,42 +284,38 @@ const App: React.FC = () => {
 
     const reader = new FileReader();
 
-    reader.onload = async (e) => {
+    reader.onload = (e) => {
       try {
         const importedData = JSON.parse(e.target?.result as string);
 
         if (importedData && importedData.data && importedData.data.notes) {
-          const importedNotes: Record<string, Note> = importedData.data.notes;
+          const importedNotes = importedData.data.notes;
 
-          // Load existing notes from data.json
-          const existingNotes = await loadNotes();
+          // Create an object to store the notes to be imported
+          const notesToImport: Record<string, Note> = {};
 
-          // Merge the imported notes with the existing notes
-          const mergedNotes: Record<string, Note> = { ...existingNotes, ...importedNotes };
+          for (const noteId in importedNotes) {
+            const importedNote = importedNotes[noteId];
+
+            // Remove the updatedAt property from the imported note
+            if (importedNote.hasOwnProperty("updatedAt")) {
+              delete importedNote.updatedAt;
+            }
+
+            // Store the note in the notesToImport object
+            notesToImport[noteId] = importedNote;
+          }
+
+          // Merge the imported notes with the existing notes in notesState
+          const mergedNotes = { ...notesState, ...notesToImport };
 
           // Update the notesState with the merged notes
           setNotesState(mergedNotes);
 
-          // Update the filteredNotes based on the search query
-          const filtered = Object.values(mergedNotes).filter((note) => {
-            const titleMatch = note.title.toLowerCase().includes(searchQuery.toLowerCase());
-            const contentMatch = JSON.stringify(note.content).toLowerCase().includes(searchQuery.toLowerCase());
-            return titleMatch || contentMatch;
-          });
-
-          setFilteredNotes(Object.fromEntries(filtered.map((note) => [note.id, note])));
-
-          Object.values(importedNotes).forEach((note) => {
-            note.createdAt = new Date(note.createdAt);
-            note.updatedAt = new Date(note.updatedAt);
-          });
-
-          // Save the merged notes to the data.json file
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes: mergedNotes } }),
-            directory: Directory.Documents,
-            encoding: FilesystemEncoding.UTF8,
+          // Save the merged notes to local storage
+          storage.set(STORAGE_KEY, Object.keys(mergedNotes));
+          Object.values(mergedNotes).forEach((note) => {
+            storage.set(`${STORAGE_KEY}:${note.id}`, note);
           });
 
           alert("Data imported successfully!");
@@ -417,7 +335,7 @@ const App: React.FC = () => {
 
   const handleChangeNoteContent = (
     content: JSONContent,
-    title: string = "Untitled Note"
+    title: string = "New Note"
   ) => {
     if (activeNoteId) {
       const updateNote = {
@@ -466,7 +384,7 @@ const App: React.FC = () => {
 
   function extractParagraphTextFromContent(content: JSONContent): string {
     if (!content || !Array.isArray(content.content)) {
-      return "No content...";
+      return "no content"; // Return "no content" if there's no content or empty content
     }
 
     // Check if the content consists of a single empty paragraph
@@ -492,291 +410,138 @@ const App: React.FC = () => {
       })
       .join(" "); // Join paragraph text with spaces
 
-    return paragraphText || "No content"; // If no paragraph text, return "No content"
+    return paragraphText || "no content"; // If no paragraph text, return "no content"
   }
 
   function truncateContentPreview(content: JSONContent | string | JSONContent[]) {
     let text = "";
-
+  
     if (typeof content === "string") {
       text = content;
     } else if (Array.isArray(content)) {
       const jsonContent: JSONContent = { type: "doc", content };
       text = extractParagraphTextFromContent(jsonContent);
     } else if (content && content.content) {
+      // Exclude the title from the content when displaying
       const { title, ...contentWithoutTitle } = content;
       text = extractParagraphTextFromContent(contentWithoutTitle);
     }
-
+  
     if (text.trim() === "") {
-      return "No content"; // Show a placeholder for No content
+      return "No content"; // Show a placeholder for no content
     } else if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
       return text;
     } else {
       return text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
     }
-  }
-
-  const uniqueLabels = Array.from(
-    new Set(Object.values(notesState).flatMap((note) => note.labels))
-  );
-
-  const handleLabelFilterChange = (selectedLabel: string) => {
-    setSearchQuery("");
-    const filteredNotes = Object.values(notesState).filter((note) => {
-      return selectedLabel
-        ? note.labels.includes(selectedLabel)
-        : true;
-    });
-
-    setFilteredNotes(
-      Object.fromEntries(filteredNotes.map((note) => [note.id, note]))
-    );
-  };  
+  }  
 
   return (
-    <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-      <div className="flex flex-col items-center justify-between p-2 h-full bg-[#F8F8F7] dark:bg-[#353333] hidden sm:flex">
-        <div className="py-5">
-          <button
-            className="hidden mb-2 p-2 bg-[#EBEBEA] dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={handleCreateNewNote}
-          >
-            <AddFillIcon className="text-amber-400 h-8 w-8" />
-          </button>
-
-          <button
-            className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={() => setIsArchiveVisible(!isArchiveVisible)}
-          >
-            <EditLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-
-          <button
-            className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={() => setIsArchiveVisible(!isArchiveVisible)}
-          >
-            <BookletLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-
-          <button
-            className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={() => setIsArchiveVisible(!isArchiveVisible)}
-          >
-            <ArchiveLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-        </div>
-        <div className="fixed bottom-6">
-          <button className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex" onClick={exportData}>
-            <Upload2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-          
-          <label htmlFor="importData" className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex">
-            <Download2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </label>
-          <input
-            className="hidden"
-            type="file"
-            id="importData"
-            accept=".json"
-            onChange={handleImportData}
-          />
-        </div>
-      </div>
-
-      <div className="overflow-y">
-        {!activeNoteId && (
-          <div className="w-full flex flex-col border-gray-300 overflow-auto">
-            <div className="bg-transparent px-6">
-              <div className="pt-12 flex justify-center">
-                <div className="apply relative w-full md:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2;">
-                  <div>
-                    <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6" />
-                  </div>
-                  <input
-                    className="text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white w-full"
-                    type="text"
-                    placeholder="Search notes"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="items-center">
-                <div className="md:w-[22em] h-12 flex items-center justify-start mx-auto sm:hidden overflow-hidden">
-                  <div className="border-r-2 border-gray-300 dark:border-neutral-800 p-3 rounded-l-full bg-[#F8F8F7] text-center dark:bg-[#2D2C2C] flex-grow text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
-                    <button className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center" onClick={exportData}>
-                      <Upload2LineIcon/>
-                    </button>
-                  </div>
-                  <div className="border-l-2 border-gray-300 dark:border-neutral-800 p-3 rounded-r-full bg-[#F8F8F7] dark:bg-[#2D2C2C] text-center flex-grow mr-2 text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
-                    <div className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center">
-                      <label htmlFor="importData">
-                        <Download2LineIcon/>
-                      </label>
-                      <input
-                        className="hidden"
-                        type="file"
-                        id="importData"
-                        accept=".json"
-                        onChange={handleImportData}
-                      />
-                    </div>
-                  </div>
-                  <div className="relative inline-flex items-center">
-                  <select
-                    id="labelSelect"
-                    onChange={(e) => handleLabelFilterChange(e.target.value)}
-                    className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
-                  >
-                    <option value="">Select Label</option>
-                    {uniqueLabels.map((label) => (
-                      <option key={label} value={label}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-                </div>
-              </div>
+    <div className={styles.pageContainer}>
+      {!activeNoteId && (
+        <div className={styles.sidebar}>
+          <div className={styles.topContainer}>
+            <div className={styles.searchContainer}>
+              <div className={styles.searchBar}>
+                <Search2LineIcon className={styles.searchIcon} />
+                <input
+                  className={styles.searchBarInput}
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
             </div>
-            <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
-              <div className="py-2 md:py-4">
-                {notesList.filter((note) => note.isBookmarked && !note.isArchived)
-                  .length > 0 && <h2 className="text-3xl font-bold">Bookmarked</h2>}
-                <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
-                  {notesList.map((note) => {
-                    if (note.isBookmarked && !note.isArchived) {
-                      return (
-                        <div
-                          key={note.id}
-                          role="button"
-                          tabIndex={0}
-                          className={
-                            note.id === activeNoteId
-                              ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                              : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                          }
-                          onClick={() => setActiveNoteId(note.id)}
-                        >
-                          <div className="h-36 overflow-hidden">
-                            <div className="flex flex-col h-full overflow-hidden">
-                              <div className="text-2xl">
-                                {note.title}
-                              </div>
-                              {note.labels.length > 0 && (
-                                <div className="flex gap-8">
-                                  {note.labels.map((label) => (
-                                    <span key={label} className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md">#{label}</span>
-                                  ))}
-                                </div>
-                              )}
-                              <div className="text-lg">
-                                {note.content &&
-                                  truncateContentPreview(note.content)}
-                              </div>
-                            </div>
+            <div className={styles.buttonContainer}>
+              <button
+                className={styles.sidebarButton}
+                onClick={handleCreateNewNote}
+              >
+                <AddFillIcon className={styles.icon} /> Note
+              </button>
+              <button className={styles.sidebarButton} onClick={exportData}>
+                Export
+              </button>
+              <div className={styles.sidebarButton}>
+                <label htmlFor="importData">Import</label>
+                <input
+                  className={styles.input}
+                  type="file"
+                  id="importData"
+                  accept=".json"
+                  onChange={handleImportData}
+                />
+             </div>
+              <button
+                className={styles.sidebarButton}
+                onClick={() => setIsArchiveVisible(!isArchiveVisible)}
+              >
+                <ArchiveLineIcon className={styles.icon} /> Archive
+              </button>
+            </div>
+          </div>
+          <div className={styles.sidebarList}>
+            <div className={styles.bookmarkedSection}>
+              {notesList.filter((note) => note.isBookmarked && !note.isArchived)
+                .length > 0 && <h3>Bookmarked</h3>}
+              <div className={styles.categories}>
+                {notesList.map((note) => {
+                  if (note.isBookmarked && !note.isArchived) {
+                    return (
+                      <div
+                        key={note.id}
+                        role="button"
+                        tabIndex={0}
+                        className={
+                          note.id === activeNoteId
+                            ? styles.bookmarkedsidebarItemActive
+                            : styles.bookmarkedsidebarItem
+                        }
+                        onClick={() => setActiveNoteId(note.id)}
+                      >
+                        <div className={styles.cardContent}>
+                          <div className={styles.sidebarTitle}>
+                            {note.title}
                           </div>
-                          <div className="py-2">
-                            <button
-                              className="text-[#52525C] py-2 dark:text-white w-auto"
-                              onClick={(e) => handleToggleBookmark(note.id, e)}
-                            >
-                              {note.isBookmarked ? (
-                                <Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                              ) : (
-                                <Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                              )}
-                            </button>
-                            <button
-                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                              onClick={() => handleDeleteNote(note.id)}
-                            >
-                              <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                            </button>
+                          <div className={styles.sidebarParagraph}>
+                            {note.content &&
+                              truncateContentPreview(note.content)}
                           </div>
                         </div>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              </div>
-              {isArchiveVisible ? (
-                <div className="py-2 md:py-4">
-                  {notesList.filter((note) => note.isArchived).length > 0 && (
-                    <h2 className="text-3xl font-bold">Archived</h2>
-                  )}
-                  <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
-                    {notesList
-                      .filter((note) => note.isArchived)
-                      .map((note) => (
-                        <div
-                          key={note.id}
-                          role="button"
-                          tabIndex={0}
-                          className={
-                            note.id === activeNoteId
-                              ? "p-3 h-auto cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C] h-48;"
-                              : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                          }
-                          onClick={() => setActiveNoteId(note.id)}
-                        >
-                          <div className="h-36 overflow-hidden">
-                            <div className="flex flex-col h-full overflow-hidden">
-                              <div className="text-2xl">
-                                {note.title}
-                              </div>
-                              {note.labels.length > 0 && (
-                                <div className="flex gap-8">
-                                  {note.labels.map((label) => (
-                                    <span key={label} className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md">#{label}</span>
-                                  ))}
-                                </div>
-                              )}
-                              <div className="text-lg">
-                                {note.content &&
-                                  truncateContentPreview(note.content)}
-                              </div>
-                            </div>
-                          </div>
+                        <div className={styles.Cardbutton}>
                           <button
-                            className="text-[#52525C] py-2 dark:text-white w-auto"
-                            onClick={(e) => handleToggleArchive(note.id, e)}
+                            className={styles.button}
+                            onClick={(e) => handleToggleBookmark(note.id, e)}
                           >
-                            {note.isArchived ? (
-                              <ArchiveDrawerFillIcon
-                                className="w-8 h-8 mr-2"
-                              />
+                            {note.isBookmarked ? (
+                              <Bookmark3FillIcon className={styles.cardIcon} />
                             ) : (
-                              <ArchiveDrawerLineIcon
-                                className="w-8 h-8 mr-2"
-                              />
+                              <Bookmark3LineIcon className={styles.cardIcon} />
                             )}
                           </button>
                           <button
-                            className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
+                            className={styles.trash}
                             onClick={() => handleDeleteNote(note.id)}
                           >
-                            <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                            <DeleteBinLineIcon className={styles.cardIcon} />
                           </button>
                         </div>
-                      ))}
-                  </div>
-                </div>
-              ) : null}
-              <div className="md:py-4">
-                <h2 className="text-3xl font-bold">All Notes</h2>
-                {notesList.length === 0 && (
-                  <div className="mx-auto">
-                    <img className="max-w-auto mx-auto flex justify-center items-center" src="../src/assets/images/Beaver.png" alt="No notes available" />
-                    <p className="py-2 text-lg text-center">No notes available. Click  <AddFillIcon className="inline-block w-5 h-5" /> to add a new note or click <Download2LineIcon className="inline-block w-5 h-5" /> to import your data.</p>
-                  </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            </div>
+            {isArchiveVisible ? (
+              <div className={styles.ArchivedSection}>
+                {notesList.filter((note) => note.isArchived).length > 0 && (
+                  <h3>Archived</h3>
                 )}
-                <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className={styles.categories}>
                   {notesList
-                    .filter((note) => !note.isBookmarked && !note.isArchived)
+                    .filter((note) => note.isArchived)
                     .map((note) => (
                       <div
                         key={note.id}
@@ -784,71 +549,109 @@ const App: React.FC = () => {
                         tabIndex={0}
                         className={
                           note.id === activeNoteId
-                            ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                            : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
+                            ? styles.bookmarkedsidebarItemActive
+                            : styles.bookmarkedsidebarItem
                         }
                         onClick={() => setActiveNoteId(note.id)}
                       >
-                        <div className="h-36 overflow-hidden">
-                          <div className="flex flex-col h-full overflow-hidden">
-                            <div className="text-2xl">
-                              {note.title}
-                            </div>
-                            {note.labels.length > 0 && (
-                              <div className="flex gap-8">
-                                {note.labels.map((label) => (
-                                  <span key={label} className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md">#{label}</span>
-                                ))}
-                              </div>
-                            )}
-                            <div className="text-lg">
-                              {note.content &&
-                                truncateContentPreview(note.content)}
-                            </div>
+                        <div className={styles.cardContent}>
+                          <div className={styles.sidebarTitle}>
+                            {note.title}
+                          </div>
+                          <div className={styles.sidebarParagraph}>
+                            {note.content &&
+                              truncateContentPreview(note.content)}
                           </div>
                         </div>
                         <button
-                          className="text-[#52525C] py-2 dark:text-white w-auto"
-                          onClick={(e) => handleToggleBookmark(note.id, e)} // Pass the event
+                          className={styles.button}
+                          onClick={(e) => handleToggleArchive(note.id, e)}
                         >
-                          {note.isBookmarked ? (
-                            <Bookmark3FillIcon className="w-8 h-8 mr-2" />
+                          {note.isArchived ? (
+                            <ArchiveDrawerFillIcon
+                              className={styles.cardIcon}
+                            />
                           ) : (
-                            <Bookmark3LineIcon className="w-8 h-8 mr-2" />
+                            <ArchiveDrawerLineIcon
+                              className={styles.cardIcon}
+                            />
                           )}
                         </button>
                         <button
-                          className="text-[#52525C] py-2 dark:text-white w-auto"
-                          onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
-                        >
-                          {note.isBookmarked ? (
-                            <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
-                          ) : (
-                            <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
-                          )}
-                        </button>
-                        <button
-                          className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
+                          className={styles.trash}
                           onClick={() => handleDeleteNote(note.id)}
                         >
-                          <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                          <DeleteBinLineIcon className={styles.cardIcon} />
                         </button>
                       </div>
                     ))}
                 </div>
               </div>
+            ) : null}
+            <div className={styles.allNotesSection}>
+              <h2>All Notes</h2>
+              <div className={styles.categories}>
+                {notesList
+                  .filter((note) => !note.isBookmarked && !note.isArchived)
+                  .map((note) => (
+                    <div
+                      key={note.id}
+                      role="button"
+                      tabIndex={0}
+                      className={
+                        note.id === activeNoteId
+                          ? styles.sidebarItemActive
+                          : styles.sidebarItem
+                      }
+                      onClick={() => setActiveNoteId(note.id)}
+                    >
+                      <div className={styles.cardContent}>
+                        <div className={styles.sidebarTitle}>{note.title}</div>
+                        <div className={styles.sidebarParagraph}>
+                          {note.content && truncateContentPreview(note.content)}
+                        </div>
+                      </div>
+                      <button
+                        className={styles.button}
+                        onClick={(e) => handleToggleBookmark(note.id, e)} // Pass the event
+                      >
+                        {note.isBookmarked ? (
+                          <Bookmark3FillIcon className={styles.cardIcon} />
+                        ) : (
+                          <Bookmark3LineIcon className={styles.cardIcon} />
+                        )}
+                      </button>
+                      <button
+                        className={styles.button}
+                        onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
+                      >
+                        {note.isBookmarked ? (
+                          <ArchiveDrawerFillIcon className={styles.cardIcon} />
+                        ) : (
+                          <ArchiveDrawerLineIcon className={styles.cardIcon} />
+                        )}
+                      </button>
+                      <button
+                        className={styles.trash}
+                        onClick={() => handleDeleteNote(note.id)}
+                      >
+                        <DeleteBinLineIcon className={styles.cardIcon} />
+                      </button>
+                    </div>
+                  ))}
+              </div>
             </div>
-            <BottomNavBar
-              onCreateNewNote={handleCreateNewNote}
-              onToggleArchiveVisibility={() => setIsArchiveVisible(!isArchiveVisible)}
-            />
           </div>
+          <BottomNavBar
+                onCreateNewNote={handleCreateNewNote}
+                onToggleArchiveVisibility={() => setIsArchiveVisible(!isArchiveVisible)}
+              />        
+              </div>
+      )}
+      <div className={styles.noteContainer}>
+        {activeNote && (
+          <NoteEditor note={activeNote} onChange={handleChangeNoteContent} />
         )}
-        <div>
-          {activeNote && (
-            <NoteEditor note={activeNote} onChange={handleChangeNoteContent} />
-          )}
-        </div>
       </div>
     </div>
   );
