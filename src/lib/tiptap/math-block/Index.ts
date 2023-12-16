@@ -35,6 +35,11 @@ export default Node.create({
     return ReactNodeViewRenderer(MathBlock);
   },
   addInputRules() {
-    return [nodeInputRule({ find: inputRegex, type: this.type })];
+    return [
+      nodeInputRule({
+        find: inputRegex,
+        type: this.type,
+      }),
+    ];
   },
 });

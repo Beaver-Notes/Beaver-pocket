@@ -2,10 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import ArchiveDrawerLineIcon from 'remixicon-react/ArchiveLineIcon';
 import HomeLineIcon from 'remixicon-react/HomeLineIcon';
 import AddFillIcon from 'remixicon-react/AddFillIcon';
-import SettingsFillIcon from 'remixicon-react/SettingsFillIcon';
-import MoreLineIcon from 'remixicon-react/MoreLineIcon';
-import Download2LineIcon from 'remixicon-react/Download2LineIcon';
-import Upload2LineIcon from 'remixicon-react/Upload2LineIcon';
 import './css/BottomNavBar.css';
 
 interface BottomNavBarProps {
@@ -18,23 +14,28 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
   onToggleArchiveVisibility,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
+  const [isVisible, setIsVisible] = useState(true);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const handleToggleArchiveClick = () => {
     onToggleArchiveVisibility(true);
   };
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
 
-  const handleMoreButtonClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleMenu();
+  const handleScroll = () => {
+    const currentScrollPos = window.pageYOffset;
+
+    if (prevScrollPos > currentScrollPos) {
+      setIsVisible(true);
+    } else {
+      setIsVisible(false);
+    }
+
+    setPrevScrollPos(currentScrollPos);
   };
 
   useEffect(() => {
@@ -43,16 +44,24 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
         closeMenu();
       }
     };
-  
+
     document.addEventListener('mousedown', handleDocumentClick);
-  
+
     return () => {
       document.removeEventListener('mousedown', handleDocumentClick);
     };
-  }, []);  
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [prevScrollPos]);
 
   return (
-    <div className="spacingdiv">
+    <div className={`spacingdiv ${isVisible ? 'visible' : 'hidden'}`}>
       <nav className={`BottomNavbar ${isMenuOpen ? 'open' : ''}`}>
         <div className="Navbardiv">
           <a href="#" className="navbarelement" onClick={onCreateNewNote}>
@@ -64,23 +73,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
           <a href="#" className="navbarelement" onClick={handleToggleArchiveClick}>
             <ArchiveDrawerLineIcon className="icon" />
           </a>
-          <a href="#" className="navbarelement" onClick={handleMoreButtonClick}>
-            <MoreLineIcon className="icon" />
-          </a>
         </div>
-        {isMenuOpen && (
-          <div className="menu" ref={menuRef}>
-            <a href="#" className="navbarelement">
-              <Download2LineIcon className="moreicon" />
-            </a>
-            <a href="#" className="navbarelement">
-              <Upload2LineIcon className="moreicon" />
-            </a>
-            <a href="#" className="navbarelement">
-              <SettingsFillIcon className="moreicon" />
-            </a>
-          </div>
-        )}
       </nav>
     </div>
   );
