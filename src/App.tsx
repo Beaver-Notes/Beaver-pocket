@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import styles from "./App.module.css";
@@ -656,5 +657,19 @@ function App() {
     </div>
   );
 }
+=======
+// App.js
+import React from "react";
+import { Routes, Route } from 'react-router-dom';
+import Home from "./Home";
+import Archive from "./Archive";
+
+const App: React.FC = () => (
+  <Routes>
+    <Route path="/" element={<Home />} />
+    <Route path="/archive" element={<Archive />} />
+  </Routes>
+);
+>>>>>>> Stashed changes
 
 export default App;
