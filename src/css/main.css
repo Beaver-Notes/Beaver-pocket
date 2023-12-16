@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    @apply dark:text-white bg-white dark:bg-[#232222];
+    font-family: 'Arimo', sans-serif;
+}
+
+h1 {
+    @apply text-3xl font-bold leading-relaxed 
+  }
+  
+  h2 {
+    @apply text-3xl font-bold leading-relaxed 
+  }
+  
+  h3 {
+    @apply text-2xl font-bold leading-relaxed 
+  }
+  
+  h4 {
+    @apply text-xl font-bold leading-relaxed 
+  }
+  
+  h5 {
+    @apply text-lg font-bold leading-relaxed 
+  }
+  
+  h6 {
+    @apply text-base font-bold leading-relaxed 
+  }
