@@ -7,6 +7,7 @@ import {
   JSONContent,
   generateText,
 } from "@tiptap/react";
+import { useNavigate } from 'react-router-dom';
 import Document from "@tiptap/extension-document";
 import Placeholder from "@tiptap/extension-placeholder";
 import { ReactNodeViewRenderer } from "@tiptap/react";
@@ -97,11 +98,12 @@ const extensions = [
 
 type Props = {
   note: Note;
+  onCloseEditor: () => void;
   onChange: (content: JSONContent, title?: string) => void;
   isFullScreen?: boolean;
 };
 
-function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
+function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Props) {
   const editor = useEditor(
     {
       extensions,
@@ -318,6 +320,12 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
     }
   };
 
+  const navigate = useNavigate();
+
+  const goHome = () => {
+    navigate('/');
+  };
+
   const toggleBold = () => {
     editor?.chain().focus().toggleBold().run();
   };
@@ -388,9 +396,9 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
       >
         <div className={styles.toolbarContainer}>
           <div className={styles.toolbar}>
-            <a className={styles.toolbarButton} href="/">
+            <button className={styles.toolbarButton} onClick={onCloseEditor}>
               <ArrowLeftSLineIcon className={styles.toolbarIcon} />
-            </a>
+            </button>
             <button
               className={
                 editor?.isActive("bold")

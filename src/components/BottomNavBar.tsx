@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ArchiveDrawerLineIcon from 'remixicon-react/ArchiveLineIcon';
+import Settings4LineIcon from 'remixicon-react/SettingsLineIcon';
 import HomeLineIcon from 'remixicon-react/HomeLineIcon';
 import AddFillIcon from 'remixicon-react/AddFillIcon';
 import './css/BottomNavBar.css';
+import { Link } from 'react-router-dom';
 
 interface BottomNavBarProps {
   onCreateNewNote: () => void;
@@ -11,16 +13,11 @@ interface BottomNavBarProps {
 
 const BottomNavBar: React.FC<BottomNavBarProps> = ({
   onCreateNewNote,
-  onToggleArchiveVisibility,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
   const [isVisible, setIsVisible] = useState(true);
   const menuRef = useRef<HTMLDivElement | null>(null);
-
-  const handleToggleArchiveClick = () => {
-    onToggleArchiveVisibility(true);
-  };
 
   const closeMenu = () => {
     setIsMenuOpen(false);
@@ -67,12 +64,21 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
           <a href="#" className="navbarelement" onClick={onCreateNewNote}>
             <AddFillIcon className="icon" />
           </a>
-          <a href="/" className="navbarelement">
+          <Link to="/">
+          <button className="navbarelement">
             <HomeLineIcon className="icon" />
-          </a>
-          <a href="#" className="navbarelement" onClick={handleToggleArchiveClick}>
+          </button>
+          </Link>
+          <Link to="/archive">
+          <button className="navbarelement">
             <ArchiveDrawerLineIcon className="icon" />
-          </a>
+          </button>
+          </Link>
+          <Link to="/archive">
+          <button className="navbarelement">
+            <Settings4LineIcon className="icon" />
+          </button>
+          </Link>
         </div>
       </nav>
     </div>
