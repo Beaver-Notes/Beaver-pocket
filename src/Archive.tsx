@@ -4,6 +4,7 @@ import { Note } from "./types";
 import NoteEditor from "./NoteEditor";
 import { JSONContent } from "@tiptap/react";
 import BottomNavBar from './components/BottomNavBar';
+import Sidebar from './components/Sidebar';
 import "./css/main.css";
 import {
   Filesystem,
@@ -12,18 +13,12 @@ import {
 } from "@capacitor/filesystem";
 
 // Import Remix icons
-import AddFillIcon from "remixicon-react/AddFillIcon";
-import ArchiveLineIcon from "remixicon-react/ArchiveLineIcon";
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
-import Bookmark3LineIcon from "remixicon-react/Bookmark3LineIcon";
-import Bookmark3FillIcon from "remixicon-react/Bookmark3FillIcon";
 import ArchiveDrawerLineIcon from "remixicon-react/ArchiveLineIcon";
 import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
-import BookletLineIcon from "remixicon-react/BookletLineIcon";
-import EditLineIcon from "remixicon-react/EditLineIcon";
 import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
 
 async function createNotesDirectory() {
@@ -42,6 +37,27 @@ async function createNotesDirectory() {
 
 
 const App: React.FC = () => {
+
+  
+  const storedDarkMode = localStorage.getItem('darkMode') ?? 'false';
+  document.documentElement.classList.toggle('dark', JSON.parse(storedDarkMode));
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check if the user has a preference for dark mode in localStorage
+    const storedDarkMode = localStorage.getItem('darkMode');
+    return storedDarkMode ? JSON.parse(storedDarkMode) : false;
+  });
+
+  // Effect to update the classList and localStorage when isDarkMode changes
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+  }, [isDarkMode]);
+
+  // Function to toggle dark mode
+  const toggleTheme = () => {
+    setIsDarkMode((prevMode: any) => !prevMode);
+  }
 
   const loadNotes = async () => {
     try {
@@ -165,33 +181,6 @@ const App: React.FC = () => {
     },
     [loadNotes]
   );
-
-  const handleToggleBookmark = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent event propagation
-
-    try {
-      const notes = await loadNotes();
-      const updatedNote = { ...notes[noteId] };
-
-      // Toggle the 'isBookmarked' property
-      updatedNote.isBookmarked = !updatedNote.isBookmarked;
-
-      // Update the note in the dictionary
-      notes[noteId] = updatedNote;
-
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      setNotesState(notes); // Update the state
-    } catch (error) {
-      console.error("Error toggling bookmark:", error);
-      alert("Error toggling bookmark: " + (error as any).message);
-    }
-  };
 
 
   const handleToggleArchive = async (noteId: string, event: React.MouseEvent) => {
@@ -540,53 +529,13 @@ const App: React.FC = () => {
 
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-      <div className="flex flex-col items-center justify-between p-2 h-full bg-[#F8F8F7] dark:bg-[#353333] hidden sm:flex">
-        <div className="py-5">
-          <button
-            className="hidden mb-2 p-2 bg-[#EBEBEA] dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={handleCreateNewNote}
-          >
-            <AddFillIcon className="text-amber-400 h-8 w-8" />
-          </button>
-
-          <button
-            className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={() => setIsArchiveVisible(!isArchiveVisible)}
-          >
-            <EditLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-
-          <button
-            className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={() => setIsArchiveVisible(!isArchiveVisible)}
-          >
-            <BookletLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-
-          <button
-            className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={() => setIsArchiveVisible(!isArchiveVisible)}
-          >
-            <ArchiveLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-        </div>
-        <div className="fixed bottom-6">
-          <button className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex" onClick={exportData}>
-            <Upload2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-          
-          <label htmlFor="importData" className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex">
-            <Download2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </label>
-          <input
-            className="hidden"
-            type="file"
-            id="importData"
-            accept=".json"
-            onChange={handleImportData}
-          />
-        </div>
-      </div>
+    <Sidebar
+        onCreateNewNote={handleCreateNewNote}
+        isDarkMode={isDarkMode}
+        toggleTheme={toggleTheme}
+        exportData={exportData}
+        handleImportData={handleImportData}
+      />
 
       <div className="overflow-y">
         {!activeNoteId && (
@@ -646,7 +595,7 @@ const App: React.FC = () => {
               </div>
             </div>
             <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
-                <div className="py-4">
+                <div className="py-12">
                   {notesList.filter((note) => note.isArchived).length > 0 && (
                     <h2 className="text-3xl font-bold">Archived</h2>
                   )}

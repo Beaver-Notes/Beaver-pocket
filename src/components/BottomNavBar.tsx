@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ArchiveDrawerLineIcon from 'remixicon-react/ArchiveLineIcon';
 import Settings4LineIcon from 'remixicon-react/SettingsLineIcon';
 import HomeLineIcon from 'remixicon-react/HomeLineIcon';
 import AddFillIcon from 'remixicon-react/AddFillIcon';
-import './css/BottomNavBar.css';
 import { Link } from 'react-router-dom';
 
 interface BottomNavBarProps {
@@ -14,14 +13,8 @@ interface BottomNavBarProps {
 const BottomNavBar: React.FC<BottomNavBarProps> = ({
   onCreateNewNote,
 }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
   const [isVisible, setIsVisible] = useState(true);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
 
   const handleScroll = () => {
     const currentScrollPos = window.pageYOffset;
@@ -36,20 +29,6 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
   };
 
   useEffect(() => {
-    const handleDocumentClick = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        closeMenu();
-      }
-    };
-
-    document.addEventListener('mousedown', handleDocumentClick);
-
-    return () => {
-      document.removeEventListener('mousedown', handleDocumentClick);
-    };
-  }, []);
-
-  useEffect(() => {
     window.addEventListener('scroll', handleScroll);
 
     return () => {
@@ -59,24 +38,24 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
 
   return (
     <div className={`spacingdiv ${isVisible ? 'visible' : 'hidden'}`}>
-      <nav className={`BottomNavbar ${isMenuOpen ? 'open' : ''}`}>
-        <div className="Navbardiv">
-          <a href="#" className="navbarelement" onClick={onCreateNewNote}>
-            <AddFillIcon className="icon" />
+      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-4 shadow-lg rounded-full md:hidden w-[calc(100%-1rem)]">
+        <div className="flex justify-between">
+          <a href="#" className="p-2" onClick={onCreateNewNote}>
+            <AddFillIcon className="text-white hover:text-amber-400 h-8 w-8" />
           </a>
           <Link to="/">
-          <button className="navbarelement">
-            <HomeLineIcon className="icon" />
+          <button className="p-2">
+            <HomeLineIcon className="text-white hover:text-amber-400 h-8 w-8" />
           </button>
           </Link>
           <Link to="/archive">
-          <button className="navbarelement">
-            <ArchiveDrawerLineIcon className="icon" />
+          <button className="p-2">
+            <ArchiveDrawerLineIcon className="text-white hover:text-amber-400 h-8 w-8" />
           </button>
           </Link>
           <Link to="/archive">
-          <button className="navbarelement">
-            <Settings4LineIcon className="icon" />
+          <button className="p-2">
+            <Settings4LineIcon className="text-white hover:text-amber-400 h-8 w-8" />
           </button>
           </Link>
         </div>

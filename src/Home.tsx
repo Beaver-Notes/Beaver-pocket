@@ -3,6 +3,7 @@ import { v4 as uuid } from "uuid";
 import { Note } from "./types";
 import NoteEditor from "./NoteEditor";
 import { JSONContent } from "@tiptap/react";
+import Sidebar from './components/Sidebar';
 import BottomNavBar from './components/BottomNavBar';
 import "./css/main.css";
 import {
@@ -13,7 +14,6 @@ import {
 
 // Import Remix icons
 import AddFillIcon from "remixicon-react/AddFillIcon";
-import ArchiveLineIcon from "remixicon-react/ArchiveLineIcon";
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import Bookmark3LineIcon from "remixicon-react/Bookmark3LineIcon";
@@ -22,9 +22,8 @@ import ArchiveDrawerLineIcon from "remixicon-react/ArchiveLineIcon";
 import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
-import BookletLineIcon from "remixicon-react/BookletLineIcon";
-import EditLineIcon from "remixicon-react/EditLineIcon";
 import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
+
 
 async function createNotesDirectory() {
   const directoryPath = 'notes';
@@ -42,6 +41,9 @@ async function createNotesDirectory() {
 
 
 const App: React.FC = () => {
+
+  const storedDarkMode = localStorage.getItem('darkMode') ?? 'false';
+  document.documentElement.classList.toggle('dark', JSON.parse(storedDarkMode));
 
   const loadNotes = async () => {
     try {
@@ -112,6 +114,23 @@ const App: React.FC = () => {
       }
     }
   };
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check if the user has a preference for dark mode in localStorage
+    const storedDarkMode = localStorage.getItem('darkMode');
+    return storedDarkMode ? JSON.parse(storedDarkMode) : false;
+  });
+
+  // Effect to update the classList and localStorage when isDarkMode changes
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+  }, [isDarkMode]);
+
+  // Function to toggle dark mode
+  const toggleTheme = () => {
+    setIsDarkMode((prevMode: any) => !prevMode);
+  }
 
   const STORAGE_PATH = "notes/data.json";
 
@@ -536,57 +555,17 @@ const App: React.FC = () => {
     setFilteredNotes(
       Object.fromEntries(filteredNotes.map((note) => [note.id, note]))
     );
-  };  
+  };
 
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-      <div className="flex flex-col items-center justify-between p-2 h-full bg-[#F8F8F7] dark:bg-[#353333] hidden sm:flex">
-        <div className="py-5">
-          <button
-            className="hidden mb-2 p-2 bg-[#EBEBEA] dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={handleCreateNewNote}
-          >
-            <AddFillIcon className="text-amber-400 h-8 w-8" />
-          </button>
-
-          <button
-            className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={() => setIsArchiveVisible(!isArchiveVisible)}
-          >
-            <EditLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-
-          <button
-            className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={() => setIsArchiveVisible(!isArchiveVisible)}
-          >
-            <BookletLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-
-          <button
-            className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
-            onClick={() => setIsArchiveVisible(!isArchiveVisible)}
-          >
-            <ArchiveLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-        </div>
-        <div className="fixed bottom-6">
-          <button className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex" onClick={exportData}>
-            <Upload2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
-          
-          <label htmlFor="importData" className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex">
-            <Download2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </label>
-          <input
-            className="hidden"
-            type="file"
-            id="importData"
-            accept=".json"
-            onChange={handleImportData}
-          />
-        </div>
-      </div>
+    <Sidebar
+        onCreateNewNote={handleCreateNewNote}
+        isDarkMode={isDarkMode}
+        toggleTheme={toggleTheme}
+        exportData={exportData}
+        handleImportData={handleImportData}
+      />
 
       <div className="overflow-y">
         {!activeNoteId && (
@@ -610,13 +589,13 @@ const App: React.FC = () => {
                 <div className="md:w-[22em] h-12 flex items-center justify-start mx-auto sm:hidden overflow-hidden">
                   <div className="border-r-2 border-gray-300 dark:border-neutral-800 p-3 rounded-l-full bg-[#F8F8F7] text-center dark:bg-[#2D2C2C] flex-grow text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
                     <button className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center" onClick={exportData}>
-                      <Upload2LineIcon/>
+                      <Upload2LineIcon />
                     </button>
                   </div>
                   <div className="border-l-2 border-gray-300 dark:border-neutral-800 p-3 rounded-r-full bg-[#F8F8F7] dark:bg-[#2D2C2C] text-center flex-grow mr-2 text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
                     <div className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center">
                       <label htmlFor="importData">
-                        <Download2LineIcon/>
+                        <Download2LineIcon />
                       </label>
                       <input
                         className="hidden"
@@ -628,25 +607,25 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="relative inline-flex items-center">
-                  <select
-                    id="labelSelect"
-                    onChange={(e) => handleLabelFilterChange(e.target.value)}
-                    className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
-                  >
-                    <option value="">Select Label</option>
-                    {uniqueLabels.map((label) => (
-                      <option key={label} value={label}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                    <select
+                      id="labelSelect"
+                      onChange={(e) => handleLabelFilterChange(e.target.value)}
+                      className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                    >
+                      <option value="">Select Label</option>
+                      {uniqueLabels.map((label) => (
+                        <option key={label} value={label}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                    <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
             <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
-              <div className="py-2 md:py-4">
+              <div className="py-4">
                 {notesList.filter((note) => note.isBookmarked && !note.isArchived)
                   .length > 0 && <h2 className="text-3xl font-bold">Bookmarked</h2>}
                 <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
@@ -707,69 +686,6 @@ const App: React.FC = () => {
                   })}
                 </div>
               </div>
-              {isArchiveVisible ? (
-                <div className="py-2 md:py-4">
-                  {notesList.filter((note) => note.isArchived).length > 0 && (
-                    <h2 className="text-3xl font-bold">Archived</h2>
-                  )}
-                  <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
-                    {notesList
-                      .filter((note) => note.isArchived)
-                      .map((note) => (
-                        <div
-                          key={note.id}
-                          role="button"
-                          tabIndex={0}
-                          className={
-                            note.id === activeNoteId
-                              ? "p-3 h-auto cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C] h-48;"
-                              : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                          }
-                          onClick={() => setActiveNoteId(note.id)}
-                        >
-                          <div className="h-36 overflow-hidden">
-                            <div className="flex flex-col h-full overflow-hidden">
-                              <div className="text-2xl">
-                                {note.title}
-                              </div>
-                              {note.labels.length > 0 && (
-                                <div className="flex gap-2">
-                                  {note.labels.map((label) => (
-                                    <span key={label} className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md">#{label}</span>
-                                  ))}
-                                </div>
-                              )}
-                              <div className="text-lg">
-                                {note.content &&
-                                  truncateContentPreview(note.content)}
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            className="text-[#52525C] py-2 dark:text-white w-auto"
-                            onClick={(e) => handleToggleArchive(note.id, e)}
-                          >
-                            {note.isArchived ? (
-                              <ArchiveDrawerFillIcon
-                                className="w-8 h-8 mr-2"
-                              />
-                            ) : (
-                              <ArchiveDrawerLineIcon
-                                className="w-8 h-8 mr-2"
-                              />
-                            )}
-                          </button>
-                          <button
-                            className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                            onClick={() => handleDeleteNote(note.id)}
-                          >
-                            <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                          </button>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              ) : null}
               <div className="py-4">
                 <h2 className="text-3xl font-bold">All Notes</h2>
                 {notesList.length === 0 && (
@@ -850,7 +766,7 @@ const App: React.FC = () => {
         )}
         <div>
           {activeNote && (
-            <NoteEditor note={activeNote} onChange={handleChangeNoteContent} onCloseEditor={handleCloseEditor}/>
+            <NoteEditor note={activeNote} onChange={handleChangeNoteContent} onCloseEditor={handleCloseEditor} />
           )}
         </div>
       </div>

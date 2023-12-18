@@ -7,7 +7,6 @@ import {
   JSONContent,
   generateText,
 } from "@tiptap/react";
-import { useNavigate } from 'react-router-dom';
 import Document from "@tiptap/extension-document";
 import Placeholder from "@tiptap/extension-placeholder";
 import { ReactNodeViewRenderer } from "@tiptap/react";
@@ -110,7 +109,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
       content: note.content,
       editorProps: {
         attributes: {
-          class: styles.TextEditor,
+          class: "overflow-auto outline-none",
         },
       },
       onUpdate: ({ editor }) => {
@@ -320,12 +319,6 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
     }
   };
 
-  const navigate = useNavigate();
-
-  const goHome = () => {
-    navigate('/');
-  };
-
   const toggleBold = () => {
     editor?.chain().focus().toggleBold().run();
   };
@@ -391,114 +384,114 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
     <div className="pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base">
       <div
         className={
-          isFullScreen ? styles.fullScreenEditor : styles.toolbarContainer
+          isFullScreen ? "overflow-auto w-full" : "fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
         }
       >
-        <div className={styles.toolbarContainer}>
-          <div className={styles.toolbar}>
-            <button className={styles.toolbarButton} onClick={onCloseEditor}>
-              <ArrowLeftSLineIcon className={styles.toolbarIcon} />
+        <div className="fixed inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar">
+          <div className="bottom-6 flex overflow-y-hidden items-center justify-center w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
+            <button className="p-2 rounded-md text-white bg-transparent cursor-pointer" onClick={onCloseEditor}>
+              <ArrowLeftSLineIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <button
               className={
                 editor?.isActive("bold")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-white bg-transparent cursor-pointer"
               }
               onClick={toggleBold}
             >
-              <BoldIcon className={styles.toolbarIcon} />
+              <BoldIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <button
               className={
                 editor?.isActive("italic")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-white bg-transparent cursor-pointer"
               }
               onClick={toggleItalic}
             >
-              <ItalicIcon className={styles.toolbarIcon} />
+              <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <button
               className={
                 editor?.isActive("underline")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-white bg-transparent cursor-pointer"
               }
               onClick={toggleUnderline}
             >
-              <UnderlineIcon className={styles.toolbarIcon} />
+              <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <button
               className={
                 editor?.isActive("strike")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-white bg-transparent cursor-pointer"
               }
               onClick={toggleStrike}
             >
-              <StrikethroughIcon className={styles.toolbarIcon} />
+              <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <button
               className={
                 editor?.isActive("highlight")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-white bg-transparent cursor-pointer"
               }
               onClick={toggleHighlight}
             >
-              <MarkPenLineIcon className={styles.toolbarIcon} />
+              <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
 
             <button
               className={
                 editor?.isActive("OrderedList")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-white bg-transparent cursor-pointer"
               }
               onClick={toggleOrderedList}
             >
-              <ListOrderedIcon className={styles.toolbarIcon} />
+              <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <button
               className={
                 editor?.isActive("UnorderedList")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-white bg-transparent cursor-pointer"
               }
               onClick={toggleUnorderedList}
             >
-              <ListUnorderedIcon className={styles.toolbarIcon} />
+              <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <button
               className={
                 editor?.isActive("Tasklist")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-white bg-transparent cursor-pointer"
               }
               onClick={toggleTaskList}
             >
-              <ListCheck2Icon className={styles.toolbarIcon} />
+              <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <button
               className={
                 editor?.isActive("Blockquote")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-white bg-transparent cursor-pointer"
               }
               onClick={toggleBlockquote}
             >
-              <DoubleQuotesLIcon className={styles.toolbarIcon} />
+              <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
 
             <button
               onClick={setLink}
-              className={styles.toolbarButton}
+              className={"p-2 rounded-md text-white bg-transparent cursor-pointer"}
             >
-              <LinkIcon className={styles.toolbarIcon} />
+              <LinkIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <button
-              className={styles.toolbarButton}
+              className={"p-2 rounded-md text-white bg-transparent cursor-pointer"}
               onClick={() => {
                 const imageInput =
                   document.getElementById("image-upload-input");
@@ -507,7 +500,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
                 }
               }}
             >
-              <ImageLineIcon className={styles.toolbarIcon} />
+              <ImageLineIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <input
               type="file"
@@ -523,11 +516,11 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
           </div>
         </div>
       </div>
-      <div className={styles.labels}>
+      <div className="flex flex-wrap gap-2 mt-4">
         {labelsArray.map((label, index) => (
           <span
             key={index}
-            className={styles.label}
+            className="text-lg bg-amber-400 bg-opacity-10 text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
             onClick={() => {
               setEditingLabelIndex(index);
 
@@ -539,7 +532,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
           >
             {editingLabelIndex === index ? (
               <div
-                className={styles.editinput}
+                className="min-w-0 flex-auto bg-transparent outline-none"
                 contentEditable
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -570,8 +563,8 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
           }}
         />
       </div>
-      <div className={styles.edtiorContainer}>
-        <EditorContent editor={editor} className={styles.textEditorContent} />
+      <div className="py-6">
+        <EditorContent editor={editor} className="overflow-auto h-full pl-6 pr-6 py-4"/>
       </div>
     </div>
   );
