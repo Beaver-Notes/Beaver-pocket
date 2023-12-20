@@ -20,6 +20,27 @@
     "@jridgewell/gen-mapping" "^0.3.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
+"@awesome-cordova-plugins/core@6.6.0":
+  version "6.6.0"
+  resolved "https://registry.yarnpkg.com/@awesome-cordova-plugins/core/-/core-6.6.0.tgz#2d274d4e618ed968727b092aa927f1688b8c0a9c"
+  integrity sha512-mr2oI+qIoxgoccG57VMkkQdedvulIFJ+kyDeXZvrA1CSkFu1RzTwRvM6QuyA01f9i9G9hSSONpAp4v94h45LNA==
+  dependencies:
+    "@types/cordova" latest
+
+"@awesome-cordova-plugins/file-opener@6.6.0":
+  version "6.6.0"
+  resolved "https://registry.yarnpkg.com/@awesome-cordova-plugins/file-opener/-/file-opener-6.6.0.tgz#fff228afae14a444e0eef74d2654a40725f7d616"
+  integrity sha512-RvckaHnd78TumSlNKbL6cDDfNBjIdB3Eua95IwpGLxCwr5BTJ0cCOooEksHcSZlwpjisvUeDL+fBuEyyKqQr2g==
+  dependencies:
+    "@types/cordova" latest
+
+"@awesome-cordova-plugins/printer@6.6.0":
+  version "6.6.0"
+  resolved "https://registry.yarnpkg.com/@awesome-cordova-plugins/printer/-/printer-6.6.0.tgz#9840f787d31c7db08d335bef53f1ec63641e1219"
+  integrity sha512-N3LQqthCJCQunGrliq+m1gGEj3FIJrPAfX1kyzEXx2duNEgWbInHaEgCnvgg0fzk38I0uRBfHkvFcJjV300gmw==
+  dependencies:
+    "@types/cordova" latest
+
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.22.13", "@babel/code-frame@^7.23.5":
   version "7.23.5"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.23.5.tgz#9009b69a8c602293476ad598ff53e4562e15c244"
@@ -1391,13 +1412,6 @@
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.1.tgz#e5211452df060fa8522b55c7b3c0c4d1981cb044"
   integrity sha512-dvuCeX5fC9dXgJn9t+X5atfmgQAzUOWqS1254Gh0m6i8wKd10ebXkfNKiRK+1GWi/yTvvLDHpoxLr0xxxeslWw==
-
-"@ionic-native/file-opener@^5.36.0":
-  version "5.36.0"
-  resolved "https://registry.yarnpkg.com/@ionic-native/file-opener/-/file-opener-5.36.0.tgz#ad1f6bf4585bd0521625ea651dfefd92ea7308e1"
-  integrity sha512-UKp3pbqvQXsAtLMJ5JE+KcTMxpjSZMFebf6nvy/KJvwy85JGIaCV4ZVM/H9CFUrHJMWBH6wDbY+WPygnsrl4Yg==
-  dependencies:
-    "@types/cordova" latest
 
 "@ionic/cli-framework-output@^2.2.5":
   version "2.2.7"
@@ -5558,6 +5572,14 @@ react-router@6.21.0:
   dependencies:
     "@remix-run/router" "1.14.0"
 
+react-to-pdf@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/react-to-pdf/-/react-to-pdf-1.0.1.tgz#a9a54ba9af9df4213078bf34eb2ffabb752b7263"
+  integrity sha512-ZsIkY6Z5gg3oBhMbWfl+tYwQ12vpPuuAzvCv+MnXchO8l08tElzRkBNAXxfbQNG/EDOHgE5EvWBlvE7ypt/y9A==
+  dependencies:
+    html2canvas "^1.4.1"
+    jspdf "^2.5.1"
+
 react@^18.2.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react/-/react-18.2.0.tgz#555bd98592883255fa00de14f1151a917b5d77d5"
@@ -5796,6 +5818,13 @@ run-parallel@^1.1.9:
   integrity sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==
   dependencies:
     queue-microtask "^1.2.2"
+
+rxjs@^7.8.1:
+  version "7.8.1"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-7.8.1.tgz#6f6f3d99ea8044291efd92e7c7fcf562c4057543"
+  integrity sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==
+  dependencies:
+    tslib "^2.1.0"
 
 safe-array-concat@^1.0.1:
   version "1.0.1"

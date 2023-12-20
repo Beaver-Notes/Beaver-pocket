@@ -10,12 +10,16 @@ PODS:
     - Capacitor
   - CapacitorKeyboard (5.0.6):
     - Capacitor
+  - CapacitorShare (5.0.6):
+    - Capacitor
   - CapacitorSplashScreen (5.0.6):
     - Capacitor
   - CapacitorStatusBar (5.0.6):
     - Capacitor
   - CapawesomeCapacitorFilePicker (5.1.1):
     - Capacitor
+  - CordovaPlugins (5.5.1):
+    - CapacitorCordova
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -24,9 +28,11 @@ DEPENDENCIES:
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
+  - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - "CapawesomeCapacitorFilePicker (from `../../node_modules/@capawesome/capacitor-file-picker`)"
+  - CordovaPlugins (from `../capacitor-cordova-ios-plugins`)
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -41,12 +47,16 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/haptics"
   CapacitorKeyboard:
     :path: "../../node_modules/@capacitor/keyboard"
+  CapacitorShare:
+    :path: "../../node_modules/@capacitor/share"
   CapacitorSplashScreen:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
   CapawesomeCapacitorFilePicker:
     :path: "../../node_modules/@capawesome/capacitor-file-picker"
+  CordovaPlugins:
+    :path: "../capacitor-cordova-ios-plugins"
 
 SPEC CHECKSUMS:
   Capacitor: 9da0a2415e3b6098511f8b5ffdb578d91ee79f8f
@@ -55,10 +65,12 @@ SPEC CHECKSUMS:
   CapacitorFilesystem: af704badfbc69f6f8623d9ed313e5490e3723dcb
   CapacitorHaptics: 1fffc1217c7e64a472d7845be50fb0c2f7d4204c
   CapacitorKeyboard: b978154b024a5f65e044908e37d15b7de58b9d12
+  CapacitorShare: cd41743331cb71d217c029de54b681cbd91e0fcc
   CapacitorSplashScreen: 5fa2ab5e46cf5cc530cf16a51c80c7a986579ccd
   CapacitorStatusBar: 565c0a1ebd79bb40d797606a8992b4a105885309
   CapawesomeCapacitorFilePicker: 4a27a464c569de315738fcb7bdd3ad544ef3c7c2
+  CordovaPlugins: 7e7553610e64fad8133022c4f4edcd2b95f5ba76
 
-PODFILE CHECKSUM: dad24680a0852db63d72cac9ad20f836ad2ea276
+PODFILE CHECKSUM: a822daf8043d8c23a0cdf14b496b77470ed1d3d3
 
 COCOAPODS: 1.14.3

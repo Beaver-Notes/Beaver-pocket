@@ -1,5 +1,5 @@
 Arguments: 
-  /Users/danielerolli/.nvm/versions/node/v18.16.1/bin/node /usr/local/Cellar/yarn/1.22.19/libexec/bin/yarn.js add @capacitor/printer
+  /Users/danielerolli/.nvm/versions/node/v18.16.1/bin/node /usr/local/Cellar/yarn/1.22.19/libexec/bin/yarn.js add @react-pdf-viewer/react-to-pdf
 
 PATH: 
   /Users/danielerolli/.rbenv/shims:/Users/danielerolli/.pyenv/shims:/Users/danielerolli/.nvm/versions/node/v18.16.1/bin:/opt/local/bin:/opt/local/sbin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Applications/Little Snitch.app/Contents/Components:/Applications/VMware Fusion.app/Contents/Public:/Users/danielerolli/.rbenv/shims:/Users/danielerolli/.nvm/versions/node/v18.16.1/bin:/opt/local/bin:/opt/local/sbin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/opt/homebrew/bin:/opt/homebrew/sbin
@@ -14,7 +14,7 @@ Platform:
   darwin arm64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@capacitor%2fprinter: Not found
+  Error: https://registry.yarnpkg.com/@react-pdf-viewer%2freact-to-pdf: Not found
       at params.callback [as _callback] (/usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:66145:18)
       at self.callback (/usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:140890:22)
       at Request.emit (node:events:513:28)
@@ -41,6 +41,9 @@ npm manifest:
       "ionic:serve": "vite"
     },
     "dependencies": {
+      "@awesome-cordova-plugins/core": "6.6.0",
+      "@awesome-cordova-plugins/file-opener": "6.6.0",
+      "@awesome-cordova-plugins/printer": "6.6.0",
       "@benrbray/prosemirror-math": "^0.2.2",
       "@capacitor/android": "5.5.1",
       "@capacitor/app": "5.0.6",
@@ -50,10 +53,10 @@ npm manifest:
       "@capacitor/haptics": "5.0.6",
       "@capacitor/ios": "5.5.1",
       "@capacitor/keyboard": "5.0.6",
+      "@capacitor/share": "^5.0.6",
       "@capacitor/splash-screen": "^5.0.6",
       "@capacitor/status-bar": "5.0.6",
       "@capawesome/capacitor-file-picker": "^5.1.1",
-      "@ionic-native/file-opener": "^5.36.0",
       "@ionic/react": "^7.6.0",
       "@nytimes/react-prosemirror": "^0.4.2",
       "@tiptap/extension-blockquote": "^2.1.13",
@@ -88,6 +91,7 @@ npm manifest:
       "file-saver": "^2.0.5",
       "highlight.js": "^11.9.0",
       "html-pdf": "^3.0.1",
+      "html2canvas": "^1.4.1",
       "html2pdf.js": "^0.10.1",
       "jspdf": "^2.5.1",
       "jszip": "^3.10.1",
@@ -106,6 +110,7 @@ npm manifest:
       "react-router-dom": "^6.21.0",
       "remixicon": "3.7.0",
       "remixicon-react": "^1.0.0",
+      "rxjs": "^7.8.1",
       "tiptap": "^1.32.2",
       "tiptap-commands": "^1.17.1",
       "uuid": "^9.0.1"
@@ -153,6 +158,27 @@ Lockfile:
     dependencies:
       "@jridgewell/gen-mapping" "^0.3.0"
       "@jridgewell/trace-mapping" "^0.3.9"
+  
+  "@awesome-cordova-plugins/core@6.6.0":
+    version "6.6.0"
+    resolved "https://registry.yarnpkg.com/@awesome-cordova-plugins/core/-/core-6.6.0.tgz#2d274d4e618ed968727b092aa927f1688b8c0a9c"
+    integrity sha512-mr2oI+qIoxgoccG57VMkkQdedvulIFJ+kyDeXZvrA1CSkFu1RzTwRvM6QuyA01f9i9G9hSSONpAp4v94h45LNA==
+    dependencies:
+      "@types/cordova" latest
+  
+  "@awesome-cordova-plugins/file-opener@6.6.0":
+    version "6.6.0"
+    resolved "https://registry.yarnpkg.com/@awesome-cordova-plugins/file-opener/-/file-opener-6.6.0.tgz#fff228afae14a444e0eef74d2654a40725f7d616"
+    integrity sha512-RvckaHnd78TumSlNKbL6cDDfNBjIdB3Eua95IwpGLxCwr5BTJ0cCOooEksHcSZlwpjisvUeDL+fBuEyyKqQr2g==
+    dependencies:
+      "@types/cordova" latest
+  
+  "@awesome-cordova-plugins/printer@6.6.0":
+    version "6.6.0"
+    resolved "https://registry.yarnpkg.com/@awesome-cordova-plugins/printer/-/printer-6.6.0.tgz#9840f787d31c7db08d335bef53f1ec63641e1219"
+    integrity sha512-N3LQqthCJCQunGrliq+m1gGEj3FIJrPAfX1kyzEXx2duNEgWbInHaEgCnvgg0fzk38I0uRBfHkvFcJjV300gmw==
+    dependencies:
+      "@types/cordova" latest
   
   "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.22.13", "@babel/code-frame@^7.23.5":
     version "7.23.5"
@@ -1340,6 +1366,11 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/@capacitor/keyboard/-/keyboard-5.0.6.tgz#04400e71b677abf9f1fc1ceaffd1211e7d864319"
     integrity sha512-9GewAa/y2Hwkdw/Be8MTdiAjrFZ7TPDKpR44M0Y/0QMnK+mBbgzcoZ/UkuumWv6e2F1IAI+VY5eYVQHDeZcRoA==
   
+  "@capacitor/share@^5.0.6":
+    version "5.0.6"
+    resolved "https://registry.yarnpkg.com/@capacitor/share/-/share-5.0.6.tgz#76d2f6f13d1596999c49a0d99d21e7a63b8ecfef"
+    integrity sha512-/dVOW7kcuuD7hWB9Z1drArIpEk+5JCoMnMrAs2c7CLp3q5PeaXNJjTkGr6RJ1OtMhsHyXc6DAFwQ4frFkmZsgw==
+  
   "@capacitor/splash-screen@^5.0.6":
     version "5.0.6"
     resolved "https://registry.yarnpkg.com/@capacitor/splash-screen/-/splash-screen-5.0.6.tgz#d29320de49cc68add59e17fecb64aa2f1a08447f"
@@ -1520,13 +1551,6 @@ Lockfile:
     version "2.0.1"
     resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.1.tgz#e5211452df060fa8522b55c7b3c0c4d1981cb044"
     integrity sha512-dvuCeX5fC9dXgJn9t+X5atfmgQAzUOWqS1254Gh0m6i8wKd10ebXkfNKiRK+1GWi/yTvvLDHpoxLr0xxxeslWw==
-  
-  "@ionic-native/file-opener@^5.36.0":
-    version "5.36.0"
-    resolved "https://registry.yarnpkg.com/@ionic-native/file-opener/-/file-opener-5.36.0.tgz#ad1f6bf4585bd0521625ea651dfefd92ea7308e1"
-    integrity sha512-UKp3pbqvQXsAtLMJ5JE+KcTMxpjSZMFebf6nvy/KJvwy85JGIaCV4ZVM/H9CFUrHJMWBH6wDbY+WPygnsrl4Yg==
-    dependencies:
-      "@types/cordova" latest
   
   "@ionic/cli-framework-output@^2.2.5":
     version "2.2.7"
@@ -4142,7 +4166,7 @@ Lockfile:
     optionalDependencies:
       phantomjs-prebuilt "^2.1.16"
   
-  html2canvas@^1.0.0, html2canvas@^1.0.0-rc.5:
+  html2canvas@^1.0.0, html2canvas@^1.0.0-rc.5, html2canvas@^1.4.1:
     version "1.4.1"
     resolved "https://registry.yarnpkg.com/html2canvas/-/html2canvas-1.4.1.tgz#7cef1888311b5011d507794a066041b14669a543"
     integrity sha512-fPU6BHNpsyIhr8yyMpTLLxAbkaK8ArIBcmZIRiBLiDhjeqvXolaEmDGmELFuX9I4xDcaKKcJl+TKZLqruBbmWA==
@@ -5925,6 +5949,13 @@ Lockfile:
     integrity sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==
     dependencies:
       queue-microtask "^1.2.2"
+  
+  rxjs@^7.8.1:
+    version "7.8.1"
+    resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-7.8.1.tgz#6f6f3d99ea8044291efd92e7c7fcf562c4057543"
+    integrity sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==
+    dependencies:
+      tslib "^2.1.0"
   
   safe-array-concat@^1.0.1:
     version "1.0.1"
