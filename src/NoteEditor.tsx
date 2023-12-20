@@ -8,6 +8,7 @@ import {
   generateText,
 } from "@tiptap/react";
 import Document from "@tiptap/extension-document";
+import generatePDF, { Resolution, Margin, Options } from "react-to-pdf";
 import Placeholder from "@tiptap/extension-placeholder";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -37,8 +38,6 @@ import {
 } from "@capacitor/filesystem";
 import CodeBlockComponent from "./components/CodeBlockComponent";
 import { v4 as uuidv4 } from "uuid";
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 
 // Remix Icons
 
@@ -383,43 +382,47 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
       .run();
   }, [editor]);
 
-  const handlePrint = async () => {
-    try {
-      // Get the HTML content from the Tiptap editor
-      const editorContent = editor?.getHTML();
-  
-      if (!editorContent) {
-        console.error('Editor content not found');
-        return;
+  const options: Options = {
+    filename: "advanced-example.pdf",
+    method: "save",
+    // default is Resolution.MEDIUM = 3, which should be enough, higher values
+    // increases the image quality but also the size of the PDF, so be careful
+    // using values higher than 10 when having multiple pages generated, it
+    // might cause the page to crash or hang.
+    resolution: Resolution.EXTREME,
+    page: {
+      // margin is in MM, default is Margin.NONE = 0
+      margin: Margin.SMALL,
+      // default is 'A4'
+      format: "letter",
+      // default is 'portrait'
+      orientation: "landscape"
+    },
+    canvas: {
+      // default is 'image/jpeg' for better size performance
+      mimeType: "image/jpeg",
+      qualityRatio: 1
+    },
+    // Customize any value passed to the jsPDF instance and html2canvas
+    // function. You probably will not need this and things can break,
+    // so use with caution.
+    overrides: {
+      // see https://artskydj.github.io/jsPDF/docs/jsPDF.html for more options
+      pdf: {
+        compress: true
+      },
+      // see https://html2canvas.hertzen.com/configuration for more options
+      canvas: {
+        useCORS: true
       }
-  
-      // Create a new jsPDF instance with A4 size
-      const pdf = new jsPDF({
-        unit: 'mm',
-        format: 'a4',
-      });
-  
-      // Add the HTML content to the PDF
-      pdf.html(editorContent, {
-        callback: () => {
-          // Save the PDF using FileSaver.js
-          pdf.save('generated-pdf.pdf');
-        },
-      });
-    } catch (error) {
-      console.error('Error generating or saving PDF:', error);
-  
-      // Log the error details
-      if (error instanceof Error) {
-        console.error(error.message);
-        console.error(error.stack);
-      }
-  
-      // Show a user-friendly error message
-      alert('An error occurred while generating or saving the PDF. Please try again.');
     }
   };
   
+  // you can also use a function to return the target element besides using React refs
+  const getTargetElement = () => document.getElementById("container");
+  
+  const downloadPdf = () => generatePDF(getTargetElement, options);
+
   return (
     <div className="pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base">
       <div
@@ -554,7 +557,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
               id="image-upload-input" // Add this ID
             />
             <button className={"p-2 rounded-md text-white bg-transparent cursor-pointer"}
-              onClick={handlePrint}>
+              onClick={downloadPdf}>
               <PrinterLineIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
           </div>
@@ -608,8 +611,8 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
             }}
           />
         </div>
-        <div className="py-6" id="content-to-print">
-          <EditorContent editor={editor} className="overflow-auto h-full"/>
+        <div className="py-6 h-full w-full" id="container">
+          <EditorContent editor={editor} className="overflow-auto h-full w-full"/>
         </div>
       </div>
     </div>

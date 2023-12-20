@@ -12,6 +12,9 @@
     "ionic:serve": "vite"
   },
   "dependencies": {
+    "@awesome-cordova-plugins/core": "6.6.0",
+    "@awesome-cordova-plugins/file-opener": "6.6.0",
+    "@awesome-cordova-plugins/printer": "6.6.0",
     "@benrbray/prosemirror-math": "^0.2.2",
     "@capacitor/android": "5.5.1",
     "@capacitor/app": "5.0.6",
@@ -25,7 +28,6 @@
     "@capacitor/splash-screen": "^5.0.6",
     "@capacitor/status-bar": "5.0.6",
     "@capawesome/capacitor-file-picker": "^5.1.1",
-    "@ionic-native/file-opener": "^5.36.0",
     "@ionic/react": "^7.6.0",
     "@nytimes/react-prosemirror": "^0.4.2",
     "@tiptap/extension-blockquote": "^2.1.13",
@@ -77,8 +79,10 @@
     "react-dom": "^18.2.0",
     "react-katex": "^3.0.1",
     "react-router-dom": "^6.21.0",
+    "react-to-pdf": "^1.0.1",
     "remixicon": "3.7.0",
     "remixicon-react": "^1.0.0",
+    "rxjs": "^7.8.1",
     "tiptap": "^1.32.2",
     "tiptap-commands": "^1.17.1",
     "uuid": "^9.0.1"

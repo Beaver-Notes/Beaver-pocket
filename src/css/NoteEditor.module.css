@@ -123,3 +123,12 @@ input[type="checkbox"]:checked::before {
   }
 }
 
+@media print {
+  .scroll-content {
+    position: relative;
+  }
+
+  .pane {
+    position: initial;
+  }
+}
