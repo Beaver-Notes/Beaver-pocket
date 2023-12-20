@@ -1,4 +1,3 @@
-// LeftNavBar.js
 import { Link } from 'react-router-dom';
 import AddFillIcon from 'remixicon-react/AddFillIcon';
 import ArchiveLineIcon from 'remixicon-react/ArchiveLineIcon';
@@ -10,22 +9,22 @@ import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import { ChangeEvent } from 'react';
 
-    interface SidebarProps {
-        onCreateNewNote: () => void;
-        isDarkMode: boolean;
-        toggleTheme: () => void;
-        exportData: () => void;
-        handleImportData: (event: ChangeEvent<HTMLInputElement>) => void;
-    }
+interface SidebarProps {
+  onCreateNewNote: () => void;
+  isDarkMode: boolean;
+  toggleTheme: () => void;
+  exportData: () => void;
+  handleImportData: (event: ChangeEvent<HTMLInputElement>) => void;
+}
 
-  const Sidebar: React.FC<SidebarProps> = ({
-    onCreateNewNote,
-    isDarkMode,
-    toggleTheme,
-    exportData,
-    handleImportData,
-  }) => {
-    return (
+const Sidebar: React.FC<SidebarProps> = ({
+  onCreateNewNote,
+  isDarkMode,
+  toggleTheme,
+  exportData,
+  handleImportData,
+}) => {
+  return (
     <div className="flex flex-col items-center justify-between p-2 h-full bg-[#F8F8F7] dark:bg-[#353333] hidden sm:flex">
       <div className="py-5">
         <button
