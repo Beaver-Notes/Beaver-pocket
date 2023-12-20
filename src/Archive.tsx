@@ -594,8 +594,8 @@ const App: React.FC = () => {
               </div>
               </div>
             </div>
-            <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
-                <div className="py-12">
+            <div className="p-2 py-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
+                <div className="pt-[4em]">
                   {notesList.filter((note) => note.isArchived).length > 0 && (
                     <h2 className="text-3xl font-bold">Archived</h2>
                   )}

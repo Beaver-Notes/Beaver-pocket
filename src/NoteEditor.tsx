@@ -37,6 +37,8 @@ import {
 } from "@capacitor/filesystem";
 import CodeBlockComponent from "./components/CodeBlockComponent";
 import { v4 as uuidv4 } from "uuid";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 // Remix Icons
 
@@ -52,6 +54,7 @@ import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
+import PrinterLineIcon from "remixicon-react/PrinterLineIcon";
 
 // Languages
 import css from "highlight.js/lib/languages/css";
@@ -137,7 +140,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
     ) {
       const contentArray =
         "content" in updatedNote.content &&
-        Array.isArray(updatedNote.content.content)
+          Array.isArray(updatedNote.content.content)
           ? updatedNote.content.content
           : [];
 
@@ -201,7 +204,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
   const addLabelToNote = (labelToAdd: string) => {
     // Clone the note to avoid mutating the original state directly
     const updatedNote = { ...note };
-  
+
     // Create a noteLabel node
     const noteLabelNode = {
       type: "noteLabel",
@@ -210,7 +213,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
         label: null,
       },
     };
-  
+
     // Check if content is an array
     if (Array.isArray(updatedNote.content)) {
       // If it is an array, create a new content object with the noteLabelNode
@@ -239,17 +242,17 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
         content: [noteLabelNode],
       };
     }
-  
+
     // Add the label to the labels array
     if (!updatedNote.labels) {
       updatedNote.labels = [labelToAdd];
     } else {
       updatedNote.labels.push(labelToAdd);
     }
-  
+
     // Update the note using the onChange callback
     onChange(updatedNote.content, updatedNote.title);
-  };  
+  };
 
   const handleImageUpload = async (file: File) => {
     try {
@@ -380,6 +383,43 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
       .run();
   }, [editor]);
 
+  const handlePrint = async () => {
+    try {
+      // Get the HTML content from the Tiptap editor
+      const editorContent = editor?.getHTML();
+  
+      if (!editorContent) {
+        console.error('Editor content not found');
+        return;
+      }
+  
+      // Create a new jsPDF instance with A4 size
+      const pdf = new jsPDF({
+        unit: 'mm',
+        format: 'a4',
+      });
+  
+      // Add the HTML content to the PDF
+      pdf.html(editorContent, {
+        callback: () => {
+          // Save the PDF using FileSaver.js
+          pdf.save('generated-pdf.pdf');
+        },
+      });
+    } catch (error) {
+      console.error('Error generating or saving PDF:', error);
+  
+      // Log the error details
+      if (error instanceof Error) {
+        console.error(error.message);
+        console.error(error.stack);
+      }
+  
+      // Show a user-friendly error message
+      alert('An error occurred while generating or saving the PDF. Please try again.');
+    }
+  };
+  
   return (
     <div className="pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base">
       <div
@@ -513,58 +553,64 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
               style={{ display: "none" }}
               id="image-upload-input" // Add this ID
             />
+            <button className={"p-2 rounded-md text-white bg-transparent cursor-pointer"}
+              onClick={handlePrint}>
+              <PrinterLineIcon className="border-none text-white text-xl w-7 h-7" />
+            </button>
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2 mt-4">
-        {labelsArray.map((label, index) => (
-          <span
-            key={index}
-            className="text-lg bg-amber-400 bg-opacity-10 text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-            onClick={() => {
-              setEditingLabelIndex(index);
+      <div>
+        <div className="flex flex-wrap gap-2 mt-4">
+          {labelsArray.map((label, index) => (
+            <span
+              key={index}
+              className="text-lg bg-amber-400 bg-opacity-10 text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+              onClick={() => {
+                setEditingLabelIndex(index);
 
-              // Handle the case when clicking on a label
-              const updatedLabels = [...labelsArray];
-              updatedLabels[index] = label; // Update the label to its original value
-              updateLabelsInNote(label, label); // Fix: Pass both labelToUpdate and newLabel
+                // Handle the case when clicking on a label
+                const updatedLabels = [...labelsArray];
+                updatedLabels[index] = label; // Update the label to its original value
+                updateLabelsInNote(label, label); // Fix: Pass both labelToUpdate and newLabel
+              }}
+            >
+              {editingLabelIndex === index ? (
+                <div
+                  className="min-w-0 flex-auto bg-transparent outline-none"
+                  contentEditable
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const updatedLabels = [...labelsArray];
+                      updatedLabels[index] = e.currentTarget.innerText.trim();
+                      setEditingLabelIndex(null);
+                      // Update the note with the new labels and content
+                      updateLabelsInNote(label, e.currentTarget.innerText.trim()); // Fix: Pass both labelToUpdate and newLabel
+                    }
+                  }}
+                >
+                  {label}
+                </div>
+              ) : (
+                `#${label}`
+              )}
+            </span>
+          ))}
+          <div
+            className={styles.labelinput}
+            contentEditable
+            data-placeholder="Add label"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.currentTarget.innerText.trim() !== "") {
+                addLabelToNote(e.currentTarget.innerText.trim());
+                e.currentTarget.innerText = ""; // Clear the input field after adding the label
+              }
             }}
-          >
-            {editingLabelIndex === index ? (
-              <div
-                className="min-w-0 flex-auto bg-transparent outline-none"
-                contentEditable
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const updatedLabels = [...labelsArray];
-                    updatedLabels[index] = e.currentTarget.innerText.trim();
-                    setEditingLabelIndex(null);
-                    // Update the note with the new labels and content
-                    updateLabelsInNote(label, e.currentTarget.innerText.trim()); // Fix: Pass both labelToUpdate and newLabel
-                  }
-                }}
-              >
-                {label}
-              </div>
-            ) : (
-              `#${label}`
-            )}
-          </span>
-        ))}
-        <div
-          className={styles.labelinput}
-          contentEditable
-          data-placeholder="Add label"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.currentTarget.innerText.trim() !== "") {
-              addLabelToNote(e.currentTarget.innerText.trim());
-              e.currentTarget.innerText = ""; // Clear the input field after adding the label
-            }
-          }}
-        />
-      </div>
-      <div className="py-6">
-        <EditorContent editor={editor} className="overflow-auto h-full pl-6 pr-6 py-4"/>
+          />
+        </div>
+        <div className="py-6" id="content-to-print">
+          <EditorContent editor={editor} className="overflow-auto h-full"/>
+        </div>
       </div>
     </div>
   );
