@@ -38,6 +38,7 @@ import {
 } from "@capacitor/filesystem";
 import CodeBlockComponent from "./components/CodeBlockComponent";
 import { v4 as uuidv4 } from "uuid";
+import HeadingTree from "./lib/HeadingTree";
 
 // Remix Icons
 
@@ -423,8 +424,15 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
   
   const downloadPdf = () => generatePDF(getTargetElement, options);
 
+
+  const handleHeadingClick = (heading: string) => {
+    console.log("Heading clicked:", heading);
+  };
+
+  
   return (
     <div className="pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base">
+      {editor && <HeadingTree editorContent={editor.getJSON()} onHeadingClick={handleHeadingClick} />}
       <div
         className={
           isFullScreen ? "overflow-auto w-full" : "fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
