@@ -1,91 +1,79 @@
-// HeadingTree.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Search2LineIcon from 'remixicon-react/Search2LineIcon';
 
 type HeadingTreeProps = {
-  editorContent: any; // Replace 'any' with the actual type of editor content
   onHeadingClick: (heading: string) => void;
 };
 
-const HeadingTree: React.FC<HeadingTreeProps> = ({ editorContent, onHeadingClick }) => {
-  const [isDropdownOpen, setDropdownOpen] = useState(false);
+const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedHeading, setSelectedHeading] = useState<string | null>(null);
 
-  const extractHeadings = (content: any) => {
-    const headings: { level: any; text: any; }[] = [];
-    if (content?.content) {
-      content.content.forEach((node: any) => {
-        if (node.type === 'heading') {
-          headings.push({
-            level: node.attrs.level,
-            text: node.content.map((textNode: any) => textNode.text).join(' '),
-          });
-        }
-        // Recursively extract headings from nested content
-        headings.push(...extractHeadings(node));
-      });
+  const handleHeadingClick = (heading: string) => {
+    const headings = Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+    const headingElement = headings.find(
+      (element) => element.textContent?.toLowerCase() === heading.toLowerCase()
+    );
+
+    if (headingElement) {
+      headingElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      onHeadingClick(heading);
+      setSelectedHeading(heading);
     }
-    return headings;
   };
 
-  const filteredHeadings = extractHeadings(editorContent).filter((heading: any) =>
-    heading.text.toLowerCase().includes(searchTerm.toLowerCase())
+  const closeHeadingTree = () => {
+    setSelectedHeading(null);
+  };
+
+  useEffect(() => {
+    document.addEventListener('click', closeHeadingTree);
+
+    return () => {
+      document.removeEventListener('click', closeHeadingTree);
+    };
+  }, []);
+
+  const headings = Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(
+    (heading) => heading.textContent?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="fixed bottom-6 overflow-auto h-auto w-full bg-transparent sticky top-0 z-50 no-scrollbar">
-      <div className="relative inline-block text-left">
-        <div>
-          <button
-            onClick={() => setDropdownOpen(!isDropdownOpen)}
-            type="button"
-            className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
-            id="options-menu"
-            aria-haspopup="true"
-            aria-expanded="true"
-          >
-            <Search2LineIcon />
-          </button>
+    <div className="absolute top-20 sm:right-60 right-2 p-3 bg-white rounded-xl shadow dark:bg-[#2D2C2C] dark:text-white z-50 w-64">
+      <div className="mb-2">
+        <div className="flex items-center relative">
+          <Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search headings"
+            className="py-2 outline-none px-4 rounded-xl w-full bg-input bg-transparent transition ring-2 dark:ring-neutral-600 focus:ring-2 focus:ring-amber-300 pl-10"
+          />
         </div>
-
-        {/* Dropdown */}
-        {isDropdownOpen && (
-          <div
-          className='z-10 hidden w-56 p-3 bg-white rounded-lg shadow dark:bg-gray-700'
-            role="menu"
-            aria-orientation="vertical"
-            aria-labelledby="options-menu"
+      </div>
+      <div className="py-1" role="none">
+        {headings.map((heading, index) => (
+          <button
+            key={index}
+            onClick={() => handleHeadingClick(heading.textContent || '')}
+            className={`w-full dark:text-white text-left block focus:bg-amber-400 hover:bg-opacity-30 text-lg rounded-xl px-4 py-2 text-[16px] text-gray-700 hover:bg-amber-400 hover:text-gray-900 ${
+              (index === 0 && !selectedHeading) ? 'bg-amber-400 bg-opacity-10 text-amber-600 mb-2 text-lg' : ''
+            }`}
+            role="menuitem"
           >
-            <div className="px-4 py-2">
-              {/* Search bar */}
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search headings"
-                className="w-full border rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <div className="py-1" role="none">
-              {filteredHeadings.map((heading: any, index: number) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    onHeadingClick(heading.text);
-                    setDropdownOpen(false);
-                  }}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                  role="menuitem"
-                >
-                  {heading.text}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+            {truncateHeading(heading.textContent || '', 2)}
+          </button>
+        ))}
       </div>
     </div>
   );
+};
+
+const truncateHeading = (text: string, words: number) => {
+  const wordsArray = text.split(' ');
+  const truncatedText = wordsArray.slice(0, words).join(' ');
+  return wordsArray.length > words ? `${truncatedText}...` : truncatedText;
 };
 
 export default HeadingTree;

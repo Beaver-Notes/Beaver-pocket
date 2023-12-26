@@ -1,1 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .ProseMirror { position: relative; outline: none; }
+
+body {
+   @apply bg-white dark:bg-[#232222];
+}
