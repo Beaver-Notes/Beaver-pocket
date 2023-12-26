@@ -105,7 +105,7 @@ input[type="checkbox"]:checked::before {
 
 .labelinput:empty:before {
   content:attr(data-placeholder);
-  @apply dark:bg-[#232222] text-neutral-600 dark:text-neutral-400;
+  @apply dark:bg-[#232222] text-neutral-600 dark:text-neutral-200;
 }
 
 @layer utilities {
