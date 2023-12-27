@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Note } from "./types";
 import { lowlight } from 'lowlight'
 import {
@@ -436,6 +436,32 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
     setHeadingTreeVisible(!headingTreeVisible);
   };
 
+  const headingTreeRef = useRef<HTMLDivElement | null>(null);
+
+  // Close heading tree when clicking outside
+  const handleOutsideClick = useCallback(
+    (event: MouseEvent) => {
+      if (
+        headingTreeVisible &&
+        headingTreeRef.current &&
+        event.target instanceof Node &&
+        !headingTreeRef.current.contains(event.target)
+      ) {
+        setHeadingTreeVisible(false);
+      }
+    },
+    [headingTreeVisible]
+  );
+
+  useEffect(() => {
+    // Attach the event listener
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    // Detach the event listener on component unmount
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [handleOutsideClick]);
 
   return (
     <div className="pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base">
@@ -584,10 +610,8 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
         </div>
       </div>
       {headingTreeVisible && editor && (
-        <div>
-          <HeadingTree
-            onHeadingClick={handleHeadingClick}
-          />
+        <div ref={headingTreeRef}>
+          <HeadingTree onHeadingClick={handleHeadingClick} />
         </div>
       )}
 <div className="fixed sm:hidden mt-4 inset-x-2 overflow-auto h-auto w-full bg-transparent sticky top-0 z-50 no-scrollbar flex justify-between">

@@ -592,7 +592,7 @@ const App: React.FC = () => {
 
       <div className="overflow-y">
         {!activeNoteId && (
-          <div className="w-full flex flex-col border-gray-300 overflow-auto">
+          <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
             <div className="bg-transparent px-6">
               <div className="pt-12 flex justify-center">
                 <div className="apply relative w-full md:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2;">
