@@ -5,10 +5,36 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Beaver Notes</title>
-    <script type="module" crossorigin src="/assets/index-ne3RBdR_.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-WPchXlXd.css">
+    <script type="module" crossorigin src="/assets/index-sA1iQWRK.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-ivgY0zey.css">
   </head>
   <body>
     <div id="root"></div>
-  </body>
+    <script>
+
+      const darkThemeCSS = document.createElement('link');
+      darkThemeCSS.rel = 'stylesheet';
+      darkThemeCSS.href = '/assets/dark-theme.css'; 
+      document.head.appendChild(darkThemeCSS);
+    
+      const themeMode = localStorage.getItem('themeMode');
+    
+      if (themeMode === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'themeMode') {
+          if (e.newValue === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          } 
+        }
+      });
+    
+    </script>
+    </body>
 </html>

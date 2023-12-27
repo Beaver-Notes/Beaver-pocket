@@ -26,6 +26,8 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
     setSelectedHeading(null);
   };
 
+  window.addEventListener('click', closeHeadingTree);
+
   useEffect(() => {
     document.addEventListener('click', closeHeadingTree);
 
@@ -69,6 +71,7 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
     </div>
   );
 };
+
 
 const truncateHeading = (text: string, words: number) => {
   const wordsArray = text.split(' ');
