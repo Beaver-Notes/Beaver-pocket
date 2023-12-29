@@ -1179,7 +1179,7 @@
     tslib "^2.4.0"
     xml2js "^0.5.0"
 
-"@capacitor/core@5.6.0":
+"@capacitor/core@5.6.0", "@capacitor/core@latest":
   version "5.6.0"
   resolved "https://registry.yarnpkg.com/@capacitor/core/-/core-5.6.0.tgz#09f766f65d156cda6a0c86bed3b1cc6e4e1184cb"
   integrity sha512-xJhCOUGPHw0QYDA3YH+CmL6qiV9DH4Ij3yPxSenymjrtLuXI197u9ddCZwGEwgVIkh9kGZBBKzsNkn89SZ2gdQ==
@@ -3084,6 +3084,13 @@ canvg@^3.0.6:
     rgbcolor "^1.0.1"
     stackblur-canvas "^2.0.0"
     svg-pathdata "^6.0.3"
+
+capacitor-biometric-auth@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/capacitor-biometric-auth/-/capacitor-biometric-auth-0.1.1.tgz#cfc815b74bd09bf9da6039535712f97accb80541"
+  integrity sha512-LZnYs5nG7dW+dnGu4rI1WotFgsZJq5hwFO6Q6TNO/AZV4UFZDEGYg5e3Z6qUdnKUjVr/NRJfxdLWVt2em83KOA==
+  dependencies:
+    "@capacitor/core" latest
 
 case-anything@^2.1.13:
   version "2.1.13"

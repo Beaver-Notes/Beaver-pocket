@@ -296,6 +296,7 @@ const Archive: React.FC = () => {
           updatedAt: updatedAtTimestamp,
           isBookmarked: note.isBookmarked,
           isArchived: note.isArchived,
+          isLocked: note.isLocked,
           lastCursorPosition: note.lastCursorPosition,
         };
       });
@@ -456,6 +457,7 @@ const Archive: React.FC = () => {
       labels: [],
       isBookmarked: false,
       isArchived: false,
+      isLocked: false,
       lastCursorPosition: 0,
     };
     setNotesState((prevNotes) => ({
