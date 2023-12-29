@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Search2LineIcon from 'remixicon-react/Search2LineIcon';
+import "../css/main.css";
 
 type HeadingTreeProps = {
   onHeadingClick: (heading: string) => void;
@@ -41,7 +42,7 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
   );
 
   return (
-    <div className="absolute top-20 sm:right-60 right-2 p-3 bg-white rounded-xl shadow dark:bg-[#2D2C2C] dark:text-white z-50 w-64">
+    <div className="absolute top-20 sm:right-60 right-2 p-3 bg-white rounded-xl shadow dark:bg-[#2D2C2C] z-50 w-64">
       <div className="mb-2">
         <div className="flex items-center relative">
           <Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />
@@ -50,7 +51,7 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search headings"
-            className="py-2 outline-none px-4 rounded-xl w-full bg-input bg-transparent transition ring-2 dark:ring-neutral-600 focus:ring-2 focus:ring-amber-300 pl-10"
+            className="py-2 outline-none px-4 rounded-xl w-full bg-input bg-transparent transition ring-neutral-200 ring-2 dark:ring-neutral-600 focus:ring-2 focus:ring-amber-300 pl-10"
           />
         </div>
       </div>
@@ -59,8 +60,8 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
           <button
             key={index}
             onClick={() => handleHeadingClick(heading.textContent || '')}
-            className={`w-full dark:text-white text-left block focus:bg-amber-400 hover:bg-opacity-30 text-lg rounded-xl px-4 py-2 text-[16px] text-gray-700 hover:bg-amber-400 hover:text-gray-900 ${
-              (index === 0 && !selectedHeading) ? 'bg-amber-400 bg-opacity-10 text-amber-600 mb-2 text-lg' : ''
+            className={`w-full text-left block text-lg rounded-xl px-4 py-2 text-[16px] hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400 hover:text-opacity-100 ${
+              (index === 0 && !selectedHeading) ? 'bg-amber-400 bg-opacity-10 text-amber-400 text-opacity-100 mb-2 text-lg' : ''
             }`}
             role="menuitem"
           >

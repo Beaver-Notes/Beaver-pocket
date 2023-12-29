@@ -17,16 +17,10 @@ import styles from "./css/NoteEditor.module.css";
 import "./css/NoteEditor.module.css";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Highlight from "@tiptap/extension-highlight";
-import Heading from "@tiptap/extension-heading";
-import Paragraph from "@tiptap/extension-paragraph";
 import Underline from "@tiptap/extension-underline";
-import Code from "@tiptap/extension-code";
 import OrderedList from "@tiptap/extension-list-item";
-import { ListItem } from "@tiptap/extension-list-item";
-import CodeBlock from "@tiptap/extension-code-block";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
-import Blockquote from "@tiptap/extension-blockquote";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
@@ -39,8 +33,9 @@ import {
 import CodeBlockComponent from "./components/CodeBlockComponent";
 import { v4 as uuidv4 } from "uuid";
 import HeadingTree from "./lib/HeadingTree";
+// import Paper from "./lib/tiptap/paper/Paper"
 
-// Remix Icons
+// Icons
 
 import BoldIcon from "remixicon-react/BoldIcon";
 import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
@@ -55,13 +50,13 @@ import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import PrinterLineIcon from "remixicon-react/PrinterLineIcon";
+import Search2LineIcon from "remixicon-react/Search2LineIcon";
 
 // Languages
 import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
 import html from "highlight.js/lib/languages/xml";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
 
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("css", css);
@@ -82,16 +77,8 @@ const extensions = [
   Mathblock,
   Highlight,
   Underline,
-  Heading.configure({
-    levels: [1, 2, 3, 4, 5, 6],
-  }),
-  Paragraph,
-  CodeBlock,
-  Code,
   Placeholder,
   OrderedList,
-  ListItem,
-  Blockquote,
   TaskList,
   TaskItem.configure({
     nested: true,
@@ -420,7 +407,6 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
     }
   };
 
-  // you can also use a function to return the target element besides using React refs
   const getTargetElement = () => document.getElementById("container");
 
   const downloadPdf = () => generatePDF(getTargetElement, options);
@@ -610,7 +596,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
         </div>
       </div>
       {headingTreeVisible && editor && (
-        <div ref={headingTreeRef}>
+        <div ref={headingTreeRef} className={`transition-opacity ${headingTreeVisible ? 'opacity-100' : 'opacity-0'}`}>
           <HeadingTree onHeadingClick={handleHeadingClick} />
         </div>
       )}
