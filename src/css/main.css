@@ -15,6 +15,14 @@ body {
     transition: background-color 0.3s ease;
 }
 
+ol {
+  @apply px-6 list-decimal
+}
+
+ul {
+  @apply px-6 list-disc
+}
+
 h1 {
     @apply text-3xl font-bold leading-relaxed 
   }
