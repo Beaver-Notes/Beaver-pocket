@@ -50,6 +50,7 @@ import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import PrinterLineIcon from "remixicon-react/PrinterLineIcon";
+import Focus3LineIcon  from "remixicon-react/Focus3LineIcon"
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 
 // Languages
@@ -118,6 +119,9 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
   const [editingLabelIndex, setEditingLabelIndex] = useState<number | null>(
     null
   );
+
+  const [focusMode, setFocusMode] = useState(false);
+  const [toolbarVisible, setToolbarVisible] = useState(true);
 
   const updateLabelsInNote = (labelToUpdate: string, newLabel: string) => {
     const updatedNote = { ...note };
@@ -450,7 +454,8 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
   }, [handleOutsideClick]);
 
   return (
-    <div className="pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base">
+    <div className={`pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base`}>
+    {toolbarVisible && (
       <div
         className={
           isFullScreen ? "overflow-auto w-full" : "fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
@@ -595,8 +600,10 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
           </div>
         </div>
       </div>
+      )}
+
       {headingTreeVisible && editor && (
-        <div ref={headingTreeRef} className={`transition-opacity ${headingTreeVisible ? 'opacity-100' : 'opacity-0'}`}>
+        <div ref={headingTreeRef} className={`transition-opacity ${headingTreeVisible ? 'opacity-100' : 'opacity-0'}` }>
           <HeadingTree onHeadingClick={handleHeadingClick} />
         </div>
       )}
@@ -605,11 +612,14 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
     <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
   </button>
   <div className="flex">
-    <button className="p-2 rounded-md text-white bg-transparent cursor-pointer" onClick={downloadPdf}>
-      <PrinterLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+    <button className="p-2 rounded-md text-white bg-transparent cursor-pointer"   onClick={() => {
+        setFocusMode((prevFocusMode) => !prevFocusMode);
+        setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
+  }}>
+      <Focus3LineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
     </button>
     <button className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer" onClick={toggleHeadingTree}>
-      <Search2LineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+      <Search2LineIcon className={`border-none ${focusMode ? 'hidden' : 'block'}  dark:text-white text-neutral-800 text-xl w-7 h-7`} />
     </button>
   </div>
 </div>

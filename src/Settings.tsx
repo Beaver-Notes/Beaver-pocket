@@ -407,6 +407,7 @@ const App: React.FC = () => {
             labels: [],
             isBookmarked: false,
             isArchived: false,
+            isLocked: false,
             lastCursorPosition: 0,
         };
         setNotesState((prevNotes) => ({
@@ -430,10 +431,10 @@ const App: React.FC = () => {
                 exportData={exportData}
                 handleImportData={handleImportData}
             />
-            <div className="mx-10 sm:mx-auto">
+            <div className="mx-10 sm:px-60">
                 <div className="pt-12">
                     <p className="text-4xl font-bold">Preferences</p>
-                    <div className="sm:w-3/4 w-full sm:order-2 order-1">
+                    <div className="w-full sm:order-2 order-1">
                         <p className="text-xl pt-4 text-neutral-700 dark:text-white">App Theme</p>
                         <div className="grid py-2 w-full h-full grid-cols-3 gap-8 cursor-pointer rounded-md items-center justify-center">
                             <button className="bg-transparent rounded-xl" onClick={() => toggleTheme(false)}>
