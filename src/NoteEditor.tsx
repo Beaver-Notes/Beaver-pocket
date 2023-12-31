@@ -452,6 +452,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [handleOutsideClick]);
+  
 
   return (
     <div className={`pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base`}>

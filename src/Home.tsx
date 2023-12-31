@@ -24,6 +24,8 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
+import LockClosedIcon from "remixicon-react/LockLineIcon";
+import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 
 async function createNotesDirectory() {
   const directoryPath = "notes";
@@ -40,9 +42,6 @@ async function createNotesDirectory() {
 }
 
 const App: React.FC = () => {
-
-  
-  
   const loadNotes = async () => {
     try {
       await createNotesDirectory(); // Create the directory before reading/writing
@@ -584,6 +583,77 @@ const App: React.FC = () => {
     );
   };
 
+  const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Stop the click event from propagating
+
+    try {
+      const notes = await loadNotes();
+      const updatedNote = { ...notes[noteId] };
+
+      // Check if a password is set
+      let sharedKey = localStorage.getItem("sharedKey");
+
+      if (!sharedKey) {
+        // If no shared key is set, prompt the user to set it up
+        sharedKey = prompt("Set up a password to lock your notes:");
+
+        if (!sharedKey) {
+          // If the user cancels or enters an empty password, do not proceed
+          alert("Note remains unlocked. Please set up a password next time.");
+          return;
+        }
+
+        // Save the shared key in local storage
+        localStorage.setItem("sharedKey", sharedKey);
+      }
+
+      if (updatedNote.isLocked) {
+        // If the note is locked, prompt for the password
+        const enteredKey = prompt("Enter the password to unlock the note:");
+
+        if (enteredKey !== sharedKey) {
+          // Incorrect password, do not unlock the note
+          alert("Incorrect password. Note remains locked.");
+          return;
+        }
+      }
+
+      // Toggle the 'isLocked' property
+      updatedNote.isLocked = !updatedNote.isLocked;
+
+      // Update the note in the dictionary
+      notes[noteId] = updatedNote;
+
+      await Filesystem.writeFile({
+        path: STORAGE_PATH,
+        data: JSON.stringify({ data: { notes } }),
+        directory: Directory.Documents,
+        encoding: FilesystemEncoding.UTF8,
+      });
+
+      setNotesState(notes); // Update the state
+    } catch (error) {
+      console.error("Error toggling lock:", error);
+      alert("Error toggling lock: " + (error as any).message);
+    }
+  };
+
+  const handleClickNote = async (note: Note) => {
+    if (note.isLocked) {
+      const userSharedKey = prompt("Enter the shared key to unlock the note:");
+  
+      // Check if the entered key matches the stored key
+      const storedSharedKey = localStorage.getItem("sharedKey");
+      if (userSharedKey === storedSharedKey) {
+        setActiveNoteId(note.id);
+      } else {
+        alert("Incorrect shared key. Note remains locked.");
+      }
+    } else {
+      setActiveNoteId(note.id);
+    }
+  };
+
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
       <Sidebar
@@ -690,10 +760,10 @@ const App: React.FC = () => {
                                   ))}
                                 </div>
                               )}
-                                <div className="text-lg">
-                                  {note.content &&
-                                    truncateContentPreview(note.content)}
-                                </div>
+                              <div className="text-lg">
+                                {note.content &&
+                                  truncateContentPreview(note.content)}
+                              </div>
                             </div>
                           </div>
                           <div className="py-2">
@@ -747,8 +817,8 @@ const App: React.FC = () => {
                             ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
                             : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
                         }
-                        onClick={() => setActiveNoteId(note.id)}
-                      >
+                        onClick={() => handleClickNote(note)}
+                        >
                         <div className="h-36 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
@@ -764,10 +834,16 @@ const App: React.FC = () => {
                                 ))}
                               </div>
                             )}
-                            <div className="text-lg">
-                              {note.content &&
-                                truncateContentPreview(note.content)}
-                            </div>
+                            {note.isLocked ? (
+                              <p className="text-red-500">
+                                This note is locked. Unlock to view content.
+                              </p>
+                            ) : (
+                              <div className="text-lg">
+                                {note.content &&
+                                  truncateContentPreview(note.content)}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <button
@@ -788,6 +864,16 @@ const App: React.FC = () => {
                             <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
                           ) : (
                             <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
+                          )}
+                        </button>
+                        <button
+                          className="text-[#52525C] py-2 dark:text-white w-auto"
+                          onClick={(e) => handleToggleLock(note.id, e)}
+                        >
+                          {note.isLocked ? (
+                            <LockClosedIcon className="w-8 h-8 mr-2" />
+                          ) : (
+                            <LockOpenIcon className="w-8 h-8 mr-2" />
                           )}
                         </button>
                         <button
