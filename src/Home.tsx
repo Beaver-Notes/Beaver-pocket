@@ -24,8 +24,6 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
-import LockLineIcon from "remixicon-react/LockLineIcon";
-import LockUnlock from "remixicon-react/LockUnlockLineIcon";
 
 async function createNotesDirectory() {
   const directoryPath = "notes";
@@ -42,6 +40,9 @@ async function createNotesDirectory() {
 }
 
 const App: React.FC = () => {
+
+  
+  
   const loadNotes = async () => {
     try {
       await createNotesDirectory(); // Create the directory before reading/writing
@@ -127,7 +128,6 @@ const App: React.FC = () => {
     return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
   });
 
-  // Effect to update the classList and localStorage when darkMode or themeMode changes
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("themeMode", themeMode);
@@ -584,105 +584,6 @@ const App: React.FC = () => {
     );
   };
 
-  const handleToggleLock = async (noteId: string) => {
-    const isConfirmed = window.confirm(
-      "Are you sure you want to lock/unlock this note?"
-    );
-  
-    if (isConfirmed) {
-      const notes = await loadNotes();
-      const currentNote = notes[noteId];
-  
-      // Check if the note is currently locked
-      if (currentNote.isLocked) {
-        // The note is currently locked, ask the user for the shared key
-        const enteredKey = prompt("Enter the shared key to unlock the note:");
-  
-        // Check if the entered key matches the stored shared key
-        const storedKey = localStorage.getItem("sharedKey");
-  
-        if (enteredKey === storedKey) {
-          // If the keys match, unlock the note
-          currentNote.isLocked = false;
-          notes[noteId] = currentNote;
-  
-          try {
-            await saveNotesToStorage(notes);
-            setNotesState(notes);
-          } catch (error) {
-            console.error("Error unlocking note:", error);
-            alert("Error unlocking note: " + (error as any).message);
-          }
-        } else {
-          // If the keys do not match, display an error message
-          alert("Incorrect shared key. Note remains locked.");
-        }
-      } else {
-        // The note is currently unlocked, check for the presence of sharedKey
-        const storedKey = localStorage.getItem("sharedKey");
-  
-        if (!storedKey) {
-          // If sharedKey is not present, prompt the user to set it
-          const newKey = prompt("Set a shared key to lock the note:");
-  
-          // Check if the user set a new key
-          if (newKey !== null) {
-            // Save the new key to localStorage
-            localStorage.setItem("sharedKey", newKey);
-          }
-        }
-  
-        // Toggle the lock status
-        currentNote.isLocked = !currentNote.isLocked;
-        notes[noteId] = currentNote;
-  
-        try {
-          await saveNotesToStorage(notes);
-          setNotesState(notes);
-        } catch (error) {
-          console.error("Error toggling lock:", error);
-          alert("Error toggling lock: " + (error as any).message);
-        }
-      }
-    }
-  };  
-
-  const saveNotesToStorage = async (notes: Record<string, Note>) => {
-    try {
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
-        encoding: FilesystemEncoding.UTF8,
-      });
-    } catch (error) {
-      console.error("Error saving notes to storage:", error);
-      throw error; // Propagate the error for handling in the calling function
-    }
-  };
-
-  const handleNoteClick = (noteId: string) => {
-    const note = notesState[noteId];
-  
-    if (note.isLocked) {
-      const enteredKey = prompt("Enter the shared key to unlock the note:");
-  
-      // Check if the entered key matches the stored shared key
-      const storedKey = localStorage.getItem("sharedKey");
-  
-      if (enteredKey === storedKey) {
-        // If the keys match, set the note as active
-        setActiveNoteId(noteId);
-      } else {
-        // If the keys do not match, display an error message
-        alert("Incorrect shared key. Note remains locked.");
-      }
-    } else {
-      // If the note is not locked, set it as active directly
-      setActiveNoteId(noteId);
-    }
-  };
-
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
       <Sidebar
@@ -773,7 +674,6 @@ const App: React.FC = () => {
                               ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
                               : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
                           }
-                          onClick={() => handleNoteClick(note.id)}
                         >
                           <div className="h-36 overflow-hidden">
                             <div className="flex flex-col h-full overflow-hidden">
@@ -790,19 +690,10 @@ const App: React.FC = () => {
                                   ))}
                                 </div>
                               )}
-                              {note.isLocked ? (
-                                <div className="flex items-center justify-center h-full">
-                                  <div className="flex flex-col items-center">
-                                    <LockLineIcon className="w-20 h-20 text-neutral-600 dark:text-white" />
-                                    <p>This note is locked</p>
-                                  </div>
-                                </div>
-                              ) : (
                                 <div className="text-lg">
                                   {note.content &&
                                     truncateContentPreview(note.content)}
                                 </div>
-                              )}
                             </div>
                           </div>
                           <div className="py-2">
@@ -904,19 +795,6 @@ const App: React.FC = () => {
                           onClick={() => handleDeleteNote(note.id)}
                         >
                           <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                        </button>
-                        <button
-                          className="text-[#52525C] py-2 dark:text-white w-auto"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleLock(note.id);
-                          }}
-                        >
-                          {note.isLocked ? (
-                            <LockUnlock className="w-8 h-8 mr-2" />
-                          ) : (
-                            <LockLineIcon className="w-8 h-8 mr-2" />
-                          )}
                         </button>
                       </div>
                     ))}
