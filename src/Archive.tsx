@@ -20,6 +20,8 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
+import LockClosedIcon from "remixicon-react/LockLineIcon";
+import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 
 async function createNotesDirectory() {
   const directoryPath = "notes";
@@ -428,10 +430,8 @@ const Archive: React.FC = () => {
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
-  const handleChangeNoteContent = (
-    content: JSONContent,
-    title: string = "Untitled Note"
-  ) => {
+  const [title, setTitle] = useState("Untitled Note");
+  const handleChangeNoteContent = (content: JSONContent) => {
     if (activeNoteId) {
       const updateNote = {
         ...notesState[activeNoteId],
@@ -456,7 +456,7 @@ const Archive: React.FC = () => {
       updatedAt: new Date(),
       labels: [],
       isBookmarked: false,
-      isArchived: false,
+      isArchived: true,
       isLocked: false,
       lastCursorPosition: 0,
     };
@@ -546,6 +546,71 @@ const Archive: React.FC = () => {
     setFilteredNotes(
       Object.fromEntries(filteredNotes.map((note) => [note.id, note]))
     );
+  };
+
+  const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Stop the click event from propagating
+  
+    try {
+      const notes = await loadNotes();
+      const updatedNote = { ...notes[noteId] };
+  
+      // Check if a password is set
+      let sharedKey = localStorage.getItem("sharedKey");
+  
+      if (!sharedKey) {
+        // If no shared key is set, prompt the user to set it up
+        sharedKey = prompt("Set up a password to lock your notes:");
+  
+        if (!sharedKey) {
+          // If the user cancels or enters an empty password, do not proceed
+          alert("Note remains unlocked. Please set up a password next time.");
+          return;
+        }
+  
+        // Save the shared key in local storage
+        localStorage.setItem("sharedKey", sharedKey);
+      }
+  
+      if (updatedNote.isLocked) {
+        // If the note is locked, prompt for the password
+        const enteredKey = prompt("Enter the password to unlock the note:");
+  
+        if (enteredKey !== sharedKey) {
+          // Incorrect password, do not unlock the note
+          alert("Incorrect password. Note remains locked.");
+          return;
+        }
+  
+        // Remove the note from the lockedNotes field
+        const lockedNotes = JSON.parse(localStorage.getItem("lockedNotes") || "{}");
+        delete lockedNotes[noteId];
+        localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
+      } else {
+        // Add the note to the lockedNotes field
+        const lockedNotes = JSON.parse(localStorage.getItem("lockedNotes") || "{}");
+        lockedNotes[noteId] = true;
+        localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
+      }
+  
+      // Toggle the 'isLocked' property
+      updatedNote.isLocked = !updatedNote.isLocked;
+  
+      // Update the note in the dictionary
+      notes[noteId] = updatedNote;
+  
+      await Filesystem.writeFile({
+        path: STORAGE_PATH,
+        data: JSON.stringify({ data: { notes } }),
+        directory: Directory.Documents,
+        encoding: FilesystemEncoding.UTF8,
+      });
+  
+      setNotesState(notes); // Update the state
+    } catch (error) {
+      console.error("Error toggling lock:", error);
+      alert("Error toggling lock: " + (error as any).message);
+    }
   };
 
   return (
@@ -1350,22 +1415,41 @@ const Archive: React.FC = () => {
                         <div className="h-36 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
-                            {note.labels.length > 0 && (
-                              <div className="flex gap-2">
-                                {note.labels.map((label) => (
-                                  <span
-                                    key={label}
-                                    className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                  >
-                                    #{label}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            <div className="text-lg">
-                              {note.content &&
-                                truncateContentPreview(note.content)}
-                            </div>
+                            {note.isLocked ? (
+                                <div>
+                                  <p></p>
+                                </div>
+                              ) : (
+                                <div>
+                                  {note.labels.length > 0 && (
+                                    <div className="flex gap-2">
+                                      {note.labels.map((label) => (
+                                        <span
+                                          key={label}
+                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                        >
+                                          #{label}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {note.isLocked ? (
+                                <div className="flex flex-col items-center">
+                                  <button className="flex items-center justify-center">
+                                    <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
+                                  </button>
+                                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                    Unlock to edit
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="text-lg">
+                                  {note.content &&
+                                    truncateContentPreview(note.content)}
+                                </div>
+                              )}
                           </div>
                         </div>
                         <button
@@ -1376,6 +1460,16 @@ const Archive: React.FC = () => {
                             <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
                           ) : (
                             <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
+                          )}
+                        </button>
+                        <button
+                          className="text-[#52525C] py-2 dark:text-white w-auto"
+                          onClick={(e) => handleToggleLock(note.id, e)}
+                        >
+                          {note.isLocked ? (
+                            <LockClosedIcon className="w-8 h-8 mr-2" />
+                          ) : (
+                            <LockOpenIcon className="w-8 h-8 mr-2" />
                           )}
                         </button>
                         <button
@@ -1398,9 +1492,11 @@ const Archive: React.FC = () => {
           </div>
         )}
         <div>
-          {activeNote && (
+        {activeNote && (
             <NoteEditor
               note={activeNote}
+              title={title}
+              onTitleChange={setTitle}
               onChange={handleChangeNoteContent}
               onCloseEditor={handleCloseEditor}
             />

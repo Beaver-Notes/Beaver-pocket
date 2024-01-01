@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Note } from "./types";
-import { lowlight } from 'lowlight'
-import {
-  EditorContent,
-  useEditor,
-  JSONContent,
-  generateText,
-} from "@tiptap/react";
+import { lowlight } from "lowlight";
+import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Document from "@tiptap/extension-document";
 import generatePDF, { Resolution, Margin, Options } from "react-to-pdf";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -50,7 +45,7 @@ import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import PrinterLineIcon from "remixicon-react/PrinterLineIcon";
-import Focus3LineIcon  from "remixicon-react/Focus3LineIcon"
+import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 
 // Languages
@@ -92,9 +87,33 @@ type Props = {
   onCloseEditor: () => void;
   onChange: (content: JSONContent, title?: string) => void;
   isFullScreen?: boolean;
+  title: string;
+  onTitleChange: (newTitle: string) => void;
 };
 
-function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Props) {
+function NoteEditor({
+  note,
+  onChange,
+  onCloseEditor,
+  onTitleChange,
+  isFullScreen = false,
+}: Props) {
+
+  const [localTitle, setLocalTitle] = useState<string>(note.title);
+
+  const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
+    const newTitle = event.currentTarget.innerText;
+    setLocalTitle(newTitle);
+    onTitleChange(newTitle);
+    // Call onChange with the updated content and title
+    onChange(editor?.getJSON() || {} as JSONContent, newTitle);
+  };
+
+  useEffect(() => {
+    // Update local title when the note changes
+    setLocalTitle(note.title);
+  }, [note.title]);
+
   const editor = useEditor(
     {
       extensions,
@@ -106,11 +125,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
       },
       onUpdate: ({ editor }) => {
         const editorContent = editor.getJSON();
-        const firstNodeContent = editorContent.content?.[0];
-        onChange(
-          editorContent,
-          firstNodeContent && generateText(firstNodeContent, extensions)
-        );
+        onChange(editorContent);
       },
     },
     [note.id]
@@ -132,7 +147,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
     ) {
       const contentArray =
         "content" in updatedNote.content &&
-          Array.isArray(updatedNote.content.content)
+        Array.isArray(updatedNote.content.content)
           ? updatedNote.content.content
           : [];
 
@@ -182,7 +197,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
         }
 
         // Call the onChange callback with the updated content and title
-        onChange(updatedNote.content, updatedNote.title);
+        onChange(updatedNote.content);
       }
     }
   };
@@ -243,7 +258,7 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
     }
 
     // Update the note using the onChange callback
-    onChange(updatedNote.content, updatedNote.title);
+    onChange(updatedNote.content);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -389,12 +404,12 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
       // default is 'A4'
       format: "letter",
       // default is 'portrait'
-      orientation: "landscape"
+      orientation: "landscape",
     },
     canvas: {
       // default is 'image/jpeg' for better size performance
       mimeType: "image/jpeg",
-      qualityRatio: 1
+      qualityRatio: 1,
     },
     // Customize any value passed to the jsPDF instance and html2canvas
     // function. You probably will not need this and things can break,
@@ -402,19 +417,18 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
     overrides: {
       // see https://artskydj.github.io/jsPDF/docs/jsPDF.html for more options
       pdf: {
-        compress: true
+        compress: true,
       },
       // see https://html2canvas.hertzen.com/configuration for more options
       canvas: {
-        useCORS: true
-      }
-    }
+        useCORS: true,
+      },
+    },
   };
 
   const getTargetElement = () => document.getElementById("container");
 
   const downloadPdf = () => generatePDF(getTargetElement, options);
-
 
   const handleHeadingClick = (heading: string) => {
     console.log("Heading clicked:", heading);
@@ -452,178 +466,221 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [handleOutsideClick]);
-  
 
   return (
-    <div className={`pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base`}>
-    {toolbarVisible && (
-      <div
-        className={
-          isFullScreen ? "overflow-auto w-full" : "fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
-        }
-      >
-        <div className="fixed inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar">
-          <div className="bottom-6 flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
-            <button className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer" onClick={onCloseEditor}>
-              <ArrowLeftSLineIcon className="border-none text-white text-xl w-7 h-7" />
-            </button>
-            <div className="sm:mx-auto flex overflow-y-hidden w-fit">
+    <div
+      className={`pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base`}
+    >
+      {toolbarVisible && (
+        <div
+          className={
+            isFullScreen
+              ? "overflow-auto w-full"
+              : "fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
+          }
+        >
+          <div className="fixed inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar">
+            <div className="bottom-6 flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
               <button
-                className={
-                  editor?.isActive("bold")
-                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                }
-                onClick={toggleBold}
+                className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
+                onClick={onCloseEditor}
               >
-                <BoldIcon className="border-none text-white text-xl w-7 h-7" />
+                <ArrowLeftSLineIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
-              <button
-                className={
-                  editor?.isActive("italic")
-                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                }
-                onClick={toggleItalic}
-              >
-                <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-              <button
-                className={
-                  editor?.isActive("underline")
-                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                }
-                onClick={toggleUnderline}
-              >
-                <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-              <button
-                className={
-                  editor?.isActive("strike")
-                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                }
-                onClick={toggleStrike}
-              >
-                <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-              <button
-                className={
-                  editor?.isActive("highlight")
-                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                }
-                onClick={toggleHighlight}
-              >
-                <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-
-              <button
-                className={
-                  editor?.isActive("OrderedList")
-                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                }
-                onClick={toggleOrderedList}
-              >
-                <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-              <button
-                className={
-                  editor?.isActive("UnorderedList")
-                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                }
-                onClick={toggleUnorderedList}
-              >
-                <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-              <button
-                className={
-                  editor?.isActive("Tasklist")
-                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                }
-                onClick={toggleTaskList}
-              >
-                <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-              <button
-                className={
-                  editor?.isActive("Blockquote")
-                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                }
-                onClick={toggleBlockquote}
-              >
-                <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-
-              <button
-                onClick={setLink}
-                className={"p-2 rounded-md text-white bg-transparent cursor-pointer"}
-              >
-                <LinkIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-              <button
-                className={"p-2 rounded-md text-white bg-transparent cursor-pointer"}
-                onClick={() => {
-                  const imageInput =
-                    document.getElementById("image-upload-input");
-                  if (imageInput) {
-                    imageInput.click();
+              <div className="sm:mx-auto flex overflow-y-hidden w-fit">
+                <button
+                  className={
+                    editor?.isActive("bold")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
                   }
-                }}
-              >
-                <ImageLineIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files) {
-                    handleImageUpload(e.target.files[0]);
+                  onClick={toggleBold}
+                >
+                  <BoldIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("italic")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
                   }
-                }}
-                style={{ display: "none" }}
-                id="image-upload-input" // Add this ID
-              />
-              <button className={"hidden sm:block p-2 rounded-md text-white bg-transparent cursor-pointer"}
-                onClick={downloadPdf}>
-                <PrinterLineIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-            </div>
-            <button className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer" onClick={toggleHeadingTree}
+                  onClick={toggleItalic}
+                >
+                  <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("underline")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleUnderline}
+                >
+                  <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("strike")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleStrike}
+                >
+                  <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("highlight")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleHighlight}
+                >
+                  <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+
+                <button
+                  className={
+                    editor?.isActive("OrderedList")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleOrderedList}
+                >
+                  <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("UnorderedList")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleUnorderedList}
+                >
+                  <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("Tasklist")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleTaskList}
+                >
+                  <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("Blockquote")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleBlockquote}
+                >
+                  <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+
+                <button
+                  onClick={setLink}
+                  className={
+                    "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                >
+                  <LinkIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={() => {
+                    const imageInput =
+                      document.getElementById("image-upload-input");
+                    if (imageInput) {
+                      imageInput.click();
+                    }
+                  }}
+                >
+                  <ImageLineIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      handleImageUpload(e.target.files[0]);
+                    }
+                  }}
+                  style={{ display: "none" }}
+                  id="image-upload-input" // Add this ID
+                />
+                <button
+                  className={
+                    "hidden sm:block p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={downloadPdf}
+                >
+                  <PrinterLineIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+              </div>
+              <button
+                className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
+                onClick={toggleHeadingTree}
               >
                 <Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
+            </div>
           </div>
         </div>
-      </div>
       )}
 
       {headingTreeVisible && editor && (
-        <div ref={headingTreeRef} className={`transition-opacity ${headingTreeVisible ? 'opacity-100' : 'opacity-0'}` }>
+        <div
+          ref={headingTreeRef}
+          className={`transition-opacity ${
+            headingTreeVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
           <HeadingTree onHeadingClick={handleHeadingClick} />
         </div>
       )}
-<div className="fixed sm:hidden mt-4 inset-x-2 overflow-auto h-auto w-full bg-transparent sticky top-0 z-50 no-scrollbar flex justify-between">
-  <button className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer" onClick={onCloseEditor}>
-    <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
-  </button>
-  <div className="flex">
-    <button className="p-2 rounded-md text-white bg-transparent cursor-pointer"   onClick={() => {
-        setFocusMode((prevFocusMode) => !prevFocusMode);
-        setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
-  }}>
-      <Focus3LineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
-    </button>
-    <button className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer" onClick={toggleHeadingTree}>
-      <Search2LineIcon className={`border-none ${focusMode ? 'hidden' : 'block'}  dark:text-white text-neutral-800 text-xl w-7 h-7`} />
-    </button>
-  </div>
-</div>
+      <div className="fixed sm:hidden mt-4 inset-x-2 overflow-auto h-auto w-full bg-transparent sticky top-0 z-50 no-scrollbar flex justify-between">
+        <button
+          className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
+          onClick={onCloseEditor}
+        >
+          <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+        </button>
+        <div className="flex">
+          <button
+            className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+            onClick={() => {
+              setFocusMode((prevFocusMode) => !prevFocusMode);
+              setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
+            }}
+          >
+            <Focus3LineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+          </button>
+          <button
+            className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
+            onClick={toggleHeadingTree}
+          >
+            <Search2LineIcon
+              className={`border-none ${
+                focusMode ? "hidden" : "block"
+              }  dark:text-white text-neutral-800 text-xl w-7 h-7`}
+            />
+          </button>
+        </div>
+      </div>
+
+      <div
+      contentEditable
+      suppressContentEditableWarning
+      className="text-3xl font-bold overflow-y-scroll outline-none"
+      onBlur={handleTitleChange}
+      dangerouslySetInnerHTML={{ __html: localTitle }}
+    />
+
       <div>
         <div className="flex flex-wrap mt-4 gap-2">
           {labelsArray.map((label, index) => (
@@ -649,7 +706,10 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
                       updatedLabels[index] = e.currentTarget.innerText.trim();
                       setEditingLabelIndex(null);
                       // Update the note with the new labels and content
-                      updateLabelsInNote(label, e.currentTarget.innerText.trim()); // Fix: Pass both labelToUpdate and newLabel
+                      updateLabelsInNote(
+                        label,
+                        e.currentTarget.innerText.trim()
+                      ); // Fix: Pass both labelToUpdate and newLabel
                     }
                   }}
                 >
@@ -665,7 +725,10 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
             contentEditable
             data-placeholder="Add label"
             onKeyDown={(e) => {
-              if (e.key === "Enter" && e.currentTarget.innerText.trim() !== "") {
+              if (
+                e.key === "Enter" &&
+                e.currentTarget.innerText.trim() !== ""
+              ) {
                 addLabelToNote(e.currentTarget.innerText.trim());
                 e.currentTarget.innerText = ""; // Clear the input field after adding the label
               }
@@ -673,7 +736,10 @@ function NoteEditor({ note, onChange, onCloseEditor, isFullScreen = false }: Pro
           />
         </div>
         <div className="py-2 h-full w-full" id="container">
-          <EditorContent editor={editor} className="overflow-auto h-full w-full" />
+          <EditorContent
+            editor={editor}
+            className="overflow-auto h-full w-full"
+          />
         </div>
       </div>
     </div>
