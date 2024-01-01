@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import debounce from "./lib/debounce";
 import { v4 as uuid } from "uuid";
 import { Note } from "./types";
 import NoteEditor from "./NoteEditor";
@@ -289,7 +288,7 @@ const App: React.FC = () => {
     try {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-
+  
       // Create the parent export folder
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
@@ -297,31 +296,35 @@ const App: React.FC = () => {
         directory: Directory.Documents,
         recursive: true,
       });
-
+  
       // Create the export folder structure
       const exportFolderName = `Beaver Notes ${formattedDate}`;
       const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
-
+  
       // Create the export folder
       await Filesystem.mkdir({
         path: exportFolderPath,
         directory: Directory.Documents,
         recursive: true,
       });
-
+  
       // Export data.json
       const exportedData: any = {
         data: {
           notes: {},
+          lockedNotes: {}, // Add the lockedNotes field
         },
+        labels: [], // Add the labels field
       };
-
+  
+      // Iterate through notes to populate the exportedData object
       Object.values(notesState).forEach((note) => {
         const createdAtTimestamp =
           note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
         const updatedAtTimestamp =
           note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
-
+  
+        // Populate notes object
         exportedData.data.notes[note.id] = {
           id: note.id,
           title: note.title,
@@ -334,11 +337,22 @@ const App: React.FC = () => {
           isLocked: note.isLocked,
           lastCursorPosition: note.lastCursorPosition,
         };
+  
+        // Populate labels array
+        exportedData.labels = exportedData.labels.concat(note.labels);
+  
+        // Populate lockedNotes object
+        if (note.isLocked) {
+          exportedData.data.lockedNotes[note.id] = true;
+        }
       });
-
+  
+      // Remove duplicate labels
+      exportedData.labels = Array.from(new Set(exportedData.labels));
+  
       const jsonData = JSON.stringify(exportedData, null, 2);
       const jsonFilePath = `${exportFolderPath}/data.json`;
-
+  
       // Save data.json
       await Filesystem.writeFile({
         path: jsonFilePath,
@@ -346,11 +360,11 @@ const App: React.FC = () => {
         directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
-
+  
       // Check if the images folder exists
       const imagesFolderPath = `images`;
       let imagesFolderExists = false;
-
+  
       try {
         const imagesFolderInfo = await (Filesystem as any).getInfo({
           path: imagesFolderPath,
@@ -360,18 +374,18 @@ const App: React.FC = () => {
       } catch (error) {
         console.error("Error checking images folder:", error);
       }
-
+  
       if (imagesFolderExists) {
         // Export images folder
         const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-
+  
         // Create the images folder in the export directory
         await Filesystem.mkdir({
           path: exportImagesFolderPath,
           directory: Directory.Documents,
           recursive: true,
         });
-
+  
         // Copy images folder to export folder
         await Filesystem.copy({
           from: imagesFolderPath,
@@ -379,16 +393,16 @@ const App: React.FC = () => {
           directory: Directory.Documents,
         });
       }
-
+  
       console.log("Export completed successfully!");
-
+  
       // Notify the user
       window.alert("Export completed successfully! Check your downloads.");
     } catch (error) {
       console.error("Error exporting data and images:", error);
       alert("Error exporting data and images: " + (error as any).message);
     }
-  };
+  };  
 
   const handleImportData = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -463,24 +477,22 @@ const App: React.FC = () => {
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
-  const handleChangeNoteContent = debounce(
-    (content: JSONContent, title: string = "Untitled Note") => {
-      if (activeNoteId) {
-        const updateNote = {
-          ...notesState[activeNoteId],
-          updatedAt: new Date(),
-          content,
-          title,
-        };
-        setNotesState((prevNotes) => ({
-          ...prevNotes,
-          [activeNoteId]: updateNote,
-        }));
-        saveNote(updateNote);
-      }
-    },
-    500
-  );
+  const [title, setTitle] = useState("Untitled Note");
+  const handleChangeNoteContent = (content: JSONContent) => {
+    if (activeNoteId) {
+      const updateNote = {
+        ...notesState[activeNoteId],
+        updatedAt: new Date(),
+        content,
+        title,
+      };
+      setNotesState((prevNotes) => ({
+        ...prevNotes,
+        [activeNoteId]: updateNote,
+      }));
+      saveNote(updateNote);
+    }
+  };
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -585,52 +597,62 @@ const App: React.FC = () => {
 
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Stop the click event from propagating
-
+  
     try {
       const notes = await loadNotes();
       const updatedNote = { ...notes[noteId] };
-
+  
       // Check if a password is set
       let sharedKey = localStorage.getItem("sharedKey");
-
+  
       if (!sharedKey) {
         // If no shared key is set, prompt the user to set it up
         sharedKey = prompt("Set up a password to lock your notes:");
-
+  
         if (!sharedKey) {
           // If the user cancels or enters an empty password, do not proceed
           alert("Note remains unlocked. Please set up a password next time.");
           return;
         }
-
+  
         // Save the shared key in local storage
         localStorage.setItem("sharedKey", sharedKey);
       }
-
+  
       if (updatedNote.isLocked) {
         // If the note is locked, prompt for the password
         const enteredKey = prompt("Enter the password to unlock the note:");
-
+  
         if (enteredKey !== sharedKey) {
           // Incorrect password, do not unlock the note
           alert("Incorrect password. Note remains locked.");
           return;
         }
+  
+        // Remove the note from the lockedNotes field
+        const lockedNotes = JSON.parse(localStorage.getItem("lockedNotes") || "{}");
+        delete lockedNotes[noteId];
+        localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
+      } else {
+        // Add the note to the lockedNotes field
+        const lockedNotes = JSON.parse(localStorage.getItem("lockedNotes") || "{}");
+        lockedNotes[noteId] = true;
+        localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
       }
-
+  
       // Toggle the 'isLocked' property
       updatedNote.isLocked = !updatedNote.isLocked;
-
+  
       // Update the note in the dictionary
       notes[noteId] = updatedNote;
-
+  
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
         directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
-
+  
       setNotesState(notes); // Update the state
     } catch (error) {
       console.error("Error toggling lock:", error);
@@ -749,22 +771,41 @@ const App: React.FC = () => {
                           <div className="h-36 overflow-hidden">
                             <div className="flex flex-col h-full overflow-hidden">
                               <div className="text-2xl">{note.title}</div>
-                              {note.labels.length > 0 && (
-                                <div className="flex gap-2">
-                                  {note.labels.map((label) => (
-                                    <span
-                                      key={label}
-                                      className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                    >
-                                      #{label}
-                                    </span>
-                                  ))}
+                              {note.isLocked ? (
+                                <div>
+                                  <p></p>
+                                </div>
+                              ) : (
+                                <div>
+                                  {note.labels.length > 0 && (
+                                    <div className="flex gap-2">
+                                      {note.labels.map((label) => (
+                                        <span
+                                          key={label}
+                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                        >
+                                          #{label}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               )}
-                              <div className="text-lg">
-                                {note.content &&
-                                  truncateContentPreview(note.content)}
-                              </div>
+                              {note.isLocked ? (
+                                <div className="flex flex-col items-center">
+                                  <button className="flex items-center justify-center">
+                                    <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
+                                  </button>
+                                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                    Unlock to edit
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="text-lg">
+                                  {note.content &&
+                                    truncateContentPreview(note.content)}
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="py-2">
@@ -778,6 +819,16 @@ const App: React.FC = () => {
                                 <Bookmark3LineIcon className="w-8 h-8 mr-2" />
                               )}
                             </button>
+                            <button
+                          className="text-[#52525C] py-2 dark:text-white w-auto"
+                          onClick={(e) => handleToggleLock(note.id, e)}
+                        >
+                          {note.isLocked ? (
+                            <LockClosedIcon className="w-8 h-8 mr-2" />
+                          ) : (
+                            <LockOpenIcon className="w-8 h-8 mr-2" />
+                          )}
+                        </button>
                             <button
                               className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
                               onClick={() => handleDeleteNote(note.id)}
@@ -820,10 +871,9 @@ const App: React.FC = () => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-                        <div className="h-42 overflow-hidden">
+                        <div className="h-36 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
-
                             {note.isLocked ? (
                               <div>
                                 <p></p>
@@ -844,13 +894,12 @@ const App: React.FC = () => {
                                 )}
                               </div>
                             )}
-
                             {note.isLocked ? (
                               <div className="flex flex-col items-center">
                                 <button className="flex items-center justify-center">
                                   <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
                                 </button>
-                                <p className="text-neutral-500 dark:text-neutral-400">
+                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                                   Unlock to edit
                                 </p>
                               </div>
@@ -915,6 +964,8 @@ const App: React.FC = () => {
           {activeNote && (
             <NoteEditor
               note={activeNote}
+              title={title}
+              onTitleChange={setTitle}
               onChange={handleChangeNoteContent}
               onCloseEditor={handleCloseEditor}
             />
