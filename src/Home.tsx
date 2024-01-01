@@ -641,7 +641,7 @@ const App: React.FC = () => {
   const handleClickNote = async (note: Note) => {
     if (note.isLocked) {
       const userSharedKey = prompt("Enter the shared key to unlock the note:");
-  
+
       // Check if the entered key matches the stored key
       const storedSharedKey = localStorage.getItem("sharedKey");
       if (userSharedKey === storedSharedKey) {
@@ -744,6 +744,7 @@ const App: React.FC = () => {
                               ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
                               : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
                           }
+                          onClick={() => handleClickNote(note)}
                         >
                           <div className="h-36 overflow-hidden">
                             <div className="flex flex-col h-full overflow-hidden">
@@ -818,26 +819,41 @@ const App: React.FC = () => {
                             : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
                         }
                         onClick={() => handleClickNote(note)}
-                        >
-                        <div className="h-36 overflow-hidden">
+                      >
+                        <div className="h-42 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
-                            {note.labels.length > 0 && (
-                              <div className="flex gap-2">
-                                {note.labels.map((label) => (
-                                  <span
-                                    key={label}
-                                    className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                  >
-                                    #{label}
-                                  </span>
-                                ))}
+
+                            {note.isLocked ? (
+                              <div>
+                                <p></p>
+                              </div>
+                            ) : (
+                              <div>
+                                {note.labels.length > 0 && (
+                                  <div className="flex gap-2">
+                                    {note.labels.map((label) => (
+                                      <span
+                                        key={label}
+                                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                      >
+                                        #{label}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             )}
+
                             {note.isLocked ? (
-                              <p className="text-red-500">
-                                This note is locked. Unlock to view content.
-                              </p>
+                              <div className="flex flex-col items-center">
+                                <button className="flex items-center justify-center">
+                                  <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
+                                </button>
+                                <p className="text-neutral-500 dark:text-neutral-400">
+                                  Unlock to edit
+                                </p>
+                              </div>
                             ) : (
                               <div className="text-lg">
                                 {note.content &&
