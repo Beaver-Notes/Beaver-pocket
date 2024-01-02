@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import debounce from "./lib/debounce";
 import { v4 as uuid } from "uuid";
 import { Note } from "./types";
 import NoteEditor from "./NoteEditor";
@@ -381,24 +380,22 @@ const App: React.FC = () => {
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
-  const handleChangeNoteContent = debounce(
-    (content: JSONContent, title: string = "Untitled Note") => {
-      if (activeNoteId) {
-        const updateNote = {
-          ...notesState[activeNoteId],
-          updatedAt: new Date(),
-          content,
-          title,
-        };
-        setNotesState((prevNotes) => ({
-          ...prevNotes,
-          [activeNoteId]: updateNote,
-        }));
-        saveNote(updateNote);
-      }
-    },
-    500
-  );
+  const [title, setTitle] = useState("Untitled Note");
+  const handleChangeNoteContent = (content: JSONContent) => {
+    if (activeNoteId) {
+      const updateNote = {
+        ...notesState[activeNoteId],
+        updatedAt: new Date(),
+        content,
+        title,
+      };
+      setNotesState((prevNotes) => ({
+        ...prevNotes,
+        [activeNoteId]: updateNote,
+      }));
+      saveNote(updateNote);
+    }
+  };
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -541,11 +538,13 @@ const App: React.FC = () => {
         )}
         <div>
           {activeNote && (
-            <NoteEditor
-              note={activeNote}
-              onChange={handleChangeNoteContent}
-              onCloseEditor={handleCloseEditor}
-            />
+                <NoteEditor
+                note={activeNote}
+                title={title}
+                onTitleChange={setTitle}
+                onChange={handleChangeNoteContent}
+                onCloseEditor={handleCloseEditor}
+              />
           )}
         </div>
       </div>
