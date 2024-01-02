@@ -54,6 +54,7 @@
     "@types/uuid": "^9.0.7",
     "autoprefixer": "^10.4.16",
     "capacitor-biometric-auth": "^0.1.1",
+    "capacitor-native-biometric": "^4.2.2",
     "crypto-js": "^4.2.0",
     "d3": "^7.8.5",
     "date-fns": "^2.30.0",

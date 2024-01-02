@@ -5,6 +5,7 @@ import NoteEditor from "./NoteEditor";
 import { JSONContent } from "@tiptap/react";
 import Sidebar from "./components/Sidebar";
 import BottomNavBar from "./components/BottomNavBar";
+import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import "./css/main.css";
 import {
   Filesystem,
@@ -602,25 +603,47 @@ const App: React.FC = () => {
       const notes = await loadNotes();
       const updatedNote = { ...notes[noteId] };
   
-      // Check if a password is set
-      let sharedKey = localStorage.getItem("sharedKey");
+      // Check if biometrics is available
+      const biometricResult = await NativeBiometric.isAvailable();
   
-      if (!sharedKey) {
-        // If no shared key is set, prompt the user to set it up
-        sharedKey = prompt("Set up a password to lock your notes:");
+      if (biometricResult.isAvailable) {
+        const isFaceID = biometricResult.biometryType === BiometryType.FACE_ID;
   
-        if (!sharedKey) {
-          // If the user cancels or enters an empty password, do not proceed
-          alert("Note remains unlocked. Please set up a password next time.");
+        // Show biometric prompt for authentication
+        try {
+          await NativeBiometric.verifyIdentity({
+            reason: "For note authentication",
+            title: "Authenticate",
+            subtitle: "Use biometrics to unlock the note.",
+            description: isFaceID
+              ? "Place your face for authentication."
+              : "Place your finger for authentication.",
+          });
+        } catch (verificationError) {
+          // Handle verification error (e.g., user cancels biometric prompt)
+          console.error("Biometric verification error:", verificationError);
+          alert("Biometric verification failed. Note remains locked.");
           return;
         }
+      } else {
+        // Biometrics not available, use sharedKey
+        let sharedKey = localStorage.getItem("sharedKey");
   
-        // Save the shared key in local storage
-        localStorage.setItem("sharedKey", sharedKey);
-      }
+        if (!sharedKey) {
+          // If no shared key is set, prompt the user to set it up
+          sharedKey = prompt("Set up a password to lock your notes:");
   
-      if (updatedNote.isLocked) {
-        // If the note is locked, prompt for the password
+          if (!sharedKey) {
+            // If the user cancels or enters an empty password, do not proceed
+            alert("Note remains unlocked. Please set up a password next time.");
+            return;
+          }
+  
+          // Save the shared key in local storage
+          localStorage.setItem("sharedKey", sharedKey);
+        }
+  
+        // Prompt for the password
         const enteredKey = prompt("Enter the password to unlock the note:");
   
         if (enteredKey !== sharedKey) {
@@ -628,17 +651,16 @@ const App: React.FC = () => {
           alert("Incorrect password. Note remains locked.");
           return;
         }
-  
-        // Remove the note from the lockedNotes field
-        const lockedNotes = JSON.parse(localStorage.getItem("lockedNotes") || "{}");
-        delete lockedNotes[noteId];
-        localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
-      } else {
-        // Add the note to the lockedNotes field
-        const lockedNotes = JSON.parse(localStorage.getItem("lockedNotes") || "{}");
-        lockedNotes[noteId] = true;
-        localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
       }
+  
+      // Remove the note from the lockedNotes field if locked, add if unlocked
+      const lockedNotes = JSON.parse(localStorage.getItem("lockedNotes") || "{}");
+      if (updatedNote.isLocked) {
+        delete lockedNotes[noteId];
+      } else {
+        lockedNotes[noteId] = true;
+      }
+      localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
   
       // Toggle the 'isLocked' property
       updatedNote.isLocked = !updatedNote.isLocked;
@@ -646,6 +668,7 @@ const App: React.FC = () => {
       // Update the note in the dictionary
       notes[noteId] = updatedNote;
   
+      // Save the updated notes to the filesystem
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
@@ -654,6 +677,9 @@ const App: React.FC = () => {
       });
   
       setNotesState(notes); // Update the state
+  
+      console.log("Note lock status toggled successfully!");
+      alert("Note lock status toggled successfully!");
     } catch (error) {
       console.error("Error toggling lock:", error);
       alert("Error toggling lock: " + (error as any).message);

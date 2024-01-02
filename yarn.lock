@@ -1186,6 +1186,13 @@
   dependencies:
     tslib "^2.1.0"
 
+"@capacitor/core@^3.4.3":
+  version "3.9.0"
+  resolved "https://registry.yarnpkg.com/@capacitor/core/-/core-3.9.0.tgz#ab5eccbeb02e140382e983b794ead296f1db7e6d"
+  integrity sha512-j1lL0+/7stY8YhIq1Lm6xixvUqIn89vtyH5ZpJNNmcZ0kwz6K9eLkcG6fvq1UWMDgSVZg9JrRGSFhb4LLoYOsw==
+  dependencies:
+    tslib "^2.1.0"
+
 "@capacitor/filesystem@5.2.0":
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/@capacitor/filesystem/-/filesystem-5.2.0.tgz#6e4529eb059c85869ecc68643f25123dbe38768f"
@@ -3091,6 +3098,13 @@ capacitor-biometric-auth@^0.1.1:
   integrity sha512-LZnYs5nG7dW+dnGu4rI1WotFgsZJq5hwFO6Q6TNO/AZV4UFZDEGYg5e3Z6qUdnKUjVr/NRJfxdLWVt2em83KOA==
   dependencies:
     "@capacitor/core" latest
+
+capacitor-native-biometric@^4.2.2:
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/capacitor-native-biometric/-/capacitor-native-biometric-4.2.2.tgz#04c3cde40926b9eb4ab9f0c4c3194401d910795a"
+  integrity sha512-stg0h48UxgkNuNcCAgCXLp2DUspRQs79bCBPntpCBhsDxk2bhDRUu+J/QpFtDQHG4M4DioSUcYaAsVw2N6N7wA==
+  dependencies:
+    "@capacitor/core" "^3.4.3"
 
 case-anything@^2.1.13:
   version "2.1.13"
