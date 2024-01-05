@@ -85,3 +85,5 @@ And for Android:
 ionic build android
 ```
 These commands will generate platform-specific build files in the respective platform directories.
+
+![Alt](https://repobeats.axiom.co/api/embed/abb7d5b9c7ad81ba2e76f249b607361b00150616.svg "Repobeats analytics image")
