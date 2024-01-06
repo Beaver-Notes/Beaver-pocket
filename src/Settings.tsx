@@ -422,6 +422,10 @@ const App: React.FC = () => {
 
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
+<<<<<<< Updated upstream
+=======
+        <div className="pr-16">
+>>>>>>> Stashed changes
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}
@@ -429,12 +433,19 @@ const App: React.FC = () => {
         exportData={exportData}
         handleImportData={handleImportData}
       />
+<<<<<<< Updated upstream
+=======
+      </div>
+>>>>>>> Stashed changes
   
       <div className="overflow-y">
         {!activeNoteId && (
           <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
       <div className="mx-10 sm:px-60 overflow-y-auto flex-grow">
+<<<<<<< Updated upstream
         <div className="pt-12">
+=======
+>>>>>>> Stashed changes
           <p className="text-4xl font-bold">Preferences</p>
             <div className="w-full sm:order-2 order-1">
               <p className="text-xl pt-4 text-neutral-700 dark:text-white">
@@ -529,7 +540,10 @@ const App: React.FC = () => {
                         </div>
                     </div>            
             </div>
+<<<<<<< Updated upstream
         </div>
+=======
+>>>>>>> Stashed changes
             <BottomNavBar
               onCreateNewNote={handleCreateNewNote}
               onToggleArchiveVisibility={() => setIsArchiveVisible(!isArchiveVisible)}
