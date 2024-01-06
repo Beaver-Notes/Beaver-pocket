@@ -430,24 +430,6 @@ const Archive: React.FC = () => {
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
-<<<<<<< Updated upstream
-  const [title, setTitle] = useState("Untitled Note");
-  const handleChangeNoteContent = (content: JSONContent) => {
-    if (activeNoteId) {
-      const updateNote = {
-        ...notesState[activeNoteId],
-        updatedAt: new Date(),
-        content,
-        title,
-      };
-      setNotesState((prevNotes) => ({
-        ...prevNotes,
-        [activeNoteId]: updateNote,
-      }));
-      saveNote(updateNote);
-    }
-  };
-=======
 const [title, setTitle] = useState(activeNoteId ? notesState[activeNoteId].title : "");
 const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
   if (activeNoteId) {
@@ -469,7 +451,6 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
     saveNote(updateNote);
   }
 };
->>>>>>> Stashed changes
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -639,10 +620,7 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
 
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-<<<<<<< Updated upstream
-=======
     <div className="pr-16">
->>>>>>> Stashed changes
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}
@@ -650,20 +628,13 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
         exportData={exportData}
         handleImportData={handleImportData}
       />
-<<<<<<< Updated upstream
-=======
     </div>
->>>>>>> Stashed changes
 
       <div className="overflow-y">
         {!activeNoteId && (
           <div className="w-full flex flex-col border-gray-300 overflow-auto">
             <div className="bg-transparent px-6">
-<<<<<<< Updated upstream
-              <div className="pt-12 flex justify-center">
-=======
               <div className="flex justify-center">
->>>>>>> Stashed changes
                 <div className="apply relative w-full md:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2;">
                   <div>
                     <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6" />
@@ -1433,11 +1404,7 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
                     </p>
                   </div>
                 )}
-<<<<<<< Updated upstream
-                <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
-=======
                 <div className="grid py-2 grid-cols-1 sm:grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
->>>>>>> Stashed changes
                   {notesList
                     .filter((note) => note.isArchived)
                     .map((note) => (
@@ -1452,11 +1419,7 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
                         }
                         onClick={() => setActiveNoteId(note.id)}
                       >
-<<<<<<< Updated upstream
-                        <div className="h-36 overflow-hidden">
-=======
                         <div className="sm:h-44 h-36 overflow-hidden">
->>>>>>> Stashed changes
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
                             {note.isLocked ? (
