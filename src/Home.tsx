@@ -478,17 +478,6 @@ const App: React.FC = () => {
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
-<<<<<<< Updated upstream
-  const [title, setTitle] = useState("Untitled Note");
-  const handleChangeNoteContent = (content: JSONContent) => {
-    if (activeNoteId) {
-      const updateNote = {
-        ...notesState[activeNoteId],
-        updatedAt: new Date(),
-        content,
-        title,
-      };
-=======
   const [title, setTitle] = useState(activeNoteId ? notesState[activeNoteId].title : "");
   const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
     if (activeNoteId) {
@@ -502,22 +491,15 @@ const App: React.FC = () => {
         title: updatedTitle,
       };
   
->>>>>>> Stashed changes
       setNotesState((prevNotes) => ({
         ...prevNotes,
         [activeNoteId]: updateNote,
       }));
-<<<<<<< Updated upstream
-      saveNote(updateNote);
-    }
-  };
-=======
   
       saveNote(updateNote);
     }
   };
   
->>>>>>> Stashed changes
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -620,21 +602,6 @@ const App: React.FC = () => {
     );
   };
 
-<<<<<<< Updated upstream
-  const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Stop the click event from propagating
-  
-    try {
-      const notes = await loadNotes();
-      const updatedNote = { ...notes[noteId] };
-  
-      // Check if biometrics is available
-      const biometricResult = await NativeBiometric.isAvailable();
-  
-      if (biometricResult.isAvailable) {
-        const isFaceID = biometricResult.biometryType === BiometryType.FACE_ID;
-  
-=======
 // ... (your imports)
 
 const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
@@ -736,7 +703,6 @@ const handleClickNote = async (note: Note) => {
       if (biometricResult.isAvailable) {
         const isFaceID = biometricResult.biometryType === BiometryType.FACE_ID;
 
->>>>>>> Stashed changes
         // Show biometric prompt for authentication
         try {
           await NativeBiometric.verifyIdentity({
@@ -755,85 +721,6 @@ const handleClickNote = async (note: Note) => {
         }
       } else {
         // Biometrics not available, use sharedKey
-<<<<<<< Updated upstream
-        let sharedKey = localStorage.getItem("sharedKey");
-  
-        if (!sharedKey) {
-          // If no shared key is set, prompt the user to set it up
-          sharedKey = prompt("Set up a password to lock your notes:");
-  
-          if (!sharedKey) {
-            // If the user cancels or enters an empty password, do not proceed
-            alert("Note remains unlocked. Please set up a password next time.");
-            return;
-          }
-  
-          // Save the shared key in local storage
-          localStorage.setItem("sharedKey", sharedKey);
-        }
-  
-        // Prompt for the password
-        const enteredKey = prompt("Enter the password to unlock the note:");
-  
-        if (enteredKey !== sharedKey) {
-          // Incorrect password, do not unlock the note
-          alert("Incorrect password. Note remains locked.");
-          return;
-        }
-      }
-  
-      // Remove the note from the lockedNotes field if locked, add if unlocked
-      const lockedNotes = JSON.parse(localStorage.getItem("lockedNotes") || "{}");
-      if (updatedNote.isLocked) {
-        delete lockedNotes[noteId];
-      } else {
-        lockedNotes[noteId] = true;
-      }
-      localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
-  
-      // Toggle the 'isLocked' property
-      updatedNote.isLocked = !updatedNote.isLocked;
-  
-      // Update the note in the dictionary
-      notes[noteId] = updatedNote;
-  
-      // Save the updated notes to the filesystem
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
-        encoding: FilesystemEncoding.UTF8,
-      });
-  
-      setNotesState(notes); // Update the state
-  
-      console.log("Note lock status toggled successfully!");
-      alert("Note lock status toggled successfully!");
-    } catch (error) {
-      console.error("Error toggling lock:", error);
-      alert("Error toggling lock: " + (error as any).message);
-    }
-  };
-
-  const handleClickNote = async (note: Note) => {
-    if (note.isLocked) {
-      const userSharedKey = prompt("Enter the shared key to unlock the note:");
-
-      // Check if the entered key matches the stored key
-      const storedSharedKey = localStorage.getItem("sharedKey");
-      if (userSharedKey === storedSharedKey) {
-        setActiveNoteId(note.id);
-      } else {
-        alert("Incorrect shared key. Note remains locked.");
-      }
-    } else {
-      setActiveNoteId(note.id);
-    }
-  };
-
-  return (
-    <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-=======
         const userSharedKey = prompt("Enter the shared key to unlock the note:");
 
         // Check if the entered key matches the stored key
@@ -855,7 +742,6 @@ const handleClickNote = async (note: Note) => {
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
     <div className="pr-16">
->>>>>>> Stashed changes
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}
@@ -863,20 +749,12 @@ const handleClickNote = async (note: Note) => {
         exportData={exportData}
         handleImportData={handleImportData}
       />
-<<<<<<< Updated upstream
-
-=======
 </div>
->>>>>>> Stashed changes
       <div className="overflow-y">
         {!activeNoteId && (
           <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
             <div className="bg-transparent px-6">
-<<<<<<< Updated upstream
-              <div className="pt-12 flex justify-center">
-=======
               <div className="flex justify-center">
->>>>>>> Stashed changes
                 <div className="apply relative w-full md:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2;">
                   <div>
                     <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6" />
@@ -939,11 +817,7 @@ const handleClickNote = async (note: Note) => {
                 ).length > 0 && (
                   <h2 className="text-3xl font-bold">Bookmarked</h2>
                 )}
-<<<<<<< Updated upstream
-                <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
-=======
                 <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
->>>>>>> Stashed changes
                   {notesList.map((note) => {
                     if (note.isBookmarked && !note.isArchived) {
                       return (
@@ -958,11 +832,7 @@ const handleClickNote = async (note: Note) => {
                           }
                           onClick={() => handleClickNote(note)}
                         >
-<<<<<<< Updated upstream
-                          <div className="h-36 overflow-hidden">
-=======
                           <div className="sm:h-44 h-36 overflow-hidden">
->>>>>>> Stashed changes
                             <div className="flex flex-col h-full overflow-hidden">
                               <div className="text-2xl">{note.title}</div>
                               {note.isLocked ? (
@@ -1050,11 +920,7 @@ const handleClickNote = async (note: Note) => {
                     </p>
                   </div>
                 )}
-<<<<<<< Updated upstream
-                <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
-=======
                 <div className="grid py-2 grid-cols-1 sm:grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
->>>>>>> Stashed changes
                   {notesList
                     .filter((note) => !note.isBookmarked && !note.isArchived)
                     .map((note) => (
@@ -1069,11 +935,7 @@ const handleClickNote = async (note: Note) => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-<<<<<<< Updated upstream
-                        <div className="h-36 overflow-hidden">
-=======
                         <div className="sm:h-44 h-36 overflow-hidden">
->>>>>>> Stashed changes
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
                             {note.isLocked ? (

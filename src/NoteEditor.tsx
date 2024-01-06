@@ -103,19 +103,11 @@ function NoteEditor({
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
     const newTitle = event.currentTarget.innerText;
-<<<<<<< Updated upstream
-    setLocalTitle(newTitle);
-    onTitleChange(newTitle);
-    // Call onChange with the updated content and title
-    onChange(editor?.getJSON() || {} as JSONContent, newTitle);
-  };
-=======
     console.log('New Title:', newTitle);
     setLocalTitle(newTitle);
     onTitleChange(newTitle);
     onChange(editor?.getJSON() || {} as JSONContent, newTitle);
   };  
->>>>>>> Stashed changes
 
   useEffect(() => {
     // Update local title when the note changes
@@ -477,11 +469,7 @@ function NoteEditor({
 
   return (
     <div
-<<<<<<< Updated upstream
-      className={`pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base`}
-=======
       className={`overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base`}
->>>>>>> Stashed changes
     >
       {toolbarVisible && (
         <div
@@ -688,21 +676,13 @@ function NoteEditor({
       <div
       contentEditable
       suppressContentEditableWarning
-<<<<<<< Updated upstream
-      className="text-3xl font-bold overflow-y-scroll outline-none"
-=======
       className="text-3xl font-bold overflow-y-scroll outline-none mt-4"
->>>>>>> Stashed changes
       onBlur={handleTitleChange}
       dangerouslySetInnerHTML={{ __html: localTitle }}
     />
 
       <div>
-<<<<<<< Updated upstream
-        <div className="flex flex-wrap mt-4 gap-2">
-=======
         <div className="flex flex-wrap mt-2 gap-2">
->>>>>>> Stashed changes
           {labelsArray.map((label, index) => (
             <span
               key={index}
