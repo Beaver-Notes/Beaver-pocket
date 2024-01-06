@@ -7,6 +7,11 @@
 :root {
   --selected-font: 'Arimo', sans-serif;
   -webkit-tap-highlight-color: transparent;
+<<<<<<< Updated upstream
+=======
+  padding-top: constant(safe-area-inset-top) !important;
+  padding-top: env(safe-area-inset-top) !important;
+>>>>>>> Stashed changes
 }
 
 body {
