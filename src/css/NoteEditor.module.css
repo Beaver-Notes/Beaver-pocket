@@ -16,14 +16,6 @@ mark {
   @apply h-full
 }
 
-.tiptap p.is-editor-empty:first-child::before {
-  color: #adb5bd;
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
 img {
   @apply rounded-xl
 }
@@ -95,17 +87,13 @@ input[type="checkbox"]:checked::before {
   color: #FBBF24;
 }
 
-.ProseMirror {
-  outline: none;
-}
-
 .labelinput {
-  @apply text-lg flex dark:text-white bg-transparent w-auto dark:bg-[#232222] outline-none content-center;
+  @apply text-lg flex dark:text-white bg-transparent w-auto outline-none content-center;
 }
 
-.labelinput:empty:before {
+.labelinput:empty::before {
   content:attr(data-placeholder);
-  @apply dark:bg-[#232222] text-neutral-600 dark:text-neutral-200;
+  @apply bg-transparent text-neutral-600 dark:text-[#A1A1AA] !important; 
 }
 
 @layer utilities {

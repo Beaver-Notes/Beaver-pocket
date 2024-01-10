@@ -12,6 +12,8 @@ import {
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
+import JSZip from "jszip";
+import { Share } from "@capacitor/share";
 
 // Import Remix icons
 import AddFillIcon from "remixicon-react/AddFillIcon";
@@ -289,7 +291,7 @@ const App: React.FC = () => {
     try {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-  
+
       // Create the parent export folder
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
@@ -297,18 +299,18 @@ const App: React.FC = () => {
         directory: Directory.Documents,
         recursive: true,
       });
-  
+
       // Create the export folder structure
       const exportFolderName = `Beaver Notes ${formattedDate}`;
       const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
-  
+
       // Create the export folder
       await Filesystem.mkdir({
         path: exportFolderPath,
         directory: Directory.Documents,
         recursive: true,
       });
-  
+
       // Export data.json
       const exportedData: any = {
         data: {
@@ -317,14 +319,14 @@ const App: React.FC = () => {
         },
         labels: [], // Add the labels field
       };
-  
+
       // Iterate through notes to populate the exportedData object
       Object.values(notesState).forEach((note) => {
         const createdAtTimestamp =
           note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
         const updatedAtTimestamp =
           note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
-  
+
         // Populate notes object
         exportedData.data.notes[note.id] = {
           id: note.id,
@@ -338,22 +340,22 @@ const App: React.FC = () => {
           isLocked: note.isLocked,
           lastCursorPosition: note.lastCursorPosition,
         };
-  
+
         // Populate labels array
         exportedData.labels = exportedData.labels.concat(note.labels);
-  
+
         // Populate lockedNotes object
         if (note.isLocked) {
           exportedData.data.lockedNotes[note.id] = true;
         }
       });
-  
+
       // Remove duplicate labels
       exportedData.labels = Array.from(new Set(exportedData.labels));
-  
+
       const jsonData = JSON.stringify(exportedData, null, 2);
       const jsonFilePath = `${exportFolderPath}/data.json`;
-  
+
       // Save data.json
       await Filesystem.writeFile({
         path: jsonFilePath,
@@ -361,11 +363,11 @@ const App: React.FC = () => {
         directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
-  
+
       // Check if the images folder exists
       const imagesFolderPath = `images`;
       let imagesFolderExists = false;
-  
+
       try {
         const imagesFolderInfo = await (Filesystem as any).getInfo({
           path: imagesFolderPath,
@@ -375,18 +377,18 @@ const App: React.FC = () => {
       } catch (error) {
         console.error("Error checking images folder:", error);
       }
-  
+
       if (imagesFolderExists) {
         // Export images folder
         const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-  
+
         // Create the images folder in the export directory
         await Filesystem.mkdir({
           path: exportImagesFolderPath,
           directory: Directory.Documents,
           recursive: true,
         });
-  
+
         // Copy images folder to export folder
         await Filesystem.copy({
           from: imagesFolderPath,
@@ -394,17 +396,78 @@ const App: React.FC = () => {
           directory: Directory.Documents,
         });
       }
-  
+
+      // Zip the export folder
+      const zip = new JSZip();
+      const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
+
+      // Retrieve files in the export folder
+      const exportFolderFiles = await Filesystem.readdir({
+        path: exportFolderPath,
+        directory: Directory.Documents,
+      });
+
+      // Use Promise.all to wait for all asynchronous file reading operations to complete
+      await Promise.all(
+        exportFolderFiles.files.map(async (file) => {
+          const filePath = `${exportFolderPath}/${file.name}`;
+          const fileContent = await Filesystem.readFile({
+            path: filePath,
+            directory: Directory.Documents,
+            encoding: FilesystemEncoding.UTF8,
+          });
+          exportFolderZip!.file(file.name, fileContent.data);
+        })
+      );
+
+      const zipContentBase64 = await zip.generateAsync({ type: 'base64' });
+
+      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
+      await Filesystem.writeFile({
+        path: zipFilePath,
+        data: zipContentBase64,
+        directory: Directory.Cache,
+      });
+
+      await shareZipFile();
+
       console.log("Export completed successfully!");
-  
+
       // Notify the user
       window.alert("Export completed successfully! Check your downloads.");
     } catch (error) {
       console.error("Error exporting data and images:", error);
       alert("Error exporting data and images: " + (error as any).message);
     }
-  };  
+  };
 
+  const shareZipFile = async () => {
+    try {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      const zipFilePath = `file:///Cache/Beaver_Notes_${formattedDate}.zip`;
+  
+      console.log("Sharing zip file from path:", zipFilePath);
+  
+      const result = await Filesystem.getUri({
+        directory: Directory.Cache,
+        path: 'Beaver_Notes_2024-01-10.zip',
+      });
+      
+      const resolvedFilePath = result.uri;
+
+      await Share.share({
+        title: 'Share Beaver Notes Export',
+        text: 'Check out my Beaver Notes export!',
+        url: resolvedFilePath,
+        dialogTitle: 'Share Beaver Notes Export',
+      });
+    } catch (error) {
+      console.error('Error sharing zip file:', error);
+      alert('Error sharing zip file: ' + (error as any).message);
+    }
+  };  
+  
   const handleImportData = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -478,28 +541,33 @@ const App: React.FC = () => {
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
-  const [title, setTitle] = useState(activeNoteId ? notesState[activeNoteId].title : "");
+  const [title, setTitle] = useState(
+    activeNoteId ? notesState[activeNoteId].title : ""
+  );
+  
   const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
     if (activeNoteId) {
       const existingNote = notesState[activeNoteId];
-      const updatedTitle = newTitle !== undefined && newTitle.trim() !== '' ? newTitle : existingNote.title;
-  
+      const updatedTitle =
+        newTitle !== undefined && newTitle.trim() !== ""
+          ? newTitle
+          : existingNote.title;
+
       const updateNote = {
         ...existingNote,
         updatedAt: new Date(),
         content,
         title: updatedTitle,
       };
-  
+
       setNotesState((prevNotes) => ({
         ...prevNotes,
         [activeNoteId]: updateNote,
       }));
-  
+
       saveNote(updateNote);
     }
   };
-  
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -602,101 +670,13 @@ const App: React.FC = () => {
     );
   };
 
-// ... (your imports)
+  const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Stop the click event from propagating
 
-const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
-  event.stopPropagation(); // Stop the click event from propagating
+    try {
+      const notes = await loadNotes();
+      const updatedNote = { ...notes[noteId] };
 
-  try {
-    const notes = await loadNotes();
-    const updatedNote = { ...notes[noteId] };
-
-    // Check if biometrics is available
-    const biometricResult = await NativeBiometric.isAvailable();
-
-    if (biometricResult.isAvailable) {
-      const isFaceID = biometricResult.biometryType === BiometryType.FACE_ID;
-
-      // Show biometric prompt for authentication
-      try {
-        await NativeBiometric.verifyIdentity({
-          reason: "For note authentication",
-          title: "Authenticate",
-          subtitle: "Use biometrics to unlock/lock the note.",
-          description: isFaceID
-            ? "Place your face for authentication."
-            : "Place your finger for authentication.",
-        });
-      } catch (verificationError) {
-        // Handle verification error (e.g., user cancels biometric prompt)
-        console.error("Biometric verification error:", verificationError);
-        alert("Biometric verification failed. Note remains in its current state.");
-        return;
-      }
-    } else {
-      // Biometrics not available, use sharedKey
-      let sharedKey = localStorage.getItem("sharedKey");
-
-      if (!sharedKey) {
-        // If no shared key is set, prompt the user to set it up
-        sharedKey = prompt("Set up a password to lock/unlock your notes:");
-
-        if (!sharedKey) {
-          // If the user cancels or enters an empty password, do not proceed
-          alert("Note remains in its current state. Please set up a password next time.");
-          return;
-        }
-
-        // Save the shared key in local storage
-        localStorage.setItem("sharedKey", sharedKey);
-      }
-
-      // Prompt for the password
-      const enteredKey = prompt("Enter the password to lock/unlock the note:");
-
-      if (enteredKey !== sharedKey) {
-        // Incorrect password, do not proceed
-        alert("Incorrect password. Note remains in its current state.");
-        return;
-      }
-    }
-
-    // Toggle the 'isLocked' property
-    updatedNote.isLocked = !updatedNote.isLocked;
-
-    // Update the note in the dictionary
-    notes[noteId] = updatedNote;
-
-    // Update the lockedNotes field
-    const lockedNotes = JSON.parse(localStorage.getItem("lockedNotes") || "{}");
-    if (updatedNote.isLocked) {
-      lockedNotes[noteId] = true;
-    } else {
-      delete lockedNotes[noteId];
-    }
-    localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
-
-    // Save the updated notes to the filesystem
-    await Filesystem.writeFile({
-      path: STORAGE_PATH,
-      data: JSON.stringify({ data: { notes } }),
-      directory: Directory.Documents,
-      encoding: FilesystemEncoding.UTF8,
-    });
-
-    setNotesState(notes); // Update the state
-
-    console.log("Note lock status toggled successfully!");
-    alert("Note lock status toggled successfully!");
-  } catch (error) {
-    console.error("Error toggling lock:", error);
-    alert("Error toggling lock: " + (error as any).message);
-  }
-};
-
-const handleClickNote = async (note: Note) => {
-  try {
-    if (note.isLocked) {
       // Check if biometrics is available
       const biometricResult = await NativeBiometric.isAvailable();
 
@@ -708,7 +688,7 @@ const handleClickNote = async (note: Note) => {
           await NativeBiometric.verifyIdentity({
             reason: "For note authentication",
             title: "Authenticate",
-            subtitle: "Use biometrics to unlock the note.",
+            subtitle: "Use biometrics to unlock/lock the note.",
             description: isFaceID
               ? "Place your face for authentication."
               : "Place your finger for authentication.",
@@ -716,32 +696,128 @@ const handleClickNote = async (note: Note) => {
         } catch (verificationError) {
           // Handle verification error (e.g., user cancels biometric prompt)
           console.error("Biometric verification error:", verificationError);
-          alert("Biometric verification failed. Note remains locked.");
+          alert(
+            "Biometric verification failed. Note remains in its current state."
+          );
           return;
         }
       } else {
         // Biometrics not available, use sharedKey
-        const userSharedKey = prompt("Enter the shared key to unlock the note:");
+        let sharedKey = localStorage.getItem("sharedKey");
 
-        // Check if the entered key matches the stored key
-        const storedSharedKey = localStorage.getItem("sharedKey");
-        if (userSharedKey !== storedSharedKey) {
-          alert("Incorrect shared key. Note remains locked.");
+        if (!sharedKey) {
+          // If no shared key is set, prompt the user to set it up
+          sharedKey = prompt("Set up a password to lock/unlock your notes:");
+
+          if (!sharedKey) {
+            // If the user cancels or enters an empty password, do not proceed
+            alert(
+              "Note remains in its current state. Please set up a password next time."
+            );
+            return;
+          }
+
+          // Save the shared key in local storage
+          localStorage.setItem("sharedKey", sharedKey);
+        }
+
+        // Prompt for the password
+        const enteredKey = prompt(
+          "Enter the password to lock/unlock the note:"
+        );
+
+        if (enteredKey !== sharedKey) {
+          // Incorrect password, do not proceed
+          alert("Incorrect password. Note remains in its current state.");
           return;
         }
       }
-    }
 
-    setActiveNoteId(note.id);
-  } catch (error) {
-    console.error("Error handling click on note:", error);
-    alert("Error handling click on note: " + (error as any).message);
-  }
-};
+      // Toggle the 'isLocked' property
+      updatedNote.isLocked = !updatedNote.isLocked;
+
+      // Update the note in the dictionary
+      notes[noteId] = updatedNote;
+
+      // Update the lockedNotes field
+      const lockedNotes = JSON.parse(
+        localStorage.getItem("lockedNotes") || "{}"
+      );
+      if (updatedNote.isLocked) {
+        lockedNotes[noteId] = true;
+      } else {
+        delete lockedNotes[noteId];
+      }
+      localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
+
+      // Save the updated notes to the filesystem
+      await Filesystem.writeFile({
+        path: STORAGE_PATH,
+        data: JSON.stringify({ data: { notes } }),
+        directory: Directory.Documents,
+        encoding: FilesystemEncoding.UTF8,
+      });
+
+      setNotesState(notes); // Update the state
+
+      console.log("Note lock status toggled successfully!");
+      alert("Note lock status toggled successfully!");
+    } catch (error) {
+      console.error("Error toggling lock:", error);
+      alert("Error toggling lock: " + (error as any).message);
+    }
+  };
+
+  const handleClickNote = async (note: Note) => {
+    try {
+      if (note.isLocked) {
+        // Check if biometrics is available
+        const biometricResult = await NativeBiometric.isAvailable();
+
+        if (biometricResult.isAvailable) {
+          const isFaceID =
+            biometricResult.biometryType === BiometryType.FACE_ID;
+
+          // Show biometric prompt for authentication
+          try {
+            await NativeBiometric.verifyIdentity({
+              reason: "For note authentication",
+              title: "Authenticate",
+              subtitle: "Use biometrics to unlock the note.",
+              description: isFaceID
+                ? "Place your face for authentication."
+                : "Place your finger for authentication.",
+            });
+          } catch (verificationError) {
+            // Handle verification error (e.g., user cancels biometric prompt)
+            console.error("Biometric verification error:", verificationError);
+            alert("Biometric verification failed. Note remains locked.");
+            return;
+          }
+        } else {
+          // Biometrics not available, use sharedKey
+          const userSharedKey = prompt(
+            "Enter the shared key to unlock the note:"
+          );
+
+          // Check if the entered key matches the stored key
+          const storedSharedKey = localStorage.getItem("sharedKey");
+          if (userSharedKey !== storedSharedKey) {
+            alert("Incorrect shared key. Note remains locked.");
+            return;
+          }
+        }
+      }
+
+      setActiveNoteId(note.id);
+    } catch (error) {
+      console.error("Error handling click on note:", error);
+      alert("Error handling click on note: " + (error as any).message);
+    }
+  };
 
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-    <div className="pr-16">
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}
@@ -749,7 +825,7 @@ const handleClickNote = async (note: Note) => {
         exportData={exportData}
         handleImportData={handleImportData}
       />
-</div>
+
       <div className="overflow-y">
         {!activeNoteId && (
           <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
@@ -767,6 +843,21 @@ const handleClickNote = async (note: Note) => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
+                <div className="relative inline-flex">
+                    <select
+                      id="labelSelect"
+                      onChange={(e) => handleLabelFilterChange(e.target.value)}
+                      className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                    >
+                      <option value="">Select Label</option>
+                      {uniqueLabels.map((label) => (
+                        <option key={label} value={label}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                    <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
+                  </div>
               </div>
               <div className="items-center">
                 <div className="md:w-[22em] h-12 flex items-center justify-start mx-auto sm:hidden overflow-hidden">
@@ -811,119 +902,14 @@ const handleClickNote = async (note: Note) => {
               </div>
             </div>
             <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
-              <div className="py-4">
-                {notesList.filter(
-                  (note) => note.isBookmarked && !note.isArchived
-                ).length > 0 && (
-                  <h2 className="text-3xl font-bold">Bookmarked</h2>
-                )}
-                <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
-                  {notesList.map((note) => {
-                    if (note.isBookmarked && !note.isArchived) {
-                      return (
-                        <div
-                          key={note.id}
-                          role="button"
-                          tabIndex={0}
-                          className={
-                            note.id === activeNoteId
-                              ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                              : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                          }
-                          onClick={() => handleClickNote(note)}
-                        >
-                          <div className="sm:h-44 h-36 overflow-hidden">
-                            <div className="flex flex-col h-full overflow-hidden">
-                              <div className="text-2xl">{note.title}</div>
-                              {note.isLocked ? (
-                                <div>
-                                  <p></p>
-                                </div>
-                              ) : (
-                                <div>
-                                  {note.labels.length > 0 && (
-                                    <div className="flex gap-2">
-                                      {note.labels.map((label) => (
-                                        <span
-                                          key={label}
-                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                        >
-                                          #{label}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              {note.isLocked ? (
-                                <div className="flex flex-col items-center">
-                                  <button className="flex items-center justify-center">
-                                    <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
-                                  </button>
-                                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                    Unlock to edit
-                                  </p>
-                                </div>
-                              ) : (
-                                <div className="text-lg">
-                                  {note.content &&
-                                    truncateContentPreview(note.content)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="py-2">
-                            <button
-                              className="text-[#52525C] py-2 dark:text-white w-auto"
-                              onClick={(e) => handleToggleBookmark(note.id, e)}
-                            >
-                              {note.isBookmarked ? (
-                                <Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                              ) : (
-                                <Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                              )}
-                            </button>
-                            <button
-                          className="text-[#52525C] py-2 dark:text-white w-auto"
-                          onClick={(e) => handleToggleLock(note.id, e)}
-                        >
-                          {note.isLocked ? (
-                            <LockClosedIcon className="w-8 h-8 mr-2" />
-                          ) : (
-                            <LockOpenIcon className="w-8 h-8 mr-2" />
-                          )}
-                        </button>
-                            <button
-                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                              onClick={() => handleDeleteNote(note.id)}
-                            >
-                              <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              </div>
-              <div className="py-4">
-                <h2 className="text-3xl font-bold">All Notes</h2>
-                {notesList.length === 0 && (
-                  <div className="mx-auto">
-                    <p className="py-2 text-lg text-center">
-                      No notes available. Click{" "}
-                      <AddFillIcon className="inline-block w-5 h-5" /> to add a
-                      new note or click{" "}
-                      <Download2LineIcon className="inline-block w-5 h-5" /> to
-                      import your data.
-                    </p>
-                  </div>
-                )}
-                <div className="grid py-2 grid-cols-1 sm:grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
-                  {notesList
-                    .filter((note) => !note.isBookmarked && !note.isArchived)
-                    .map((note) => (
+              {notesList.filter((note) => note.isBookmarked && !note.isArchived)
+                .length > 0 && (
+                <h2 className="text-3xl font-bold">Bookmarked</h2>
+              )}
+              <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                {notesList.map((note) => {
+                  if (note.isBookmarked && !note.isArchived) {
+                    return (
                       <div
                         key={note.id}
                         role="button"
@@ -975,45 +961,145 @@ const handleClickNote = async (note: Note) => {
                             )}
                           </div>
                         </div>
-                        <button
-                          className="text-[#52525C] py-2 dark:text-white w-auto"
-                          onClick={(e) => handleToggleBookmark(note.id, e)} // Pass the event
-                        >
-                          {note.isBookmarked ? (
-                            <Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                          ) : (
-                            <Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                          )}
-                        </button>
-                        <button
-                          className="text-[#52525C] py-2 dark:text-white w-auto"
-                          onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
-                        >
-                          {note.isBookmarked ? (
-                            <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
-                          ) : (
-                            <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
-                          )}
-                        </button>
-                        <button
-                          className="text-[#52525C] py-2 dark:text-white w-auto"
-                          onClick={(e) => handleToggleLock(note.id, e)}
-                        >
-                          {note.isLocked ? (
-                            <LockClosedIcon className="w-8 h-8 mr-2" />
-                          ) : (
-                            <LockOpenIcon className="w-8 h-8 mr-2" />
-                          )}
-                        </button>
-                        <button
-                          className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                          onClick={() => handleDeleteNote(note.id)}
-                        >
-                          <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                        </button>
+                        <div className="py-2">
+                          <button
+                            className="text-[#52525C] py-2 dark:text-white w-auto"
+                            onClick={(e) => handleToggleBookmark(note.id, e)}
+                          >
+                            {note.isBookmarked ? (
+                              <Bookmark3FillIcon className="w-8 h-8 mr-2" />
+                            ) : (
+                              <Bookmark3LineIcon className="w-8 h-8 mr-2" />
+                            )}
+                          </button>
+                          <button
+                            className="text-[#52525C] py-2 dark:text-white w-auto"
+                            onClick={(e) => handleToggleLock(note.id, e)}
+                          >
+                            {note.isLocked ? (
+                              <LockClosedIcon className="w-8 h-8 mr-2" />
+                            ) : (
+                              <LockOpenIcon className="w-8 h-8 mr-2" />
+                            )}
+                          </button>
+                          <button
+                            className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
+                            onClick={() => handleDeleteNote(note.id)}
+                          >
+                            <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                          </button>
+                        </div>
                       </div>
-                    ))}
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+              <h2 className="text-3xl font-bold">All Notes</h2>
+              {notesList.length === 0 && (
+                <div className="mx-auto">
+                  <p className="py-2 text-lg text-center">
+                    No notes available. Click{" "}
+                    <AddFillIcon className="inline-block w-5 h-5" /> to add a
+                    new note or click{" "}
+                    <Download2LineIcon className="inline-block w-5 h-5" /> to
+                    import your data.
+                  </p>
                 </div>
+              )}
+              <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                {notesList
+                  .filter((note) => !note.isBookmarked && !note.isArchived)
+                  .map((note) => (
+                    <div
+                      key={note.id}
+                      role="button"
+                      tabIndex={0}
+                      className={
+                        note.id === activeNoteId
+                          ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
+                          : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
+                      }
+                      onClick={() => handleClickNote(note)}
+                    >
+                      <div className="sm:h-44 h-36 overflow-hidden">
+                        <div className="flex flex-col h-full overflow-hidden">
+                          <div className="text-2xl">{note.title}</div>
+                          {note.isLocked ? (
+                            <div>
+                              <p></p>
+                            </div>
+                          ) : (
+                            <div>
+                              {note.labels.length > 0 && (
+                                <div className="flex gap-2">
+                                  {note.labels.map((label) => (
+                                    <span
+                                      key={label}
+                                      className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                    >
+                                      #{label}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {note.isLocked ? (
+                            <div className="flex flex-col items-center">
+                              <button className="flex items-center justify-center">
+                                <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
+                              </button>
+                              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                Unlock to edit
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="text-lg">
+                              {note.content &&
+                                truncateContentPreview(note.content)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        className="text-[#52525C] py-2 dark:text-white w-auto"
+                        onClick={(e) => handleToggleBookmark(note.id, e)} // Pass the event
+                      >
+                        {note.isBookmarked ? (
+                          <Bookmark3FillIcon className="w-8 h-8 mr-2" />
+                        ) : (
+                          <Bookmark3LineIcon className="w-8 h-8 mr-2" />
+                        )}
+                      </button>
+                      <button
+                        className="text-[#52525C] py-2 dark:text-white w-auto"
+                        onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
+                      >
+                        {note.isBookmarked ? (
+                          <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
+                        ) : (
+                          <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
+                        )}
+                      </button>
+                      <button
+                        className="text-[#52525C] py-2 dark:text-white w-auto"
+                        onClick={(e) => handleToggleLock(note.id, e)}
+                      >
+                        {note.isLocked ? (
+                          <LockClosedIcon className="w-8 h-8 mr-2" />
+                        ) : (
+                          <LockOpenIcon className="w-8 h-8 mr-2" />
+                        )}
+                      </button>
+                      <button
+                        className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
+                        onClick={() => handleDeleteNote(note.id)}
+                      >
+                        <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                      </button>
+                    </div>
+                  ))}
               </div>
             </div>
             <BottomNavBar

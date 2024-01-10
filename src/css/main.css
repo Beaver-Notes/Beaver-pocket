@@ -25,26 +25,204 @@ ul {
   @apply px-6 list-disc
 }
 
-h1 {
-    @apply text-3xl font-bold leading-relaxed 
+.ProseMirror pre,
+.ProseMirror .inline-code {
+  @apply bg-black bg-opacity-5 rounded-lg dark:bg-gray-600 dark:bg-opacity-30 text-gray-700 dark:text-gray-200 pt-6 !important;
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  tab-size: 2;
+  font-variant-ligatures: normal;
+}
+
+.ProseMirror a {
+  @apply text-amber-400 dark:text-amber-400 !important;
+}
+.ProseMirror strong {
+  @apply dark:text-white;
+}
+.ProseMirror blockquote {
+  @apply dark:border-gray-700 dark:text-gray-100;
+}
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  @apply dark:text-white;
+}
+.ProseMirror .mention {
+  @apply py-0.5 px-1 rounded-md bg-amber-400 text-amber-400 bg-opacity-10 dark:text-amber-400 hover:underline;
+  cursor: pointer;
+}
+.ProseMirror .math-block {
+  @apply dark:bg-gray-800;
+}
+.math-node .math-src {
+  @apply dark:text-purple-400 text-purple-500 !important;
+}
+img.ProseMirror-selectednode {
+  @apply ring-2 ring-amber-400 transition;
+}
+
+.ProseMirror {
+  min-height:  400px;
+  & > :first-child {
+    margin-top: 0;
   }
+  &:focus {
+    outline: none;
+  }
+  ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+    li {
+      &::before {
+        height: 0 !important;
+        width: 0 !important;
+      }
+      > label {
+        flex: 0 0 auto;
+        margin-right: 0.5rem;
+        user-select: none;
+      }
+      p {
+        margin: 0;
+      }
+      input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #ccc;
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.3s;
+        margin-top: 4px;
+      }
+
+      input[type="checkbox"]:checked {
+        border-color: #FBBF24;
+      }
+
+      /* Optional: You can add a custom background or other styles for the checked state */
+      input[type="checkbox"]:checked::before {
+        content:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(251,191,36,1)'%3E%3C/path%3E%3C/svg%3E");
+        display: block;
+        width: 100%;
+        height: 100%;
+        font-size: 16px;
+        line-height: 20px;
+        text-align: center;
+        color: #FBBF24;
+      }
+
+      display: flex;
+      align-items: flex-start;
+    }
+  }
+  .find {
+    @apply bg-yellow-400;
+  }
+  .inline-code {
+    @apply p-0.5 px-1 !important;
+  }
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    @apply text-neutral-600 dark:text-[#A1A1AA];
+    pointer-events: none;
+    height: 0;
+  }
+  img {
+    @apply rounded;
+  }
+  mark {
+    @apply bg-yellow-200 dark:bg-yellow-100;
+  }
+}
+
+.labelinput {
+  @apply text-lg flex dark:text-white bg-transparent w-auto outline-none content-center;
+}
+
+.labelinput:empty::before {
+  content:attr(data-placeholder);
+  @apply bg-transparent text-neutral-600 dark:text-[#A1A1AA] !important; 
+}
+
+
+/* Basic editor styles */
+.tiptap {
+  > * + * {
+    margin-top: 0.75em;
+  }
+
+  pre {
+    background: #0D0D0D;
+    color: #FFF;
+    font-family: 'JetBrainsMono', monospace;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+
+    code {
+      color: inherit;
+      padding: 0;
+      background: none;
+      font-size: 0.8rem;
+    }
+
+    .hljs-comment,
+    .hljs-quote {
+      color: #616161;
+    }
+
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-attribute,
+    .hljs-tag,
+    .hljs-name,
+    .hljs-regexp,
+    .hljs-link,
+    .hljs-name,
+    .hljs-selector-id,
+    .hljs-selector-class {
+      color: #F98181;
+    }
+
+    .hljs-number,
+    .hljs-meta,
+    .hljs-built_in,
+    .hljs-builtin-name,
+    .hljs-literal,
+    .hljs-type,
+    .hljs-params {
+      color: #FBBC88;
+    }
+
+    .hljs-string,
+    .hljs-symbol,
+    .hljs-bullet {
+      color: #B9F18D;
+    }
+
+    .hljs-title,
+    .hljs-section {
+      color: #FAF594;
+    }
+
+    .hljs-keyword,
+    .hljs-selector-tag {
+      color: #70CFF8;
+    }
+
+    .hljs-emphasis {
+      font-style: italic;
+    }
+
+    .hljs-strong {
+      font-weight: 700;
+    }
+  }
+}
   
-  h2 {
-    @apply text-3xl font-bold leading-relaxed 
-  }
-  
-  h3 {
-    @apply text-2xl font-bold leading-relaxed 
-  }
-  
-  h4 {
-    @apply text-xl font-bold leading-relaxed 
-  }
-  
-  h5 {
-    @apply text-lg font-bold leading-relaxed 
-  }
-  
-  h6 {
-    @apply text-base font-bold leading-relaxed 
-  }
