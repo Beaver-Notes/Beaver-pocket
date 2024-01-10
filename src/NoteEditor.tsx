@@ -102,7 +102,7 @@ function NoteEditor({
   const [localTitle, setLocalTitle] = useState<string>(note.title);
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
-    const newTitle = event.currentTarget.innerText;
+    const newTitle = event.currentTarget.innerHTML;
     console.log('New Title:', newTitle);
     setLocalTitle(newTitle);
     onTitleChange(newTitle);
@@ -476,10 +476,9 @@ function NoteEditor({
           className={
             isFullScreen
               ? "overflow-auto w-full"
-              : "fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
+              : "fixed z-10 pt-2 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
           }
         >
-          <div className="fixed inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar">
             <div className="bottom-6 flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
               <button
                 className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
@@ -630,7 +629,6 @@ function NoteEditor({
               </button>
             </div>
           </div>
-        </div>
       )}
 
       {headingTreeVisible && editor && (
@@ -721,7 +719,7 @@ function NoteEditor({
             </span>
           ))}
           <div
-            className={styles.labelinput}
+            className="is-empty labelinput"
             contentEditable
             data-placeholder="Add label"
             onKeyDown={(e) => {
@@ -735,10 +733,10 @@ function NoteEditor({
             }}
           />
         </div>
-        <div className="py-2 h-full w-full" id="container">
+        <div className="py-2 " id="container">
           <EditorContent
             editor={editor}
-            className="overflow-auto h-full w-full"
+            className="overflow-auto min-h-[25em]"
           />
         </div>
       </div>

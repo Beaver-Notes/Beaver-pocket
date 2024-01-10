@@ -11,6 +11,8 @@ import {
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
+import JSZip from "jszip";
+import { Share } from "@capacitor/share";
 
 // Import Remix icons
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
@@ -280,15 +282,19 @@ const Archive: React.FC = () => {
       const exportedData: any = {
         data: {
           notes: {},
+          lockedNotes: {}, // Add the lockedNotes field
         },
+        labels: [], // Add the labels field
       };
 
+      // Iterate through notes to populate the exportedData object
       Object.values(notesState).forEach((note) => {
         const createdAtTimestamp =
           note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
         const updatedAtTimestamp =
           note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
 
+        // Populate notes object
         exportedData.data.notes[note.id] = {
           id: note.id,
           title: note.title,
@@ -301,7 +307,18 @@ const Archive: React.FC = () => {
           isLocked: note.isLocked,
           lastCursorPosition: note.lastCursorPosition,
         };
+
+        // Populate labels array
+        exportedData.labels = exportedData.labels.concat(note.labels);
+
+        // Populate lockedNotes object
+        if (note.isLocked) {
+          exportedData.data.lockedNotes[note.id] = true;
+        }
       });
+
+      // Remove duplicate labels
+      exportedData.labels = Array.from(new Set(exportedData.labels));
 
       const jsonData = JSON.stringify(exportedData, null, 2);
       const jsonFilePath = `${exportFolderPath}/data.json`;
@@ -315,7 +332,7 @@ const Archive: React.FC = () => {
       });
 
       // Check if the images folder exists
-      const imagesFolderPath = `images`;
+      const imagesFolderPath = `assets`;
       let imagesFolderExists = false;
 
       try {
@@ -347,6 +364,40 @@ const Archive: React.FC = () => {
         });
       }
 
+      // Zip the export folder
+      const zip = new JSZip();
+      const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
+
+      // Retrieve files in the export folder
+      const exportFolderFiles = await Filesystem.readdir({
+        path: exportFolderPath,
+        directory: Directory.Documents,
+      });
+
+      // Use Promise.all to wait for all asynchronous file reading operations to complete
+      await Promise.all(
+        exportFolderFiles.files.map(async (file) => {
+          const filePath = `${exportFolderPath}/${file.name}`;
+          const fileContent = await Filesystem.readFile({
+            path: filePath,
+            directory: Directory.Documents,
+            encoding: FilesystemEncoding.UTF8,
+          });
+          exportFolderZip!.file(file.name, fileContent.data);
+        })
+      );
+
+      const zipContentBase64 = await zip.generateAsync({ type: 'base64' });
+
+      const zipFilePath = `${parentExportFolderPath}/Beaver_Notes_${formattedDate}.zip`;
+      await Filesystem.writeFile({
+        path: zipFilePath,
+        data: zipContentBase64,
+        directory: Directory.Documents,
+      });
+
+      await shareZipFile();
+
       console.log("Export completed successfully!");
 
       // Notify the user
@@ -354,6 +405,23 @@ const Archive: React.FC = () => {
     } catch (error) {
       console.error("Error exporting data and images:", error);
       alert("Error exporting data and images: " + (error as any).message);
+    }
+  };
+
+  const shareZipFile = async () => {
+    try {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      const parentExportFolderPath = `export`;
+      await Share.share({
+        title: 'Share Beaver Notes Export',
+        text: 'Check out my Beaver Notes export!',
+        url: `file://${parentExportFolderPath}/Beaver_Notes_${formattedDate}.zip`,
+        dialogTitle: 'Share Beaver Notes Export',
+      });
+    } catch (error) {
+      console.error('Error sharing zip file:', error);
+      alert('Error sharing zip file: ' + (error as any).message);
     }
   };
 
@@ -620,7 +688,6 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
 
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-    <div className="pr-16">
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}
@@ -628,8 +695,7 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
         exportData={exportData}
         handleImportData={handleImportData}
       />
-    </div>
-
+      
       <div className="overflow-y">
         {!activeNoteId && (
           <div className="w-full flex flex-col border-gray-300 overflow-auto">
@@ -691,7 +757,6 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
               </div>
             </div>
             <div className="p-2 py-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
-              <div className="pt-[4em]">
                 {notesList.filter((note) => note.isArchived).length > 0 && (
                   <h2 className="text-3xl font-bold">Archived</h2>
                 )}
@@ -1404,7 +1469,7 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
                     </p>
                   </div>
                 )}
-                <div className="grid py-2 grid-cols-1 sm:grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList
                     .filter((note) => note.isArchived)
                     .map((note) => (
@@ -1488,7 +1553,6 @@ const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
                       </div>
                     ))}
                 </div>
-              </div>
             </div>
             <BottomNavBar
               onCreateNewNote={handleCreateNewNote}

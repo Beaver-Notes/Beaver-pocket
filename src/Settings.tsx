@@ -422,7 +422,6 @@ const App: React.FC = () => {
 
   return (
     <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-        <div className="pr-16">
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}
@@ -430,7 +429,7 @@ const App: React.FC = () => {
         exportData={exportData}
         handleImportData={handleImportData}
       />
-      </div>
+
       <div className="overflow-y">
         {!activeNoteId && (
           <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
