@@ -1228,11 +1228,6 @@
   resolved "https://registry.yarnpkg.com/@capacitor/status-bar/-/status-bar-5.0.6.tgz#281568a7f7aeacf80777702cb9947c29dc32685c"
   integrity sha512-7od8CxsBnot1XMK3IeOkproFL4hgoKoWAc3pwUvmDOkQsXoxwQm4SR9mLwQavv1XfxtHbFV9Ukd7FwMxOPSViw==
 
-"@capawesome/capacitor-file-picker@^5.1.1":
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/@capawesome/capacitor-file-picker/-/capacitor-file-picker-5.1.1.tgz#625437ebd621af150101e285b6dc4ef43bd0e857"
-  integrity sha512-VtWV/er8Kux5Bbb0BtRneAaL8aj7zKoSPSR5sn3QlVBccete+CX+nH3scg6JKrogoitNP35PS33LIoaz9WVZiA==
-
 "@csstools/selector-specificity@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@csstools/selector-specificity/-/selector-specificity-3.0.0.tgz#798622546b63847e82389e473fd67f2707d82247"

@@ -827,7 +827,7 @@ const App: React.FC = () => {
         handleImportData={handleImportData}
       />
 
-      <div className="overflow-y">
+      <div className="overflow-y w-screen">
         {!activeNoteId && (
           <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
             <div className="bg-transparent px-6">
@@ -884,7 +884,7 @@ const App: React.FC = () => {
                       />
                     </div>
                   </div>
-                  <div className="relative inline-flex items-center">
+                  <div className="relative hidden sm:block inline-flex items-center">
                     <select
                       id="labelSelect"
                       onChange={(e) => handleLabelFilterChange(e.target.value)}
@@ -907,7 +907,7 @@ const App: React.FC = () => {
                 .length > 0 && (
                 <h2 className="text-3xl font-bold">Bookmarked</h2>
               )}
-              <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+              <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
                 {notesList.map((note) => {
                   if (note.isBookmarked && !note.isArchived) {
                     return (
@@ -1008,7 +1008,7 @@ const App: React.FC = () => {
                   </p>
                 </div>
               )}
-              <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+              <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
                 {notesList
                   .filter((note) => !note.isBookmarked && !note.isArchived)
                   .map((note) => (
