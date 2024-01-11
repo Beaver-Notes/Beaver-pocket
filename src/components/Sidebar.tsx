@@ -25,8 +25,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   handleImportData,
 }) => {
   return (
-    <div className="hidden sm:mr-16 sm:block">
-      <div className="fixed top-0 left-0 h-screen flex flex-col items-center justify-between p-2.5 bg-[#F8F8F7] dark:bg-[#353333] hidden sm:flex">
+    <div className="hidden md:mr-16 md:block">
+      <div className="fixed top-0 left-0 h-screen flex flex-col items-center justify-between p-2.5 bg-[#F8F8F7] dark:bg-[#353333] hidden md:flex">
         <div className="py-5">
           <button
             className="hidden mb-2 p-2 bg-[#EBEBEA] dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"

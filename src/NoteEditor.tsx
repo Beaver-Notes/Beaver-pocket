@@ -468,7 +468,7 @@ function NoteEditor({
 
   return (
     <div
-      className={`overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base`}
+    className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white lg:px-60 text-base"
     >
       {toolbarVisible && (
         <div
@@ -732,10 +732,10 @@ function NoteEditor({
             }}
           />
         </div>
-        <div className="py-2 " id="container">
+        <div className="py-2 h-full w-full" id="container">
           <EditorContent
             editor={editor}
-            className="overflow-auto min-h-[25em]"
+            className="overflow-auto w-full min-h-[25em]"
           />
         </div>
       </div>
