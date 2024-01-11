@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'beaver.notes.pocket',
-  appName: 'Beaver Notes Pocket',
+  appName: 'Beaver Pocket',
   webDir: 'dist',
   plugins: {
     SplashScreen: {

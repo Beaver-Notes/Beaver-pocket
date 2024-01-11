@@ -16,79 +16,12 @@ mark {
   @apply h-full
 }
 
-.tiptap p.is-editor-empty:first-child::before {
-  color: #adb5bd;
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
-h1 {
-  @apply font-bold leading-relaxed 
-}
-
-h2 {
-  @apply text-3xl font-bold leading-relaxed 
-}
-
-h3 {
-  @apply text-2xl font-bold leading-relaxed 
-}
-
-h4 {
-  @apply text-xl font-bold leading-relaxed 
-}
-
-h5 {
-  @apply text-lg font-bold leading-relaxed 
-}
-
-h6 {
-  @apply text-base font-bold leading-relaxed 
-}
 img {
   @apply rounded-xl
 }
 
 a {
   @apply text-amber-400 hover:text-amber-500 underline
-}
-
-.toolbar {
-   @apply flex overflow-y-hidden items-center justify-center w-fit md:w-full p-2 bg-[#2D2C2C] rounded-full
-}
-
-.toolbarIcon {
-   @apply border-none text-white text-xl w-7 h-7
-}
-
-.toolbarContainer {
-    @apply fixed z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar
-  }
-
-.edtiorContainer {
-  @apply py-6
-}
-
-.styles.fullScreenEditor{
-  @apply overflow-auto w-full
-}
-
-.textEditor {
-  @apply overflow-auto outline-none
-}
-
-.textEditorcontent {
-  @apply overflow-auto h-full pl-6 pr-6 py-4;
-}
-
-.toolbarButton {
-    @apply p-2 rounded-md text-white bg-transparent cursor-pointer 
-}
-
-.toolbarButtonActive { 
-    @apply p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer
 }
 
 code {
@@ -154,29 +87,13 @@ input[type="checkbox"]:checked::before {
   color: #FBBF24;
 }
 
-.ProseMirror {
-  outline: none;
-}
-
-.labels {
-  @apply flex flex-wrap gap-2 mt-4
-}
-
-.label {
-  @apply text-lg bg-amber-400 bg-opacity-10 text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md
-}
-
 .labelinput {
-  @apply text-lg flex dark:text-white bg-transparent w-auto dark:bg-[#232222] outline-none content-center;
+  @apply text-lg flex dark:text-white bg-transparent w-auto outline-none content-center;
 }
 
-.labelinput:empty:before {
+.labelinput:empty::before {
   content:attr(data-placeholder);
-  @apply dark:bg-[#232222] text-neutral-600 dark:text-neutral-400;
-}
-
-.editinput {
-  @apply min-w-0 flex-auto bg-transparent outline-none
+  @apply bg-transparent text-neutral-600 dark:text-[#A1A1AA] !important; 
 }
 
 @layer utilities {
@@ -194,3 +111,12 @@ input[type="checkbox"]:checked::before {
   }
 }
 
+@media print {
+  .scroll-content {
+    position: relative;
+  }
+
+  .pane {
+    position: initial;
+  }
+}

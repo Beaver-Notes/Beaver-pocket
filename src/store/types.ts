@@ -9,5 +9,6 @@ export type Note = {
   labels: string[];
   isBookmarked: boolean;
   isArchived: boolean;
+  isLocked: boolean;
   lastCursorPosition: number;
 };
