@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
-import { Note } from "./types";
+import { Note } from "./store/types";
 import NoteEditor from "./NoteEditor";
+import "./css/NoteEditor.module.css";
 import { JSONContent } from "@tiptap/react";
 import Sidebar from "./components/Sidebar";
 import BottomNavBar from "./components/BottomNavBar";

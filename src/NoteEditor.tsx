@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Note } from "./types";
+import { Note } from "./store/types";
 import { lowlight } from "lowlight";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Document from "@tiptap/extension-document";
@@ -8,7 +8,6 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import styles from "./css/NoteEditor.module.css";
 import "./css/NoteEditor.module.css";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Highlight from "@tiptap/extension-highlight";
@@ -25,7 +24,7 @@ import {
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import CodeBlockComponent from "./components/CodeBlockComponent";
+import CodeBlockComponent from "./lib/CodeBlockComponent";
 import { v4 as uuidv4 } from "uuid";
 import HeadingTree from "./lib/HeadingTree";
 // import Paper from "./lib/tiptap/paper/Paper"
