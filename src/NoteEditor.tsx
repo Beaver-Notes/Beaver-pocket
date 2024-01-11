@@ -1,31 +1,19 @@
-import { useCallback, useState } from "react";
-import { Note } from "./types";
-import { lowlight } from 'lowlight'
-import {
-  EditorContent,
-  useEditor,
-  JSONContent,
-  generateText,
-} from "@tiptap/react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Note } from "./store/types";
+import { lowlight } from "lowlight";
+import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Document from "@tiptap/extension-document";
 import Placeholder from "@tiptap/extension-placeholder";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import styles from "./css/NoteEditor.module.css";
 import "./css/NoteEditor.module.css";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Highlight from "@tiptap/extension-highlight";
-import Heading from "@tiptap/extension-heading";
-import Paragraph from "@tiptap/extension-paragraph";
 import Underline from "@tiptap/extension-underline";
-import Code from "@tiptap/extension-code";
 import OrderedList from "@tiptap/extension-list-item";
-import { ListItem } from "@tiptap/extension-list-item";
-import CodeBlock from "@tiptap/extension-code-block";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
-import Blockquote from "@tiptap/extension-blockquote";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
@@ -35,10 +23,12 @@ import {
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import CodeBlockComponent from "./components/CodeBlockComponent";
+import CodeBlockComponent from "./lib/CodeBlockComponent";
 import { v4 as uuidv4 } from "uuid";
+import HeadingTree from "./lib/HeadingTree";
+// import Paper from "./lib/tiptap/paper/Paper"
 
-// Remix Icons
+// Icons
 
 import BoldIcon from "remixicon-react/BoldIcon";
 import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
@@ -52,6 +42,8 @@ import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
+import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
+import Search2LineIcon from "remixicon-react/Search2LineIcon";
 
 // Languages
 import css from "highlight.js/lib/languages/css";
@@ -78,16 +70,8 @@ const extensions = [
   Mathblock,
   Highlight,
   Underline,
-  Heading.configure({
-    levels: [1, 2, 3, 4, 5, 6],
-  }),
-  Paragraph,
-  CodeBlock,
-  Code,
   Placeholder,
   OrderedList,
-  ListItem,
-  Blockquote,
   TaskList,
   TaskItem.configure({
     nested: true,
@@ -97,27 +81,48 @@ const extensions = [
 
 type Props = {
   note: Note;
+  onCloseEditor: () => void;
   onChange: (content: JSONContent, title?: string) => void;
   isFullScreen?: boolean;
+  title: string;
+  onTitleChange: (newTitle: string) => void;
 };
 
-function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
+function NoteEditor({
+  note,
+  onChange,
+  onCloseEditor,
+  onTitleChange,
+  isFullScreen = false,
+}: Props) {
+
+  const [localTitle, setLocalTitle] = useState<string>(note.title);
+
+  const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
+    const newTitle = event.currentTarget.innerHTML;
+    console.log('New Title:', newTitle);
+    setLocalTitle(newTitle);
+    onTitleChange(newTitle);
+    onChange(editor?.getJSON() || {} as JSONContent, newTitle);
+  };  
+
+  useEffect(() => {
+    // Update local title when the note changes
+    setLocalTitle(note.title);
+  }, [note.title]);
+
   const editor = useEditor(
     {
       extensions,
       content: note.content,
       editorProps: {
         attributes: {
-          class: styles.TextEditor,
+          class: "overflow-auto outline-none",
         },
       },
       onUpdate: ({ editor }) => {
         const editorContent = editor.getJSON();
-        const firstNodeContent = editorContent.content?.[0];
-        onChange(
-          editorContent,
-          firstNodeContent && generateText(firstNodeContent, extensions)
-        );
+        onChange(editorContent);
       },
     },
     [note.id]
@@ -126,6 +131,9 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
   const [editingLabelIndex, setEditingLabelIndex] = useState<number | null>(
     null
   );
+
+  const [focusMode, setFocusMode] = useState(false);
+  const [toolbarVisible, setToolbarVisible] = useState(true);
 
   const updateLabelsInNote = (labelToUpdate: string, newLabel: string) => {
     const updatedNote = { ...note };
@@ -186,7 +194,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
         }
 
         // Call the onChange callback with the updated content and title
-        onChange(updatedNote.content, updatedNote.title);
+        onChange(updatedNote.content);
       }
     }
   };
@@ -200,7 +208,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
   const addLabelToNote = (labelToAdd: string) => {
     // Clone the note to avoid mutating the original state directly
     const updatedNote = { ...note };
-  
+
     // Create a noteLabel node
     const noteLabelNode = {
       type: "noteLabel",
@@ -209,7 +217,7 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
         label: null,
       },
     };
-  
+
     // Check if content is an array
     if (Array.isArray(updatedNote.content)) {
       // If it is an array, create a new content object with the noteLabelNode
@@ -238,17 +246,17 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
         content: [noteLabelNode],
       };
     }
-  
+
     // Add the label to the labels array
     if (!updatedNote.labels) {
       updatedNote.labels = [labelToAdd];
     } else {
       updatedNote.labels.push(labelToAdd);
     }
-  
+
     // Update the note using the onChange callback
-    onChange(updatedNote.content, updatedNote.title);
-  };  
+    onChange(updatedNote.content);
+  };
 
   const handleImageUpload = async (file: File) => {
     try {
@@ -379,191 +387,307 @@ function NoteEditor({ note, onChange, isFullScreen = false }: Props) {
       .run();
   }, [editor]);
 
+  const handleHeadingClick = (heading: string) => {
+    console.log("Heading clicked:", heading);
+  };
+
+  const [headingTreeVisible, setHeadingTreeVisible] = useState(false);
+
+  const toggleHeadingTree = () => {
+    setHeadingTreeVisible(!headingTreeVisible);
+  };
+
+  const headingTreeRef = useRef<HTMLDivElement | null>(null);
+
+  // Close heading tree when clicking outside
+  const handleOutsideClick = useCallback(
+    (event: MouseEvent) => {
+      if (
+        headingTreeVisible &&
+        headingTreeRef.current &&
+        event.target instanceof Node &&
+        !headingTreeRef.current.contains(event.target)
+      ) {
+        setHeadingTreeVisible(false);
+      }
+    },
+    [headingTreeVisible]
+  );
+
+  useEffect(() => {
+    // Attach the event listener
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    // Detach the event listener on component unmount
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [handleOutsideClick]);
+
   return (
-    <div className="pt-6 overflow-auto h-full justify-center items-start w-full px-4 text-black dark:text-white lg:px-60 text-base">
-      <div
-        className={
-          isFullScreen ? styles.fullScreenEditor : styles.toolbarContainer
-        }
-      >
-        <div className={styles.toolbarContainer}>
-          <div className={styles.toolbar}>
-            <a className={styles.toolbarButton} href="/">
-              <ArrowLeftSLineIcon className={styles.toolbarIcon} />
-            </a>
-            <button
-              className={
-                editor?.isActive("bold")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
-              }
-              onClick={toggleBold}
-            >
-              <BoldIcon className={styles.toolbarIcon} />
-            </button>
-            <button
-              className={
-                editor?.isActive("italic")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
-              }
-              onClick={toggleItalic}
-            >
-              <ItalicIcon className={styles.toolbarIcon} />
-            </button>
-            <button
-              className={
-                editor?.isActive("underline")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
-              }
-              onClick={toggleUnderline}
-            >
-              <UnderlineIcon className={styles.toolbarIcon} />
-            </button>
-            <button
-              className={
-                editor?.isActive("strike")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
-              }
-              onClick={toggleStrike}
-            >
-              <StrikethroughIcon className={styles.toolbarIcon} />
-            </button>
-            <button
-              className={
-                editor?.isActive("highlight")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
-              }
-              onClick={toggleHighlight}
-            >
-              <MarkPenLineIcon className={styles.toolbarIcon} />
-            </button>
+    <div
+    className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white lg:px-60 text-base"
+    >
+      {toolbarVisible && (
+        <div
+          className={
+            isFullScreen
+              ? "overflow-auto w-full"
+              : "fixed z-10 pt-2 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
+          }
+        >
+            <div className="bottom-6 flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
+              <button
+                className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
+                onClick={onCloseEditor}
+              >
+                <ArrowLeftSLineIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
+              <div className="sm:mx-auto flex overflow-y-hidden w-fit">
+                <button
+                  className={
+                    editor?.isActive("bold")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleBold}
+                >
+                  <BoldIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("italic")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleItalic}
+                >
+                  <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("underline")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleUnderline}
+                >
+                  <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("strike")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleStrike}
+                >
+                  <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("highlight")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleHighlight}
+                >
+                  <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
 
-            <button
-              className={
-                editor?.isActive("OrderedList")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
-              }
-              onClick={toggleOrderedList}
-            >
-              <ListOrderedIcon className={styles.toolbarIcon} />
-            </button>
-            <button
-              className={
-                editor?.isActive("UnorderedList")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
-              }
-              onClick={toggleUnorderedList}
-            >
-              <ListUnorderedIcon className={styles.toolbarIcon} />
-            </button>
-            <button
-              className={
-                editor?.isActive("Tasklist")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
-              }
-              onClick={toggleTaskList}
-            >
-              <ListCheck2Icon className={styles.toolbarIcon} />
-            </button>
-            <button
-              className={
-                editor?.isActive("Blockquote")
-                  ? styles.toolbarButtonActive
-                  : styles.toolbarButton
-              }
-              onClick={toggleBlockquote}
-            >
-              <DoubleQuotesLIcon className={styles.toolbarIcon} />
-            </button>
+                <button
+                  className={
+                    editor?.isActive("OrderedList")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleOrderedList}
+                >
+                  <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("UnorderedList")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleUnorderedList}
+                >
+                  <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("Tasklist")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleTaskList}
+                >
+                  <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("Blockquote")
+                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={toggleBlockquote}
+                >
+                  <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
 
-            <button
-              onClick={setLink}
-              className={styles.toolbarButton}
-            >
-              <LinkIcon className={styles.toolbarIcon} />
-            </button>
-            <button
-              className={styles.toolbarButton}
-              onClick={() => {
-                const imageInput =
-                  document.getElementById("image-upload-input");
-                if (imageInput) {
-                  imageInput.click();
-                }
-              }}
-            >
-              <ImageLineIcon className={styles.toolbarIcon} />
-            </button>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                if (e.target.files) {
-                  handleImageUpload(e.target.files[0]);
-                }
-              }}
-              style={{ display: "none" }}
-              id="image-upload-input" // Add this ID
-            />
+                <button
+                  onClick={setLink}
+                  className={
+                    "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                >
+                  <LinkIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                  }
+                  onClick={() => {
+                    const imageInput =
+                      document.getElementById("image-upload-input");
+                    if (imageInput) {
+                      imageInput.click();
+                    }
+                  }}
+                >
+                  <ImageLineIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      handleImageUpload(e.target.files[0]);
+                    }
+                  }}
+                  style={{ display: "none" }}
+                  id="image-upload-input" // Add this ID
+                />
+              </div>
+              <button
+                className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
+                onClick={toggleHeadingTree}
+              >
+                <Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
-      <div className={styles.labels}>
-        {labelsArray.map((label, index) => (
-          <span
-            key={index}
-            className={styles.label}
-            onClick={() => {
-              setEditingLabelIndex(index);
+      )}
 
-              // Handle the case when clicking on a label
-              const updatedLabels = [...labelsArray];
-              updatedLabels[index] = label; // Update the label to its original value
-              updateLabelsInNote(label, label); // Fix: Pass both labelToUpdate and newLabel
+      {headingTreeVisible && editor && (
+        <div
+          ref={headingTreeRef}
+          className={`transition-opacity ${
+            headingTreeVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <HeadingTree onHeadingClick={handleHeadingClick} />
+        </div>
+      )}
+      <div className="fixed sm:hidden mt-4 inset-x-2 overflow-auto h-auto w-full bg-transparent sticky top-0 z-50 no-scrollbar flex justify-between">
+        <button
+          className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
+          onClick={onCloseEditor}
+        >
+          <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+        </button>
+        <div className="flex">
+          <button
+            className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+            onClick={() => {
+              setFocusMode((prevFocusMode) => !prevFocusMode);
+              setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
             }}
           >
-            {editingLabelIndex === index ? (
-              <div
-                className={styles.editinput}
-                contentEditable
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const updatedLabels = [...labelsArray];
-                    updatedLabels[index] = e.currentTarget.innerText.trim();
-                    setEditingLabelIndex(null);
-                    // Update the note with the new labels and content
-                    updateLabelsInNote(label, e.currentTarget.innerText.trim()); // Fix: Pass both labelToUpdate and newLabel
-                  }
-                }}
-              >
-                {label}
-              </div>
-            ) : (
-              `#${label}`
-            )}
-          </span>
-        ))}
-        <div
-          className={styles.labelinput}
-          contentEditable
-          data-placeholder="Add label"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.currentTarget.innerText.trim() !== "") {
-              addLabelToNote(e.currentTarget.innerText.trim());
-              e.currentTarget.innerText = ""; // Clear the input field after adding the label
-            }
-          }}
-        />
+            <Focus3LineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+          </button>
+          <button
+            className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
+            onClick={toggleHeadingTree}
+          >
+            <Search2LineIcon
+              className={`border-none ${
+                focusMode ? "hidden" : "block"
+              }  dark:text-white text-neutral-800 text-xl w-7 h-7`}
+            />
+          </button>
+        </div>
       </div>
-      <div className={styles.edtiorContainer}>
-        <EditorContent editor={editor} className={styles.textEditorContent} />
+
+      <div
+      contentEditable
+      suppressContentEditableWarning
+      className="text-3xl font-bold overflow-y-scroll outline-none mt-4"
+      onBlur={handleTitleChange}
+      dangerouslySetInnerHTML={{ __html: localTitle }}
+    />
+
+      <div>
+        <div className="flex flex-wrap mt-2 gap-2">
+          {labelsArray.map((label, index) => (
+            <span
+              key={index}
+              className="text-lg bg-amber-400 bg-opacity-10 text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+              onClick={() => {
+                setEditingLabelIndex(index);
+
+                // Handle the case when clicking on a label
+                const updatedLabels = [...labelsArray];
+                updatedLabels[index] = label; // Update the label to its original value
+                updateLabelsInNote(label, label); // Fix: Pass both labelToUpdate and newLabel
+              }}
+            >
+              {editingLabelIndex === index ? (
+                <div
+                  className="min-w-0 flex-auto bg-transparent outline-none"
+                  contentEditable
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const updatedLabels = [...labelsArray];
+                      updatedLabels[index] = e.currentTarget.innerText.trim();
+                      setEditingLabelIndex(null);
+                      // Update the note with the new labels and content
+                      updateLabelsInNote(
+                        label,
+                        e.currentTarget.innerText.trim()
+                      ); // Fix: Pass both labelToUpdate and newLabel
+                    }
+                  }}
+                >
+                  {label}
+                </div>
+              ) : (
+                `#${label}`
+              )}
+            </span>
+          ))}
+          <div
+            className="is-empty labelinput"
+            contentEditable
+            data-placeholder="Add label"
+            onKeyDown={(e) => {
+              if (
+                e.key === "Enter" &&
+                e.currentTarget.innerText.trim() !== ""
+              ) {
+                addLabelToNote(e.currentTarget.innerText.trim());
+                e.currentTarget.innerText = ""; // Clear the input field after adding the label
+              }
+            }}
+          />
+        </div>
+        <div className="py-2 h-full w-full" id="container">
+          <EditorContent
+            editor={editor}
+            className="overflow-auto w-full min-h-[25em]"
+          />
+        </div>
       </div>
     </div>
   );
