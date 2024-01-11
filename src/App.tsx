@@ -12,5 +12,3 @@ const App: React.FC = () => (
     <Route path="/settings" element={<Settings />}/>
   </Routes>
 );
-
-export default App;
