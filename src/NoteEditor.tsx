@@ -18,16 +18,10 @@ import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
-import {
-  Filesystem,
-  Directory,
-  FilesystemEncoding,
-} from "@capacitor/filesystem";
-import CodeBlockComponent from "./lib/CodeBlockComponent";
-import { v4 as uuidv4 } from "uuid";
+import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
+import { initDB } from "react-indexed-db-hook";
 import HeadingTree from "./lib/HeadingTree";
 // import Paper from "./lib/tiptap/paper/Paper"
-
 // Icons
 
 import BoldIcon from "remixicon-react/BoldIcon";
@@ -258,71 +252,53 @@ function NoteEditor({
     onChange(updatedNote.content);
   };
 
-  const handleImageUpload = async (file: File) => {
-    try {
-      // Generate a unique identifier (UUID) for the image
-      const directoryId = uuidv4();
+  const [initialized, setInitialized] = useState(false);
 
-      // Directory name for your images under the "assets" directory
-      const assetsDirectory = "assets";
-
-      // Check if the "assets" directory exists (or attempt to create it)
-      try {
-        await Filesystem.mkdir({
-          path: assetsDirectory,
-          directory: Directory.Data,
-          recursive: true, // Create parent directories if they don't exist
-        });
-      } catch (createDirectoryError) {
-        // Directory likely already exists, ignore the error
-      }
-
-      // Check if the directory with the random UUID exists (or attempt to create it)
-      try {
-        await Filesystem.mkdir({
-          path: `${assetsDirectory}/${directoryId}`,
-          directory: Directory.Data,
-          recursive: true, // Create parent directories if they don't exist
-        });
-      } catch (createDirectoryError) {
-        // Directory likely already exists, ignore the error
-      }
-
-      // Fetch the image as a binary blob
-      const response = await fetch(URL.createObjectURL(file));
-      const blob = await response.blob();
-
-      // Convert the binary blob to an ArrayBuffer
-      const arrayBuffer = await new Response(blob).arrayBuffer();
-
-      // Convert ArrayBuffer to Uint8Array
-      const uint8Array = new Uint8Array(arrayBuffer);
-
-      // Convert the Uint8Array to a regular array of numbers
-      const dataArray = Array.from(uint8Array);
-
-      // Encode the array of numbers as Base64
-      const base64Data = btoa(
-        dataArray.map((byte) => String.fromCharCode(byte)).join("")
-      );
-
-      // Get the original file name
-      const originalFileName = file.name;
-
-      // Write the Base64 image data to the app's data directory with the original file name
-      await Filesystem.writeFile({
-        path: `${assetsDirectory}/${directoryId}/${originalFileName}`,
-        data: base64Data,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
+  useEffect(() => {
+    const initializeDB = async () => {
+      await initDB({
+        name: "MyDatabase",
+        version: 1,
+        objectStoresMeta: [
+          {
+            store: "images",
+            storeConfig: { keyPath: "id", autoIncrement: true },
+            storeSchema: [
+              { name: "data", keypath: "data", options: { unique: false } },
+            ],
+          },
+        ],
       });
+      setInitialized(true);
+    };
 
-      const imageSrc = `data:image/jpeg;base64,${base64Data}`;
+    initializeDB();
+  }, []);
 
-      // Insert the image into the editor
-      editor?.chain().focus().setImage({ src: imageSrc }).run();
-    } catch (error) {
-      console.error("Error uploading image:", error);
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!initialized) {
+      console.error(
+        "Database not initialized. Please wait or handle appropriately."
+      );
+      return;
+    }
+
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const dataUrl = event.target?.result as string;
+        editor
+          ?.chain()
+          .focus()
+          .setImage({
+            src: dataUrl,
+            alt: "Image Alt Text",
+            title: "Image Title",
+          })
+          .run();
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -544,31 +520,17 @@ function NoteEditor({
                 >
                   <LinkIcon className="border-none text-white text-xl w-7 h-7" />
                 </button>
-                <button
-                  className={
-                    "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={() => {
-                    const imageInput =
-                      document.getElementById("image-upload-input");
-                    if (imageInput) {
-                      imageInput.click();
-                    }
-                  }}
-                >
+                <div className="p-2 rounded-md text-white bg-transparent cursor-pointer">
+                <label htmlFor="importData">
                   <ImageLineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
+                </label>
                 <input
+                className="hidden"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files) {
-                      handleImageUpload(e.target.files[0]);
-                    }
-                  }}
-                  style={{ display: "none" }}
-                  id="image-upload-input" // Add this ID
+                  onChange={handleImageUpload}
                 />
+              </div>
               </div>
               <button
                 className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
