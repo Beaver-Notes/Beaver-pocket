@@ -446,7 +446,7 @@ const App: React.FC = () => {
                 >
                   <div className="w-auto mt-4 object-fit">
                     <svg
-                      className="mx-auto my-auto w-16 rounded-full border-2 dark:border-neutral-800 px-auto"
+                      className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
                       viewBox="0 0 512 512"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -462,7 +462,7 @@ const App: React.FC = () => {
                 >
                   <div className="w-auto mt-4 object-fit">
                     <svg
-                      className="mx-auto my-auto w-16  rounded-full border-2 dark:border-neutral-800 px-auto"
+                      className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
                       viewBox="0 0 512 512"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -478,7 +478,7 @@ const App: React.FC = () => {
                 >
                   <div className="w-auto mt-4 object-contain">
                     <svg
-                      className="mx-auto my-auto w-16  rounded-full border-2 dark:border-neutral-800 px-auto"
+                      className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
                       viewBox="0 0 511 512"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"

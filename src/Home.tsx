@@ -818,7 +818,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
+    <div>
+    <div className="grid sm:grid-cols-[auto,1fr]">
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}
@@ -827,7 +828,7 @@ const App: React.FC = () => {
         handleImportData={handleImportData}
       />
 
-      <div className="overflow-y w-screen">
+      <div className="overflow-y">
         {!activeNoteId && (
           <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
             <div className="bg-transparent px-6">
@@ -1260,6 +1261,8 @@ const App: React.FC = () => {
             />
           </div>
         )}
+            </div>
+            </div>
         <div>
           {activeNote && (
             <NoteEditor
@@ -1271,8 +1274,7 @@ const App: React.FC = () => {
             />
           )}
         </div>
-      </div>
-    </div>
+        </div>
   );
 };
 
