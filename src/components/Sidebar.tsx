@@ -36,13 +36,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
 
           <Link to="/">
-            <button className="hidden mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex">
+            <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex">
               <BookletLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
             </button>
           </Link>
 
           <Link to="/archive">
-            <button className="hidden p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex">
+            <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex">
               <ArchiveLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
             </button>
           </Link>
@@ -50,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="fixed bottom-6 gap-y-2">
           <button
             onClick={toggleTheme}
-            className="hidden p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
+            className="hidden p-2 hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
           >
             {isDarkMode ? (
               <SunLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}
           </button>
           <button
-            className="hidden p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
+            className="hidden p-2 hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
             onClick={exportData}
           >
             <Upload2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
           <label
             htmlFor="importData"
-            className="hidden p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
+            className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex"
           >
             <Download2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
           </label>
@@ -79,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             onChange={handleImportData}
           />
           <Link to="/settings">
-            <button className="hidden p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex">
+            <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex md:flex">
               <SettingsLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
             </button>
           </Link>

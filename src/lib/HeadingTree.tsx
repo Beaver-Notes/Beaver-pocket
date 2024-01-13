@@ -42,7 +42,7 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
   );
 
   return (
-    <div className="absolute top-20 sm:right-60 right-2 p-3 bg-white rounded-xl shadow dark:bg-[#2D2C2C] z-50 w-64">
+    <div className="absolute top-20 sm:right-60 right-2 p-3 bg-white rounded-xl dark:bg-[#2D2C2C] border-2 dark:border-neutral-800 z-50 w-64">
       <div className="mb-2">
         <div className="flex items-center relative">
           <Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />

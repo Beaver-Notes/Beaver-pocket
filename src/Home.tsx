@@ -8,6 +8,7 @@ import Sidebar from "./components/Sidebar";
 import BottomNavBar from "./components/BottomNavBar";
 import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import "./css/main.css";
+import "./css/fonts.css";
 import {
   Filesystem,
   Directory,
@@ -15,6 +16,8 @@ import {
 } from "@capacitor/filesystem";
 import JSZip from "jszip";
 import { Share } from "@capacitor/share";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 
 // Import Remix icons
 import AddFillIcon from "remixicon-react/AddFillIcon";
@@ -27,6 +30,7 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
+import ArrowUpDownLineIcon from "remixicon-react/ArrowUpDownLineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 
@@ -86,7 +90,8 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDeleteNote = async (noteId: string) => {
+  const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event propagation
     const isConfirmed = window.confirm(
       "Are you sure you want to delete this note?"
     );
@@ -421,7 +426,7 @@ const App: React.FC = () => {
         })
       );
 
-      const zipContentBase64 = await zip.generateAsync({ type: 'base64' });
+      const zipContentBase64 = await zip.generateAsync({ type: "base64" });
 
       const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
       await Filesystem.writeFile({
@@ -447,28 +452,28 @@ const App: React.FC = () => {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
       const zipFilePath = `file:///Cache/Beaver_Notes_${formattedDate}.zip`;
-  
+
       console.log("Sharing zip file from path:", zipFilePath);
-  
+
       const result = await Filesystem.getUri({
         directory: Directory.Cache,
-        path: 'Beaver_Notes_2024-01-10.zip',
+        path: "Beaver_Notes_2024-01-10.zip",
       });
-      
+
       const resolvedFilePath = result.uri;
 
       await Share.share({
-        title: 'Share Beaver Notes Export',
-        text: 'Check out my Beaver Notes export!',
+        title: "Share Beaver Notes Export",
+        text: "Check out my Beaver Notes export!",
         url: resolvedFilePath,
-        dialogTitle: 'Share Beaver Notes Export',
+        dialogTitle: "Share Beaver Notes Export",
       });
     } catch (error) {
-      console.error('Error sharing zip file:', error);
-      alert('Error sharing zip file: ' + (error as any).message);
+      console.error("Error sharing zip file:", error);
+      alert("Error sharing zip file: " + (error as any).message);
     }
-  };  
-  
+  };
+
   const handleImportData = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -545,7 +550,7 @@ const App: React.FC = () => {
   const [title, setTitle] = useState(
     activeNoteId ? notesState[activeNoteId].title : ""
   );
-  
+
   const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
     if (activeNoteId) {
       const existingNote = notesState[activeNoteId];
@@ -592,11 +597,26 @@ const App: React.FC = () => {
   };
 
   const [isArchiveVisible, setIsArchiveVisible] = useState(false);
+  const [sortingOption, setSortingOption] = useState("updatedAt");
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
-    const updatedAtA = a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
-    const updatedAtB = b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
-    return updatedAtA.getTime() - updatedAtB.getTime();
+    switch (sortingOption) {
+      case "alphabetical":
+        return a.title.localeCompare(b.title);
+      case "createdAt":
+        const createdAtA =
+          a.createdAt instanceof Date ? a.createdAt : new Date(0);
+        const createdAtB =
+          b.createdAt instanceof Date ? b.createdAt : new Date(0);
+        return createdAtA.getTime() - createdAtB.getTime();
+      case "updatedAt":
+      default:
+        const updatedAtA =
+          a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
+        const updatedAtB =
+          b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
+        return updatedAtA.getTime() - updatedAtB.getTime();
+    }
   });
 
   const MAX_CONTENT_PREVIEW_LENGTH = 150;
@@ -817,189 +837,227 @@ const App: React.FC = () => {
     }
   };
 
+  dayjs.extend(relativeTime);
+
   return (
     <div>
-    <div className="grid sm:grid-cols-[auto,1fr]">
-      <Sidebar
-        onCreateNewNote={handleCreateNewNote}
-        isDarkMode={darkMode}
-        toggleTheme={() => toggleTheme(!darkMode)}
-        exportData={exportData}
-        handleImportData={handleImportData}
-      />
+      <div className="grid sm:grid-cols-[auto,1fr]">
+        <Sidebar
+          onCreateNewNote={handleCreateNewNote}
+          isDarkMode={darkMode}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          exportData={exportData}
+          handleImportData={handleImportData}
+        />
 
-      <div className="overflow-y">
-        {!activeNoteId && (
-          <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-            <div className="bg-transparent px-6">
-              <div className="flex justify-center">
-                <div className="apply relative w-full md:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2;">
-                  <div>
-                    <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6" />
+        <div className="overflow-y">
+          {!activeNoteId && (
+            <div className="md:mt-4 py-2 w-full flex flex-col border-gray-300 overflow-auto">
+              <div className="bg-transparent px-6">
+                <div className="flex justify-center">
+                  <div className="apply relative w-full md:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2;">
+                    <div>
+                      <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6" />
+                    </div>
+                    <input
+                      className="text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white w-full"
+                      type="text"
+                      placeholder="Search notes"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                   </div>
-                  <input
-                    className="text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white w-full"
-                    type="text"
-                    placeholder="Search notes"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <div className="relative inline-flex">
-                    <select
-                      id="labelSelect"
-                      onChange={(e) => handleLabelFilterChange(e.target.value)}
-                      className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
-                    >
-                      <option value="">Select Label</option>
-                      {uniqueLabels.map((label) => (
-                        <option key={label} value={label}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                    <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
-                  </div>
-              </div>
-              <div className="items-center">
-                <div className="md:w-[22em] h-12 flex items-center justify-start mx-auto sm:hidden overflow-hidden">
-                  <div className="border-r-2 border-gray-300 dark:border-neutral-800 p-3 rounded-l-full bg-[#F8F8F7] text-center dark:bg-[#2D2C2C] flex-grow text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
-                    <button
-                      className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center"
-                      onClick={exportData}
-                    >
-                      <Upload2LineIcon />
-                    </button>
-                  </div>
-                  <div className="border-l-2 border-gray-300 dark:border-neutral-800 p-3 rounded-r-full bg-[#F8F8F7] dark:bg-[#2D2C2C] text-center flex-grow mr-2 text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
-                    <div className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center">
-                      <label htmlFor="importData">
-                        <Download2LineIcon />
-                      </label>
-                      <input
-                        className="hidden"
-                        type="file"
-                        id="importData"
-                        accept=".json"
-                        onChange={handleImportData}
-                      />
+                  <div className="md:block hidden relative inline-flex items-center">
+                    <div>
+                      <select
+                        id="labelSelect"
+                        onChange={(e) =>
+                          handleLabelFilterChange(e.target.value)
+                        }
+                        className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                      >
+                        <option value="">Select Label</option>
+                        {uniqueLabels.map((label) => (
+                          <option key={label} value={label}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
                     </div>
                   </div>
-                  <div className="relative hidden sm:block inline-flex items-center">
+                  <div className="md:block hidden relative inline-flex items-center">
                     <select
-                      id="labelSelect"
-                      onChange={(e) => handleLabelFilterChange(e.target.value)}
-                      className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                      onChange={(e) => setSortingOption(e.target.value)}
+                      className="rounded-full ml-2 pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
                     >
-                      <option value="">Select Label</option>
-                      {uniqueLabels.map((label) => (
-                        <option key={label} value={label}>
-                          {label}
-                        </option>
-                      ))}
+                      <option value="updatedAt">Last Updated</option>
+                      <option value="createdAt">Created Date</option>
+                      <option value="alphabetical">Alphabetical Order</option>
                     </select>
                     <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
-              </div>
-            </div>
-            <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
-              {notesList.filter((note) => note.isBookmarked && !note.isArchived)
-                .length > 0 && (
-                <h2 className="text-3xl font-bold">Bookmarked</h2>
-              )}
-              <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
-                {notesList.map((note) => {
-                  if (note.isBookmarked && !note.isArchived) {
-                    return (
-                      <div
-                        key={note.id}
-                        role="button"
-                        tabIndex={0}
-                        className={
-                          note.id === activeNoteId
-                            ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                            : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                        }
-                        onClick={() => handleClickNote(note)}
+                <div className="items-center">
+                  <div className="md:w-[22em] h-12 flex items-center justify-start mx-auto sm:hidden overflow-hidden">
+                    <div className="border-r-2 border-gray-300 dark:border-neutral-800 p-3 rounded-l-full bg-[#F8F8F7] text-center dark:bg-[#2D2C2C] flex-grow text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
+                      <button
+                        className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center"
+                        onClick={exportData}
                       >
-                        <div className="sm:h-44 h-36 overflow-hidden">
-                          <div className="flex flex-col h-full overflow-hidden">
-                            <div className="text-2xl">{note.title}</div>
-                            {note.isLocked ? (
-                              <div>
-                                <p></p>
-                              </div>
-                            ) : (
-                              <div>
-                                {note.labels.length > 0 && (
-                                  <div className="flex gap-2">
-                                    {note.labels.map((label) => (
-                                      <span
-                                        key={label}
-                                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                      >
-                                        #{label}
-                                      </span>
-                                    ))}
-                                  </div>
+                        <Upload2LineIcon />
+                      </button>
+                    </div>
+                    <div className="border-l-2 border-gray-300 dark:border-neutral-800 p-3 rounded-r-full bg-[#F8F8F7] dark:bg-[#2D2C2C] text-center flex-grow mr-2 text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
+                      <div className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center">
+                        <label htmlFor="importData">
+                          <Download2LineIcon />
+                        </label>
+                        <input
+                          className="hidden"
+                          type="file"
+                          id="importData"
+                          accept=".json"
+                          onChange={handleImportData}
+                        />
+                      </div>
+                    </div>
+                    <div className="relative inline-flex items-center">
+                      <select
+                        id="labelSelect"
+                        onChange={(e) =>
+                          handleLabelFilterChange(e.target.value)
+                        }
+                        className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                      >
+                        <option value="">Select Label</option>
+                        {uniqueLabels.map((label) => (
+                          <option key={label} value={label}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+                  <div className="py-2 block sm:hidden relative inline-flex items-center">
+                    <ArrowUpDownLineIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                    <select
+                      onChange={(e) => setSortingOption(e.target.value)}
+                      className="bg-transparent text-lg dark:text-white outline-none appearance-none pl-10"
+                    >
+                      <option value="updatedAt">Last Updated</option>
+                      <option value="createdAt">Created Date</option>
+                      <option value="alphabetical">Alphabetical Order</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
+                {notesList.filter(
+                  (note) => note.isBookmarked && !note.isArchived
+                ).length > 0 && (
+                  <h2 className="text-3xl font-bold">Bookmarked</h2>
+                )}
+                <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
+                  {notesList.map((note) => {
+                    if (note.isBookmarked && !note.isArchived) {
+                      return (
+                        <div
+                          key={note.id}
+                          role="button"
+                          tabIndex={0}
+                          className={
+                            note.id === activeNoteId
+                              ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
+                              : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
+                          }
+                          onClick={() => handleClickNote(note)}
+                        >
+                          <div className="sm:h-44 h-36 overflow-hidden">
+                            <div className="flex flex-col h-full overflow-hidden">
+                              <div className="text-2xl">{note.title}</div>
+                              {note.isLocked ? (
+                                <div>
+                                  <p></p>
+                                </div>
+                              ) : (
+                                <div>
+                                  {note.labels.length > 0 && (
+                                    <div className="flex gap-2">
+                                      {note.labels.map((label) => (
+                                        <span
+                                          key={label}
+                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                        >
+                                          #{label}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {note.isLocked ? (
+                                <div className="flex flex-col items-center">
+                                  <button className="flex items-center justify-center">
+                                    <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
+                                  </button>
+                                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                    Unlock to edit
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="text-lg">
+                                  {note.content &&
+                                    truncateContentPreview(note.content)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pt-2">
+                            <div>
+                              <button
+                                className="text-[#52525C] py-2 dark:text-white w-auto"
+                                onClick={(e) =>
+                                  handleToggleBookmark(note.id, e)
+                                }
+                              >
+                                {note.isBookmarked ? (
+                                  <Bookmark3FillIcon className="w-8 h-8 mr-2" />
+                                ) : (
+                                  <Bookmark3LineIcon className="w-8 h-8 mr-2" />
                                 )}
-                              </div>
-                            )}
-                            {note.isLocked ? (
-                              <div className="flex flex-col items-center">
-                                <button className="flex items-center justify-center">
-                                  <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
-                                </button>
-                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                  Unlock to edit
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="text-lg">
-                                {note.content &&
-                                  truncateContentPreview(note.content)}
-                              </div>
-                            )}
+                              </button>
+                              <button
+                                className="text-[#52525C] py-2 dark:text-white w-auto"
+                                onClick={(e) => handleToggleLock(note.id, e)}
+                              >
+                                {note.isLocked ? (
+                                  <LockClosedIcon className="w-8 h-8 mr-2" />
+                                ) : (
+                                  <LockOpenIcon className="w-8 h-8 mr-2" />
+                                )}
+                              </button>
+                              <button
+                                className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
+                                onClick={(e) => handleDeleteNote(note.id, e)}
+                              >
+                                <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                              </button>
+                            </div>
+                            <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
+                              {dayjs(note.createdAt).fromNow()}
+                            </div>
                           </div>
                         </div>
-                        <div className="py-2">
-                          <button
-                            className="text-[#52525C] py-2 dark:text-white w-auto"
-                            onClick={(e) => handleToggleBookmark(note.id, e)}
-                          >
-                            {note.isBookmarked ? (
-                              <Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                            ) : (
-                              <Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                            )}
-                          </button>
-                          <button
-                            className="text-[#52525C] py-2 dark:text-white w-auto"
-                            onClick={(e) => handleToggleLock(note.id, e)}
-                          >
-                            {note.isLocked ? (
-                              <LockClosedIcon className="w-8 h-8 mr-2" />
-                            ) : (
-                              <LockOpenIcon className="w-8 h-8 mr-2" />
-                            )}
-                          </button>
-                          <button
-                            className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                            onClick={() => handleDeleteNote(note.id)}
-                          >
-                            <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-              <h2 className="text-3xl font-bold">All Notes</h2>
-              {notesList.length === 0 && (
-                <div className="mx-auto">
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+                <h2 className="text-3xl font-bold">All Notes</h2>
+                {notesList.length === 0 && (
+                  <div className="mx-auto">
                     <svg
                       className="max-w-auto sm:w-1/3 mx-auto flex justify-center items-center"
                       viewBox="0 0 295 301"
@@ -1149,132 +1207,139 @@ const App: React.FC = () => {
                         fill="#E3E3E3"
                       />
                     </svg>
-                  <p className="py-2 text-lg text-center">
-                    No notes available. Click{" "}
-                    <AddFillIcon className="inline-block w-5 h-5" /> to add a
-                    new note or click{" "}
-                    <Download2LineIcon className="inline-block w-5 h-5" /> to
-                    import your data.
-                  </p>
-                </div>
-              )}
-              <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
-                {notesList
-                  .filter((note) => !note.isBookmarked && !note.isArchived)
-                  .map((note) => (
-                    <div
-                      key={note.id}
-                      role="button"
-                      tabIndex={0}
-                      className={
-                        note.id === activeNoteId
-                          ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                          : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                      }
-                      onClick={() => handleClickNote(note)}
-                    >
-                      <div className="sm:h-44 h-36 overflow-hidden">
-                        <div className="flex flex-col h-full overflow-hidden">
-                          <div className="text-2xl">{note.title}</div>
-                          {note.isLocked ? (
-                            <div>
-                              <p></p>
-                            </div>
-                          ) : (
-                            <div>
-                              {note.labels.length > 0 && (
-                                <div className="flex gap-2">
-                                  {note.labels.map((label) => (
-                                    <span
-                                      key={label}
-                                      className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                    >
-                                      #{label}
-                                    </span>
-                                  ))}
-                                </div>
+                    <p className="py-2 text-lg text-center">
+                      No notes available. Click{" "}
+                      <AddFillIcon className="inline-block w-5 h-5" /> to add a
+                      new note or click{" "}
+                      <Download2LineIcon className="inline-block w-5 h-5" /> to
+                      import your data.
+                    </p>
+                  </div>
+                )}
+                <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
+                  {notesList
+                    .filter((note) => !note.isBookmarked && !note.isArchived)
+                    .map((note) => (
+                      <div
+                        key={note.id}
+                        role="button"
+                        tabIndex={0}
+                        className={
+                          note.id === activeNoteId
+                            ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
+                            : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
+                        }
+                        onClick={() => handleClickNote(note)}
+                      >
+                        <div className="sm:h-44 h-36 overflow-hidden">
+                          <div className="flex flex-col h-full overflow-hidden">
+                            <div className="text-2xl">{note.title}</div>
+                            {note.isLocked ? (
+                              <div>
+                                <p></p>
+                              </div>
+                            ) : (
+                              <div>
+                                {note.labels.length > 0 && (
+                                  <div className="flex gap-2">
+                                    {note.labels.map((label) => (
+                                      <span
+                                        key={label}
+                                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                      >
+                                        #{label}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {note.isLocked ? (
+                              <div className="flex flex-col items-center">
+                                <button className="flex items-center justify-center">
+                                  <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
+                                </button>
+                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                  Unlock to edit
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="text-lg">
+                                {note.content &&
+                                  truncateContentPreview(note.content)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center"> 
+                          <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleBookmark(note.id, e)}
+                            >
+                              {note.isBookmarked ? (
+                                <Bookmark3FillIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <Bookmark3LineIcon className="w-8 h-8 mr-2" />
                               )}
-                            </div>
-                          )}
-                          {note.isLocked ? (
-                            <div className="flex flex-col items-center">
-                              <button className="flex items-center justify-center">
-                                <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
-                              </button>
-                              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                Unlock to edit
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="text-lg">
-                              {note.content &&
-                                truncateContentPreview(note.content)}
-                            </div>
-                          )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
+                            >
+                              {note.isBookmarked ? (
+                                <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
+                              )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleLock(note.id, e)}
+                            >
+                              {note.isLocked ? (
+                                <LockClosedIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <LockOpenIcon className="w-8 h-8 mr-2" />
+                              )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto"
+                              onClick={(e) => handleDeleteNote(note.id, e)}
+                            >
+                              <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                            </button>
+                          </div>
+                          <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
+                            {dayjs(note.createdAt).fromNow()}
+                          </div>
                         </div>
                       </div>
-                      <button
-                        className="text-[#52525C] py-2 dark:text-white w-auto"
-                        onClick={(e) => handleToggleBookmark(note.id, e)} // Pass the event
-                      >
-                        {note.isBookmarked ? (
-                          <Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                        ) : (
-                          <Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                        )}
-                      </button>
-                      <button
-                        className="text-[#52525C] py-2 dark:text-white w-auto"
-                        onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
-                      >
-                        {note.isBookmarked ? (
-                          <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
-                        ) : (
-                          <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
-                        )}
-                      </button>
-                      <button
-                        className="text-[#52525C] py-2 dark:text-white w-auto"
-                        onClick={(e) => handleToggleLock(note.id, e)}
-                      >
-                        {note.isLocked ? (
-                          <LockClosedIcon className="w-8 h-8 mr-2" />
-                        ) : (
-                          <LockOpenIcon className="w-8 h-8 mr-2" />
-                        )}
-                      </button>
-                      <button
-                        className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                        onClick={() => handleDeleteNote(note.id)}
-                      >
-                        <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
+              <BottomNavBar
+                onCreateNewNote={handleCreateNewNote}
+                onToggleArchiveVisibility={() =>
+                  setIsArchiveVisible(!isArchiveVisible)
+                }
+              />
             </div>
-            <BottomNavBar
-              onCreateNewNote={handleCreateNewNote}
-              onToggleArchiveVisibility={() =>
-                setIsArchiveVisible(!isArchiveVisible)
-              }
-            />
-          </div>
-        )}
-            </div>
-            </div>
-        <div>
-          {activeNote && (
-            <NoteEditor
-              note={activeNote}
-              title={title}
-              onTitleChange={setTitle}
-              onChange={handleChangeNoteContent}
-              onCloseEditor={handleCloseEditor}
-            />
           )}
         </div>
-        </div>
+      </div>
+      <div>
+        {activeNote && (
+          <NoteEditor
+            note={activeNote}
+            title={title}
+            onTitleChange={setTitle}
+            onChange={handleChangeNoteContent}
+            onCloseEditor={handleCloseEditor}
+          />
+        )}
+      </div>
+    </div>
   );
 };
 

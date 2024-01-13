@@ -19,8 +19,9 @@ import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
-import { initDB } from "react-indexed-db-hook";
+import { v4 as uuidv4 } from "uuid";
 import HeadingTree from "./lib/HeadingTree";
+import { openDB } from "idb";
 // import Paper from "./lib/tiptap/paper/Paper"
 // Icons
 
@@ -89,16 +90,15 @@ function NoteEditor({
   onTitleChange,
   isFullScreen = false,
 }: Props) {
-
   const [localTitle, setLocalTitle] = useState<string>(note.title);
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
     const newTitle = event.currentTarget.innerHTML;
-    console.log('New Title:', newTitle);
+    console.log("New Title:", newTitle);
     setLocalTitle(newTitle);
     onTitleChange(newTitle);
-    onChange(editor?.getJSON() || {} as JSONContent, newTitle);
-  };  
+    onChange(editor?.getJSON() || ({} as JSONContent), newTitle);
+  };
 
   useEffect(() => {
     // Update local title when the note changes
@@ -252,55 +252,56 @@ function NoteEditor({
     onChange(updatedNote.content);
   };
 
-  const [initialized, setInitialized] = useState(false);
+  async function initializeIndexedDB() {
+    const db = await openDB("noteImages", 1, {
+      upgrade(db) {
+        db.createObjectStore("images");
+      },
+    });
 
-  useEffect(() => {
-    const initializeDB = async () => {
-      await initDB({
-        name: "MyDatabase",
-        version: 1,
-        objectStoresMeta: [
-          {
-            store: "images",
-            storeConfig: { keyPath: "id", autoIncrement: true },
-            storeSchema: [
-              { name: "data", keypath: "data", options: { unique: false } },
-            ],
-          },
-        ],
-      });
-      setInitialized(true);
-    };
+    return db;
+  }
 
-    initializeDB();
-  }, []);
+  const dbPromise = initializeIndexedDB();
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!initialized) {
-      console.error(
-        "Database not initialized. Please wait or handle appropriately."
-      );
-      return;
+  async function handleImageUpload(file: File) {
+    try {
+      const db = await dbPromise;
+  
+      const directoryId = uuidv4();
+      const imageFileName = `${directoryId}/${file.name}`;
+  
+      // Save the image in IndexedDB
+      await db.put('images', file, imageFileName);
+  
+      // Retrieve the image from IndexedDB
+      const storedImage = await db.get('images', imageFileName);
+  
+      if (storedImage) {
+        // Convert the binary blob to an ArrayBuffer
+        const arrayBuffer = await new Response(storedImage).arrayBuffer();
+  
+        // Convert ArrayBuffer to Uint8Array
+        const uint8Array = new Uint8Array(arrayBuffer);
+  
+        // Convert the Uint8Array to a regular array of numbers
+        const dataArray = Array.from(uint8Array);
+  
+        // Encode the array of numbers as Base64
+        const base64Data = btoa(
+          dataArray.map((byte) => String.fromCharCode(byte)).join('')
+        );
+  
+        // Construct the image source URL
+        const imageSrc = `data:image/jpeg;base64,${base64Data}`;
+  
+        // Insert the image into the editor
+        editor?.chain().focus().setImage({ src: imageSrc }).run();
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
     }
-
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const dataUrl = event.target?.result as string;
-        editor
-          ?.chain()
-          .focus()
-          .setImage({
-            src: dataUrl,
-            alt: "Image Alt Text",
-            title: "Image Title",
-          })
-          .run();
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  }  
 
   const toggleBold = () => {
     editor?.chain().focus().toggleBold().run();
@@ -401,9 +402,7 @@ function NoteEditor({
   }, [handleOutsideClick]);
 
   return (
-    <div
-    className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white lg:px-60 text-base"
-    >
+    <div className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white lg:px-60 text-base">
       {toolbarVisible && (
         <div
           className={
@@ -412,134 +411,139 @@ function NoteEditor({
               : "fixed z-10 pt-2 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
           }
         >
-            <div className="bottom-6 flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
+          <div className="bottom-6 flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
+            <button
+              className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
+              onClick={onCloseEditor}
+            >
+              <ArrowLeftSLineIcon className="border-none text-white text-xl w-7 h-7" />
+            </button>
+            <div className="sm:mx-auto flex overflow-y-hidden w-fit">
               <button
-                className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
-                onClick={onCloseEditor}
+                className={
+                  editor?.isActive("bold")
+                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+                onClick={toggleBold}
               >
-                <ArrowLeftSLineIcon className="border-none text-white text-xl w-7 h-7" />
+                <BoldIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
-              <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-                <button
-                  className={
-                    editor?.isActive("bold")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleBold}
-                >
-                  <BoldIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("italic")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleItalic}
-                >
-                  <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("underline")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleUnderline}
-                >
-                  <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("strike")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleStrike}
-                >
-                  <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("highlight")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleHighlight}
-                >
-                  <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
+              <button
+                className={
+                  editor?.isActive("italic")
+                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+                onClick={toggleItalic}
+              >
+                <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("underline")
+                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+                onClick={toggleUnderline}
+              >
+                <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("strike")
+                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+                onClick={toggleStrike}
+              >
+                <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("highlight")
+                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+                onClick={toggleHighlight}
+              >
+                <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
 
-                <button
-                  className={
-                    editor?.isActive("OrderedList")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleOrderedList}
-                >
-                  <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("UnorderedList")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleUnorderedList}
-                >
-                  <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("Tasklist")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleTaskList}
-                >
-                  <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("Blockquote")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleBlockquote}
-                >
-                  <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
+              <button
+                className={
+                  editor?.isActive("OrderedList")
+                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+                onClick={toggleOrderedList}
+              >
+                <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("UnorderedList")
+                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+                onClick={toggleUnorderedList}
+              >
+                <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("Tasklist")
+                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+                onClick={toggleTaskList}
+              >
+                <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("Blockquote")
+                    ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                    : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+                onClick={toggleBlockquote}
+              >
+                <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
 
-                <button
-                  onClick={setLink}
-                  className={
-                    "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                >
-                  <LinkIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <div className="p-2 rounded-md text-white bg-transparent cursor-pointer">
-                <label htmlFor="importData">
-                  <ImageLineIcon className="border-none text-white text-xl w-7 h-7" />
+              <button
+                onClick={setLink}
+                className={
+                  "p-2 rounded-md text-white bg-transparent cursor-pointer"
+                }
+              >
+                <LinkIcon className="border-none text-white text-xl w-7 h-7" />
+              </button>
+              <div className="p-2 rounded-md text-white bg-transparent cursor-pointer">
+                <label htmlFor="image-upload-input">
+                  <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
                 </label>
                 <input
-                className="hidden"
                   type="file"
                   accept="image/*"
-                  onChange={handleImageUpload}
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      handleImageUpload(e.target.files[0]); // Assuming note has an 'id' property
+                    }
+                  }}
+                  id="image-upload-input"
+                  className="hidden"
                 />
               </div>
-              </div>
-              <button
-                className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
-                onClick={toggleHeadingTree}
-              >
-                <Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
             </div>
+            <button
+              className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
+              onClick={toggleHeadingTree}
+            >
+              <Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
+            </button>
           </div>
+        </div>
       )}
 
       {headingTreeVisible && editor && (
@@ -583,12 +587,12 @@ function NoteEditor({
       </div>
 
       <div
-      contentEditable
-      suppressContentEditableWarning
-      className="text-3xl font-bold overflow-y-scroll outline-none mt-4"
-      onBlur={handleTitleChange}
-      dangerouslySetInnerHTML={{ __html: localTitle }}
-    />
+        contentEditable
+        suppressContentEditableWarning
+        className="text-3xl font-bold overflow-y-scroll outline-none mt-4"
+        onBlur={handleTitleChange}
+        dangerouslySetInnerHTML={{ __html: localTitle }}
+      />
 
       <div>
         <div className="flex flex-wrap mt-2 gap-2">
