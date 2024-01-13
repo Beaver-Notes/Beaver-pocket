@@ -175,11 +175,10 @@ ul {
   }
 
   img {
-    height: auto;
-    max-width: 100%;
+    @apply rounded-xl;
 
     &.ProseMirror-selectednode {
-      outline: 3px solid #68cef8;
+      @apply border-2 border-amber-400;
     }
   }
 
