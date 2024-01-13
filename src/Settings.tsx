@@ -32,7 +32,14 @@ const App: React.FC = () => {
     localStorage.getItem("selected-font") || "Arimo"
   );
 
-  const fonts = ["Arimo", "Avenir", "Helvetica", "EB Garamond", "OpenDyslexic", "Ubuntu"];
+  const fonts = [
+    "Arimo",
+    "Avenir",
+    "Helvetica",
+    "EB Garamond",
+    "OpenDyslexic",
+    "Ubuntu",
+  ];
 
   useEffect(() => {
     document.documentElement.style.setProperty("--selected-font", selectedFont);
@@ -381,19 +388,29 @@ const App: React.FC = () => {
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
-  const [title, setTitle] = useState("Untitled Note");
-  const handleChangeNoteContent = (content: JSONContent) => {
+  const [title, setTitle] = useState(
+    activeNoteId ? notesState[activeNoteId].title : ""
+  );
+  const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
     if (activeNoteId) {
+      const existingNote = notesState[activeNoteId];
+      const updatedTitle =
+        newTitle !== undefined && newTitle.trim() !== ""
+          ? newTitle
+          : existingNote.title;
+
       const updateNote = {
-        ...notesState[activeNoteId],
+        ...existingNote,
         updatedAt: new Date(),
         content,
-        title,
+        title: updatedTitle,
       };
+
       setNotesState((prevNotes) => ({
         ...prevNotes,
         [activeNoteId]: updateNote,
       }));
+
       saveNote(updateNote);
     }
   };
@@ -422,130 +439,146 @@ const App: React.FC = () => {
   const [isArchiveVisible, setIsArchiveVisible] = useState(false);
 
   return (
-    <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-      <Sidebar
-        onCreateNewNote={handleCreateNewNote}
-        isDarkMode={darkMode}
-        toggleTheme={() => toggleTheme(!darkMode)}
-        exportData={exportData}
-        handleImportData={handleImportData}
-      />
+    <div>
+      <div className="grid sm:grid-cols-[auto,1fr]">
+        <Sidebar
+          onCreateNewNote={handleCreateNewNote}
+          isDarkMode={darkMode}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          exportData={exportData}
+          handleImportData={handleImportData}
+        />
 
-      <div className="overflow-y">
-        {!activeNoteId && (
-          <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-      <div className="mx-10 sm:px-60 overflow-y-auto flex-grow">
-          <p className="text-4xl font-bold">Preferences</p>
-            <div className="w-full sm:order-2 order-1">
-              <p className="text-xl pt-4 text-neutral-700 dark:text-white">
-                App Theme
-              </p>
-              <div className="grid py-2 w-full h-full grid-cols-3 gap-8 cursor-pointer rounded-md items-center justify-center">
-                <button
-                  className="bg-transparent rounded-xl"
-                  onClick={() => toggleTheme(false)}
-                >
-                  <div className="w-auto mt-4 object-fit">
-                    <svg
-                      className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
-                      viewBox="0 0 512 512"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+        <div className="overflow-y">
+          {!activeNoteId && (
+            <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
+              <div className="mx-10 sm:px-60 overflow-y-auto flex-grow">
+                <p className="text-4xl font-bold">Preferences</p>
+                <div className="w-full sm:order-2 order-1">
+                  <p className="text-xl pt-4 text-neutral-700 dark:text-white">
+                    App Theme
+                  </p>
+                  <div className="grid py-2 w-full h-full grid-cols-3 gap-8 cursor-pointer rounded-md items-center justify-center">
+                    <button
+                      className="bg-transparent rounded-xl"
+                      onClick={() => toggleTheme(false)}
                     >
-                      <rect width="512" height="512" rx="256" fill="#FFFFFF" />
-                    </svg>
-                  </div>
-                  <p className="text-center py-2">Light</p>
-                </button>
-                <button
-                  onClick={() => toggleTheme(true)}
-                  className="bg-transparent rounded-xl"
-                >
-                  <div className="w-auto mt-4 object-fit">
-                    <svg
-                      className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
-                      viewBox="0 0 512 512"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <rect width="512" height="512" rx="256" fill="#282727" />
-                    </svg>
-                  </div>
-                  <p className="text-center py-2">Dark</p>
-                </button>
-                <button
-                  onClick={setAutoMode}
-                  className="bg-transparent rounded-xl"
-                >
-                  <div className="w-auto mt-4 object-contain">
-                    <svg
-                      className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
-                      viewBox="0 0 511 512"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M0 256C0 114.615 114.615 0 256 0V0V512V512C114.615 512 0 397.385 0 256V256Z"
-                        fill="white"
-                      />
-                      <path
-                        d="M256 0V0C396.833 0 511 115.167 511 256V256C511 396.833 396.833 512 256 512V512V0Z"
-                        fill="#282727"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-center  py-2">Auto</p>
-                </button>
-              </div>
-            </div>
-            <p className="text-xl pt-4 text-neutral-700 dark:text-white">Select Font</p>
-                    <div className="relative pt-2">
-                        <select
-                            value={selectedFont}
-                            onChange={updateFont}
-                            className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                      <div className="w-auto mt-4 object-fit">
+                        <svg
+                          className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
+                          viewBox="0 0 512 512"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
                         >
-                            {fonts.map((font) => (
-                                <option key={font} value={font}>
-                                    {font}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                            <svg
-                                className="h-4 w-4 text-gray-500 dark:text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M19 9l-7 7-7-7"
-                                />
-                            </svg>
-                        </div>
-                    </div>            
-            </div>
-            <BottomNavBar
-              onCreateNewNote={handleCreateNewNote}
-              onToggleArchiveVisibility={() => setIsArchiveVisible(!isArchiveVisible)}
-            />
-          </div>
-        )}
-        <div>
-          {activeNote && (
-                <NoteEditor
-                note={activeNote}
-                title={title}
-                onTitleChange={setTitle}
-                onChange={handleChangeNoteContent}
-                onCloseEditor={handleCloseEditor}
+                          <rect
+                            width="512"
+                            height="512"
+                            rx="256"
+                            fill="#FFFFFF"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-center py-2">Light</p>
+                    </button>
+                    <button
+                      onClick={() => toggleTheme(true)}
+                      className="bg-transparent rounded-xl"
+                    >
+                      <div className="w-auto mt-4 object-fit">
+                        <svg
+                          className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
+                          viewBox="0 0 512 512"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <rect
+                            width="512"
+                            height="512"
+                            rx="256"
+                            fill="#282727"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-center py-2">Dark</p>
+                    </button>
+                    <button
+                      onClick={setAutoMode}
+                      className="bg-transparent rounded-xl"
+                    >
+                      <div className="w-auto mt-4 object-contain">
+                        <svg
+                          className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
+                          viewBox="0 0 511 512"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M0 256C0 114.615 114.615 0 256 0V0V512V512C114.615 512 0 397.385 0 256V256Z"
+                            fill="white"
+                          />
+                          <path
+                            d="M256 0V0C396.833 0 511 115.167 511 256V256C511 396.833 396.833 512 256 512V512V0Z"
+                            fill="#282727"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-center  py-2">Auto</p>
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xl pt-4 text-neutral-700 dark:text-white">
+                  Select Font
+                </p>
+                <div className="relative pt-2">
+                  <select
+                    value={selectedFont}
+                    onChange={updateFont}
+                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                  >
+                    {fonts.map((font) => (
+                      <option key={font} value={font}>
+                        {font}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg
+                      className="h-4 w-4 text-gray-500 dark:text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <BottomNavBar
+                onCreateNewNote={handleCreateNewNote}
+                onToggleArchiveVisibility={() =>
+                  setIsArchiveVisible(!isArchiveVisible)
+                }
               />
+            </div>
           )}
         </div>
+      </div>
+      <div>
+      {activeNote && (
+          <NoteEditor
+            note={activeNote}
+            title={title}
+            onTitleChange={setTitle}
+            onChange={handleChangeNoteContent}
+            onCloseEditor={handleCloseEditor}
+          />
+        )}
       </div>
     </div>
   );
