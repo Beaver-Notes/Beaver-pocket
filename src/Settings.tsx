@@ -6,6 +6,7 @@ import { JSONContent } from "@tiptap/react";
 import Sidebar from "./components/Sidebar";
 import BottomNavBar from "./components/BottomNavBar";
 import "./css/main.css";
+import "./css/fonts.css";
 import {
   Filesystem,
   Directory,
@@ -31,7 +32,7 @@ const App: React.FC = () => {
     localStorage.getItem("selected-font") || "Arimo"
   );
 
-  const fonts = ["Arimo", "Open-Dyslexic"];
+  const fonts = ["Arimo", "Avenir", "Helvetica", "EB Garamond", "OpenDyslexic", "Ubuntu"];
 
   useEffect(() => {
     document.documentElement.style.setProperty("--selected-font", selectedFont);
