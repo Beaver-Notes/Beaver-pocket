@@ -7,6 +7,7 @@ import BottomNavBar from "./components/BottomNavBar";
 import Sidebar from "./components/Sidebar";
 import "./css/main.css";
 import "./css/fonts.css";
+import SearchBar from "./components/Search";
 import {
   Filesystem,
   Directory,
@@ -17,15 +18,10 @@ import { Share } from "@capacitor/share";
 
 // Import Remix icons
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import ArchiveDrawerLineIcon from "remixicon-react/ArchiveLineIcon";
 import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
-import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
-import Download2LineIcon from "remixicon-react/Download2LineIcon";
-import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
-import ArrowUpDownLineIcon from "remixicon-react/ArrowUpDownLineIcon";
 
 async function createNotesDirectory() {
   const directoryPath = "notes";
@@ -726,87 +722,15 @@ const Archive: React.FC = () => {
         <div className="overflow-y">
           {!activeNoteId && (
             <div className="w-full md:pt-4 py-2 flex flex-col border-gray-300 overflow-auto">
-              <div className="bg-transparent px-6">
-                <div className="flex justify-center">
-                  <div className="relative w-full md:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2;">
-                    <div>
-                      <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6" />
-                    </div>
-                    <input
-                      className="text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white w-full"
-                      type="text"
-                      placeholder="Search notes"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <div className="relative hidden sm:block inline-flex items-center">
-                    <select
-                      onChange={(e) => setSortingOption(e.target.value)}
-                      className="rounded-full ml-2 pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
-                    >
-                      <option value="updatedAt">Last Updated</option>
-                      <option value="createdAt">Created Date</option>
-                      <option value="alphabetical">Alphabetical Order</option>
-                    </select>
-                    <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-                <div className="items-center">
-                  <div className="md:w-[22em] h-12 flex items-center justify-start mx-auto sm:hidden overflow-hidden">
-                    <div className="border-r-2 border-gray-300 dark:border-neutral-800 p-3 rounded-l-full bg-[#F8F8F7] text-center dark:bg-[#2D2C2C] flex-grow text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
-                      <button
-                        className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center"
-                        onClick={exportData}
-                      >
-                        <Upload2LineIcon />
-                      </button>
-                    </div>
-                    <div className="border-l-2 border-gray-300 dark:border-neutral-800 p-3 rounded-r-full bg-[#F8F8F7] dark:bg-[#2D2C2C] text-center flex-grow mr-2 text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
-                      <div className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center">
-                        <label htmlFor="importData">
-                          <Download2LineIcon />
-                        </label>
-                        <input
-                          className="hidden"
-                          type="file"
-                          id="importData"
-                          accept=".json"
-                          onChange={handleImportData}
-                        />
-                      </div>
-                    </div>
-                    <div className="relative inline-flex items-center">
-                      <select
-                        id="labelSelect"
-                        onChange={(e) =>
-                          handleLabelFilterChange(e.target.value)
-                        }
-                        className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
-                      >
-                        <option value="">Select Label</option>
-                        {uniqueLabels.map((label) => (
-                          <option key={label} value={label}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                      <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-                    </div>
-                  </div>
-                  <div className="py-2 block sm:hidden relative inline-flex items-center">
-                    <ArrowUpDownLineIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-                    <select
-                      onChange={(e) => setSortingOption(e.target.value)}
-                      className="bg-transparent text-lg dark:text-white outline-none appearance-none pl-10"
-                    >
-                      <option value="updatedAt">Last Updated</option>
-                      <option value="createdAt">Created Date</option>
-                      <option value="alphabetical">Alphabetical Order</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                handleLabelFilterChange={handleLabelFilterChange}
+                setSortingOption={handleLabelFilterChange}
+                uniqueLabels={uniqueLabels}
+                exportData={exportData}
+                handleImportData={handleImportData}
+              />
               <div className="py-6 p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
                 <h2 className="text-3xl font-bold">Archived</h2>
                 {notesList.filter((note) => note.isArchived).length === 0 && (
