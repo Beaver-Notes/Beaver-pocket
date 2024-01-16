@@ -19,9 +19,8 @@ import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
-import { v4 as uuidv4 } from "uuid";
 import HeadingTree from "./lib/HeadingTree";
-import { openDB } from "idb";
+import noteLink from "./lib/tiptap/NoteLink"
 // import Paper from "./lib/tiptap/paper/Paper"
 // Icons
 
@@ -45,6 +44,10 @@ import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
 import html from "highlight.js/lib/languages/xml";
+import {
+  Filesystem,
+  FilesystemDirectory,
+} from "@capacitor/filesystem";
 
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("css", css);
@@ -62,6 +65,7 @@ const extensions = [
   Text,
   StarterKit,
   Link,
+  noteLink,
   Mathblock,
   Highlight,
   Underline,
@@ -252,56 +256,44 @@ function NoteEditor({
     onChange(updatedNote.content);
   };
 
-  async function initializeIndexedDB() {
-    const db = await openDB("noteImages", 1, {
-      upgrade(db) {
-        db.createObjectStore("images");
-      },
-    });
-
-    return db;
-  }
-
-  const dbPromise = initializeIndexedDB();
-
-  async function handleImageUpload(file: File) {
+  async function handleImageUpload(file: File, noteId: string) {
     try {
-      const db = await dbPromise;
-  
-      const directoryId = uuidv4();
-      const imageFileName = `${directoryId}/${file.name}`;
-  
-      // Save the image in IndexedDB
-      await db.put('images', file, imageFileName);
-  
-      // Retrieve the image from IndexedDB
-      const storedImage = await db.get('images', imageFileName);
-  
-      if (storedImage) {
-        // Convert the binary blob to an ArrayBuffer
-        const arrayBuffer = await new Response(storedImage).arrayBuffer();
-  
-        // Convert ArrayBuffer to Uint8Array
-        const uint8Array = new Uint8Array(arrayBuffer);
-  
-        // Convert the Uint8Array to a regular array of numbers
-        const dataArray = Array.from(uint8Array);
-  
-        // Encode the array of numbers as Base64
-        const base64Data = btoa(
-          dataArray.map((byte) => String.fromCharCode(byte)).join('')
-        );
-  
+      // Construct the directory path
+      const directoryPath = `/assets/${noteId}`;
+
+      // Ensure the directory exists using Capacitor Filesystem
+      await Filesystem.mkdir({
+        path: directoryPath,
+        directory: FilesystemDirectory.Data,
+        recursive: true, // Create directories recursively
+      });
+
+      const imageFileName = `${directoryPath}/${file.name}`;
+
+      // Read the file as a data URL
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onload = async () => {
+        const imageDataUrl = reader.result as string;
+
+        // Save the image using Capacitor Filesystem
+        await Filesystem.writeFile({
+          path: imageFileName,
+          data: imageDataUrl.split(",")[1], // Extract base64 data
+          directory: FilesystemDirectory.Data,
+        });
+
         // Construct the image source URL
-        const imageSrc = `data:image/jpeg;base64,${base64Data}`;
-  
+        const imageSrc = imageDataUrl;
+
         // Insert the image into the editor
         editor?.chain().focus().setImage({ src: imageSrc }).run();
-      }
+      };
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error("Error uploading image:", error);
     }
-  }  
+  }
 
   const toggleBold = () => {
     editor?.chain().focus().toggleBold().run();
@@ -528,7 +520,7 @@ function NoteEditor({
                   accept="image/*"
                   onChange={(e) => {
                     if (e.target.files) {
-                      handleImageUpload(e.target.files[0]); // Assuming note has an 'id' property
+                      handleImageUpload(e.target.files[0], note.id);
                     }
                   }}
                   id="image-upload-input"

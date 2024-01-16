@@ -1,5 +1,5 @@
 Arguments: 
-  /Users/danielerolli/.nvm/versions/node/v18.16.1/bin/node /usr/local/Cellar/yarn/1.22.19/libexec/bin/yarn.js add @tailwindcss/typography
+  /Users/danielerolli/.nvm/versions/node/v18.16.1/bin/node /usr/local/Cellar/yarn/1.22.19/libexec/bin/yarn.js add @tiptap/suggestions
 
 PATH: 
   /Users/danielerolli/.rbenv/shims:/Users/danielerolli/.pyenv/shims:/Users/danielerolli/.nvm/versions/node/v18.16.1/bin:/opt/local/bin:/opt/local/sbin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Applications/Little Snitch.app/Contents/Components:/Applications/VMware Fusion.app/Contents/Public:/Users/danielerolli/.rbenv/shims:/Users/danielerolli/.nvm/versions/node/v18.16.1/bin:/opt/local/bin:/opt/local/sbin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/opt/homebrew/bin:/opt/homebrew/sbin
@@ -14,10 +14,17 @@ Platform:
   darwin arm64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@tailwindcss%2ftypography: ETIMEDOUT
-      at Timeout._onTimeout (/usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:141550:19)
-      at listOnTimeout (node:internal/timers:569:17)
-      at process.processTimers (node:internal/timers:512:7)
+  Error: https://registry.yarnpkg.com/@tiptap%2fsuggestions: Not found
+      at params.callback [as _callback] (/usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:66145:18)
+      at self.callback (/usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:140890:22)
+      at Request.emit (node:events:513:28)
+      at Request.<anonymous> (/usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:141862:10)
+      at Request.emit (node:events:513:28)
+      at IncomingMessage.<anonymous> (/usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:141784:12)
+      at Object.onceWrapper (node:events:627:28)
+      at IncomingMessage.emit (node:events:525:35)
+      at endReadableNT (node:internal/streams/readable:1359:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
 
 npm manifest: 
   {
@@ -46,7 +53,6 @@ npm manifest:
       "@capacitor/share": "^5.0.6",
       "@capacitor/splash-screen": "^5.0.6",
       "@capacitor/status-bar": "5.0.6",
-      "@capawesome/capacitor-file-picker": "^5.1.1",
       "@ionic/cli": "^7.1.6",
       "@ionic/react": "7.6.2",
       "@nytimes/react-prosemirror": "^0.4.2",
@@ -80,6 +86,7 @@ npm manifest:
       "crypto-js": "^4.2.0",
       "d3": "^7.8.5",
       "date-fns": "^2.30.0",
+      "dayjs": "^1.11.10",
       "eslint-config-react-app": "^7.0.1",
       "file-saver": "^2.0.5",
       "formidable": "v3",
@@ -87,6 +94,7 @@ npm manifest:
       "html-pdf": "^3.0.1",
       "html2canvas": "^1.4.1",
       "html2pdf.js": "^0.10.1",
+      "idb": "^8.0.0",
       "jspdf": "^2.5.1",
       "jszip": "^3.10.1",
       "katex": "0.16.9",
@@ -95,11 +103,13 @@ npm manifest:
       "normalize.css": "^8.0.1",
       "postcss": "^8.4.32",
       "postcss-nesting": "^12.0.1",
+      "prosemirror-history": "^1.3.2",
       "prosemirror-model": "^1.19.3",
       "prosemirror-state": "^1.4.3",
       "puppeteer": "^21.6.0",
       "react": "^18.2.0",
       "react-dom": "^18.2.0",
+      "react-indexed-db-hook": "^1.0.14",
       "react-katex": "^3.0.1",
       "react-portal": "^4.2.2",
       "react-router-dom": "^6.21.0",
@@ -1362,11 +1372,6 @@ Lockfile:
     version "5.0.6"
     resolved "https://registry.yarnpkg.com/@capacitor/status-bar/-/status-bar-5.0.6.tgz#281568a7f7aeacf80777702cb9947c29dc32685c"
     integrity sha512-7od8CxsBnot1XMK3IeOkproFL4hgoKoWAc3pwUvmDOkQsXoxwQm4SR9mLwQavv1XfxtHbFV9Ukd7FwMxOPSViw==
-  
-  "@capawesome/capacitor-file-picker@^5.1.1":
-    version "5.1.1"
-    resolved "https://registry.yarnpkg.com/@capawesome/capacitor-file-picker/-/capacitor-file-picker-5.1.1.tgz#625437ebd621af150101e285b6dc4ef43bd0e857"
-    integrity sha512-VtWV/er8Kux5Bbb0BtRneAaL8aj7zKoSPSR5sn3QlVBccete+CX+nH3scg6JKrogoitNP35PS33LIoaz9WVZiA==
   
   "@csstools/selector-specificity@^3.0.0":
     version "3.0.0"
@@ -3813,6 +3818,11 @@ Lockfile:
     dependencies:
       "@babel/runtime" "^7.21.0"
   
+  dayjs@^1.11.10:
+    version "1.11.10"
+    resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.10.tgz#68acea85317a6e164457d6d6947564029a6a16a0"
+    integrity sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==
+  
   debug@4, debug@4.3.4, debug@^4.0.0, debug@^4.1.0, debug@^4.1.1, debug@^4.3.2, debug@^4.3.4:
     version "4.3.4"
     resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.4.tgz#1319f6579357f2338d3337d2cdd4914bb5dcc865"
@@ -5007,6 +5017,11 @@ Lockfile:
     integrity sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==
     dependencies:
       safer-buffer ">= 2.1.2 < 3"
+  
+  idb@^8.0.0:
+    version "8.0.0"
+    resolved "https://registry.yarnpkg.com/idb/-/idb-8.0.0.tgz#33d7ed894ed36e23bcb542fb701ad579bfaad41f"
+    integrity sha512-l//qvlAKGmQO31Qn7xdzagVPPaHTxXx199MhrAFuVBTPqydcPYBWjkrbv4Y0ktB+GmWOiwHl237UUOrLmQxLvw==
   
   ieee754@^1.1.13:
     version "1.2.1"
@@ -6451,7 +6466,7 @@ Lockfile:
       prosemirror-state "^1.0.0"
       prosemirror-view "^1.0.0"
   
-  prosemirror-history@^1.0.0, prosemirror-history@^1.3.0:
+  prosemirror-history@^1.0.0, prosemirror-history@^1.3.0, prosemirror-history@^1.3.2:
     version "1.3.2"
     resolved "https://registry.yarnpkg.com/prosemirror-history/-/prosemirror-history-1.3.2.tgz#ce6ad7ab9db83e761aee716f3040d74738311b15"
     integrity sha512-/zm0XoU/N/+u7i5zepjmZAEnpvjDtzoPWW6VmKptcAnPadN/SStsBjMImdCEbb3seiNTpveziPTIrXQbHLtU1g==
@@ -6657,6 +6672,11 @@ Lockfile:
     dependencies:
       loose-envify "^1.1.0"
       scheduler "^0.23.0"
+  
+  react-indexed-db-hook@^1.0.14:
+    version "1.0.14"
+    resolved "https://registry.yarnpkg.com/react-indexed-db-hook/-/react-indexed-db-hook-1.0.14.tgz#a29cd732d592735b6a68dfc94316b7a4a091e6be"
+    integrity sha512-tQ6rWofgXUCBhZp9pRpWzthzPbjqcll5uXMo07lbQTKl47VyL9nw9wfVswRxxzS5yj5Sq/VHUkNUjamWbA/M/w==
   
   react-is@^16.13.1:
     version "16.13.1"
