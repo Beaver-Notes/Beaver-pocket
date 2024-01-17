@@ -457,9 +457,9 @@ const App: React.FC = () => {
 
         <div className="overflow-y">
           {!activeNoteId && (
-            <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-              <div className="mx-10 sm:px-60 overflow-y-auto flex-grow">
-                <p className="text-4xl font-bold">Preferences</p>
+            <div className="py-2 w-full flex flex-col border-gray-300 mx-10 sm:px-60 overflow-auto">
+              <div className="overflow-y-auto flex-grow">
+                <p className="text-4xl font-bold">Settings</p>
                 <div className="w-full sm:order-2 order-1">
                   <p className="text-xl pt-4 text-neutral-700 dark:text-white">
                     App Theme
@@ -567,27 +567,28 @@ const App: React.FC = () => {
                 <p className="text-xl pt-4 text-neutral-700 dark:text-white">
                   Import / Export Data
                 </p>
-                <div className="relative pt-2 grid-cols-1 sm:grid-cols-2">
-                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
+                <div className="relative pt-2 gap-4 flex flex-col sm:flex-row">
+                <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                      <FileUploadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-400" />
+                      <FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
                     </div>
-                    <button className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6]">
-                      Export Data
-                    </button>
-                  </div>
-
-                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
-                    <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                      <FileDownloadLineIcon className="w-12 h-12 text-gray-800  dark:text-gray-400" />
-                    </div>
-                    <button className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6]">
+                    <button className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
                       Import Data
                     </button>
                   </div>
+                  
+                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
+                    <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
+                      <FileUploadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
+                    </div>
+                    <button className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
+                      Export Data
+                    </button>
+                  </div>
                 </div>
+
                 <div>
-                  <div className="flex gap-4 pt-4">
+                  <div className="flex gap-4 py-4">
                     <Link
                       to="/about"
                       className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
@@ -595,7 +596,7 @@ const App: React.FC = () => {
                       <InformationLineIcon className="w-6 h-6 mr-2" /> About
                     </Link>
                     <Link
-                      to="/"
+                      to="/shortcuts"
                       className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
                       <KeyboardLineIcon className="w-6 h-6 mr-2" /> Shortcuts

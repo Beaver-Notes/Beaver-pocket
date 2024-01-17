@@ -17,11 +17,16 @@ import TaskList from "@tiptap/extension-task-list";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
+import NoteLabels from "./NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
+import {
+  Filesystem, FilesystemDirectory,
+  
+} from "@capacitor/filesystem";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
 import HeadingTree from "./lib/HeadingTree";
-import noteLink from "./lib/tiptap/NoteLink"
 // import Paper from "./lib/tiptap/paper/Paper"
+
 // Icons
 
 import BoldIcon from "remixicon-react/BoldIcon";
@@ -44,10 +49,6 @@ import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
 import html from "highlight.js/lib/languages/xml";
-import {
-  Filesystem,
-  FilesystemDirectory,
-} from "@capacitor/filesystem";
 
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("css", css);
@@ -65,7 +66,6 @@ const extensions = [
   Text,
   StarterKit,
   Link,
-  noteLink,
   Mathblock,
   Highlight,
   Underline,
@@ -126,135 +126,10 @@ function NoteEditor({
     [note.id]
   );
 
-  const [editingLabelIndex, setEditingLabelIndex] = useState<number | null>(
-    null
-  );
+
 
   const [focusMode, setFocusMode] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(true);
-
-  const updateLabelsInNote = (labelToUpdate: string, newLabel: string) => {
-    const updatedNote = { ...note };
-
-    if (
-      typeof updatedNote.content === "object" &&
-      updatedNote.content !== null
-    ) {
-      const contentArray =
-        "content" in updatedNote.content &&
-        Array.isArray(updatedNote.content.content)
-          ? updatedNote.content.content
-          : [];
-
-      const labelIndex = updatedNote.labels?.indexOf(labelToUpdate);
-
-      if (labelIndex !== -1) {
-        // Check if the newLabel is empty
-        if (newLabel.trim() === "") {
-          // Remove the label from the labels array
-          updatedNote.labels.splice(labelIndex, 1);
-
-          // Remove the corresponding noteLabel node from the content array
-          const existingNoteLabelIndex = contentArray.findIndex(
-            (node: any) =>
-              node.type === "noteLabel" &&
-              node.attrs &&
-              node.attrs.id === labelToUpdate
-          );
-
-          if (existingNoteLabelIndex !== -1) {
-            contentArray.splice(existingNoteLabelIndex, 1);
-          }
-        } else {
-          // Update the label in the labels array
-          updatedNote.labels[labelIndex] = newLabel;
-
-          // Find the corresponding noteLabel node and update it
-          const existingNoteLabelIndex = contentArray.findIndex(
-            (node: any) =>
-              node.type === "noteLabel" &&
-              node.attrs &&
-              node.attrs.id === labelToUpdate
-          );
-
-          if (
-            existingNoteLabelIndex !== -1 &&
-            contentArray[existingNoteLabelIndex]?.attrs
-          ) {
-            contentArray[existingNoteLabelIndex] = {
-              type: "noteLabel",
-              attrs: {
-                id: newLabel,
-                label: newLabel,
-              },
-            };
-          }
-        }
-
-        // Call the onChange callback with the updated content and title
-        onChange(updatedNote.content);
-      }
-    }
-  };
-
-  const extractLabelsFromNote = (note: Note): string[] => {
-    return note.labels || [];
-  };
-
-  const labelsArray: string[] = extractLabelsFromNote(note);
-
-  const addLabelToNote = (labelToAdd: string) => {
-    // Clone the note to avoid mutating the original state directly
-    const updatedNote = { ...note };
-
-    // Create a noteLabel node
-    const noteLabelNode = {
-      type: "noteLabel",
-      attrs: {
-        id: labelToAdd,
-        label: null,
-      },
-    };
-
-    // Check if content is an array
-    if (Array.isArray(updatedNote.content)) {
-      // If it is an array, create a new content object with the noteLabelNode
-      updatedNote.content = {
-        type: "doc",
-        content: [noteLabelNode],
-      };
-    } else if (updatedNote.content && typeof updatedNote.content === "object") {
-      // Check if content has content property
-      if (
-        "content" in updatedNote.content &&
-        Array.isArray(updatedNote.content.content)
-      ) {
-        updatedNote.content.content.push(noteLabelNode);
-      } else {
-        // If content is not an array or content property is not an array, create a new object with the noteLabelNode
-        updatedNote.content = {
-          type: "doc",
-          content: [noteLabelNode],
-        };
-      }
-    } else {
-      // If content is not an array or an object, create a new object with the noteLabelNode
-      updatedNote.content = {
-        type: "doc",
-        content: [noteLabelNode],
-      };
-    }
-
-    // Add the label to the labels array
-    if (!updatedNote.labels) {
-      updatedNote.labels = [labelToAdd];
-    } else {
-      updatedNote.labels.push(labelToAdd);
-    }
-
-    // Update the note using the onChange callback
-    onChange(updatedNote.content);
-  };
 
   async function handleImageUpload(file: File, noteId: string) {
     try {
@@ -563,7 +438,9 @@ function NoteEditor({
               setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
             }}
           >
-            <Focus3LineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+            <Focus3LineIcon className={`border-none ${
+                focusMode ? "text-amber-400" : "text-neutral-800"
+              }  dark:text-white text-xl w-7 h-7`} />
           </button>
           <button
             className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
@@ -587,59 +464,10 @@ function NoteEditor({
       />
 
       <div>
-        <div className="flex flex-wrap mt-2 gap-2">
-          {labelsArray.map((label, index) => (
-            <span
-              key={index}
-              className="text-lg bg-amber-400 bg-opacity-10 text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-              onClick={() => {
-                setEditingLabelIndex(index);
-
-                // Handle the case when clicking on a label
-                const updatedLabels = [...labelsArray];
-                updatedLabels[index] = label; // Update the label to its original value
-                updateLabelsInNote(label, label); // Fix: Pass both labelToUpdate and newLabel
-              }}
-            >
-              {editingLabelIndex === index ? (
-                <div
-                  className="min-w-0 flex-auto bg-transparent outline-none"
-                  contentEditable
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      const updatedLabels = [...labelsArray];
-                      updatedLabels[index] = e.currentTarget.innerText.trim();
-                      setEditingLabelIndex(null);
-                      // Update the note with the new labels and content
-                      updateLabelsInNote(
-                        label,
-                        e.currentTarget.innerText.trim()
-                      ); // Fix: Pass both labelToUpdate and newLabel
-                    }
-                  }}
-                >
-                  {label}
-                </div>
-              ) : (
-                `#${label}`
-              )}
-            </span>
-          ))}
-          <div
-            className="is-empty labelinput"
-            contentEditable
-            data-placeholder="Add label"
-            onKeyDown={(e) => {
-              if (
-                e.key === "Enter" &&
-                e.currentTarget.innerText.trim() !== ""
-              ) {
-                addLabelToNote(e.currentTarget.innerText.trim());
-                e.currentTarget.innerText = ""; // Clear the input field after adding the label
-              }
-            }}
-          />
-        </div>
+       <NoteLabels 
+       note={note} 
+       onChange={onChange}
+       />
         <div className="py-2 h-full w-full" id="container">
           <EditorContent
             editor={editor}

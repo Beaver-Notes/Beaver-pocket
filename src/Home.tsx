@@ -19,6 +19,7 @@ import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import SearchBar from "./components/Search";
+import * as CryptoJS from "crypto-js";
 
 // Import Remix icons
 import AddFillIcon from "remixicon-react/AddFillIcon";
@@ -722,11 +723,11 @@ const App: React.FC = () => {
       } else {
         // Biometrics not available, use sharedKey
         let sharedKey = localStorage.getItem("sharedKey");
-
+      
         if (!sharedKey) {
           // If no shared key is set, prompt the user to set it up
           sharedKey = prompt("Set up a password to lock/unlock your notes:");
-
+      
           if (!sharedKey) {
             // If the user cancels or enters an empty password, do not proceed
             alert(
@@ -734,22 +735,30 @@ const App: React.FC = () => {
             );
             return;
           }
-
-          // Save the shared key in local storage
+      
+          // Save the shared key in local storage after hashing
+          sharedKey = CryptoJS.SHA256(sharedKey).toString();
           localStorage.setItem("sharedKey", sharedKey);
         }
-
+      
         // Prompt for the password
-        const enteredKey = prompt(
-          "Enter the password to lock/unlock the note:"
-        );
-
-        if (enteredKey !== sharedKey) {
+        const enteredKey = prompt("Enter the password to lock/unlock the note:");
+      
+        // Check if the user canceled the prompt
+        if (enteredKey === null) {
+          alert("Password input canceled. Note remains in its current state.");
+          return;
+        }
+      
+        // Hash the entered password for comparison
+        const hashedEnteredKey = CryptoJS.SHA256(enteredKey).toString();
+      
+        if (hashedEnteredKey !== sharedKey) {
           // Incorrect password, do not proceed
           alert("Incorrect password. Note remains in its current state.");
           return;
         }
-      }
+      }      
 
       // Toggle the 'isLocked' property
       updatedNote.isLocked = !updatedNote.isLocked;
@@ -791,11 +800,11 @@ const App: React.FC = () => {
       if (note.isLocked) {
         // Check if biometrics is available
         const biometricResult = await NativeBiometric.isAvailable();
-
+  
         if (biometricResult.isAvailable) {
           const isFaceID =
             biometricResult.biometryType === BiometryType.FACE_ID;
-
+  
           // Show biometric prompt for authentication
           try {
             await NativeBiometric.verifyIdentity({
@@ -817,22 +826,31 @@ const App: React.FC = () => {
           const userSharedKey = prompt(
             "Enter the shared key to unlock the note:"
           );
-
+  
+          // Check if the user canceled the prompt
+          if (userSharedKey === null) {
+            alert("Shared key input canceled. Note remains locked.");
+            return;
+          }
+  
+          // Hash the entered password for comparison
+          const hashedUserSharedKey = CryptoJS.SHA256(userSharedKey).toString();
+  
           // Check if the entered key matches the stored key
           const storedSharedKey = localStorage.getItem("sharedKey");
-          if (userSharedKey !== storedSharedKey) {
+          if (hashedUserSharedKey !== storedSharedKey) {
             alert("Incorrect shared key. Note remains locked.");
             return;
           }
         }
       }
-
+  
       setActiveNoteId(note.id);
     } catch (error) {
       console.error("Error handling click on note:", error);
       alert("Error handling click on note: " + (error as any).message);
     }
-  };
+  };  
 
   dayjs.extend(relativeTime);
 
@@ -854,7 +872,7 @@ const App: React.FC = () => {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 handleLabelFilterChange={handleLabelFilterChange}
-                setSortingOption={handleLabelFilterChange}
+                setSortingOption={setSortingOption}
                 uniqueLabels={uniqueLabels}
                 exportData={exportData}
                 handleImportData={handleImportData}
