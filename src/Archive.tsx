@@ -15,6 +15,8 @@ import {
 } from "@capacitor/filesystem";
 import JSZip from "jszip";
 import { Share } from "@capacitor/share";
+import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
+import * as CryptoJS from "crypto-js";
 
 // Import Remix icons
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
@@ -545,6 +547,7 @@ const Archive: React.FC = () => {
   };
 
   const [isArchiveVisible, setIsArchiveVisible] = useState(false);
+  // @ts-ignore
   const [sortingOption, setSortingOption] = useState("updatedAt");
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
@@ -646,47 +649,69 @@ const Archive: React.FC = () => {
       const notes = await loadNotes();
       const updatedNote = { ...notes[noteId] };
 
-      // Check if a password is set
-      let sharedKey = localStorage.getItem("sharedKey");
+      // Check if biometrics is available
+      const biometricResult = await NativeBiometric.isAvailable();
 
-      if (!sharedKey) {
-        // If no shared key is set, prompt the user to set it up
-        sharedKey = prompt("Set up a password to lock your notes:");
+      if (biometricResult.isAvailable) {
+        const isFaceID = biometricResult.biometryType === BiometryType.FACE_ID;
 
-        if (!sharedKey) {
-          // If the user cancels or enters an empty password, do not proceed
-          alert("Note remains unlocked. Please set up a password next time.");
+        // Show biometric prompt for authentication
+        try {
+          await NativeBiometric.verifyIdentity({
+            reason: "For note authentication",
+            title: "Authenticate",
+            subtitle: "Use biometrics to unlock/lock the note.",
+            description: isFaceID
+              ? "Place your face for authentication."
+              : "Place your finger for authentication.",
+          });
+        } catch (verificationError) {
+          // Handle verification error (e.g., user cancels biometric prompt)
+          console.error("Biometric verification error:", verificationError);
+          alert(
+            "Biometric verification failed. Note remains in its current state."
+          );
           return;
         }
-
-        // Save the shared key in local storage
-        localStorage.setItem("sharedKey", sharedKey);
-      }
-
-      if (updatedNote.isLocked) {
-        // If the note is locked, prompt for the password
-        const enteredKey = prompt("Enter the password to unlock the note:");
-
-        if (enteredKey !== sharedKey) {
-          // Incorrect password, do not unlock the note
-          alert("Incorrect password. Note remains locked.");
-          return;
-        }
-
-        // Remove the note from the lockedNotes field
-        const lockedNotes = JSON.parse(
-          localStorage.getItem("lockedNotes") || "{}"
-        );
-        delete lockedNotes[noteId];
-        localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
       } else {
-        // Add the note to the lockedNotes field
-        const lockedNotes = JSON.parse(
-          localStorage.getItem("lockedNotes") || "{}"
-        );
-        lockedNotes[noteId] = true;
-        localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
-      }
+        // Biometrics not available, use sharedKey
+        let sharedKey = localStorage.getItem("sharedKey");
+      
+        if (!sharedKey) {
+          // If no shared key is set, prompt the user to set it up
+          sharedKey = prompt("Set up a password to lock/unlock your notes:");
+      
+          if (!sharedKey) {
+            // If the user cancels or enters an empty password, do not proceed
+            alert(
+              "Note remains in its current state. Please set up a password next time."
+            );
+            return;
+          }
+      
+          // Save the shared key in local storage after hashing
+          sharedKey = CryptoJS.SHA256(sharedKey).toString();
+          localStorage.setItem("sharedKey", sharedKey);
+        }
+      
+        // Prompt for the password
+        const enteredKey = prompt("Enter the password to lock/unlock the note:");
+      
+        // Check if the user canceled the prompt
+        if (enteredKey === null) {
+          alert("Password input canceled. Note remains in its current state.");
+          return;
+        }
+      
+        // Hash the entered password for comparison
+        const hashedEnteredKey = CryptoJS.SHA256(enteredKey).toString();
+      
+        if (hashedEnteredKey !== sharedKey) {
+          // Incorrect password, do not proceed
+          alert("Incorrect password. Note remains in its current state.");
+          return;
+        }
+      }      
 
       // Toggle the 'isLocked' property
       updatedNote.isLocked = !updatedNote.isLocked;
@@ -694,6 +719,18 @@ const Archive: React.FC = () => {
       // Update the note in the dictionary
       notes[noteId] = updatedNote;
 
+      // Update the lockedNotes field
+      const lockedNotes = JSON.parse(
+        localStorage.getItem("lockedNotes") || "{}"
+      );
+      if (updatedNote.isLocked) {
+        lockedNotes[noteId] = true;
+      } else {
+        delete lockedNotes[noteId];
+      }
+      localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
+
+      // Save the updated notes to the filesystem
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
@@ -702,11 +739,71 @@ const Archive: React.FC = () => {
       });
 
       setNotesState(notes); // Update the state
+
+      console.log("Note lock status toggled successfully!");
+      alert("Note lock status toggled successfully!");
     } catch (error) {
       console.error("Error toggling lock:", error);
       alert("Error toggling lock: " + (error as any).message);
     }
   };
+
+  const handleClickNote = async (note: Note) => {
+    try {
+      if (note.isLocked) {
+        // Check if biometrics is available
+        const biometricResult = await NativeBiometric.isAvailable();
+  
+        if (biometricResult.isAvailable) {
+          const isFaceID =
+            biometricResult.biometryType === BiometryType.FACE_ID;
+  
+          // Show biometric prompt for authentication
+          try {
+            await NativeBiometric.verifyIdentity({
+              reason: "For note authentication",
+              title: "Authenticate",
+              subtitle: "Use biometrics to unlock the note.",
+              description: isFaceID
+                ? "Place your face for authentication."
+                : "Place your finger for authentication.",
+            });
+          } catch (verificationError) {
+            // Handle verification error (e.g., user cancels biometric prompt)
+            console.error("Biometric verification error:", verificationError);
+            alert("Biometric verification failed. Note remains locked.");
+            return;
+          }
+        } else {
+          // Biometrics not available, use sharedKey
+          const userSharedKey = prompt(
+            "Enter the shared key to unlock the note:"
+          );
+  
+          // Check if the user canceled the prompt
+          if (userSharedKey === null) {
+            alert("Shared key input canceled. Note remains locked.");
+            return;
+          }
+  
+          // Hash the entered password for comparison
+          const hashedUserSharedKey = CryptoJS.SHA256(userSharedKey).toString();
+  
+          // Check if the entered key matches the stored key
+          const storedSharedKey = localStorage.getItem("sharedKey");
+          if (hashedUserSharedKey !== storedSharedKey) {
+            alert("Incorrect shared key. Note remains locked.");
+            return;
+          }
+        }
+      }
+  
+      setActiveNoteId(note.id);
+    } catch (error) {
+      console.error("Error handling click on note:", error);
+      alert("Error handling click on note: " + (error as any).message);
+    }
+  };  
 
   return (
     <div>
@@ -1455,8 +1552,8 @@ const Archive: React.FC = () => {
                             ? "p-3 h-auto cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C] h-48;"
                             : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
                         }
-                        onClick={() => setActiveNoteId(note.id)}
-                      >
+                        onClick={() => handleClickNote(note)}
+                        >
                         <div className="sm:h-44 h-36 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
