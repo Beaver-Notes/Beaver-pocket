@@ -9,6 +9,7 @@ import BottomNavBar from "./components/BottomNavBar";
 import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import "./css/main.css";
 import "./css/fonts.css";
+import Bookmarked from "./components/Bookmarked";
 import {
   Filesystem,
   Directory,
@@ -883,102 +884,15 @@ const App: React.FC = () => {
                 ).length > 0 && (
                   <h2 className="text-3xl font-bold">Bookmarked</h2>
                 )}
-                <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
-                  {notesList.map((note) => {
-                    if (note.isBookmarked && !note.isArchived) {
-                      return (
-                        <div
-                          key={note.id}
-                          role="button"
-                          tabIndex={0}
-                          className={
-                            note.id === activeNoteId
-                              ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                              : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                          }
-                          onClick={() => handleClickNote(note)}
-                        >
-                          <div className="sm:h-44 h-36 overflow-hidden">
-                            <div className="flex flex-col h-full overflow-hidden">
-                              <div className="text-2xl">{note.title}</div>
-                              {note.isLocked ? (
-                                <div>
-                                  <p></p>
-                                </div>
-                              ) : (
-                                <div>
-                                  {note.labels.length > 0 && (
-                                    <div className="flex gap-2">
-                                      {note.labels.map((label) => (
-                                        <span
-                                          key={label}
-                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                        >
-                                          #{label}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              {note.isLocked ? (
-                                <div className="flex flex-col items-center">
-                                  <button className="flex items-center justify-center">
-                                    <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
-                                  </button>
-                                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                    Unlock to edit
-                                  </p>
-                                </div>
-                              ) : (
-                                <div className="text-lg">
-                                  {note.content &&
-                                    truncateContentPreview(note.content)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between pt-2">
-                            <div>
-                              <button
-                                className="text-[#52525C] py-2 dark:text-white w-auto"
-                                onClick={(e) =>
-                                  handleToggleBookmark(note.id, e)
-                                }
-                              >
-                                {note.isBookmarked ? (
-                                  <Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                                ) : (
-                                  <Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                                )}
-                              </button>
-                              <button
-                                className="text-[#52525C] py-2 dark:text-white w-auto"
-                                onClick={(e) => handleToggleLock(note.id, e)}
-                              >
-                                {note.isLocked ? (
-                                  <LockClosedIcon className="w-8 h-8 mr-2" />
-                                ) : (
-                                  <LockOpenIcon className="w-8 h-8 mr-2" />
-                                )}
-                              </button>
-                              <button
-                                className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                                onClick={(e) => handleDeleteNote(note.id, e)}
-                              >
-                                <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                              </button>
-                            </div>
-                            <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
-                              {dayjs(note.createdAt).fromNow()}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
+                <Bookmarked 
+                notesList={notesList}
+                activeNoteId={activeNoteId}
+                handleToggleBookmark={handleToggleBookmark}
+                handleToggleLock={handleToggleLock}
+                handleDeleteNote={handleDeleteNote}
+                handleClickNote={handleClickNote}
+                truncateContentPreview={truncateContentPreview}
+                />
                 <h2 className="text-3xl font-bold">All Notes</h2>
                 {notesList.length === 0 && (
                   <div className="mx-auto">

@@ -457,8 +457,8 @@ const App: React.FC = () => {
 
         <div className="overflow-y">
           {!activeNoteId && (
-            <div className="py-2 w-full flex flex-col border-gray-300 mx-10 sm:px-60 overflow-auto">
-              <div className="overflow-y-auto flex-grow">
+          <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
+          <div className="mx-10 sm:px-60 overflow-y-auto flex-grow">
                 <p className="text-4xl font-bold">Settings</p>
                 <div className="w-full sm:order-2 order-1">
                   <p className="text-xl pt-4 text-neutral-700 dark:text-white">

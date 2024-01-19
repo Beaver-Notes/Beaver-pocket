@@ -17,7 +17,7 @@ import TaskList from "@tiptap/extension-task-list";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
-import NoteLabels from "./NoteLabel";
+import NoteLabels from "./components/NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
 import {
   Filesystem, FilesystemDirectory,
