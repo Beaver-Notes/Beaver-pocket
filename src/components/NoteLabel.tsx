@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { JSONContent } from "@tiptap/react";
-import { Note } from "./store/types";
+import { Note } from "../store/types";
 
 type Props = {
     note: Note;
