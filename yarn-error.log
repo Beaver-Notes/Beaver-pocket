@@ -14,7 +14,7 @@ Platform:
   darwin arm64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@typescript-eslint%2feslint-plugin: ESOCKETTIMEDOUT
+  Error: https://registry.yarnpkg.com/vite: ESOCKETTIMEDOUT
       at ClientRequest.<anonymous> (/usr/local/Cellar/yarn/1.22.19/libexec/lib/cli.js:141517:19)
       at Object.onceWrapper (node:events:627:28)
       at ClientRequest.emit (node:events:513:28)

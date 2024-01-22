@@ -19,10 +19,7 @@ import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import NoteLabels from "./components/NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
-import {
-  Filesystem, FilesystemDirectory,
-  
-} from "@capacitor/filesystem";
+import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
 import HeadingTree from "./lib/HeadingTree";
 // import Paper from "./lib/tiptap/paper/Paper"
@@ -126,8 +123,6 @@ function NoteEditor({
     [note.id]
   );
 
-
-
   const [focusMode, setFocusMode] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(true);
 
@@ -169,6 +164,33 @@ function NoteEditor({
       console.error("Error uploading image:", error);
     }
   }
+
+  const handlePaste = async (event: React.ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+
+        if (item.type.indexOf("image") !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            await handleImageUpload(file, note.id);
+          }
+        }
+      }
+    }
+  };
+
+  const handleDrop = async (event: React.DragEvent) => {
+    event.preventDefault();
+
+    const files = event.dataTransfer?.files;
+
+    if (files && files.length > 0) {
+      await handleImageUpload(files[0], note.id);
+    }
+  };
 
   const toggleBold = () => {
     editor?.chain().focus().toggleBold().run();
@@ -269,7 +291,12 @@ function NoteEditor({
   }, [handleOutsideClick]);
 
   return (
-    <div className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white lg:px-60 text-base">
+    <div
+      className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white lg:px-60 text-base "
+      onPaste={handlePaste}
+      onDrop={handleDrop}
+      onDragOver={(e) => e.preventDefault()}
+    >
       {toolbarVisible && (
         <div
           className={
@@ -416,62 +443,61 @@ function NoteEditor({
       {headingTreeVisible && editor && (
         <div
           ref={headingTreeRef}
-          className={`transition-opacity ${
+          className={`transition-opacity z-50 ${
             headingTreeVisible ? "opacity-100" : "opacity-0"
           }`}
         >
           <HeadingTree onHeadingClick={handleHeadingClick} />
         </div>
       )}
-      <div className="fixed sm:hidden mt-4 inset-x-2 overflow-auto h-auto w-full bg-transparent sticky top-0 z-50 no-scrollbar flex justify-between">
-        <button
-          className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
-          onClick={onCloseEditor}
-        >
-          <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
-        </button>
-        <div className="flex">
-          <button
-            className="p-2 rounded-md text-white bg-transparent cursor-pointer"
-            onClick={() => {
-              setFocusMode((prevFocusMode) => !prevFocusMode);
-              setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
-            }}
-          >
-            <Focus3LineIcon className={`border-none ${
-                focusMode ? "text-amber-400" : "text-neutral-800"
-              }  dark:text-white text-xl w-7 h-7`} />
-          </button>
-          <button
-            className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
-            onClick={toggleHeadingTree}
-          >
-            <Search2LineIcon
-              className={`border-none ${
-                focusMode ? "hidden" : "block"
-              }  dark:text-white text-neutral-800 text-xl w-7 h-7`}
-            />
-          </button>
-        </div>
-      </div>
+      <div className="sm:hidden bg-white dark:bg-[#232222] pr-4 pl-4 pt-5 pb-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full bg-transparent z-50 no-scrollbar flex justify-between">
+  <button
+    className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
+    onClick={onCloseEditor}
+  >
+    <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+  </button>
+  <div className="flex">
+    <button
+      className="p-2  mt-4 rounded-md text-white bg-transparent cursor-pointer"
+      onClick={() => {
+        setFocusMode((prevFocusMode) => !prevFocusMode);
+        setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
+      }}
+    >
+      <Focus3LineIcon
+        className={`border-none ${
+          focusMode ? "text-amber-400" : "text-neutral-800"
+        }  dark:text-white text-xl w-7 h-7`}
+      />
+    </button>
+    <button
+      className="p-2 align-end mt-4 rounded-md text-white bg-transparent cursor-pointer"
+      onClick={toggleHeadingTree}
+    >
+      <Search2LineIcon
+        className={`border-none ${
+          focusMode ? "hidden" : "block"
+        }  dark:text-white text-neutral-800 text-xl w-7 h-7`}
+      />
+    </button>
+  </div>
+</div>
 
       <div
         contentEditable
         suppressContentEditableWarning
-        className="text-3xl font-bold overflow-y-scroll outline-none mt-4"
+        className="text-3xl mt-[2em] font-bold overflow-y-scroll outline-none mt-4"
         onBlur={handleTitleChange}
         dangerouslySetInnerHTML={{ __html: localTitle }}
       />
 
       <div>
-       <NoteLabels 
-       note={note} 
-       onChange={onChange}
-       />
+        <NoteLabels note={note} onChange={onChange} />
         <div className="py-2 h-full w-full" id="container">
           <EditorContent
             editor={editor}
-            className="overflow-auto w-full min-h-[25em]"
+            className="overflow-auto w-full mb-[6em] min-h-[25em]"
           />
         </div>
       </div>
