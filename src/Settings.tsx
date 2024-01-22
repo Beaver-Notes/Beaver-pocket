@@ -13,6 +13,8 @@ import {
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
+import enTranslations from "./assets/locales/en.json";
+import itTranslations from "./assets/locales/it.json";
 
 import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
 import InformationLineIcon from "remixicon-react/InformationLineIcon";
@@ -444,6 +446,51 @@ const App: React.FC = () => {
 
   const [isArchiveVisible, setIsArchiveVisible] = useState(false);
 
+  // Translations
+  const [translations, setTranslations] = useState({
+    settings: {
+      apptheme: "settings.apptheme",
+      light: "settings.light",
+      dark: "settings.dark",
+      system: "settings.system",
+      selectlanguage: "settings.selectlanguage",
+      // ... (add other translations as needed)
+    },
+  });
+
+  useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `./assets/locales/${selectedLanguage}.json`
+        );
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []); // Empty dependency array means this effect runs once on mount
+
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    localStorage.getItem("selectedLanguage") || "en"
+  );
+
+  const languages = [
+    { code: "en", name: "English", translations: enTranslations },
+    { code: "it", name: "Italiano", translations: itTranslations },
+  ];
+
+  const updateLanguage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const languageCode = event.target.value;
+    setSelectedLanguage(languageCode);
+    localStorage.setItem("selectedLanguage", languageCode);
+    window.location.reload(); // Reload the page
+  };
+
   return (
     <div>
       <div className="grid sm:grid-cols-[auto,1fr]">
@@ -547,6 +594,22 @@ const App: React.FC = () => {
                       </option>
                     ))}
                   </select>
+                  <div>
+                    <p className="mb-2">
+                      {translations.settings.selectlanguage || "-"}
+                    </p>
+                    <select
+                      value={selectedLanguage}
+                      onChange={updateLanguage}
+                      className="w-full"
+                    >
+                      {languages.map((language) => (
+                        <option key={language.code} value={language.code}>
+                          {language.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg
                       className="h-4 w-4 text-gray-500 dark:text-white"
