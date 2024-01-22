@@ -110,7 +110,7 @@ const App: React.FC = () => {
           });
 
           setNotesState(notes);
-          location.reload();
+          window.location.reload();        
         } else {
           console.log(`Note with id ${noteId} not found.`);
         }

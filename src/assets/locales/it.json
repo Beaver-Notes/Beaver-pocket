@@ -1,0 +1,33 @@
+{
+    "settings": {
+      "title": "Impostazioni",
+      "apptheme": "Tema dell'app",
+      "light": "Chiaro",
+      "dark": "Scuro",
+      "system": "Sistema",
+      "selectlanguage": "Seleziona lingua",
+      "selectfont": "Seleziona carattere",
+      "syncpath": "Percorso di sincronizzazione",
+      "selectpath": "Seleziona percorso",
+      "iedata": "Importa/Esporta dati",
+      "encryptwpasswd": "Critta con password",
+      "exportdata": "Esporta dati",
+      "importdata": "Importa dati",
+      "pathplaceholder": "Percorso",
+      "password": "Password",
+      "General": "Generale",
+      "Shortcuts": "Scorciatoie",
+      "About": "Informazioni",
+      "Inputpassword": "Inserisci la password",
+      "body": "Questi dati sono crittografati, inserisci la password per accedere",
+      "Import": "Importa",
+      "Cancel": "Annulla",
+      "Password": "Password",
+      "Invalidpassword": "Password non valida",
+      "relaunch": "L'app deve essere riavviata affinché questa modifica abbia effetto",
+      "relaunchbutton": "Riavvia l'app",
+      "exportmessage": "Le note sono state esportate nella cartella",
+      "invaliddata": "Dati non validi",
+      "syncreminder": "Nascondi promemoria di sincronizzazione"
+    }
+  }

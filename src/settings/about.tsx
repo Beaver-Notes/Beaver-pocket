@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { version } from "../../package.json"; // Assuming your version is defined in package.json
+import { version } from "../../package.json";
 import GlobalLineIcon from "remixicon-react/GlobalLineIcon";
 import GithubFillIcon from "remixicon-react/GithubFillIcon";
 import CupLineIcon from "remixicon-react/CupLineIcon";
