@@ -15,6 +15,7 @@ import {
 } from "@capacitor/filesystem";
 import enTranslations from "./assets/locales/en.json";
 import itTranslations from "./assets/locales/it.json";
+import * as CryptoJS from "crypto-js";
 
 import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
 import InformationLineIcon from "remixicon-react/InformationLineIcon";
@@ -35,7 +36,7 @@ async function createNotesDirectory() {
   }
 }
 
-const App: React.FC = () => {
+const Settings: React.FC = () => {
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
   );
@@ -219,6 +220,8 @@ const App: React.FC = () => {
     setActiveNoteId(null);
   };
 
+  const [withPassword, setWithPassword] = useState(false);
+
   const exportData = async () => {
     try {
       const currentDate = new Date();
@@ -244,7 +247,7 @@ const App: React.FC = () => {
       });
 
       // Export data.json
-      const exportedData: any = {
+      let exportedData: any = {
         data: {
           notes: {},
         },
@@ -269,7 +272,24 @@ const App: React.FC = () => {
         };
       });
 
-      const jsonData = JSON.stringify(exportedData, null, 2);
+      let jsonData = JSON.stringify(exportedData, null, 2);
+
+      // Check if password protection is enabled
+      if (withPassword) {
+        // Prompt the user for a password
+        const password = prompt("Enter password for export:");
+
+        // Check if the user provided a password
+        if (password !== null) {
+          // Encrypt the data using CryptoJS and the user's password
+          jsonData = CryptoJS.AES.encrypt(jsonData, password).toString();
+        } else {
+          // User canceled password input, abort export
+          console.log("Export canceled.");
+          return;
+        }
+      }
+
       const jsonFilePath = `${exportFolderPath}/data.json`;
 
       // Save data.json
@@ -323,36 +343,58 @@ const App: React.FC = () => {
     }
   };
 
-  const handleImportData = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-
+  
     if (!file) {
       return;
     }
-
+  
     const reader = new FileReader();
-
+  
     reader.onload = async (e) => {
       try {
-        const importedData = JSON.parse(e.target?.result as string);
-
-        if (importedData && importedData.data && importedData.data.notes) {
-          const importedNotes: Record<string, Note> = importedData.data.notes;
-
+        const importedData = e.target?.result as string;
+  
+        let jsonData: string;
+  
+        try {
+          // Try parsing the data as JSON
+          JSON.parse(importedData);
+          // If successful, it's JSON, no need for password
+          jsonData = importedData;
+        } catch (jsonError) {
+          // Parsing as JSON failed, assume it's encrypted and ask for password
+          const password = prompt("Enter password for import:");
+  
+          // Check if the user provided a password
+          if (password !== null) {
+            // Decrypt the data using CryptoJS and the user's password
+            jsonData = CryptoJS.AES.decrypt(importedData, password).toString(CryptoJS.enc.Utf8);
+          } else {
+            // User canceled password input, abort import
+            console.log("Import canceled.");
+            return;
+          }
+        }
+  
+        const parsedData = JSON.parse(jsonData);
+  
+        if (parsedData && parsedData.data && parsedData.data.notes) {
+          const importedNotes: Record<string, Note> = parsedData.data.notes;
+  
           // Load existing notes from data.json
           const existingNotes = await loadNotes();
-
+  
           // Merge the imported notes with the existing notes
           const mergedNotes: Record<string, Note> = {
             ...existingNotes,
             ...importedNotes,
           };
-
+  
           // Update the notesState with the merged notes
           setNotesState(mergedNotes);
-
+  
           // Update the filteredNotes based on the search query
           const filtered = Object.values(mergedNotes).filter((note) => {
             const titleMatch = note.title
@@ -363,16 +405,16 @@ const App: React.FC = () => {
               .includes(searchQuery.toLowerCase());
             return titleMatch || contentMatch;
           });
-
+  
           setFilteredNotes(
             Object.fromEntries(filtered.map((note) => [note.id, note]))
           );
-
+  
           Object.values(importedNotes).forEach((note) => {
             note.createdAt = new Date(note.createdAt);
             note.updatedAt = new Date(note.updatedAt);
           });
-
+  
           // Save the merged notes to the data.json file
           await Filesystem.writeFile({
             path: STORAGE_PATH,
@@ -380,7 +422,7 @@ const App: React.FC = () => {
             directory: Directory.Documents,
             encoding: FilesystemEncoding.UTF8,
           });
-
+  
           alert("Data imported successfully!");
         } else {
           alert("Invalid data format.");
@@ -390,10 +432,10 @@ const App: React.FC = () => {
         alert("Error while importing data.");
       }
     };
-
+  
     reader.readAsText(file);
-  };
-
+  };  
+  
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
   const [title, setTitle] = useState(
@@ -454,7 +496,13 @@ const App: React.FC = () => {
       dark: "settings.dark",
       system: "settings.system",
       selectlanguage: "settings.selectlanguage",
-      // ... (add other translations as needed)
+      selectfont: "settings.selectfont",
+      iedata: "settings.iedata",
+      importdata: "settings.importdata",
+      exportdata: "settings.exportdata",
+      About: "settings.About",
+      Shortcuts: "settings.Shortcuts",
+      title: "settings.title",
     },
   });
 
@@ -504,12 +552,15 @@ const App: React.FC = () => {
 
         <div className="overflow-y">
           {!activeNoteId && (
-          <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-          <div className="mx-10 sm:px-60 overflow-y-auto flex-grow">
-                <p className="text-4xl font-bold">Settings</p>
+            <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
+              <div className="mx-10 sm:px-60 overflow-y-auto flex-grow">
+                <p className="text-4xl font-bold">
+                  {" "}
+                  {translations.settings.title || "-"}
+                </p>
                 <div className="w-full sm:order-2 order-1">
                   <p className="text-xl pt-4 text-neutral-700 dark:text-white">
-                    App Theme
+                    {translations.settings.apptheme || "-"}
                   </p>
                   <div className="grid py-2 w-full h-full grid-cols-3 gap-8 cursor-pointer rounded-md items-center justify-center">
                     <button
@@ -531,7 +582,9 @@ const App: React.FC = () => {
                           />
                         </svg>
                       </div>
-                      <p className="text-center py-2">Light</p>
+                      <p className="text-center py-2">
+                        {translations.settings.light || "-"}
+                      </p>
                     </button>
                     <button
                       onClick={() => toggleTheme(true)}
@@ -552,7 +605,7 @@ const App: React.FC = () => {
                           />
                         </svg>
                       </div>
-                      <p className="text-center py-2">Dark</p>
+                      {translations.settings.dark || "-"}
                     </button>
                     <button
                       onClick={setAutoMode}
@@ -575,12 +628,14 @@ const App: React.FC = () => {
                           />
                         </svg>
                       </div>
-                      <p className="text-center py-2">Auto</p>
+                      <p className="text-center py-2">
+                        {translations.settings.system || "-"}
+                      </p>
                     </button>
                   </div>
                 </div>
                 <p className="text-xl pt-4 text-neutral-700 dark:text-white">
-                  Select Font
+                  {translations.settings.selectfont || "-"}
                 </p>
                 <div className="relative pt-2">
                   <select
@@ -594,23 +649,7 @@ const App: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <div>
-                    <p className="mb-2">
-                      {translations.settings.selectlanguage || "-"}
-                    </p>
-                    <select
-                      value={selectedLanguage}
-                      onChange={updateLanguage}
-                      className="w-full"
-                    >
-                      {languages.map((language) => (
-                        <option key={language.code} value={language.code}>
-                          {language.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
                     <svg
                       className="h-4 w-4 text-gray-500 dark:text-white"
                       fill="none"
@@ -628,41 +667,99 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-xl pt-4 text-neutral-700 dark:text-white">
-                  Import / Export Data
+                  {translations.settings.selectlanguage || "-"}
+                </p>
+                <div className="relative pt-2">
+                  <select
+                    value={selectedLanguage}
+                    onChange={updateLanguage}
+                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                  >
+                    {languages.map((language) => (
+                      <option key={language.code} value={language.code}>
+                        {language.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
+                    <svg
+                      className="h-4 w-4 text-gray-500 dark:text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-xl pt-4 text-neutral-700 dark:text-white">
+                  {translations.settings.iedata || "-"}
                 </p>
                 <div className="relative pt-2 gap-4 flex flex-col sm:flex-row">
-                <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
+                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
                       <FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
                     </div>
-                    <button className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
-                      Import Data
-                    </button>
+                    <div className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
+                      <label
+                        htmlFor="file"
+                        className="w-full flex items-center justify-center"
+                      >
+                        {translations.settings.importdata || "-"}
+                      </label>
+                      <input
+                        className="hidden"
+                        type="file"
+                        onChange={handleImportData}
+                        id="file"
+                        // @ts-ignore
+                        directory=""
+                        webkitdirectory=""
+                      />
+                    </div>
                   </div>
-                  
+
                   <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
                       <FileUploadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
                     </div>
-                    <button className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
-                      Export Data
+                    <button
+                      className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]"
+                      onClick={exportData}
+                    >
+                      {translations.settings.exportdata || "-"}
                     </button>
+                    <div className="relative pt-2">
+                      <input
+                        type="checkbox"
+                        checked={withPassword}
+                        onChange={() => setWithPassword(!withPassword)}
+                      />
+                      Encrypt with password
+                    </div>
                   </div>
                 </div>
-
                 <div>
                   <div className="flex gap-4 py-4">
                     <Link
                       to="/about"
                       className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <InformationLineIcon className="w-6 h-6 mr-2" /> About
+                      <InformationLineIcon className="w-6 h-6 mr-2" />{" "}
+                      {translations.settings.About || "-"}
                     </Link>
                     <Link
                       to="/shortcuts"
                       className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <KeyboardLineIcon className="w-6 h-6 mr-2" /> Shortcuts
+                      <KeyboardLineIcon className="w-6 h-6 mr-2" />{" "}
+                      {translations.settings.Shortcuts || "-"}
                     </Link>
                   </div>
                 </div>
@@ -692,4 +789,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default Settings;
