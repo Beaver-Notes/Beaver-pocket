@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./css/fonts.css";
+import "./css/welcome.css"
 import ArrowRightLineIcon from "remixicon-react/ArrowRightLineIcon";
 import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
 import { useNavigate } from "react-router-dom";
@@ -213,7 +214,7 @@ const Welcome: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className={`view ${currentView}`}>
       {currentView === "view1" && (
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] sm:h-[32em] mx-10 rounded-3xl sm:bg-gray-600 sm:bg-opacity-5 sm:dark:bg-gray-200">
@@ -272,7 +273,42 @@ const Welcome: React.FC = () => {
         </div>
       )}
 
-      {currentView === "view2" && (
+{currentView === "view2" && (
+        <div className={`flex items-center justify-center mt-[5em]`}>
+          <div className="sm:w-[32em] sm:h-[32em] mx-10 rounded-3xl sm:bg-gray-600 sm:bg-opacity-5 sm:dark:bg-gray-200">
+            <h3 className="pt-4 text-center">🌎 Choose your language</h3>
+            <ul className="list-disc py-4 sm:mx-10">
+              <li>🔒 Lock your notes with your face or finger</li>
+              <li className="py-2">⌨️ Use Keyboard shortcuts to navigate</li>
+              <li>📄 Export, Share and Import your notes</li>
+              <li className="py-2">
+                🧮 List your notes alphabetically, by creation or update date
+              </li>
+              <li>🔎 Browse through notes and labels</li>
+              <li className="py-2">✍️ Choose the fonts you like best</li>
+              <li>🗑️ Fixed issues in deleting notes</li>
+            </ul>
+            <div className="relative pt-2">
+              <div className="flex items-center justify-center sm:mt-[8.5em] fixed bottom-6 inset-x-2 sm:relative">
+                <button
+                  className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
+                  onClick={() => handleViewChange("view1")}
+                >
+                  <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
+                </button>
+                <button
+                  className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
+                  onClick={() => handleViewChange("view3")}
+                >
+                 Next   <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {currentView === "view3" && (
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] sm:h-[32em] mx-10 rounded-3xl sm:bg-gray-600 sm:bg-opacity-5 sm:dark:bg-gray-200">
             <h3 className="pt-4 text-center">🪄 Set the Mood</h3>
@@ -342,13 +378,13 @@ const Welcome: React.FC = () => {
               <div className="flex items-center justify-center sm:mt-[6.5em] fixed bottom-6 inset-x-2 sm:relative">
                 <button
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
-                  onClick={() => handleViewChange("view1")}
+                  onClick={() => handleViewChange("view2")}
                 >
                   <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
                 </button>
                 <button
                   className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
-                  onClick={() => handleViewChange("view3")}
+                  onClick={() => handleViewChange("view4")}
                 >
                   Next <ArrowRightLineIcon className="inline-block w-5 h-5" />
                 </button>
@@ -358,7 +394,7 @@ const Welcome: React.FC = () => {
         </div>
       )}
 
-      {currentView === "view3" && (
+      {currentView === "view4" && (
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] sm:h-[32em] mx-10 rounded-3xl sm:bg-gray-600 sm:bg-opacity-5 sm:dark:bg-gray-200">
             <h3 className="pt-4 text-center">✍️ Craft Your Typography</h3>
@@ -387,13 +423,13 @@ const Welcome: React.FC = () => {
             <div className="flex items-center justify-center sm:mt-10 fixed bottom-6 inset-x-2 sm:relative">
               <button
                 className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
-                onClick={() => handleViewChange("view2")}
+                onClick={() => handleViewChange("view3")}
               >
                 <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
               </button>
               <button
                 className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
-                onClick={() => handleViewChange("view4")}
+                onClick={() => handleViewChange("view5")}
               >
                 Next <ArrowRightLineIcon className="inline-block w-5 h-5" />
               </button>
@@ -402,7 +438,7 @@ const Welcome: React.FC = () => {
         </div>
       )}
 
-      {currentView === "view4" && (
+      {currentView === "view5" && (
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] sm:h-[32em] mx-10 rounded-3xl sm:bg-gray-600 sm:bg-opacity-5 sm:dark:bg-gray-200">
             <h3 className="pt-4 text-center">🚚 Import your notes</h3>
@@ -436,13 +472,13 @@ const Welcome: React.FC = () => {
               <div className="flex items-center justify-center sm:mt-[3.2em] fixed bottom-6 inset-x-2 sm:relative">
                 <button
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
-                  onClick={() => handleViewChange("view3")}
+                  onClick={() => handleViewChange("view4")}
                 >
                   <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
                 </button>
                 <button
                   className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
-                  onClick={() => handleViewChange("view5")}
+                  onClick={() => handleViewChange("view6")}
                 >
                   Skip <ArrowRightLineIcon className="inline-block w-5 h-5" />
                 </button>
@@ -452,7 +488,7 @@ const Welcome: React.FC = () => {
         </div>
       )}
 
-      {currentView === "view5" && (
+      {currentView === "view6" && (
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] sm:h-[32em] mx-10 rounded-3xl sm:bg-gray-600 sm:bg-opacity-5 sm:dark:bg-gray-200">
             <h3 className="pt-4 text-center">🗞️ What's new</h3>
@@ -471,7 +507,7 @@ const Welcome: React.FC = () => {
               <div className="flex items-center justify-center sm:mt-[8.5em] fixed bottom-6 inset-x-2 sm:relative">
                 <button
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
-                  onClick={() => handleViewChange("view4")}
+                  onClick={() => handleViewChange("view5")}
                 >
                   <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
                 </button>
@@ -489,5 +525,4 @@ const Welcome: React.FC = () => {
     </div>
   );
 };
-
 export default Welcome;

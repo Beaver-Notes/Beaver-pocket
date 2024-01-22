@@ -6,10 +6,6 @@ import Settings from "./Settings";
 import About from "./settings/about";
 import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
-import { Plugins } from '@capacitor/core';
-import { FilesystemDirectory } from "@capacitor/filesystem";
-
-const { Filesystem } = Plugins;
 
 const App: React.FC = () => {
   const history = useNavigate();
@@ -18,22 +14,18 @@ const App: React.FC = () => {
   useEffect(() => {
     // Check if it's the first time only when the app starts
     if (!checkedFirstTime) {
-      Filesystem.readFile({
-        path: 'data.json',
-        directory: FilesystemDirectory.Data,
-      })
-        .then(() => {
-          // File exists, not the first time
-        })
-        .catch(() => {
-          // File doesn't exist, it's the first time
-          // You can redirect to the welcome page or perform other actions here
-          history("/welcome");
-        })
-        .finally(() => {
-          // Set the flag to true after the initial check
-          setCheckedFirstTime(true);
-        });
+      const isFirstTime = localStorage.getItem('isFirstTime');
+
+      if (isFirstTime === null || isFirstTime === "true") {
+        // It's the first time or the flag is not set, redirect to welcome page
+        history("/welcome");
+        
+        // Set the flag to false after the initial check
+        localStorage.setItem('isFirstTime', 'false');
+      }
+
+      // Set the flag to false after the initial check
+      setCheckedFirstTime(true);
     }
   }, [checkedFirstTime, history]);
 
