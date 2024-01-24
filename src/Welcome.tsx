@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./css/fonts.css";
-import "./css/welcome.css"
+import "./css/welcome.css";
 import ArrowRightLineIcon from "remixicon-react/ArrowRightLineIcon";
 import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,8 @@ import {
   Filesystem,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
+import enTranslations from "./assets/locales/en.json";
+import itTranslations from "./assets/locales/it.json";
 
 const Welcome: React.FC = () => {
   const [currentView, setCurrentView] = useState<
@@ -30,7 +32,7 @@ const Welcome: React.FC = () => {
   };
 
   const [languageIndex, setLanguageIndex] = useState(0);
-  const languages = [
+  const languagetitle = [
     "🌎 Select your language",
     "🌍 seleziona la tua lingua",
     "🌍 Wähle deine Sprache aus",
@@ -38,8 +40,54 @@ const Welcome: React.FC = () => {
   ];
 
   useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `./assets/locales/${selectedLanguage}.json`
+        );
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []); // Empty dependency array means this effect runs once on mount
+
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    localStorage.getItem("selectedLanguage") || "en"
+  );
+
+  // Translations
+  const [translations, setTranslations] = useState({
+    welcome: {
+      next: "welcome.next",
+      back: "welcome.back",
+      themeTitle: "welcome.themeTitle",
+      themeText: "welcome.themeText",
+      dark: "welcome.dark",
+      light: "welcome.light",
+      system: "welcome.system",
+    },
+  });
+
+  const languages = [
+    { code: "en", name: "English", translations: enTranslations },
+    { code: "it", name: "Italiano", translations: itTranslations },
+  ];
+
+  const updateLanguage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const languageCode = event.target.value;
+    setSelectedLanguage(languageCode);
+    localStorage.setItem("selectedLanguage", languageCode);
+    location.reload();
+  };
+
+  useEffect(() => {
     const intervalId = setInterval(() => {
-      setLanguageIndex((prevIndex) => (prevIndex + 1) % languages.length);
+      setLanguageIndex((prevIndex) => (prevIndex + 1) % languagetitle.length);
     }, 2000);
 
     return () => clearInterval(intervalId); // Cleanup the interval on component unmount
@@ -293,31 +341,51 @@ const Welcome: React.FC = () => {
       {currentView === "view2" && (
         <div className={`flex items-center justify-center mt-[5em]`}>
           <div className="sm:w-[32em] mx-10 rounded-3xl">
-            <h3 className="pt-4 text-center">{languages[languageIndex]}</h3>
-            <ul className="list-disc py-4 sm:mx-10">
-              <li>🔒 Lock your notes with your face or finger</li>
-              <li className="py-2">⌨️ Use Keyboard shortcuts to navigate</li>
-              <li>📄 Export, Share and Import your notes</li>
-              <li className="py-2">
-                🧮 List your notes alphabetically, by creation or update date
-              </li>
-              <li>🔎 Browse through notes and labels</li>
-              <li className="py-2">✍️ Choose the fonts you like best</li>
-              <li>🗑️ Fixed issues in deleting notes</li>
-            </ul>
+            <h3 className="pt-4 text-center">{languagetitle[languageIndex]}</h3>
+            <div className="relative pt-2">
+              <select
+                value={selectedLanguage}
+                onChange={updateLanguage}
+                className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+              >
+                {languages.map((language) => (
+                  <option key={language.code} value={language.code}>
+                    {language.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
+                <svg
+                  className="h-4 w-4 text-gray-500 dark:text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
             <div className="relative pt-2">
               <div className="flex items-center justify-center fixed bottom-6 inset-x-2">
                 <button
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view1")}
                 >
-                  <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
+                  <ArrowLeftLineIcon className="inline-block w-5 h-5" />
+                  {translations.welcome.back || "-"}
                 </button>
                 <button
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view3")}
                 >
-                  Next <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                  {translations.welcome.next || "-"}
+                  <ArrowRightLineIcon className="inline-block w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -328,11 +396,11 @@ const Welcome: React.FC = () => {
       {currentView === "view3" && (
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] mx-10 rounded-3xl">
-            <h3 className="pt-4 text-center">🪄 Set the Mood</h3>
+            <h3 className="pt-4 text-center">
+            {translations.welcome.themeTitle || "-"}
+            </h3>
             <p className="pt-2 text-center sm:mx-10">
-              Choose the appearance that best suits your style. Rest assured,
-              you can always revisit your preferences and make adjustments in
-              the settings later on.
+            {translations.welcome.themeText || "-"}
             </p>
             <div className="w-full sm:order-2 order-1">
               <div className="grid py-2 mt-10 w-full h-full grid-cols-3 gap-8 cursor-pointer rounded-md items-center justify-center">
@@ -350,7 +418,10 @@ const Welcome: React.FC = () => {
                       <rect width="512" height="512" rx="256" fill="#FFFFFF" />
                     </svg>
                   </div>
-                  <p className="text-center py-2">Light</p>
+                  <p className="text-center py-2">
+                    {" "}
+                    {translations.welcome.light || "-"}
+                  </p>
                 </button>
                 <button
                   onClick={() => toggleTheme(true)}
@@ -366,7 +437,10 @@ const Welcome: React.FC = () => {
                       <rect width="512" height="512" rx="256" fill="#282727" />
                     </svg>
                   </div>
-                  <p className="text-center py-2">Dark</p>
+                  <p className="text-center py-2">
+                    {" "}
+                    {translations.welcome.dark || "-"}
+                  </p>
                 </button>
                 <button
                   onClick={setAutoMode}
@@ -389,7 +463,10 @@ const Welcome: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <p className="text-center py-2">System</p>
+                  <p className="text-center py-2">
+                    {" "}
+                    {translations.welcome.system || "-"}
+                  </p>
                 </button>
               </div>
               <div className="flex items-center justify-center fixed bottom-6 inset-x-2">
@@ -397,13 +474,15 @@ const Welcome: React.FC = () => {
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view2")}
                 >
-                  <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
+                  <ArrowLeftLineIcon className="inline-block w-5 h-5" />
+                  {translations.welcome.back || "-"}
                 </button>
                 <button
                   className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view4")}
                 >
-                  Next <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                  {translations.welcome.next || "-"}
+                  <ArrowRightLineIcon className="inline-block w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -442,13 +521,15 @@ const Welcome: React.FC = () => {
                 className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                 onClick={() => handleViewChange("view3")}
               >
-                <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
+                <ArrowLeftLineIcon className="inline-block w-5 h-5" />
+                {translations.welcome.back || "-"}
               </button>
               <button
                 className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                 onClick={() => handleViewChange("view5")}
               >
-                Next <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                {translations.welcome.next || "-"}
+                <ArrowRightLineIcon className="inline-block w-5 h-5" />
               </button>
             </div>
           </div>
@@ -491,7 +572,8 @@ const Welcome: React.FC = () => {
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view4")}
                 >
-                  <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
+                  <ArrowLeftLineIcon className="inline-block w-5 h-5" />{" "}
+                  {translations.welcome.back || "-"}
                 </button>
                 <button
                   className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
@@ -526,7 +608,8 @@ const Welcome: React.FC = () => {
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view5")}
                 >
-                  <ArrowLeftLineIcon className="inline-block w-5 h-5" /> Back
+                  <ArrowLeftLineIcon className="inline-block w-5 h-5" />{" "}
+                  {translations.welcome.back || "-"}
                 </button>
                 <button
                   className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"

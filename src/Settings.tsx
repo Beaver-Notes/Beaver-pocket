@@ -277,7 +277,8 @@ const Settings: React.FC = () => {
       // Check if password protection is enabled
       if (withPassword) {
         // Prompt the user for a password
-        const password = prompt("Enter password for export:");
+        const passwordPrompt = translations.settings.Inputpassword || "Enter password for export:";
+        const password = prompt(passwordPrompt);
 
         // Check if the user provided a password
         if (password !== null) {
@@ -496,6 +497,7 @@ const Settings: React.FC = () => {
       dark: "settings.dark",
       system: "settings.system",
       selectlanguage: "settings.selectlanguage",
+      encryptwpasswd: "settings.encryptwpasswd",
       selectfont: "settings.selectfont",
       iedata: "settings.iedata",
       importdata: "settings.importdata",
@@ -503,6 +505,7 @@ const Settings: React.FC = () => {
       About: "settings.About",
       Shortcuts: "settings.Shortcuts",
       title: "settings.title",
+      Inputpassword: "settings.Inputpassword",
     },
   });
 
@@ -605,7 +608,9 @@ const Settings: React.FC = () => {
                           />
                         </svg>
                       </div>
+                      <p className="text-center py-2">
                       {translations.settings.dark || "-"}
+                      </p>
                     </button>
                     <button
                       onClick={setAutoMode}
@@ -741,7 +746,7 @@ const Settings: React.FC = () => {
                         checked={withPassword}
                         onChange={() => setWithPassword(!withPassword)}
                       />
-                      Encrypt with password
+                      {translations.settings.encryptwpasswd || "-"}
                     </div>
                   </div>
                 </div>
@@ -749,16 +754,16 @@ const Settings: React.FC = () => {
                   <div className="flex gap-4 py-4">
                     <Link
                       to="/about"
-                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      className="w-auto p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <InformationLineIcon className="w-6 h-6 mr-2" />{" "}
+                      <InformationLineIcon className="w-6 h-6 mr-2" />
                       {translations.settings.About || "-"}
                     </Link>
                     <Link
                       to="/shortcuts"
-                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <KeyboardLineIcon className="w-6 h-6 mr-2" />{" "}
+                      <KeyboardLineIcon className="w-6 h-6 mr-2" />
                       {translations.settings.Shortcuts || "-"}
                     </Link>
                   </div>
