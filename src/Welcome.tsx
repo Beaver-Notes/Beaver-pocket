@@ -65,8 +65,18 @@ const Welcome: React.FC = () => {
     welcome: {
       next: "welcome.next",
       back: "welcome.back",
+      welcomeTitle: "welcome.welcomeTitle",
+      welcomeParagraph: "welcome.welcomeParagraph",
+      welcomeWarning: "welcome.welcomeWarning",
+      languageText: "welcome.languageText",
+      getStarted: "welcome.getStarted",
       themeTitle: "welcome.themeTitle",
       themeText: "welcome.themeText",
+      typographyTitle: "welcome.typographyTitle",
+      typographyText: "welcome.typographyText",
+      importTitle: "welcome.importTitle",
+      importText: "welcome.importText",
+      skip: "welcome.skip",
       dark: "welcome.dark",
       light: "welcome.light",
       system: "welcome.system",
@@ -311,16 +321,16 @@ const Welcome: React.FC = () => {
                 </defs>
               </svg>
             </div>
-            <h3 className="text-center">🎉 Welcome to Beaver Pocket</h3>
+            <h3 className="text-center">
+              {" "}
+              {translations.welcome.welcomeTitle || "-"}
+            </h3>
             <p className="text-center sm:mx-10">
-              All the amazing features introduced with Beaver Notes are packed
-              into the perfect note-taking app for you on the go.
+              {translations.welcome.welcomeParagraph || "-"}
             </p>
             <div className="mt-4 sm:mt-1 bg-amber-300 bg-opacity-30 rounded-xl border-2 border-amber-300 border-opacity-60 sm:mx-10">
               <p className="p-2">
-                Beaver Pocket is currently in its alpha stage, which may lead to
-                issues. Therefore it's advised to back up your data regularly.
-                Please be aware that data loss is a possibility.
+                {translations.welcome.welcomeWarning || "-"}
               </p>
             </div>
             <div className="flex items-center justify-center fixed bottom-20 inset-x-2">
@@ -331,7 +341,7 @@ const Welcome: React.FC = () => {
                 className="p-4 rounded-xl bg-[#2D2C2C] hover:bg-[#3a3939] text-white items-center justify-center"
                 onClick={() => handleViewChange("view2")}
               >
-                Get started
+                {translations.welcome.getStarted || "-"}
               </button>
             </div>
           </div>
@@ -342,6 +352,9 @@ const Welcome: React.FC = () => {
         <div className={`flex items-center justify-center mt-[5em]`}>
           <div className="sm:w-[32em] mx-10 rounded-3xl">
             <h3 className="pt-4 text-center">{languagetitle[languageIndex]}</h3>
+            <p className="text-center sm:mx-10">
+            {translations.welcome.languageText || "-"}
+            </p>
             <div className="relative pt-2">
               <select
                 value={selectedLanguage}
@@ -397,10 +410,10 @@ const Welcome: React.FC = () => {
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] mx-10 rounded-3xl">
             <h3 className="pt-4 text-center">
-            {translations.welcome.themeTitle || "-"}
+              {translations.welcome.themeTitle || "-"}
             </h3>
             <p className="pt-2 text-center sm:mx-10">
-            {translations.welcome.themeText || "-"}
+              {translations.welcome.themeText || "-"}
             </p>
             <div className="w-full sm:order-2 order-1">
               <div className="grid py-2 mt-10 w-full h-full grid-cols-3 gap-8 cursor-pointer rounded-md items-center justify-center">
@@ -419,7 +432,6 @@ const Welcome: React.FC = () => {
                     </svg>
                   </div>
                   <p className="text-center py-2">
-                    {" "}
                     {translations.welcome.light || "-"}
                   </p>
                 </button>
@@ -438,7 +450,6 @@ const Welcome: React.FC = () => {
                     </svg>
                   </div>
                   <p className="text-center py-2">
-                    {" "}
                     {translations.welcome.dark || "-"}
                   </p>
                 </button>
@@ -493,11 +504,11 @@ const Welcome: React.FC = () => {
       {currentView === "view4" && (
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] mx-10 rounded-3xl">
-            <h3 className="pt-4 text-center">✍️ Craft Your Typography</h3>
+            <h3 className="pt-4 text-center">
+              {translations.welcome.typographyTitle || "-"}
+            </h3>
             <p className="pt-2 text-center sm:mx-10">
-              Personalize your note-taking experience with fonts that reflect
-              your style. You can always revisit and update this choice in the
-              settings later.
+              {translations.welcome.typographyText || "-"}
             </p>
             <div className="relative pt-2">
               <div className="grid grid-cols-1">
@@ -539,11 +550,11 @@ const Welcome: React.FC = () => {
       {currentView === "view5" && (
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] mx-10 rounded-3xl">
-            <h3 className="pt-4 text-center">🚚 Import your notes</h3>
+            <h3 className="pt-4 text-center">
+              {translations.welcome.importTitle || "-"}
+            </h3>
             <p className="pt-2 text-center sm:mx-10">
-              Effortlessly bring in your notes taken on Beaver Notes. Don't use
-              the desktop app or not ready to import now? No worries — you can
-              import them in settings anytime.
+              {translations.welcome.importText || "-"}
             </p>
             <div className="mb-2 w-full p-4 text-xl rounded-xl items-center px-10 py-14">
               <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
@@ -579,7 +590,8 @@ const Welcome: React.FC = () => {
                   className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view6")}
                 >
-                  Skip <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                                    {translations.welcome.skip || "-"}
+                   <ArrowRightLineIcon className="inline-block w-5 h-5" />
                 </button>
               </div>
             </div>
