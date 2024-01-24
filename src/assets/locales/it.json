@@ -29,5 +29,14 @@
       "exportmessage": "Le note sono state esportate nella cartella",
       "invaliddata": "Dati non validi",
       "syncreminder": "Nascondi promemoria di sincronizzazione"
+    },
+    "welcome": {
+      "next": "Avanti",
+      "back": "Indietro",
+      "themeTitle": "🪄 Personalizza Beaver",
+      "themeText": "Scegli l'aspetto che si adatta meglio al tuo stile. Puoi sempre modificare questa opzione nelle impostazioni.",
+      "light": "Chiaro",
+      "dark": "Scuro",
+      "system": "Sistema"      
     }
   }

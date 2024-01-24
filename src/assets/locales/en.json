@@ -30,5 +30,14 @@
       "importsuccess": "Data imported successfully",
       "invaliddata": "Invalid data",
       "syncreminder": "Hide sync reminder"
+    },
+    "welcome": {
+      "next": "Next",
+      "back": "Back",
+      "themeTitle": "🪄 Set the Mood",
+      "themeText": "Choose the appearance that best suits your style. Rest assured, you can always revisit your preferences and make adjustments in the settings later on.",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
     }
   }
