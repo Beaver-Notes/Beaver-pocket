@@ -33,10 +33,23 @@
     "welcome": {
       "next": "Avanti",
       "back": "Indietro",
-      "themeTitle": "🪄 Personalizza Beaver",
-      "themeText": "Scegli l'aspetto che si adatta meglio al tuo stile. Puoi sempre modificare questa opzione nelle impostazioni.",
+      "welcomeTitle": "🎉 Benvenuto in Beaver Pocket",
+      "welcomeParagraph": "Tutte le incredibili funzionalità introdotte con Beaver Notes racchiuse nella perfetta app per prendere appunti.",
+      "welcomeWarning": "Beaver Pocket è attualmente nella sua fase alpha, il che potrebbe causare problemi. Si consiglia pertanto di eseguire regolarmente il backup dei dati. Si prega di essere consapevoli che la perdita di dati è una possibilità.",
+      "languageText": "Scegli la lingua che preferisci. Puoi sempre tornare indietro e cambiare questa scelta nelle impostazioni in seguito.",
+      "getStarted": "Inizia",
+      "themeTitle": "🪄 Imposta l'Atmosfera",
+      "themeText": "Scegli l'aspetto che si adatta meglio al tuo stile. Stai tranquillo, puoi sempre ripensarci e apportare modifiche nelle impostazioni in seguito.",
+      "typographyTitle": "✍️ Personalizza la tua Tipografia",
+      "typographyText": "Personalizza la tua esperienza con caratteri che riflettono il tuo stile. Puoi sempre cambiare idea e modificare questa scelta nelle impostazioni in seguito.",
+      "importTitle": "🚚 Importa i tuoi appunti",
+      "importText": "Porta senza sforzo i tuoi appunti presi su Beaver Notes. Se non usi l'app desktop o non sei pronto a importare i tuoi appunti ora? Nessun problema, puoi importarli in qualsiasi momento nelle impostazioni.",
+      "start": "Inizia ora",
+      "startTitle": "🎊 Pronto per Cominciare",
+      "skip": "Salta",
       "light": "Chiaro",
       "dark": "Scuro",
-      "system": "Sistema"      
-    }
+      "system": "Sistema",
+      "import": "Importa"
+      }
   }

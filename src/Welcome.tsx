@@ -76,10 +76,13 @@ const Welcome: React.FC = () => {
       typographyText: "welcome.typographyText",
       importTitle: "welcome.importTitle",
       importText: "welcome.importText",
+      start: "welcome.start",
+      startTitle: "welcome.startTitle",
       skip: "welcome.skip",
       dark: "welcome.dark",
       light: "welcome.light",
       system: "welcome.system",
+      import: "welcome.import",
     },
   });
 
@@ -353,7 +356,7 @@ const Welcome: React.FC = () => {
           <div className="sm:w-[32em] mx-10 rounded-3xl">
             <h3 className="pt-4 text-center">{languagetitle[languageIndex]}</h3>
             <p className="text-center sm:mx-10">
-            {translations.welcome.languageText || "-"}
+              {translations.welcome.languageText || "-"}
             </p>
             <div className="relative pt-2">
               <select
@@ -563,7 +566,7 @@ const Welcome: React.FC = () => {
               <div className="w-auto px-10 mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
                 <label htmlFor="file">
                   <p className="text-center text-gray-800 dark:text-gray-300">
-                    click to Import
+                  {translations.welcome.import || "-"}
                   </p>
                 </label>
                 <input
@@ -590,8 +593,8 @@ const Welcome: React.FC = () => {
                   className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view6")}
                 >
-                                    {translations.welcome.skip || "-"}
-                   <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                  {translations.welcome.skip || "-"}
+                  <ArrowRightLineIcon className="inline-block w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -600,20 +603,11 @@ const Welcome: React.FC = () => {
       )}
 
       {currentView === "view6" && (
-        <div className="flex items-center justify-center mt-[5em]">
-          <div className="sm:w-[32em]mx-10 rounded-3xl">
-            <h3 className="pt-4 text-center">🗞️ What's new</h3>
-            <ul className="list-disc py-4 sm:mx-10">
-              <li>🔒 Lock your notes with your face or finger</li>
-              <li className="py-2">⌨️ Use Keyboard shortcuts to navigate</li>
-              <li>📄 Export, Share and Import your notes</li>
-              <li className="py-2">
-                🧮 List your notes alphabetically, by creation or update date
-              </li>
-              <li>🔎 Browse through notes and labels</li>
-              <li className="py-2">✍️ Choose the fonts you like best</li>
-              <li>🗑️ Fixed issues in deleting notes</li>
-            </ul>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center sm:w-[32em] mx-10 rounded-3xl">
+            <h3 className="pt-4 text-center">
+              {translations.welcome.startTitle || "-"}
+            </h3>
             <div className="relative pt-2">
               <div className="flex items-center justify-center fixed bottom-6 inset-x-2">
                 <button
@@ -627,7 +621,7 @@ const Welcome: React.FC = () => {
                   className="p-4 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => history("/")}
                 >
-                  Start Note-Taking
+                  {translations.welcome.start || "-"}
                 </button>
               </div>
             </div>
