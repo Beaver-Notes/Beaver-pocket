@@ -45,9 +45,12 @@
     "typographyText": " Personalize your note-taking experience with fonts that reflect your style. You can always revisit and update this choice in the settings later.",
     "importTitle": "🚚 Import your notes",
     "importText": "Effortlessly bring in your notes taken on Beaver Notes. Don't use the desktop app or not ready to import now? No worries — you can import them in settings anytime.",
+    "start": "Start Note-Taking",
+    "startTitle": "🎊 Happy Note-Taking",
     "skip": "Skip",
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "import": "Import"
   }
 }

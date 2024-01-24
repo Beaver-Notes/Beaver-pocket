@@ -277,7 +277,8 @@ const Settings: React.FC = () => {
       // Check if password protection is enabled
       if (withPassword) {
         // Prompt the user for a password
-        const passwordPrompt = translations.settings.Inputpassword || "Enter password for export:";
+        const passwordPrompt =
+          translations.settings.Inputpassword || "Enter password for export:";
         const password = prompt(passwordPrompt);
 
         // Check if the user provided a password
@@ -344,21 +345,23 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportData = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-  
+
     if (!file) {
       return;
     }
-  
+
     const reader = new FileReader();
-  
+
     reader.onload = async (e) => {
       try {
         const importedData = e.target?.result as string;
-  
+
         let jsonData: string;
-  
+
         try {
           // Try parsing the data as JSON
           JSON.parse(importedData);
@@ -367,35 +370,37 @@ const Settings: React.FC = () => {
         } catch (jsonError) {
           // Parsing as JSON failed, assume it's encrypted and ask for password
           const password = prompt("Enter password for import:");
-  
+
           // Check if the user provided a password
           if (password !== null) {
             // Decrypt the data using CryptoJS and the user's password
-            jsonData = CryptoJS.AES.decrypt(importedData, password).toString(CryptoJS.enc.Utf8);
+            jsonData = CryptoJS.AES.decrypt(importedData, password).toString(
+              CryptoJS.enc.Utf8
+            );
           } else {
             // User canceled password input, abort import
             console.log("Import canceled.");
             return;
           }
         }
-  
+
         const parsedData = JSON.parse(jsonData);
-  
+
         if (parsedData && parsedData.data && parsedData.data.notes) {
           const importedNotes: Record<string, Note> = parsedData.data.notes;
-  
+
           // Load existing notes from data.json
           const existingNotes = await loadNotes();
-  
+
           // Merge the imported notes with the existing notes
           const mergedNotes: Record<string, Note> = {
             ...existingNotes,
             ...importedNotes,
           };
-  
+
           // Update the notesState with the merged notes
           setNotesState(mergedNotes);
-  
+
           // Update the filteredNotes based on the search query
           const filtered = Object.values(mergedNotes).filter((note) => {
             const titleMatch = note.title
@@ -406,16 +411,16 @@ const Settings: React.FC = () => {
               .includes(searchQuery.toLowerCase());
             return titleMatch || contentMatch;
           });
-  
+
           setFilteredNotes(
             Object.fromEntries(filtered.map((note) => [note.id, note]))
           );
-  
+
           Object.values(importedNotes).forEach((note) => {
             note.createdAt = new Date(note.createdAt);
             note.updatedAt = new Date(note.updatedAt);
           });
-  
+
           // Save the merged notes to the data.json file
           await Filesystem.writeFile({
             path: STORAGE_PATH,
@@ -423,7 +428,7 @@ const Settings: React.FC = () => {
             directory: Directory.Documents,
             encoding: FilesystemEncoding.UTF8,
           });
-  
+
           alert("Data imported successfully!");
         } else {
           alert("Invalid data format.");
@@ -433,10 +438,10 @@ const Settings: React.FC = () => {
         alert("Error while importing data.");
       }
     };
-  
+
     reader.readAsText(file);
-  };  
-  
+  };
+
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
   const [title, setTitle] = useState(
@@ -609,7 +614,7 @@ const Settings: React.FC = () => {
                         </svg>
                       </div>
                       <p className="text-center py-2">
-                      {translations.settings.dark || "-"}
+                        {translations.settings.dark || "-"}
                       </p>
                     </button>
                     <button
@@ -711,7 +716,7 @@ const Settings: React.FC = () => {
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
                       <FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
                     </div>
-                    <div className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
+                    <div className="w-full mt-11 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
                       <label
                         htmlFor="file"
                         className="w-full flex items-center justify-center"
@@ -734,34 +739,36 @@ const Settings: React.FC = () => {
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
                       <FileUploadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
                     </div>
+                    <div className="flex items-center pt-2">
+                      <input
+                        type="checkbox"
+                        checked={withPassword}
+                        onChange={() => setWithPassword(!withPassword)}
+                        className="mr-2 mb-"
+                      />
+                      <span>{translations.settings.encryptwpasswd || "-"}</span>
+                    </div>
+
                     <button
                       className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]"
                       onClick={exportData}
                     >
                       {translations.settings.exportdata || "-"}
                     </button>
-                    <div className="relative pt-2">
-                      <input
-                        type="checkbox"
-                        checked={withPassword}
-                        onChange={() => setWithPassword(!withPassword)}
-                      />
-                      {translations.settings.encryptwpasswd || "-"}
-                    </div>
                   </div>
                 </div>
                 <div>
                   <div className="flex gap-4 py-4">
                     <Link
                       to="/about"
-                      className="w-auto p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
                       <InformationLineIcon className="w-6 h-6 mr-2" />
                       {translations.settings.About || "-"}
                     </Link>
                     <Link
                       to="/shortcuts"
-                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
                       <KeyboardLineIcon className="w-6 h-6 mr-2" />
                       {translations.settings.Shortcuts || "-"}
