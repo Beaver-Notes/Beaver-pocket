@@ -49,7 +49,16 @@
       "skip": "Salta",
       "light": "Chiaro",
       "dark": "Scuro",
-      "system": "Sistema",
-      "import": "Importa"
-      }
+      "system": "Sistema"      
+    },
+    "home": {
+      "bookmarked": "Contrassegnate",
+      "all": "Tutte",
+      "messagePt1": "Questa sezione è vuota. Clicca",
+      "messagePt2": "per aggiungere una nuova nota o clicca",
+      "messagePt3": "per importare i tuoi dati.",
+      "unlocktoedit": "Sblocca per modificare",
+      "noContent": "Nessun contenuto...",
+      "title": "Nuova Nota"
+    }
   }
