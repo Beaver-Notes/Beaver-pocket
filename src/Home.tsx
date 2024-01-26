@@ -18,9 +18,11 @@ import {
 import JSZip from "jszip";
 import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
+import 'dayjs/locale/it';
 import relativeTime from "dayjs/plugin/relativeTime";
 import SearchBar from "./components/Search";
 import * as CryptoJS from "crypto-js";
+import { loadNotes, useSaveNote, useDeleteNote, useToggleBookmark } from "./store/notes"
 
 // Import Remix icons
 import AddFillIcon from "remixicon-react/AddFillIcon";
@@ -33,94 +35,20 @@ import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 
-async function createNotesDirectory() {
-  const directoryPath = "notes";
-
-  try {
-    await Filesystem.mkdir({
-      path: directoryPath,
-      directory: Directory.Documents,
-      recursive: true,
-    });
-  } catch (error: any) {
-    console.error("Error creating the directory:", error);
-  }
-}
-
 const App: React.FC = () => {
-  const loadNotes = async () => {
-    try {
-      await createNotesDirectory(); // Create the directory before reading/writing
-
-      const fileExists = await Filesystem.stat({
-        path: STORAGE_PATH,
-        directory: Directory.Documents,
-      });
-
-      if (fileExists) {
-        const data = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: Directory.Documents,
-          encoding: FilesystemEncoding.UTF8,
-        });
-
-        if (data.data) {
-          const parsedData = JSON.parse(data.data as string);
-
-          if (parsedData?.data?.notes) {
-            return parsedData.data.notes;
-          } else {
-            console.log(
-              "The file is missing the 'notes' data. Returning an empty object."
-            );
-            return {};
-          }
-        } else {
-          console.log("The file is empty. Returning an empty object.");
-          return {};
-        }
-      } else {
-        console.log("The file doesn't exist. Returning an empty object.");
-        return {};
-      }
-    } catch (error) {
-      console.error("Error loading notes:", error);
-      return {};
-    }
-  };
+  const { saveNote } = useSaveNote();
+  const { deleteNote } = useDeleteNote();
 
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event propagation
-    const isConfirmed = window.confirm(
-      "Are you sure you want to delete this note?"
-    );
+    const isConfirmed = window.confirm("Are you sure you want to delete this note?");
 
     if (isConfirmed) {
-      try {
-        const notes = await loadNotes();
-
-        if (notes[noteId]) {
-          delete notes[noteId];
-
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes } }),
-            directory: Directory.Documents,
-            encoding: FilesystemEncoding.UTF8,
-          });
-
-          setNotesState(notes);
-          window.location.reload();        
-        } else {
-          console.log(`Note with id ${noteId} not found.`);
-        }
-      } catch (error) {
-        console.error("Error deleting note:", error);
-        alert("Error deleting note: " + (error as any).message);
-      }
+      // Correct usage: Call deleteNote with the noteId parameter
+      await deleteNote(noteId);
     }
   };
-
+  
   const [themeMode, setThemeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
@@ -149,52 +77,7 @@ const App: React.FC = () => {
 
   const STORAGE_PATH = "notes/data.json";
 
-  const saveNote = React.useCallback(
-    async (note: unknown) => {
-      try {
-        const notes = await loadNotes();
-
-        if (typeof note === "object" && note !== null) {
-          const typedNote = note as Note;
-
-          // Use getTime() to get the Unix timestamp in milliseconds
-          const createdAtTimestamp =
-            typedNote.createdAt instanceof Date
-              ? typedNote.createdAt.getTime()
-              : Date.now();
-
-          const updatedAtTimestamp =
-            typedNote.updatedAt instanceof Date
-              ? typedNote.updatedAt.getTime()
-              : Date.now();
-
-          notes[typedNote.id] = {
-            ...typedNote,
-            createdAt: createdAtTimestamp,
-            updatedAt: updatedAtTimestamp,
-          };
-
-          const data = {
-            data: {
-              notes,
-            },
-          };
-
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify(data),
-            directory: Directory.Documents,
-            encoding: FilesystemEncoding.UTF8,
-          });
-        } else {
-          console.error("Invalid note object:", note);
-        }
-      } catch (error) {
-        console.error("Error saving note:", error);
-      }
-    },
-    [loadNotes]
-  );
+  const { toggleBookmark } = useToggleBookmark();
 
   const handleToggleBookmark = async (
     noteId: string,
@@ -203,25 +86,10 @@ const App: React.FC = () => {
     event.stopPropagation(); // Prevent event propagation
 
     try {
-      const notes = await loadNotes();
-      const updatedNote = { ...notes[noteId] };
-
-      // Toggle the 'isBookmarked' property
-      updatedNote.isBookmarked = !updatedNote.isBookmarked;
-
-      // Update the note in the dictionary
-      notes[noteId] = updatedNote;
-
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      setNotesState(notes); // Update the state
+      const updatedNotes = await toggleBookmark(noteId);
+      setNotesState(updatedNotes);
     } catch (error) {
-      console.error("Error toggling bookmark:", error);
+      console.error("Error handling toggle bookmark:", error);
       alert("Error toggling bookmark: " + (error as any).message);
     }
   };
@@ -257,7 +125,6 @@ const App: React.FC = () => {
   };
 
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
-
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
@@ -577,7 +444,7 @@ const App: React.FC = () => {
   const handleCreateNewNote = () => {
     const newNote = {
       id: uuid(),
-      title: "New Note",
+      title: translations.home.title || "New Note",      
       content: { type: "doc", content: [] },
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -622,7 +489,7 @@ const App: React.FC = () => {
 
   function extractParagraphTextFromContent(content: JSONContent): string {
     if (!content || !Array.isArray(content.content)) {
-      return "No content...";
+      return translations.home.noContent;
     }
 
     // Check if the content consists of a single empty paragraph
@@ -648,7 +515,7 @@ const App: React.FC = () => {
       })
       .join(" "); // Join paragraph text with spaces
 
-    return paragraphText || "No content"; // If no paragraph text, return "No content"
+    return paragraphText || translations.home.noContent;
   }
 
   function truncateContentPreview(
@@ -666,9 +533,7 @@ const App: React.FC = () => {
       text = extractParagraphTextFromContent(contentWithoutTitle);
     }
 
-    if (text.trim() === "") {
-      return "No content"; // Show a placeholder for No content
-    } else if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
+    if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
       return text;
     } else {
       return text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
@@ -724,11 +589,11 @@ const App: React.FC = () => {
       } else {
         // Biometrics not available, use sharedKey
         let sharedKey = localStorage.getItem("sharedKey");
-      
+
         if (!sharedKey) {
           // If no shared key is set, prompt the user to set it up
           sharedKey = prompt("Set up a password to lock/unlock your notes:");
-      
+
           if (!sharedKey) {
             // If the user cancels or enters an empty password, do not proceed
             alert(
@@ -736,30 +601,32 @@ const App: React.FC = () => {
             );
             return;
           }
-      
+
           // Save the shared key in local storage after hashing
           sharedKey = CryptoJS.SHA256(sharedKey).toString();
           localStorage.setItem("sharedKey", sharedKey);
         }
-      
+
         // Prompt for the password
-        const enteredKey = prompt("Enter the password to lock/unlock the note:");
-      
+        const enteredKey = prompt(
+          "Enter the password to lock/unlock the note:"
+        );
+
         // Check if the user canceled the prompt
         if (enteredKey === null) {
           alert("Password input canceled. Note remains in its current state.");
           return;
         }
-      
+
         // Hash the entered password for comparison
         const hashedEnteredKey = CryptoJS.SHA256(enteredKey).toString();
-      
+
         if (hashedEnteredKey !== sharedKey) {
           // Incorrect password, do not proceed
           alert("Incorrect password. Note remains in its current state.");
           return;
         }
-      }      
+      }
 
       // Toggle the 'isLocked' property
       updatedNote.isLocked = !updatedNote.isLocked;
@@ -801,11 +668,11 @@ const App: React.FC = () => {
       if (note.isLocked) {
         // Check if biometrics is available
         const biometricResult = await NativeBiometric.isAvailable();
-  
+
         if (biometricResult.isAvailable) {
           const isFaceID =
             biometricResult.biometryType === BiometryType.FACE_ID;
-  
+
           // Show biometric prompt for authentication
           try {
             await NativeBiometric.verifyIdentity({
@@ -827,16 +694,16 @@ const App: React.FC = () => {
           const userSharedKey = prompt(
             "Enter the shared key to unlock the note:"
           );
-  
+
           // Check if the user canceled the prompt
           if (userSharedKey === null) {
             alert("Shared key input canceled. Note remains locked.");
             return;
           }
-  
+
           // Hash the entered password for comparison
           const hashedUserSharedKey = CryptoJS.SHA256(userSharedKey).toString();
-  
+
           // Check if the entered key matches the stored key
           const storedSharedKey = localStorage.getItem("sharedKey");
           if (hashedUserSharedKey !== storedSharedKey) {
@@ -845,15 +712,48 @@ const App: React.FC = () => {
           }
         }
       }
-  
+
       setActiveNoteId(note.id);
     } catch (error) {
       console.error("Error handling click on note:", error);
       alert("Error handling click on note: " + (error as any).message);
     }
-  };  
+  };
 
   dayjs.extend(relativeTime);
+
+  // Translations
+  const [translations, setTranslations] = useState({
+    home: {
+      bookmarked: "home.bookmarked",
+      all: "home.all",
+      messagePt1: "home.messagePt1",
+      messagePt2: "home.messagePt2",
+      messagePt3: "home.messagePt3",
+      unlocktoedit: "home.unlocktoedit",
+      noContent: "home.noContent",
+      title: "home.title",
+    },
+  });
+
+  useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `./assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+        dayjs.locale(selectedLanguage);
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []); // Empty dependency array means this effect runs once on mount
 
   return (
     <div>
@@ -882,18 +782,22 @@ const App: React.FC = () => {
                 {notesList.filter(
                   (note) => note.isBookmarked && !note.isArchived
                 ).length > 0 && (
-                  <h2 className="text-3xl font-bold">Bookmarked</h2>
+                  <h2 className="text-3xl font-bold">
+                    {translations.home.bookmarked || "-"}
+                  </h2>
                 )}
-                <Bookmarked 
-                notesList={notesList}
-                activeNoteId={activeNoteId}
-                handleToggleBookmark={handleToggleBookmark}
-                handleToggleLock={handleToggleLock}
-                handleDeleteNote={handleDeleteNote}
-                handleClickNote={handleClickNote}
-                truncateContentPreview={truncateContentPreview}
+                <Bookmarked
+                  notesList={notesList}
+                  activeNoteId={activeNoteId}
+                  handleToggleBookmark={handleToggleBookmark}
+                  handleToggleLock={handleToggleLock}
+                  handleDeleteNote={handleDeleteNote}
+                  handleClickNote={handleClickNote}
+                  truncateContentPreview={truncateContentPreview}
                 />
-                <h2 className="text-3xl font-bold">All Notes</h2>
+                <h2 className="text-3xl font-bold">
+                  {translations.home.all || "-"}
+                </h2>
                 {notesList.length === 0 && (
                   <div className="mx-auto">
                     <svg
@@ -1046,11 +950,11 @@ const App: React.FC = () => {
                       />
                     </svg>
                     <p className="py-2 text-lg text-center">
-                      No notes available. Click{" "}
-                      <AddFillIcon className="inline-block w-5 h-5" /> to add a
-                      new note or click{" "}
-                      <Download2LineIcon className="inline-block w-5 h-5" /> to
-                      import your data.
+                      {translations.home.messagePt1 || "-"}
+                      <AddFillIcon className="inline-block w-5 h-5" />{" "}
+                      {translations.home.messagePt2 || "-"}
+                      <Download2LineIcon className="inline-block w-5 h-5" />{" "}
+                      {translations.home.messagePt3 || "-"}
                     </p>
                   </div>
                 )}
@@ -1098,7 +1002,7 @@ const App: React.FC = () => {
                                   <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
                                 </button>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                  Unlock to edit
+                                {translations.home.unlocktoedit || "-"}
                                 </p>
                               </div>
                             ) : (
