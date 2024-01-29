@@ -22,8 +22,8 @@ import Mathblock from "./lib/tiptap/math-block/Index";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
 import HeadingTree from "./lib/HeadingTree";
+import { isPlatform } from '@ionic/react';
 // import Paper from "./lib/tiptap/paper/Paper"
-
 
 // Icons
 
@@ -291,6 +291,9 @@ function NoteEditor({
     };
   }, [handleOutsideClick]);
 
+
+  const addPaddingTop = isPlatform('ios') ? 'pt-5' : '';
+
   return (
     <div
       className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white lg:px-60 text-base "
@@ -451,39 +454,39 @@ function NoteEditor({
           <HeadingTree onHeadingClick={handleHeadingClick} />
         </div>
       )}
-      <div className="sm:hidden bg-white dark:bg-[#232222] pr-4 pl-4 pt-5 pb-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full bg-transparent z-50 no-scrollbar flex justify-between">
-  <button
-    className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
-    onClick={onCloseEditor}
-  >
-    <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
-  </button>
-  <div className="flex">
-    <button
-      className="p-2  mt-4 rounded-md text-white bg-transparent cursor-pointer"
-      onClick={() => {
-        setFocusMode((prevFocusMode) => !prevFocusMode);
-        setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
-      }}
-    >
-      <Focus3LineIcon
-        className={`border-none ${
-          focusMode ? "text-amber-400" : "text-neutral-800"
-        }  dark:text-white text-xl w-7 h-7`}
-      />
-    </button>
-    <button
-      className="p-2 align-end mt-4 rounded-md text-white bg-transparent cursor-pointer"
-      onClick={toggleHeadingTree}
-    >
-      <Search2LineIcon
-        className={`border-none ${
-          focusMode ? "hidden" : "block"
-        }  dark:text-white text-neutral-800 text-xl w-7 h-7`}
-      />
-    </button>
-  </div>
-</div>
+      <div className={`sm:hidden bg-white dark:bg-[#232222] pr-4 pl-4 fixed top-0 inset-x-0 overflow-auto h-auto w-full bg-transparent z-50 no-scrollbar flex justify-between ${addPaddingTop}`}>
+        <button
+          className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
+          onClick={onCloseEditor}
+        >
+          <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+        </button>
+        <div className="flex">
+          <button
+            className="p-2  mt-4 rounded-md text-white bg-transparent cursor-pointer"
+            onClick={() => {
+              setFocusMode((prevFocusMode) => !prevFocusMode);
+              setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
+            }}
+          >
+            <Focus3LineIcon
+              className={`border-none ${
+                focusMode ? "text-amber-400" : "text-neutral-800"
+              }  dark:text-white text-xl w-7 h-7`}
+            />
+          </button>
+          <button
+            className="p-2 align-end mt-4 rounded-md text-white bg-transparent cursor-pointer"
+            onClick={toggleHeadingTree}
+          >
+            <Search2LineIcon
+              className={`border-none ${
+                focusMode ? "hidden" : "block"
+              }  dark:text-white text-neutral-800 text-xl w-7 h-7`}
+            />
+          </button>
+        </div>
+      </div>
 
       <div
         contentEditable

@@ -186,3 +186,34 @@ export const useToggleBookmark = () => {
 
   return { toggleBookmark };
 };
+
+// Archive 
+export const useToggleArchive = () => {
+  const toggleArchive = async (noteId: string) => {
+    try {
+      const notes = await loadNotes();
+      const updatedNote = { ...notes[noteId] };
+
+      // Toggle the 'isArchived' property
+      updatedNote.isArchived = !updatedNote.isArchived;
+
+      // Update the note in the dictionary
+      notes[noteId] = updatedNote;
+
+      await Filesystem.writeFile({
+        path: STORAGE_PATH,
+        data: JSON.stringify({ data: { notes } }),
+        directory: Directory.Documents,
+        encoding: FilesystemEncoding.UTF8,
+      });
+
+      return notes; // Return the updated notes
+    } catch (error) {
+      console.error("Error toggling archive:", error);
+      throw error; // Throw the error for the caller to handle
+    }
+  };
+
+  return { toggleArchive };
+};
+
