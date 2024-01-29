@@ -47,13 +47,9 @@ ul {
   @apply px-6 list-disc
 }
 
-.ProseMirror pre,
-.ProseMirror .inline-code {
-  @apply bg-black bg-opacity-5 rounded-lg dark:bg-gray-600 dark:bg-opacity-30 text-gray-700 dark:text-gray-200 pt-6 !important;
-  font-family: 'Helvetica', 'Arial', sans-serif;
-  tab-size: 2;
-  font-variant-ligatures: normal;
-}
+code {
+  @apply bg-neutral-100 dark:bg-neutral-700 rounded-xl p-1 px-1;
+ }
 
 .ProseMirror a {
   @apply text-amber-400 dark:text-amber-400 !important;

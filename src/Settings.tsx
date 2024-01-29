@@ -22,6 +22,7 @@ import InformationLineIcon from "remixicon-react/InformationLineIcon";
 import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
 import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
 
+
 async function createNotesDirectory() {
   const directoryPath = "notes";
 

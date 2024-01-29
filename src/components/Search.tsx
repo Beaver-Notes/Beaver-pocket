@@ -3,6 +3,7 @@ import ArrowUpDownLineIcon from "remixicon-react/ArrowUpDownLineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
+import { useEffect, useState } from "react";
 
 interface SearchBarProps {
   searchQuery: string;
@@ -25,6 +26,26 @@ const SearchBar: React.FC<SearchBarProps> = ({
   exportData,
   handleImportData,
 }) => {
+  const [translations, setTranslations] = useState({
+    search: {
+      searchNotes: "search.searchNotes",
+      selectlabel: "search.selectlabel",
+      lastUpdated: "search.lastUpdated",
+      creationDate: "search.creationDate",
+      alphabetical: "search.alphabetical",
+    },
+  });
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+      const translationModule = await import(`../assets/locales/${selectedLanguage}.json`);
+      setTranslations({ ...translations, ...translationModule.default });
+    };
+
+    loadTranslations();
+  }, []);
+
   return (
     <div className="bg-transparent px-6">
       <div className="flex justify-center">
@@ -35,7 +56,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <input
             className="text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white w-full"
             type="text"
-            placeholder="Search notes"
+            placeholder={translations.search.searchNotes}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -47,7 +68,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               onChange={(e) => handleLabelFilterChange(e.target.value)}
               className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
             >
-              <option value="">Select Label</option>
+              <option value="">{translations.search.selectlabel}</option>
               {uniqueLabels.map((label) => (
                 <option key={label} value={label}>
                   {label}
