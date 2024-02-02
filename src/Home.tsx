@@ -57,8 +57,8 @@ const App: React.FC = () => {
       const updatedNotes = await toggleBookmark(noteId);
       setNotesState(updatedNotes);
     } catch (error) {
-      console.error("Error handling toggle bookmark:", error);
-      alert("Error toggling bookmark: " + (error as any).message);
+      console.error(translations.home.bookmarkError, error);
+      alert(translations.home.bookmarkError + (error as any).message);
     }
   };
   const handleToggleArchive = async (
@@ -674,6 +674,8 @@ const App: React.FC = () => {
       biometricSuccess: "home.biometricSuccess",
       subtitle2: "home.subtitle2",
       biometricUnlock: "home.biometricUnlock",
+      bookmarkError: "home.bookmarkError",
+      archiverError: "home.archiverError",
     },
   });
 
