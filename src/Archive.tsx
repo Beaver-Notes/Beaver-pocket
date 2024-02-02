@@ -35,7 +35,6 @@ import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 import dayjs from "dayjs";
 
 const Archive: React.FC = () => {
-
   const { saveNote } = useSaveNote();
   const { deleteNote } = useDeleteNote();
   const { toggleArchive } = useToggleArchive();

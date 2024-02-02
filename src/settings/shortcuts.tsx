@@ -12,6 +12,7 @@ import {
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
+import dayjs from "dayjs";
 
 async function createNotesDirectory() {
   const directoryPath = "notes";
@@ -405,41 +406,84 @@ const Shortcuts: React.FC = () => {
     saveNote(newNote);
   };
 
+    // Translations
+    const [translations, setTranslations] = useState({
+      settings: {
+        title: "settings.title",
+      },
+      shortcuts: {
+        Createnewnote: "shortcuts.Createnewnote",
+        Toggledarktheme: "shortcuts.Toggledarktheme",
+        Tonotes: "shortcuts.Tonotes",
+        Toarchivednotes: "shortcuts.ToarchivedNotes",
+        Tosettings: "shortcuts.Tosettings",
+        Bold: "shortcuts.Bold",
+        Italic: "shortcuts.Italic",
+        Underline: "shortcuts.Underline",
+        Link: "shortcuts.Link",
+        Strikethrough: "shortcuts.Strikethrough",
+        Highlight: "shortcuts.Highlight",
+        Inlinecode: "shortcuts.InlineCode",
+        Headings: "shortcuts.Headings",
+        Orderedlist: "shortcuts.OrderedList",
+        Bulletlist: "shortcuts.Bulletlist",
+        Blockquote: "shortcuts.Blockquote",
+        Blockcode: "shortcuts.BlockCode",
+      },
+    });
+  
+    useEffect(() => {
+      // Load translations
+      const loadTranslations = async () => {
+        const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+        try {
+          const translationModule = await import(
+            `../assets/locales/${selectedLanguage}.json`
+          );
+  
+          setTranslations({ ...translations, ...translationModule.default });
+          dayjs.locale(selectedLanguage);
+        } catch (error) {
+          console.error("Error loading translations:", error);
+        }
+      };
+  
+      loadTranslations();
+    }, []);  
+
   const [isArchiveVisible, setIsArchiveVisible] = useState(false);
 
   const shortcuts = [
     {
       title: "General shortcuts",
       items: [
-        { name: "Create new note", keys: ["Ctrl", "N"] },
-        { name: "Toggle command prompt", keys: ["Ctrl", "P"] },
-        { name: "Toggle dark theme", keys: ["Ctrl", "Shift", "L"] },
+        { name: translations.shortcuts.Createnewnote, keys: ["Ctrl", "N"] },
+        { name: translations.shortcuts.Toggledarktheme, keys: ["Ctrl", "Shift", "L"] },
       ],
     },
     {
       title: "Navigates shortcuts",
       items: [
-        { name: "To edited note", keys: ["Ctrl", "Shift", "W"] },
-        { name: "To notes", keys: ["Ctrl", "Shift", "N"] },
-        { name: "To archived notes", keys: ["Ctrl", "Shift", "A"] },
-        { name: "To settings", keys: ["Ctrl", ","] },
+        { name: translations.shortcuts.Tonotes, keys: ["Ctrl", "Shift", "N"] },
+        { name: translations.shortcuts.Toarchivednotes, keys: ["Ctrl", "Shift", "A"] },
+        { name: translations.shortcuts.Tosettings, keys: ["Ctrl", ","] },
       ],
     },
     {
       title: "Editor shortcuts",
       items: [
-        { name: "Bold", keys: ["Ctrl", "B"] },
-        { name: "Italic", keys: ["Ctrl", "I"] },
-        { name: "Underline", keys: ["Ctrl", "U"] },
-        { name: "Link", keys: ["Ctrl", "K"] },
-        { name: "Strikethrough", keys: ["Ctrl", "Shift", "X"] },
-        { name: "Highlight", keys: ["Ctrl", "Shift", "E"] },
-        { name: "Inline code", keys: ["Ctrl", "E"] },
-        { name: "Headings (1-6)", keys: ["Ctrl", "Alt", "(1-6)"] },
-        { name: "Ordered list", keys: ["Ctrl", "Shift", "7"] },
-        { name: "Bullet list", keys: ["Ctrl", "Shift", "8"] },
-        { name: "Blockquote", keys: ["Ctrl", "Shift", "B"] },
-        { name: "Block code", keys: ["Ctrl", "Alt", "C"] },
+        { name: translations.shortcuts.Bold, keys: ["Ctrl", "B"] },
+        { name: translations.shortcuts.Italic, keys: ["Ctrl", "I"] },
+        { name: translations.shortcuts.Underline, keys: ["Ctrl", "U"] },
+        { name: translations.shortcuts.Link, keys: ["Ctrl", "K"] },
+        { name: translations.shortcuts.Strikethrough, keys: ["Ctrl", "Shift", "X"] },
+        { name: translations.shortcuts.Highlight, keys: ["Ctrl", "Shift", "E"] },
+        { name: translations.shortcuts.Inlinecode, keys: ["Ctrl", "E"] },
+        { name: translations.shortcuts.Headings, keys: ["Ctrl", "Alt", "(1-6)"] },
+        { name: translations.shortcuts.Orderedlist, keys: ["Ctrl", "Shift", "7"] },
+        { name: translations.shortcuts.Bulletlist, keys: ["Ctrl", "Shift", "8"] },
+        { name: translations.shortcuts.Blockquote, keys: ["Ctrl", "Shift", "B"] },
+        { name: translations.shortcuts.Blockcode, keys: ["Ctrl", "Alt", "C"] },
       ],
     },
   ];
@@ -457,8 +501,8 @@ const Shortcuts: React.FC = () => {
       <div className="overflow-y">
       {!activeNoteId && (
         <div className="mx-10 sm:px-60 mb-2"> 
-        <div className="general space-y-8 w-full">
-          <p className="text-4xl font-bold">Settings</p>
+        <div className="general py-2 space-y-8 w-full">
+          <p className="text-4xl font-bold">{translations.settings.title}</p>
           {shortcuts.map((shortcut) => (
             <section key={shortcut.title}>
               <p className="mb-2">{shortcut.title}</p>
@@ -469,7 +513,7 @@ const Shortcuts: React.FC = () => {
                     {item.keys.map((key) => (
                       <kbd
                         key={key}
-                        className="mr-1 border-2 rounded-lg p-1 px-2"
+                        className="mr-1 border-2 dark:border-neutral-700 rounded-lg p-1 px-2"
                       >
                         {key}
                       </kbd>
