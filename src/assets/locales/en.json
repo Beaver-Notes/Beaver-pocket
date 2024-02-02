@@ -50,7 +50,8 @@
     "skip": "Skip",
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "import": "Import"
   },
   "home": {
     "bookmarked": "Bookmarked",
@@ -94,5 +95,42 @@
     "lastUpdated": "Last Updated",
     "creationDate": "Creation Date",
     "alphabetical": "Alphabetical"
+  },
+  "shortcuts": {
+    "General": "General shortcuts",
+    "Navigates": "Navigates shortcuts",
+    "Editor": "Editor shortcuts",
+    "Createnewnote": "Create new note",
+    "Togglecommandprompt": "Toggle command prompt",
+    "Toggledarktheme": "Toggle dark theme",
+    "Toggleexport": "Toggle export",
+    "Toggleimport": "Toggle import",
+    "Toeditednote": "To edited note",
+    "Tonotes": "To notes",
+    "Toarchivednotes": "To archived notes",
+    "Tosettings": "To settings",
+    "Bold": "Bold",
+    "Italic": "Italic",
+    "Underline": "Underline",
+    "Link": "Link",
+    "Strikethrough": "Strikethrough",
+    "Highlight": "Highlight",
+    "Inlinecode": "Inline code",
+    "Headings": "Headings (1-6)",
+    "Orderedlist": "Ordered list",
+    "Bulletlist": "Bullet list",
+    "Blockquote": "Blockquote",
+    "Blockcode": "Block code",
+    "Previousnote": "Previous notes"
+  },
+  "about": {
+    "title": "About",
+    "app": "Beaver Pocket",
+    "description": "Beaver Pocket was developed with love ❤️ to take your notes on the go.",
+    "version": "Version",
+    "website": "Website",
+    "github" : "GitHub",
+    "donate": "Donate",
+    "copyright": "Copyright © 2023 - 2024. All rights reserved."
   }
 }
