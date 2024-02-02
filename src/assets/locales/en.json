@@ -79,7 +79,9 @@
     "biometricError": "Something went wrong. Please try again.",
     "biometricPassword": "Set up a password to lock/unlock your notes: ",
     "biometricWrongPassword": "Wrong password. Please try again.",
-    "biometricUnlock": "Enter the password to unlock the note:"
+    "biometricUnlock": "Enter the password to unlock the note:",
+    "bookmarkError": "The following error accured while bookmarking a note:",
+    "archiveError": "The following error accured while archiving a note:"
   },
   "archive": {
     "archived": "Archived",
