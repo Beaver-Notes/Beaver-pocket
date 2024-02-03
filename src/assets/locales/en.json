@@ -81,7 +81,9 @@
     "biometricWrongPassword": "Wrong password. Please try again.",
     "biometricUnlock": "Enter the password to unlock the note:",
     "bookmarkError": "The following error accured while bookmarking a note:",
-    "archiveError": "The following error accured while archiving a note:"
+    "archiveError": "The following error accured while archiving a note:",
+    "shareTitle": "Share Beaver Notes Export",
+    "addLabel": "Add Label"
   },
   "archive": {
     "archived": "Archived",

@@ -71,8 +71,8 @@ const App: React.FC = () => {
       const updatedNotes = await toggleArchive(noteId);
       setNotesState(updatedNotes);
     } catch (error) {
-      console.error("Error handling toggle archive:", error);
-      alert("Error toggling archive: " + (error as any).message);
+      console.error(translations.home.archiveError, error);
+      alert(translations.home.archiveError + (error as any).message);
     }
   };
 
@@ -295,9 +295,9 @@ const App: React.FC = () => {
       const resolvedFilePath = result.uri;
 
       await Share.share({
-        title: "Share Beaver Notes Export",
+        title: `${translations.home.shareTitle}`,
         url: resolvedFilePath,
-        dialogTitle: "Share Beaver Notes Export",
+        dialogTitle: `${translations.home.shareTitle}`,
       });
     } catch (error) {
       alert(translations.home.shareError + (error as any).message);
@@ -675,7 +675,8 @@ const App: React.FC = () => {
       subtitle2: "home.subtitle2",
       biometricUnlock: "home.biometricUnlock",
       bookmarkError: "home.bookmarkError",
-      archiverError: "home.archiverError",
+      archiveError: "home.archiveError",
+      shareTitle: "home.shareTitle",
     },
   });
 
@@ -708,7 +709,7 @@ const App: React.FC = () => {
           handleImportData={handleImportData}
         />
 
-        <div className="overflow-y">
+        <div className="overflow-y-hidden">
           {!activeNoteId && (
             <div className="md:mt-4 py-2 w-full flex flex-col border-gray-300 overflow-auto">
               <SearchBar
@@ -743,7 +744,7 @@ const App: React.FC = () => {
                 {notesList.length === 0 && (
                   <div className="mx-auto">
                     <img
-                      src="/src/assets/Beaver.png"
+                      src="./imgs/Beaver.png"
                       className="max-w-auto sm:w-1/3 mx-auto flex justify-center items-center"
                       alt="No content"
                     />
@@ -756,7 +757,7 @@ const App: React.FC = () => {
                     </p>
                   </div>
                 )}
-                <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 grid-cols-1 md:grid-cols-2 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList
                     .filter((note) => !note.isBookmarked && !note.isArchived)
                     .map((note) => (

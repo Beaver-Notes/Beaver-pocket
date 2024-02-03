@@ -83,9 +83,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
             onChange={(e) => setSortingOption(e.target.value)}
             className="rounded-full ml-2 pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
           >
-            <option value="updatedAt">Last Updated</option>
-            <option value="createdAt">Created Date</option>
-            <option value="alphabetical">Alphabetical Order</option>
+            <option value="updatedAt">{translations.search.lastUpdated}</option>
+            <option value="createdAt">{translations.search.creationDate}</option>
+            <option value="alphabetical">{translations.search.alphabetical}</option>
           </select>
           <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
         </div>
@@ -138,9 +138,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
             onChange={(e) => setSortingOption(e.target.value)}
             className="bg-transparent text-lg dark:text-white outline-none appearance-none pl-10"
           >
-            <option value="updatedAt">Last Updated</option>
-            <option value="createdAt">Created Date</option>
-            <option value="alphabetical">Alphabetical Order</option>
+            <option value="updatedAt">{translations.search.lastUpdated}</option>
+            <option value="createdAt">{translations.search.creationDate}</option>
+            <option value="alphabetical">{translations.search.alphabetical}</option>
           </select>
         </div>
       </div>

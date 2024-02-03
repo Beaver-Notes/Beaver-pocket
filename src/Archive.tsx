@@ -49,15 +49,15 @@ const Archive: React.FC = () => {
       const updatedNotes = await toggleArchive(noteId);
       setNotesState(updatedNotes);
     } catch (error) {
-      console.error("Error handling toggle archive:", error);
-      alert("Error toggling archive: " + (error as any).message);
+      console.error(translations.home.archiveError, error);
+      alert(translations.home.archiveError + (error as any).message);
     }
   };
 
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event propagation
     const isConfirmed = window.confirm(
-      "Are you sure you want to delete this note?"
+      translations.home.confirmDelete
     );
 
     if (isConfirmed) {
@@ -136,7 +136,6 @@ const Archive: React.FC = () => {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
 
-      // Create the parent export folder
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
@@ -144,34 +143,29 @@ const Archive: React.FC = () => {
         recursive: true,
       });
 
-      // Create the export folder structure
       const exportFolderName = `Beaver Notes ${formattedDate}`;
       const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
 
-      // Create the export folder
       await Filesystem.mkdir({
         path: exportFolderPath,
         directory: Directory.Documents,
         recursive: true,
       });
 
-      // Export data.json
       const exportedData: any = {
         data: {
           notes: {},
-          lockedNotes: {}, // Add the lockedNotes field
+          lockedNotes: {}, 
         },
-        labels: [], // Add the labels field
+        labels: [],
       };
 
-      // Iterate through notes to populate the exportedData object
       Object.values(notesState).forEach((note) => {
         const createdAtTimestamp =
           note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
         const updatedAtTimestamp =
           note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
 
-        // Populate notes object
         exportedData.data.notes[note.id] = {
           id: note.id,
           title: note.title,
@@ -185,22 +179,18 @@ const Archive: React.FC = () => {
           lastCursorPosition: note.lastCursorPosition,
         };
 
-        // Populate labels array
         exportedData.labels = exportedData.labels.concat(note.labels);
 
-        // Populate lockedNotes object
         if (note.isLocked) {
           exportedData.data.lockedNotes[note.id] = true;
         }
       });
 
-      // Remove duplicate labels
       exportedData.labels = Array.from(new Set(exportedData.labels));
 
       const jsonData = JSON.stringify(exportedData, null, 2);
       const jsonFilePath = `${exportFolderPath}/data.json`;
 
-      // Save data.json
       await Filesystem.writeFile({
         path: jsonFilePath,
         data: jsonData,
@@ -208,8 +198,7 @@ const Archive: React.FC = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      // Check if the images folder exists
-      const imagesFolderPath = `assets`;
+      const imagesFolderPath = `images`;
       let imagesFolderExists = false;
 
       try {
@@ -223,17 +212,14 @@ const Archive: React.FC = () => {
       }
 
       if (imagesFolderExists) {
-        // Export images folder
         const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
 
-        // Create the images folder in the export directory
         await Filesystem.mkdir({
           path: exportImagesFolderPath,
           directory: Directory.Documents,
           recursive: true,
         });
 
-        // Copy images folder to export folder
         await Filesystem.copy({
           from: imagesFolderPath,
           to: exportImagesFolderPath,
@@ -241,17 +227,14 @@ const Archive: React.FC = () => {
         });
       }
 
-      // Zip the export folder
       const zip = new JSZip();
       const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
 
-      // Retrieve files in the export folder
       const exportFolderFiles = await Filesystem.readdir({
         path: exportFolderPath,
         directory: Directory.Documents,
       });
 
-      // Use Promise.all to wait for all asynchronous file reading operations to complete
       await Promise.all(
         exportFolderFiles.files.map(async (file) => {
           const filePath = `${exportFolderPath}/${file.name}`;
@@ -266,22 +249,18 @@ const Archive: React.FC = () => {
 
       const zipContentBase64 = await zip.generateAsync({ type: "base64" });
 
-      const zipFilePath = `${parentExportFolderPath}/Beaver_Notes_${formattedDate}.zip`;
+      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
       await Filesystem.writeFile({
         path: zipFilePath,
         data: zipContentBase64,
-        directory: Directory.Documents,
+        directory: Directory.Cache,
       });
 
       await shareZipFile();
 
-      console.log("Export completed successfully!");
-
-      // Notify the user
-      window.alert("Export completed successfully! Check your downloads.");
+      alert(translations.home.exportSuccess);
     } catch (error) {
-      console.error("Error exporting data and images:", error);
-      alert("Error exporting data and images: " + (error as any).message);
+      alert(translations.home.exportError + (error as any).message);
     }
   };
 
@@ -289,15 +268,22 @@ const Archive: React.FC = () => {
     try {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-      const parentExportFolderPath = `export`;
+      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
+
+      const result = await Filesystem.getUri({
+        directory: Directory.Cache,
+        path: zipFilePath,
+      });
+
+      const resolvedFilePath = result.uri;
+
       await Share.share({
         title: "Share Beaver Notes Export",
-        url: `file://${parentExportFolderPath}/Beaver_Notes_${formattedDate}.zip`,
+        url: resolvedFilePath,
         dialogTitle: "Share Beaver Notes Export",
       });
     } catch (error) {
-      console.error("Error sharing zip file:", error);
-      alert("Error sharing zip file: " + (error as any).message);
+      alert(translations.home.shareError + (error as any).message);
     }
   };
 
@@ -359,13 +345,12 @@ const Archive: React.FC = () => {
             encoding: FilesystemEncoding.UTF8,
           });
 
-          alert("Data imported successfully!");
+          alert(translations.home.importSuccess);
         } else {
-          alert("Invalid data format.");
+          alert(translations.home.importInvalid);
         }
       } catch (error) {
-        console.error("Error while importing data:", error);
-        alert("Error while importing data.");
+        alert(translations.home.importError);
       }
     };
 
@@ -519,85 +504,66 @@ const Archive: React.FC = () => {
   };
 
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Stop the click event from propagating
+    event.stopPropagation();
 
     try {
       const notes = await loadNotes();
       const updatedNote = { ...notes[noteId] };
 
-      // Check if biometrics is available
       const biometricResult = await NativeBiometric.isAvailable();
 
       if (biometricResult.isAvailable) {
         const isFaceID = biometricResult.biometryType === BiometryType.FACE_ID;
 
-        // Show biometric prompt for authentication
         try {
           await NativeBiometric.verifyIdentity({
-            reason: "For note authentication",
-            title: "Authenticate",
-            subtitle: "Use biometrics to unlock/lock the note.",
+            reason: translations.home.biometricsReason,
+            title: translations.home.biometricsTitle,
+            subtitle: translations.home.subtitle,
             description: isFaceID
-              ? "Place your face for authentication."
-              : "Place your finger for authentication.",
+              ? translations.home.biometricFace
+              : translations.home.biometricTouch
           });
         } catch (verificationError) {
-          // Handle verification error (e.g., user cancels biometric prompt)
-          console.error("Biometric verification error:", verificationError);
-          alert(
-            "Biometric verification failed. Note remains in its current state."
-          );
+          alert(translations.home.biometricError);
           return;
         }
       } else {
-        // Biometrics not available, use sharedKey
         let sharedKey = localStorage.getItem("sharedKey");
 
         if (!sharedKey) {
-          // If no shared key is set, prompt the user to set it up
-          sharedKey = prompt("Set up a password to lock/unlock your notes:");
+          sharedKey = prompt(translations.home.biometricPassword);
 
           if (!sharedKey) {
-            // If the user cancels or enters an empty password, do not proceed
-            alert(
-              "Note remains in its current state. Please set up a password next time."
-            );
+            alert(translations.home.biometricError);
             return;
           }
 
-          // Save the shared key in local storage after hashing
           sharedKey = CryptoJS.SHA256(sharedKey).toString();
           localStorage.setItem("sharedKey", sharedKey);
         }
 
-        // Prompt for the password
         const enteredKey = prompt(
-          "Enter the password to lock/unlock the note:"
+          translations.home.biometricPassword
         );
 
-        // Check if the user canceled the prompt
         if (enteredKey === null) {
-          alert("Password input canceled. Note remains in its current state.");
+          alert(translations.home.biometricError);          
           return;
         }
 
-        // Hash the entered password for comparison
         const hashedEnteredKey = CryptoJS.SHA256(enteredKey).toString();
 
         if (hashedEnteredKey !== sharedKey) {
-          // Incorrect password, do not proceed
-          alert("Incorrect password. Note remains in its current state.");
+          alert(translations.home.biometricWrongPassword);
           return;
         }
       }
 
-      // Toggle the 'isLocked' property
       updatedNote.isLocked = !updatedNote.isLocked;
 
-      // Update the note in the dictionary
       notes[noteId] = updatedNote;
 
-      // Update the lockedNotes field
       const lockedNotes = JSON.parse(
         localStorage.getItem("lockedNotes") || "{}"
       );
@@ -608,7 +574,6 @@ const Archive: React.FC = () => {
       }
       localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
 
-      // Save the updated notes to the filesystem
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
@@ -616,61 +581,50 @@ const Archive: React.FC = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(notes); // Update the state
+      setNotesState(notes);
 
-      console.log("Note lock status toggled successfully!");
-      alert("Note lock status toggled successfully!");
+      alert(translations.home.biometricSuccess);
     } catch (error) {
-      console.error("Error toggling lock:", error);
-      alert("Error toggling lock: " + (error as any).message);
+      alert(translations.home.biometricError + (error as any).message);
     }
   };
 
   const handleClickNote = async (note: Note) => {
     try {
       if (note.isLocked) {
-        // Check if biometrics is available
         const biometricResult = await NativeBiometric.isAvailable();
 
         if (biometricResult.isAvailable) {
           const isFaceID =
             biometricResult.biometryType === BiometryType.FACE_ID;
 
-          // Show biometric prompt for authentication
           try {
             await NativeBiometric.verifyIdentity({
-              reason: "For note authentication",
-              title: "Authenticate",
-              subtitle: "Use biometrics to unlock the note.",
+              reason: translations.home.biometricsReason,
+              title: translations.home.biometricsTitle,
+              subtitle: translations.home.subtitle2,
               description: isFaceID
-                ? "Place your face for authentication."
-                : "Place your finger for authentication.",
+                ? translations.home.biometricFace
+                : translations.home.biometricTouch,
             });
           } catch (verificationError) {
-            // Handle verification error (e.g., user cancels biometric prompt)
-            console.error("Biometric verification error:", verificationError);
-            alert("Biometric verification failed. Note remains locked.");
+            alert(translations.home.biometricError);
             return;
           }
         } else {
-          // Biometrics not available, use sharedKey
           const userSharedKey = prompt(
-            "Enter the shared key to unlock the note:"
+            translations.home.biometricUnlock
           );
 
-          // Check if the user canceled the prompt
           if (userSharedKey === null) {
-            alert("Shared key input canceled. Note remains locked.");
             return;
           }
 
-          // Hash the entered password for comparison
           const hashedUserSharedKey = CryptoJS.SHA256(userSharedKey).toString();
 
-          // Check if the entered key matches the stored key
           const storedSharedKey = localStorage.getItem("sharedKey");
           if (hashedUserSharedKey !== storedSharedKey) {
-            alert("Incorrect shared key. Note remains locked.");
+            alert(translations.home.biometricWrongPassword);
             return;
           }
         }
@@ -678,8 +632,6 @@ const Archive: React.FC = () => {
 
       setActiveNoteId(note.id);
     } catch (error) {
-      console.error("Error handling click on note:", error);
-      alert("Error handling click on note: " + (error as any).message);
     }
   };
 
@@ -694,6 +646,27 @@ const Archive: React.FC = () => {
      unlocktoeditor: "archive.unlocktoeditor",
      noContent: "archive.noContent",
      title: "archive.title",
+    },
+    home: {
+      exportSuccess: "home.exportSuccess",
+      exportError: "home.exportError",
+      shareError: "home.shareError",
+      archiveError: "home.archiveError",
+      confirmDelete: "home.confirmDelete",
+      importSuccess: "home.importSuccess",
+      importInvalid: "home.importInvalid",
+      importError: "home.importError",
+      biometricsReason: "home.biometricsReason",
+      biometricsTitle: "home.biometricsTitle",
+      subtitle: "home.subtitle",
+      biometricFace: "home.biometricFace",
+      biometricTouch: "home.biometricFinger",
+      biometricError: "home.biometricError",
+      biometricPassword: "home.biometricPassword",
+      biometricWrongPassword: "home.biometricWrongPassword",
+      biometricSuccess: "home.biometricSuccess",
+      biometricUnlock: "home.biometricUnlock",
+      subtitle2: "home.subtitle2",
     },
   });
 
@@ -744,7 +717,7 @@ const Archive: React.FC = () => {
                 {notesList.filter((note) => note.isArchived).length === 0 && (
                   <div className="mx-auto">
                     <img
-                      src="/src/assets/Beaver-classic-mac.png"
+                      src="./imgs/Beaver-classic-mac.png"
                       className="max-w-auto sm:w-1/3 mx-auto flex justify-center items-center"
                       alt="No content"
                     />
@@ -755,7 +728,7 @@ const Archive: React.FC = () => {
                     </p>
                   </div>
                 )}
-                <div className="grid py-2 grid-cols-1 sm:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 grid-cols-1 md:grid-cols-2 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList
                     .filter((note) => note.isArchived)
                     .map((note) => (

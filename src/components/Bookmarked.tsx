@@ -6,6 +6,7 @@ import LockClosedIcon from "remixicon-react/LockLineIcon";
 import { JSONContent } from "@tiptap/react";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
 
 interface BookmarkedProps {
     notesList: Note[];     
@@ -26,9 +27,36 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
     handleClickNote,
     truncateContentPreview,
 }) => {
+
+    // Translations
+    const [translations, setTranslations] = useState({
+      home: {
+        unlocktoedit: "home.unlocktoedit",
+      }
+    });
+  
+    useEffect(() => {
+      // Load translations
+      const loadTranslations = async () => {
+        const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+        try {
+          const translationModule = await import(
+            `../assets/locales/${selectedLanguage}.json`
+          );
+  
+          setTranslations({ ...translations, ...translationModule.default });
+          dayjs.locale(selectedLanguage);
+        } catch (error) {
+          console.error("Error loading translations:", error);
+        }
+      };
+  
+      loadTranslations();
+    }, []); 
+    
   return (
-<div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
-                  {notesList.map((note) => {
+    <div className="grid py-2 grid-cols-1 md:grid-cols-2 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+    {notesList.map((note) => {
                     if (note.isBookmarked && !note.isArchived) {
                       return (
                         <div
@@ -71,7 +99,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
                                     <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
                                   </button>
                                   <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                    Unlock to edit
+                                   {translations.home.unlocktoedit}
                                   </p>
                                 </div>
                               ) : (
