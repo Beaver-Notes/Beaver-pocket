@@ -336,13 +336,10 @@ const Settings: React.FC = () => {
         });
       }
 
-      console.log("Export completed successfully!");
 
-      // Notify the user
-      window.alert("Export completed successfully! Check your downloads.");
+      alert(translations.home.exportSuccess);
     } catch (error) {
-      console.error("Error exporting data and images:", error);
-      alert("Error exporting data and images: " + (error as any).message);
+      alert(translations.home.exportError + (error as any).message);
     }
   };
 
@@ -430,13 +427,12 @@ const Settings: React.FC = () => {
             encoding: FilesystemEncoding.UTF8,
           });
 
-          alert("Data imported successfully!");
+          alert(translations.home.importSuccess);
         } else {
-          alert("Invalid data format.");
+          alert(translations.home.importInvalid);
         }
       } catch (error) {
-        console.error("Error while importing data:", error);
-        alert("Error while importing data.");
+        alert(translations.home.importError);
       }
     };
 
@@ -513,6 +509,15 @@ const Settings: React.FC = () => {
       title: "settings.title",
       Inputpassword: "settings.Inputpassword",
     },
+    home: {
+      exportSuccess: "home.exportSuccess",
+      exportError: "home.exportError",
+      shareTitle: "home.shareTitle",
+      shareError: "home.shareError",
+      importSuccess: "home.importSuccess",
+      importError: "home.importError",
+      importInvalid: "home.importInvalid",
+    }
   });
 
   useEffect(() => {
@@ -559,10 +564,10 @@ const Settings: React.FC = () => {
           handleImportData={handleImportData}
         />
 
-        <div className="overflow-y">
+        <div className="overflow-y-hidden">
           {!activeNoteId && (
             <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-              <div className="mx-10 sm:px-60 overflow-y-auto flex-grow">
+              <div className="mx-10 md:px-24 overflow-y-auto flex-grow">
                 <p className="text-4xl font-bold">
                   {" "}
                   {translations.settings.title || "-"}

@@ -292,11 +292,11 @@ function NoteEditor({
   }, [handleOutsideClick]);
 
 
-  const addPaddingTop = isPlatform('ios') ? 'pt-5' : '';
+  const addPaddingTop = isPlatform('ios') ? 'pt-5 sm:pt-1' : '';
 
   return (
     <div
-      className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white lg:px-60 text-base "
+      className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white sm:px-10 md:px-20 lg:px-60 text-base "
       onPaste={handlePaste}
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
@@ -491,7 +491,7 @@ function NoteEditor({
       <div
         contentEditable
         suppressContentEditableWarning
-        className="text-3xl mt-[2em] font-bold overflow-y-scroll outline-none mt-4"
+        className="text-3xl mt-[2em] font-bold overflow-y-scroll outline-none mt-4 sm:mt-2"
         onBlur={handleTitleChange}
         dangerouslySetInnerHTML={{ __html: localTitle }}
       />

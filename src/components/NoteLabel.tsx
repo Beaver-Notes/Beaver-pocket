@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { JSONContent } from "@tiptap/react";
 import { Note } from "../store/types";
+import dayjs from "dayjs";
 
 type Props = {
     note: Note;
@@ -120,6 +121,32 @@ function NoteLabels({
     onChange(updatedNote.content);
   };
 
+      // Translations
+      const [translations, setTranslations] = useState({
+        home: {
+         addLabel: "home.addLabel",
+        }
+      });
+    
+      useEffect(() => {
+        // Load translations
+        const loadTranslations = async () => {
+          const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+          try {
+            const translationModule = await import(
+              `../assets/locales/${selectedLanguage}.json`
+            );
+    
+            setTranslations({ ...translations, ...translationModule.default });
+            dayjs.locale(selectedLanguage);
+          } catch (error) {
+            console.error("Error loading translations:", error);
+          }
+        };
+    
+        loadTranslations();
+      }, []); 
+
 
   return (
     <div className="flex flex-wrap mt-2 gap-2">
@@ -157,7 +184,7 @@ function NoteLabels({
       <div
         className="is-empty labelinput"
         contentEditable
-        data-placeholder="Add label"
+        data-placeholder={translations.home.addLabel || "-"}
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.currentTarget.innerText.trim() !== "") {
             addLabelToNote(e.currentTarget.innerText.trim());
