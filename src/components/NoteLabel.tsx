@@ -123,8 +123,8 @@ function NoteLabels({
 
       // Translations
       const [translations, setTranslations] = useState({
-        home: {
-         addLabel: "home.addLabel",
+        editor: {
+         addLabel: "editor.addLabel",
         }
       });
     
@@ -184,7 +184,7 @@ function NoteLabels({
       <div
         className="is-empty labelinput"
         contentEditable
-        data-placeholder={translations.home.addLabel || "-"}
+        data-placeholder={translations.editor.addLabel || "-"}
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.currentTarget.innerText.trim() !== "") {
             addLabelToNote(e.currentTarget.innerText.trim());

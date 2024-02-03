@@ -546,8 +546,9 @@ const Shortcuts: React.FC = () => {
   ];
 
   return (
-    <div className="">
-              <Sidebar
+    <div>
+    <div className="grid sm:grid-cols-[auto,1fr]">
+    <Sidebar
           onCreateNewNote={handleCreateNewNote}
           isDarkMode={darkMode}
           toggleTheme={() => toggleTheme(!darkMode)}
@@ -557,7 +558,7 @@ const Shortcuts: React.FC = () => {
 
       <div className="overflow-y">
       {!activeNoteId && (
-        <div className="mx-10 sm:px-60 mb-2"> 
+        <div className="mx-10 sm:px-20 mb-2"> 
         <div className="general py-2 space-y-8 w-full">
           <p className="text-4xl font-bold">{translations.settings.title}</p>
           {shortcuts.map((shortcut) => (
@@ -603,6 +604,7 @@ const Shortcuts: React.FC = () => {
           />
         )}
       </div>
+    </div>
     </div>
   );
 };

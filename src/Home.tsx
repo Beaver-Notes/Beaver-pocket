@@ -772,7 +772,7 @@ const App: React.FC = () => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-                        <div className="sm:h-44 h-36 overflow-hidden">
+                        <div className="h-40 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
                             {note.isLocked ? (

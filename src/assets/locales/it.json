@@ -82,9 +82,12 @@
     "biometricUnlock": "Inserisci la password per sbloccare l'appunto:",
     "bookmarkError": "Si è verificato il seguente errore durante l'aggiunta ai preferiti di un appunto:",
     "archiveError": "Si è verificato il seguente errore durante l'archiviazione di un appunto:",
-    "shareTitle": "Condividi Esportazione Beaver Notes",
-    "addLabel": "Aggiungi Etichetta"
+    "shareTitle": "Condividi Esportazione Beaver Notes"
   },
+  "editor": {
+    "addLabel": "Aggiungi Etichetta",
+    "searchHeadings": "Cerca Titoli"
+  },  
   "archive": {
     "archived": "Archiviate",
     "messagePt1": "Nessun appunto è stato archiviato. Clicca",

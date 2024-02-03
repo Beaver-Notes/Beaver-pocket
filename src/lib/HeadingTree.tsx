@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Search2LineIcon from 'remixicon-react/Search2LineIcon';
 import "../css/main.css";
+import dayjs from 'dayjs';
 
 type HeadingTreeProps = {
   onHeadingClick: (heading: string) => void;
@@ -41,8 +42,34 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
     (heading) => heading.textContent?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+      // Translations
+      const [translations, setTranslations] = useState({
+        editor: {
+          searchHeadings: "editor.searchHeadings",
+        }
+      });
+    
+      useEffect(() => {
+        // Load translations
+        const loadTranslations = async () => {
+          const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+          try {
+            const translationModule = await import(
+              `../assets/locales/${selectedLanguage}.json`
+            );
+    
+            setTranslations({ ...translations, ...translationModule.default });
+            dayjs.locale(selectedLanguage);
+          } catch (error) {
+            console.error("Error loading translations:", error);
+          }
+        };
+    
+        loadTranslations();
+      }, []);   
+
   return (
-    <div className="absolute top-20 sm:right-60 right-2 p-3 bg-white rounded-xl dark:bg-[#2D2C2C] border-2 dark:border-neutral-800 z-50 w-64">
+    <div className="absolute right-2 sm:right-10 md:right-20 lg:right-60 top-20 p-3 bg-white rounded-xl dark:bg-[#2D2C2C] border-2 dark:border-neutral-800 z-50 w-64">
       <div className="mb-2">
         <div className="flex items-center relative">
           <Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />
@@ -50,7 +77,7 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search headings"
+            placeholder={translations.editor.searchHeadings || "-"}
             className="py-2 outline-none px-4 rounded-xl w-full bg-input bg-transparent transition ring-neutral-200 ring-2 dark:ring-neutral-600 focus:ring-2 focus:ring-amber-300 pl-10"
           />
         </div>
