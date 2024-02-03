@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Arimo&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,17 +15,9 @@ mark {
   @apply h-full
 }
 
-img {
-  @apply rounded-xl
-}
-
 a {
   @apply text-amber-400 hover:text-amber-500 underline
 }
-
-code {
-  @apply bg-[#F2F2F2] dark:bg-[#303033] text-inherit text-base p-1 px-2 rounded-full;
- }
 
 blockquote {
  @apply border-l-4 border-[#E4E4E6] dark:border-[#3F3F46];
