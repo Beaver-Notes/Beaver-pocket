@@ -8,6 +8,8 @@ import Sidebar from "./components/Sidebar";
 import BottomNavBar from "./components/BottomNavBar";
 import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import "./css/main.css";
+import "./css/fonts.css";
+import Bookmarked from "./components/Bookmarked";
 import {
   Filesystem,
   Directory,
@@ -15,105 +17,73 @@ import {
 } from "@capacitor/filesystem";
 import JSZip from "jszip";
 import { Share } from "@capacitor/share";
+import dayjs from "dayjs";
+import "dayjs/locale/it";
+import relativeTime from "dayjs/plugin/relativeTime";
+import SearchBar from "./components/Search";
+import * as CryptoJS from "crypto-js";
+import {
+  loadNotes,
+  useSaveNote,
+  useDeleteNote,
+  useToggleBookmark,
+  useToggleArchive,
+} from "./store/notes";
 
 // Import Remix icons
 import AddFillIcon from "remixicon-react/AddFillIcon";
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import Bookmark3LineIcon from "remixicon-react/Bookmark3LineIcon";
 import Bookmark3FillIcon from "remixicon-react/Bookmark3FillIcon";
 import ArchiveDrawerLineIcon from "remixicon-react/ArchiveLineIcon";
 import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
-import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
-import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 
-async function createNotesDirectory() {
-  const directoryPath = "notes";
-
-  try {
-    await Filesystem.mkdir({
-      path: directoryPath,
-      directory: Directory.Documents,
-      recursive: true,
-    });
-  } catch (error: any) {
-    console.error("Error creating the directory:", error);
-  }
-}
-
 const App: React.FC = () => {
-  const loadNotes = async () => {
+  const { saveNote } = useSaveNote();
+  const { deleteNote } = useDeleteNote();
+  const { toggleArchive } = useToggleArchive();
+  const { toggleBookmark } = useToggleBookmark();
+
+  const handleToggleBookmark = async (
+    noteId: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+
     try {
-      await createNotesDirectory(); // Create the directory before reading/writing
-
-      const fileExists = await Filesystem.stat({
-        path: STORAGE_PATH,
-        directory: Directory.Documents,
-      });
-
-      if (fileExists) {
-        const data = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: Directory.Documents,
-          encoding: FilesystemEncoding.UTF8,
-        });
-
-        if (data.data) {
-          const parsedData = JSON.parse(data.data as string);
-
-          if (parsedData?.data?.notes) {
-            return parsedData.data.notes;
-          } else {
-            console.log(
-              "The file is missing the 'notes' data. Returning an empty object."
-            );
-            return {};
-          }
-        } else {
-          console.log("The file is empty. Returning an empty object.");
-          return {};
-        }
-      } else {
-        console.log("The file doesn't exist. Returning an empty object.");
-        return {};
-      }
+      const updatedNotes = await toggleBookmark(noteId);
+      setNotesState(updatedNotes);
     } catch (error) {
-      console.error("Error loading notes:", error);
-      return {};
+      console.error(translations.home.bookmarkError, error);
+      alert(translations.home.bookmarkError + (error as any).message);
+    }
+  };
+  const handleToggleArchive = async (
+    noteId: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+
+    try {
+      const updatedNotes = await toggleArchive(noteId);
+      setNotesState(updatedNotes);
+    } catch (error) {
+      console.error(translations.home.archiveError, error);
+      alert(translations.home.archiveError + (error as any).message);
     }
   };
 
-  const handleDeleteNote = async (noteId: string) => {
+  const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
     const isConfirmed = window.confirm(
-      "Are you sure you want to delete this note?"
+      translations.home.confirmDelete
     );
 
     if (isConfirmed) {
-      try {
-        const notes = await loadNotes();
-
-        if (notes[noteId]) {
-          delete notes[noteId];
-
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes } }),
-            directory: Directory.Documents,
-            encoding: FilesystemEncoding.UTF8,
-          });
-
-          setNotesState(notes);
-          location.reload();
-        } else {
-          console.log(`Note with id ${noteId} not found.`);
-        }
-      } catch (error) {
-        console.error("Error deleting note:", error);
-        alert("Error deleting note: " + (error as any).message);
-      }
+      await deleteNote(noteId);
     }
   };
 
@@ -122,7 +92,6 @@ const App: React.FC = () => {
     return storedThemeMode || "auto";
   });
 
-  // State to manage dark mode
   const [darkMode, setDarkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
@@ -135,7 +104,6 @@ const App: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  // Function to toggle dark mode
   const toggleTheme = (
     newMode: boolean | ((prevState: boolean) => boolean)
   ) => {
@@ -145,115 +113,7 @@ const App: React.FC = () => {
 
   const STORAGE_PATH = "notes/data.json";
 
-  const saveNote = React.useCallback(
-    async (note: unknown) => {
-      try {
-        const notes = await loadNotes();
-
-        if (typeof note === "object" && note !== null) {
-          const typedNote = note as Note;
-
-          // Use getTime() to get the Unix timestamp in milliseconds
-          const createdAtTimestamp =
-            typedNote.createdAt instanceof Date
-              ? typedNote.createdAt.getTime()
-              : Date.now();
-
-          const updatedAtTimestamp =
-            typedNote.updatedAt instanceof Date
-              ? typedNote.updatedAt.getTime()
-              : Date.now();
-
-          notes[typedNote.id] = {
-            ...typedNote,
-            createdAt: createdAtTimestamp,
-            updatedAt: updatedAtTimestamp,
-          };
-
-          const data = {
-            data: {
-              notes,
-            },
-          };
-
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify(data),
-            directory: Directory.Documents,
-            encoding: FilesystemEncoding.UTF8,
-          });
-        } else {
-          console.error("Invalid note object:", note);
-        }
-      } catch (error) {
-        console.error("Error saving note:", error);
-      }
-    },
-    [loadNotes]
-  );
-
-  const handleToggleBookmark = async (
-    noteId: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation(); // Prevent event propagation
-
-    try {
-      const notes = await loadNotes();
-      const updatedNote = { ...notes[noteId] };
-
-      // Toggle the 'isBookmarked' property
-      updatedNote.isBookmarked = !updatedNote.isBookmarked;
-
-      // Update the note in the dictionary
-      notes[noteId] = updatedNote;
-
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      setNotesState(notes); // Update the state
-    } catch (error) {
-      console.error("Error toggling bookmark:", error);
-      alert("Error toggling bookmark: " + (error as any).message);
-    }
-  };
-
-  const handleToggleArchive = async (
-    noteId: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation(); // Prevent event propagation
-
-    try {
-      const notes = await loadNotes();
-      const updatedNote = { ...notes[noteId] };
-
-      // Toggle the 'isArchived' property
-      updatedNote.isArchived = !updatedNote.isArchived;
-
-      // Update the note in the dictionary
-      notes[noteId] = updatedNote;
-
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      setNotesState(notes); // Update the state
-    } catch (error) {
-      console.error("Error toggling archive:", error);
-      alert("Error toggling archive: " + (error as any).message);
-    }
-  };
-
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
-
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
@@ -293,7 +153,6 @@ const App: React.FC = () => {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
 
-      // Create the parent export folder
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
@@ -301,34 +160,29 @@ const App: React.FC = () => {
         recursive: true,
       });
 
-      // Create the export folder structure
       const exportFolderName = `Beaver Notes ${formattedDate}`;
       const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
 
-      // Create the export folder
       await Filesystem.mkdir({
         path: exportFolderPath,
         directory: Directory.Documents,
         recursive: true,
       });
 
-      // Export data.json
       const exportedData: any = {
         data: {
           notes: {},
-          lockedNotes: {}, // Add the lockedNotes field
+          lockedNotes: {}, 
         },
-        labels: [], // Add the labels field
+        labels: [],
       };
 
-      // Iterate through notes to populate the exportedData object
       Object.values(notesState).forEach((note) => {
         const createdAtTimestamp =
           note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
         const updatedAtTimestamp =
           note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
 
-        // Populate notes object
         exportedData.data.notes[note.id] = {
           id: note.id,
           title: note.title,
@@ -342,22 +196,18 @@ const App: React.FC = () => {
           lastCursorPosition: note.lastCursorPosition,
         };
 
-        // Populate labels array
         exportedData.labels = exportedData.labels.concat(note.labels);
 
-        // Populate lockedNotes object
         if (note.isLocked) {
           exportedData.data.lockedNotes[note.id] = true;
         }
       });
 
-      // Remove duplicate labels
       exportedData.labels = Array.from(new Set(exportedData.labels));
 
       const jsonData = JSON.stringify(exportedData, null, 2);
       const jsonFilePath = `${exportFolderPath}/data.json`;
 
-      // Save data.json
       await Filesystem.writeFile({
         path: jsonFilePath,
         data: jsonData,
@@ -365,7 +215,6 @@ const App: React.FC = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      // Check if the images folder exists
       const imagesFolderPath = `images`;
       let imagesFolderExists = false;
 
@@ -380,17 +229,14 @@ const App: React.FC = () => {
       }
 
       if (imagesFolderExists) {
-        // Export images folder
         const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
 
-        // Create the images folder in the export directory
         await Filesystem.mkdir({
           path: exportImagesFolderPath,
           directory: Directory.Documents,
           recursive: true,
         });
 
-        // Copy images folder to export folder
         await Filesystem.copy({
           from: imagesFolderPath,
           to: exportImagesFolderPath,
@@ -398,17 +244,14 @@ const App: React.FC = () => {
         });
       }
 
-      // Zip the export folder
       const zip = new JSZip();
       const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
 
-      // Retrieve files in the export folder
       const exportFolderFiles = await Filesystem.readdir({
         path: exportFolderPath,
         directory: Directory.Documents,
       });
 
-      // Use Promise.all to wait for all asynchronous file reading operations to complete
       await Promise.all(
         exportFolderFiles.files.map(async (file) => {
           const filePath = `${exportFolderPath}/${file.name}`;
@@ -421,7 +264,7 @@ const App: React.FC = () => {
         })
       );
 
-      const zipContentBase64 = await zip.generateAsync({ type: 'base64' });
+      const zipContentBase64 = await zip.generateAsync({ type: "base64" });
 
       const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
       await Filesystem.writeFile({
@@ -432,13 +275,9 @@ const App: React.FC = () => {
 
       await shareZipFile();
 
-      console.log("Export completed successfully!");
-
-      // Notify the user
-      window.alert("Export completed successfully! Check your downloads.");
+      alert(translations.home.exportSuccess);
     } catch (error) {
-      console.error("Error exporting data and images:", error);
-      alert("Error exporting data and images: " + (error as any).message);
+      alert(translations.home.exportError + (error as any).message);
     }
   };
 
@@ -446,29 +285,25 @@ const App: React.FC = () => {
     try {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-      const zipFilePath = `file:///Cache/Beaver_Notes_${formattedDate}.zip`;
-  
-      console.log("Sharing zip file from path:", zipFilePath);
-  
+      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
+
       const result = await Filesystem.getUri({
         directory: Directory.Cache,
-        path: 'Beaver_Notes_2024-01-10.zip',
+        path: zipFilePath,
       });
-      
+
       const resolvedFilePath = result.uri;
 
       await Share.share({
-        title: 'Share Beaver Notes Export',
-        text: 'Check out my Beaver Notes export!',
+        title: `${translations.home.shareTitle}`,
         url: resolvedFilePath,
-        dialogTitle: 'Share Beaver Notes Export',
+        dialogTitle: `${translations.home.shareTitle}`,
       });
     } catch (error) {
-      console.error('Error sharing zip file:', error);
-      alert('Error sharing zip file: ' + (error as any).message);
+      alert(translations.home.shareError + (error as any).message);
     }
-  };  
-  
+  };
+
   const handleImportData = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -487,19 +322,15 @@ const App: React.FC = () => {
         if (importedData && importedData.data && importedData.data.notes) {
           const importedNotes: Record<string, Note> = importedData.data.notes;
 
-          // Load existing notes from data.json
           const existingNotes = await loadNotes();
 
-          // Merge the imported notes with the existing notes
           const mergedNotes: Record<string, Note> = {
             ...existingNotes,
             ...importedNotes,
           };
 
-          // Update the notesState with the merged notes
           setNotesState(mergedNotes);
 
-          // Update the filteredNotes based on the search query
           const filtered = Object.values(mergedNotes).filter((note) => {
             const titleMatch = note.title
               .toLowerCase()
@@ -519,7 +350,6 @@ const App: React.FC = () => {
             note.updatedAt = new Date(note.updatedAt);
           });
 
-          // Save the merged notes to the data.json file
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify({ data: { notes: mergedNotes } }),
@@ -527,13 +357,12 @@ const App: React.FC = () => {
             encoding: FilesystemEncoding.UTF8,
           });
 
-          alert("Data imported successfully!");
+          alert(translations.home.importSuccess);
         } else {
-          alert("Invalid data format.");
+          alert(translations.home.importInvalid);
         }
       } catch (error) {
-        console.error("Error while importing data:", error);
-        alert("Error while importing data.");
+        alert(translations.home.importError);
       }
     };
 
@@ -545,7 +374,7 @@ const App: React.FC = () => {
   const [title, setTitle] = useState(
     activeNoteId ? notesState[activeNoteId].title : ""
   );
-  
+
   const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
     if (activeNoteId) {
       const existingNote = notesState[activeNoteId];
@@ -573,7 +402,7 @@ const App: React.FC = () => {
   const handleCreateNewNote = () => {
     const newNote = {
       id: uuid(),
-      title: "New Note",
+      title: translations.home.title || "New Note",
       content: { type: "doc", content: [] },
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -592,44 +421,57 @@ const App: React.FC = () => {
   };
 
   const [isArchiveVisible, setIsArchiveVisible] = useState(false);
+  const [sortingOption, setSortingOption] = useState("updatedAt");
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
-    const updatedAtA = a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
-    const updatedAtB = b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
-    return updatedAtA.getTime() - updatedAtB.getTime();
+    switch (sortingOption) {
+      case "alphabetical":
+        return a.title.localeCompare(b.title);
+      case "createdAt":
+        const createdAtA =
+          a.createdAt instanceof Date ? a.createdAt : new Date(0);
+        const createdAtB =
+          b.createdAt instanceof Date ? b.createdAt : new Date(0);
+        return createdAtA.getTime() - createdAtB.getTime();
+      case "updatedAt":
+      default:
+        const updatedAtA =
+          a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
+        const updatedAtB =
+          b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
+        return updatedAtA.getTime() - updatedAtB.getTime();
+    }
   });
 
   const MAX_CONTENT_PREVIEW_LENGTH = 150;
 
   function extractParagraphTextFromContent(content: JSONContent): string {
     if (!content || !Array.isArray(content.content)) {
-      return "No content...";
+      return translations.home.noContent;
     }
-
-    // Check if the content consists of a single empty paragraph
     if (
       content.content.length === 1 &&
       content.content[0].type === "paragraph" &&
       (!content.content[0].content || content.content[0].content.length === 0)
     ) {
-      return ""; // Return an empty string for a single empty paragraph
+      return ""; 
     }
 
     const paragraphText = content.content
-      .filter((node) => node.type === "paragraph") // Filter paragraph nodes
+      .filter((node) => node.type === "paragraph")
       .map((node) => {
         if (node.content && Array.isArray(node.content)) {
           const textContent = node.content
-            .filter((innerNode) => innerNode.type === "text") // Filter text nodes within paragraphs
-            .map((innerNode) => innerNode.text) // Get the text from text nodes
-            .join(" "); // Join text from text nodes within the paragraph
+            .filter((innerNode) => innerNode.type === "text") 
+            .map((innerNode) => innerNode.text)
+            .join(" ");
           return textContent;
         }
-        return ""; // Return an empty string for nodes without content
+        return "";
       })
-      .join(" "); // Join paragraph text with spaces
+      .join(" ");
 
-    return paragraphText || "No content"; // If no paragraph text, return "No content"
+    return paragraphText || translations.home.noContent;
   }
 
   function truncateContentPreview(
@@ -647,9 +489,7 @@ const App: React.FC = () => {
       text = extractParagraphTextFromContent(contentWithoutTitle);
     }
 
-    if (text.trim() === "") {
-      return "No content"; // Show a placeholder for No content
-    } else if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
+    if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
       return text;
     } else {
       return text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
@@ -672,75 +512,66 @@ const App: React.FC = () => {
   };
 
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Stop the click event from propagating
+    event.stopPropagation();
 
     try {
       const notes = await loadNotes();
       const updatedNote = { ...notes[noteId] };
 
-      // Check if biometrics is available
       const biometricResult = await NativeBiometric.isAvailable();
 
       if (biometricResult.isAvailable) {
         const isFaceID = biometricResult.biometryType === BiometryType.FACE_ID;
 
-        // Show biometric prompt for authentication
         try {
           await NativeBiometric.verifyIdentity({
-            reason: "For note authentication",
-            title: "Authenticate",
-            subtitle: "Use biometrics to unlock/lock the note.",
+            reason: translations.home.biometricsReason,
+            title: translations.home.biometricsTitle,
+            subtitle: translations.home.subtitle,
             description: isFaceID
-              ? "Place your face for authentication."
-              : "Place your finger for authentication.",
+              ? translations.home.biometricFace
+              : translations.home.biometricTouch
           });
         } catch (verificationError) {
-          // Handle verification error (e.g., user cancels biometric prompt)
-          console.error("Biometric verification error:", verificationError);
-          alert(
-            "Biometric verification failed. Note remains in its current state."
-          );
+          alert(translations.home.biometricError);
           return;
         }
       } else {
-        // Biometrics not available, use sharedKey
         let sharedKey = localStorage.getItem("sharedKey");
 
         if (!sharedKey) {
-          // If no shared key is set, prompt the user to set it up
-          sharedKey = prompt("Set up a password to lock/unlock your notes:");
+          sharedKey = prompt(translations.home.biometricPassword);
 
           if (!sharedKey) {
-            // If the user cancels or enters an empty password, do not proceed
-            alert(
-              "Note remains in its current state. Please set up a password next time."
-            );
+            alert(translations.home.biometricError);
             return;
           }
 
-          // Save the shared key in local storage
+          sharedKey = CryptoJS.SHA256(sharedKey).toString();
           localStorage.setItem("sharedKey", sharedKey);
         }
 
-        // Prompt for the password
         const enteredKey = prompt(
-          "Enter the password to lock/unlock the note:"
+          translations.home.biometricPassword
         );
 
-        if (enteredKey !== sharedKey) {
-          // Incorrect password, do not proceed
-          alert("Incorrect password. Note remains in its current state.");
+        if (enteredKey === null) {
+          alert(translations.home.biometricError);          
+          return;
+        }
+
+        const hashedEnteredKey = CryptoJS.SHA256(enteredKey).toString();
+
+        if (hashedEnteredKey !== sharedKey) {
+          alert(translations.home.biometricWrongPassword);
           return;
         }
       }
 
-      // Toggle the 'isLocked' property
       updatedNote.isLocked = !updatedNote.isLocked;
 
-      // Update the note in the dictionary
       notes[noteId] = updatedNote;
 
-      // Update the lockedNotes field
       const lockedNotes = JSON.parse(
         localStorage.getItem("lockedNotes") || "{}"
       );
@@ -751,7 +582,6 @@ const App: React.FC = () => {
       }
       localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
 
-      // Save the updated notes to the filesystem
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
@@ -759,52 +589,50 @@ const App: React.FC = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(notes); // Update the state
+      setNotesState(notes);
 
-      console.log("Note lock status toggled successfully!");
-      alert("Note lock status toggled successfully!");
+      alert(translations.home.biometricSuccess);
     } catch (error) {
-      console.error("Error toggling lock:", error);
-      alert("Error toggling lock: " + (error as any).message);
+      alert(translations.home.biometricError + (error as any).message);
     }
   };
 
   const handleClickNote = async (note: Note) => {
     try {
       if (note.isLocked) {
-        // Check if biometrics is available
         const biometricResult = await NativeBiometric.isAvailable();
 
         if (biometricResult.isAvailable) {
           const isFaceID =
             biometricResult.biometryType === BiometryType.FACE_ID;
 
-          // Show biometric prompt for authentication
           try {
             await NativeBiometric.verifyIdentity({
-              reason: "For note authentication",
-              title: "Authenticate",
-              subtitle: "Use biometrics to unlock the note.",
+              reason: translations.home.biometricsReason,
+              title: translations.home.biometricsTitle,
+              subtitle: translations.home.subtitle2,
               description: isFaceID
-                ? "Place your face for authentication."
-                : "Place your finger for authentication.",
+                ? translations.home.biometricFace
+                : translations.home.biometricTouch,
             });
           } catch (verificationError) {
-            // Handle verification error (e.g., user cancels biometric prompt)
-            console.error("Biometric verification error:", verificationError);
-            alert("Biometric verification failed. Note remains locked.");
+            alert(translations.home.biometricError);
             return;
           }
         } else {
-          // Biometrics not available, use sharedKey
           const userSharedKey = prompt(
-            "Enter the shared key to unlock the note:"
+            translations.home.biometricUnlock
           );
 
-          // Check if the entered key matches the stored key
+          if (userSharedKey === null) {
+            return;
+          }
+
+          const hashedUserSharedKey = CryptoJS.SHA256(userSharedKey).toString();
+
           const storedSharedKey = localStorage.getItem("sharedKey");
-          if (userSharedKey !== storedSharedKey) {
-            alert("Incorrect shared key. Note remains locked.");
+          if (hashedUserSharedKey !== storedSharedKey) {
+            alert(translations.home.biometricWrongPassword);
             return;
           }
         }
@@ -812,105 +640,127 @@ const App: React.FC = () => {
 
       setActiveNoteId(note.id);
     } catch (error) {
-      console.error("Error handling click on note:", error);
-      alert("Error handling click on note: " + (error as any).message);
     }
   };
 
-  return (
-    <div className="grid grid-cols-[auto] sm:grid-cols-[auto,1fr] h-screen dark:text-white bg-white dark:bg-[#232222]">
-      <Sidebar
-        onCreateNewNote={handleCreateNewNote}
-        isDarkMode={darkMode}
-        toggleTheme={() => toggleTheme(!darkMode)}
-        exportData={exportData}
-        handleImportData={handleImportData}
-      />
+  dayjs.extend(relativeTime);
 
-      <div className="overflow-y w-screen">
-        {!activeNoteId && (
-          <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-            <div className="bg-transparent px-6">
-              <div className="flex justify-center">
-                <div className="apply relative w-full md:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2;">
-                  <div>
-                    <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6" />
+  // Translations
+  const [translations, setTranslations] = useState({
+    home: {
+      bookmarked: "home.bookmarked",
+      all: "home.all",
+      messagePt1: "home.messagePt1",
+      messagePt2: "home.messagePt2",
+      messagePt3: "home.messagePt3",
+      unlocktoedit: "home.unlocktoedit",
+      noContent: "home.noContent",
+      title: "home.title",
+      confirmDelete: "home.confirmDelete",
+      exportSuccess: "home.exportSuccess",
+      exportError: "home.exportError",
+      shareError: "home.shareError",
+      importSuccess: "home.importSuccess",
+      importInvalid: "home.importInvalid",
+      importError: "home.importError",
+      biometricsReason: "home.biometricsReason",
+      biometricsTitle: "home.biometricsTitle",
+      subtitle: "home.subtitle",
+      biometricFace: "home.biometricFace",
+      biometricTouch: "home.biometricFinger",
+      biometricError: "home.biometricError",
+      biometricPassword: "home.biometricPassword",
+      biometricWrongPassword: "home.biometricWrongPassword",
+      biometricSuccess: "home.biometricSuccess",
+      subtitle2: "home.subtitle2",
+      biometricUnlock: "home.biometricUnlock",
+      bookmarkError: "home.bookmarkError",
+      archiveError: "home.archiveError",
+      shareTitle: "home.shareTitle",
+    },
+  });
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `./assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+        dayjs.locale(selectedLanguage);
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+
+  return (
+    <div>
+      <div className="grid sm:grid-cols-[auto,1fr]">
+        <Sidebar
+          onCreateNewNote={handleCreateNewNote}
+          isDarkMode={darkMode}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          exportData={exportData}
+          handleImportData={handleImportData}
+        />
+
+        <div className="overflow-y-hidden">
+          {!activeNoteId && (
+            <div className="md:mt-4 py-2 w-full flex flex-col border-gray-300 overflow-auto">
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                handleLabelFilterChange={handleLabelFilterChange}
+                setSortingOption={setSortingOption}
+                uniqueLabels={uniqueLabels}
+                exportData={exportData}
+                handleImportData={handleImportData}
+              />
+              <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
+                {notesList.filter(
+                  (note) => note.isBookmarked && !note.isArchived
+                ).length > 0 && (
+                  <h2 className="text-3xl font-bold">
+                    {translations.home.bookmarked || "-"}
+                  </h2>
+                )}
+                <Bookmarked
+                  notesList={notesList}
+                  activeNoteId={activeNoteId}
+                  handleToggleBookmark={handleToggleBookmark}
+                  handleToggleLock={handleToggleLock}
+                  handleDeleteNote={handleDeleteNote}
+                  handleClickNote={handleClickNote}
+                  truncateContentPreview={truncateContentPreview}
+                />
+                <h2 className="text-3xl font-bold">
+                  {translations.home.all || "-"}
+                </h2>
+                {notesList.length === 0 && (
+                  <div className="mx-auto">
+                    <img
+                      src="./imgs/Beaver.png"
+                      className="max-w-auto sm:w-1/3 mx-auto flex justify-center items-center"
+                      alt="No content"
+                    />
+                    <p className="py-2 text-lg text-center">
+                      {translations.home.messagePt1 || "-"}
+                      <AddFillIcon className="inline-block w-5 h-5" />{" "}
+                      {translations.home.messagePt2 || "-"}
+                      <Download2LineIcon className="inline-block w-5 h-5" />{" "}
+                      {translations.home.messagePt3 || "-"}
+                    </p>
                   </div>
-                  <input
-                    className="text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white w-full"
-                    type="text"
-                    placeholder="Search notes"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <div className="relative inline-flex">
-                    <select
-                      id="labelSelect"
-                      onChange={(e) => handleLabelFilterChange(e.target.value)}
-                      className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
-                    >
-                      <option value="">Select Label</option>
-                      {uniqueLabels.map((label) => (
-                        <option key={label} value={label}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                    <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
-                  </div>
-              </div>
-              <div className="items-center">
-                <div className="md:w-[22em] h-12 flex items-center justify-start mx-auto sm:hidden overflow-hidden">
-                  <div className="border-r-2 border-gray-300 dark:border-neutral-800 p-3 rounded-l-full bg-[#F8F8F7] text-center dark:bg-[#2D2C2C] flex-grow text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
-                    <button
-                      className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center"
-                      onClick={exportData}
-                    >
-                      <Upload2LineIcon />
-                    </button>
-                  </div>
-                  <div className="border-l-2 border-gray-300 dark:border-neutral-800 p-3 rounded-r-full bg-[#F8F8F7] dark:bg-[#2D2C2C] text-center flex-grow mr-2 text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
-                    <div className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center">
-                      <label htmlFor="importData">
-                        <Download2LineIcon />
-                      </label>
-                      <input
-                        className="hidden"
-                        type="file"
-                        id="importData"
-                        accept=".json"
-                        onChange={handleImportData}
-                      />
-                    </div>
-                  </div>
-                  <div className="relative hidden sm:block inline-flex items-center">
-                    <select
-                      id="labelSelect"
-                      onChange={(e) => handleLabelFilterChange(e.target.value)}
-                      className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
-                    >
-                      <option value="">Select Label</option>
-                      {uniqueLabels.map((label) => (
-                        <option key={label} value={label}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                    <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
-              {notesList.filter((note) => note.isBookmarked && !note.isArchived)
-                .length > 0 && (
-                <h2 className="text-3xl font-bold">Bookmarked</h2>
-              )}
-              <div className="grid py-2 w-full h-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
-                {notesList.map((note) => {
-                  if (note.isBookmarked && !note.isArchived) {
-                    return (
+                )}
+                <div className="grid py-2 grid-cols-1 md:grid-cols-2 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                  {notesList
+                    .filter((note) => !note.isBookmarked && !note.isArchived)
+                    .map((note) => (
                       <div
                         key={note.id}
                         role="button"
@@ -922,7 +772,7 @@ const App: React.FC = () => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-                        <div className="sm:h-44 h-36 overflow-hidden">
+                        <div className="h-40 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
                             {note.isLocked ? (
@@ -951,7 +801,7 @@ const App: React.FC = () => {
                                   <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
                                 </button>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                  Unlock to edit
+                                  {translations.home.unlocktoedit || "-"}
                                 </p>
                               </div>
                             ) : (
@@ -962,166 +812,73 @@ const App: React.FC = () => {
                             )}
                           </div>
                         </div>
-                        <div className="py-2">
-                          <button
-                            className="text-[#52525C] py-2 dark:text-white w-auto"
-                            onClick={(e) => handleToggleBookmark(note.id, e)}
-                          >
-                            {note.isBookmarked ? (
-                              <Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                            ) : (
-                              <Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                            )}
-                          </button>
-                          <button
-                            className="text-[#52525C] py-2 dark:text-white w-auto"
-                            onClick={(e) => handleToggleLock(note.id, e)}
-                          >
-                            {note.isLocked ? (
-                              <LockClosedIcon className="w-8 h-8 mr-2" />
-                            ) : (
-                              <LockOpenIcon className="w-8 h-8 mr-2" />
-                            )}
-                          </button>
-                          <button
-                            className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                            onClick={() => handleDeleteNote(note.id)}
-                          >
-                            <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-              <h2 className="text-3xl font-bold">All Notes</h2>
-              {notesList.length === 0 && (
-                <div className="mx-auto">
-                  <p className="py-2 text-lg text-center">
-                    No notes available. Click{" "}
-                    <AddFillIcon className="inline-block w-5 h-5" /> to add a
-                    new note or click{" "}
-                    <Download2LineIcon className="inline-block w-5 h-5" /> to
-                    import your data.
-                  </p>
-                </div>
-              )}
-              <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-4 gap-4 cursor-pointer rounded-md items-center justify-center">
-                {notesList
-                  .filter((note) => !note.isBookmarked && !note.isArchived)
-                  .map((note) => (
-                    <div
-                      key={note.id}
-                      role="button"
-                      tabIndex={0}
-                      className={
-                        note.id === activeNoteId
-                          ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                          : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                      }
-                      onClick={() => handleClickNote(note)}
-                    >
-                      <div className="sm:h-44 h-36 overflow-hidden">
-                        <div className="flex flex-col h-full overflow-hidden">
-                          <div className="text-2xl">{note.title}</div>
-                          {note.isLocked ? (
-                            <div>
-                              <p></p>
-                            </div>
-                          ) : (
-                            <div>
-                              {note.labels.length > 0 && (
-                                <div className="flex gap-2">
-                                  {note.labels.map((label) => (
-                                    <span
-                                      key={label}
-                                      className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                    >
-                                      #{label}
-                                    </span>
-                                  ))}
-                                </div>
+                        <div className="flex items-center justify-between pt-2">
+                          <div className="flex items-center">
+                            <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleBookmark(note.id, e)}
+                            >
+                              {note.isBookmarked ? (
+                                <Bookmark3FillIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <Bookmark3LineIcon className="w-8 h-8 mr-2" />
                               )}
-                            </div>
-                          )}
-                          {note.isLocked ? (
-                            <div className="flex flex-col items-center">
-                              <button className="flex items-center justify-center">
-                                <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
-                              </button>
-                              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                Unlock to edit
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="text-lg">
-                              {note.content &&
-                                truncateContentPreview(note.content)}
-                            </div>
-                          )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
+                            >
+                              {note.isBookmarked ? (
+                                <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
+                              )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleLock(note.id, e)}
+                            >
+                              {note.isLocked ? (
+                                <LockClosedIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <LockOpenIcon className="w-8 h-8 mr-2" />
+                              )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto"
+                              onClick={(e) => handleDeleteNote(note.id, e)}
+                            >
+                              <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                            </button>
+                          </div>
+                          <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
+                            {dayjs(note.createdAt).fromNow()}
+                          </div>
                         </div>
                       </div>
-                      <button
-                        className="text-[#52525C] py-2 dark:text-white w-auto"
-                        onClick={(e) => handleToggleBookmark(note.id, e)} // Pass the event
-                      >
-                        {note.isBookmarked ? (
-                          <Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                        ) : (
-                          <Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                        )}
-                      </button>
-                      <button
-                        className="text-[#52525C] py-2 dark:text-white w-auto"
-                        onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
-                      >
-                        {note.isBookmarked ? (
-                          <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
-                        ) : (
-                          <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
-                        )}
-                      </button>
-                      <button
-                        className="text-[#52525C] py-2 dark:text-white w-auto"
-                        onClick={(e) => handleToggleLock(note.id, e)}
-                      >
-                        {note.isLocked ? (
-                          <LockClosedIcon className="w-8 h-8 mr-2" />
-                        ) : (
-                          <LockOpenIcon className="w-8 h-8 mr-2" />
-                        )}
-                      </button>
-                      <button
-                        className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                        onClick={() => handleDeleteNote(note.id)}
-                      >
-                        <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
+              <BottomNavBar
+                onCreateNewNote={handleCreateNewNote}
+                onToggleArchiveVisibility={() =>
+                  setIsArchiveVisible(!isArchiveVisible)
+                }
+              />
             </div>
-            <BottomNavBar
-              onCreateNewNote={handleCreateNewNote}
-              onToggleArchiveVisibility={() =>
-                setIsArchiveVisible(!isArchiveVisible)
-              }
-            />
-          </div>
-        )}
-        <div>
-          {activeNote && (
-            <NoteEditor
-              note={activeNote}
-              title={title}
-              onTitleChange={setTitle}
-              onChange={handleChangeNoteContent}
-              onCloseEditor={handleCloseEditor}
-            />
           )}
         </div>
+      </div>
+      <div>
+        {activeNote && (
+          <NoteEditor
+            note={activeNote}
+            title={title}
+            onTitleChange={setTitle}
+            onChange={handleChangeNoteContent}
+            onCloseEditor={handleCloseEditor}
+          />
+        )}
       </div>
     </div>
   );
