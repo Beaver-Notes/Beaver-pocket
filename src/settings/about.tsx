@@ -511,7 +511,7 @@ const About: React.FC = ({}) => {
       />
       <div className="overflow-y">
         {!activeNoteId && (
-          <div className="py-2 mx-10 sm:px-60 mb-2">
+          <div className="py-2 mx-10 sm:px-20 mb-2">
             <div className="general space-y-3 w-full">
               <p className="text-4xl font-bold">{translations.about.title}</p>
               <img src="./imgs/icon.png" alt="Beaver Notes Icon" className="w-32 h-32 rounded-full"/>

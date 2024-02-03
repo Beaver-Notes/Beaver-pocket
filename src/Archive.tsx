@@ -700,7 +700,7 @@ const Archive: React.FC = () => {
           handleImportData={handleImportData}
         />
 
-        <div className="overflow-y">
+        <div className="overflow-y-hidden">
           {!activeNoteId && (
             <div className="w-full md:pt-4 py-2 flex flex-col border-gray-300 overflow-auto">
               <SearchBar
@@ -743,7 +743,7 @@ const Archive: React.FC = () => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-                        <div className="sm:h-44 h-36 overflow-hidden">
+                        <div className="h-40 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
                             {note.isLocked ? (

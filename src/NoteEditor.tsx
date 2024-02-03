@@ -295,8 +295,9 @@ function NoteEditor({
   const addPaddingTop = isPlatform('ios') ? 'pt-5 sm:pt-1' : '';
 
   return (
+    <div>
     <div
-      className="overflow-auto h-full justify-center items-start px-4 text-black dark:text-white sm:px-10 md:px-20 lg:px-60 text-base "
+      className="sm:ml-16 overflow-auto h-full justify-center items-start px-4 text-black dark:text-white sm:px-10 md:px-20 lg:px-60 text-base "
       onPaste={handlePaste}
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
@@ -306,7 +307,7 @@ function NoteEditor({
           className={
             isFullScreen
               ? "overflow-auto w-full"
-              : "fixed z-10 pt-2 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
+              : "fixed z-10 pt-2 bottom-6 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
           }
         >
           <div className="bottom-6 flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
@@ -447,7 +448,7 @@ function NoteEditor({
       {headingTreeVisible && editor && (
         <div
           ref={headingTreeRef}
-          className={`transition-opacity z-50 ${
+          className={`transition-opacity  ${
             headingTreeVisible ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -505,6 +506,7 @@ function NoteEditor({
           />
         </div>
       </div>
+    </div>
     </div>
   );
 }
