@@ -55,7 +55,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
     }, []); 
     
   return (
-    <div className="grid py-2 grid-cols-1 md:grid-cols-2 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+    <div className="grid py-2 grid-cols-1 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
     {notesList.map((note) => {
                     if (note.isBookmarked && !note.isArchived) {
                       return (
@@ -70,7 +70,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
                           }
                           onClick={() => handleClickNote(note)}
                         >
-                          <div className="h-40 overflow-hidden">
+                          <div className="h-44 overflow-hidden">
                             <div className="flex flex-col h-full overflow-hidden">
                               <div className="text-2xl">{note.title}</div>
                               {note.isLocked ? (

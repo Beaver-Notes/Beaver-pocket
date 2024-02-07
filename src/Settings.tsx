@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
@@ -21,7 +21,9 @@ import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
 import InformationLineIcon from "remixicon-react/InformationLineIcon";
 import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
 import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
-
+import { useSwipeable } from "react-swipeable";
+import { Share } from "@capacitor/share";
+import JSZip from "jszip";
 
 async function createNotesDirectory() {
   const directoryPath = "notes";
@@ -50,6 +52,23 @@ const Settings: React.FC = () => {
     "OpenDyslexic",
     "Ubuntu",
   ];
+
+  const navigate = useNavigate();
+
+  const handleSwipe = (eventData: any) => {
+    const isRightSwipe = eventData.dir === "Right";
+    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
+
+    if (isRightSwipe && isSmallSwipe) {
+      eventData.event.preventDefault();
+    } else if (isRightSwipe) {
+      navigate(-1); // Navigate back
+    }
+  };
+
+  const handlers = useSwipeable({
+    onSwiped: handleSwipe,
+  });
 
   useEffect(() => {
     document.documentElement.style.setProperty("--selected-font", selectedFont);
@@ -228,7 +247,6 @@ const Settings: React.FC = () => {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
 
-      // Create the parent export folder
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
@@ -236,22 +254,21 @@ const Settings: React.FC = () => {
         recursive: true,
       });
 
-      // Create the export folder structure
       const exportFolderName = `Beaver Notes ${formattedDate}`;
       const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
 
-      // Create the export folder
       await Filesystem.mkdir({
         path: exportFolderPath,
         directory: Directory.Documents,
         recursive: true,
       });
 
-      // Export data.json
-      let exportedData: any = {
+      const exportedData: any = {
         data: {
           notes: {},
+          lockedNotes: {},
         },
+        labels: [],
       };
 
       Object.values(notesState).forEach((note) => {
@@ -269,33 +286,22 @@ const Settings: React.FC = () => {
           updatedAt: updatedAtTimestamp,
           isBookmarked: note.isBookmarked,
           isArchived: note.isArchived,
+          isLocked: note.isLocked,
           lastCursorPosition: note.lastCursorPosition,
         };
+
+        exportedData.labels = exportedData.labels.concat(note.labels);
+
+        if (note.isLocked) {
+          exportedData.data.lockedNotes[note.id] = true;
+        }
       });
 
-      let jsonData = JSON.stringify(exportedData, null, 2);
+      exportedData.labels = Array.from(new Set(exportedData.labels));
 
-      // Check if password protection is enabled
-      if (withPassword) {
-        // Prompt the user for a password
-        const passwordPrompt =
-          translations.settings.Inputpassword || "Enter password for export:";
-        const password = prompt(passwordPrompt);
-
-        // Check if the user provided a password
-        if (password !== null) {
-          // Encrypt the data using CryptoJS and the user's password
-          jsonData = CryptoJS.AES.encrypt(jsonData, password).toString();
-        } else {
-          // User canceled password input, abort export
-          console.log("Export canceled.");
-          return;
-        }
-      }
-
+      const jsonData = JSON.stringify(exportedData, null, 2);
       const jsonFilePath = `${exportFolderPath}/data.json`;
 
-      // Save data.json
       await Filesystem.writeFile({
         path: jsonFilePath,
         data: jsonData,
@@ -303,7 +309,6 @@ const Settings: React.FC = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      // Check if the images folder exists
       const imagesFolderPath = `images`;
       let imagesFolderExists = false;
 
@@ -318,17 +323,14 @@ const Settings: React.FC = () => {
       }
 
       if (imagesFolderExists) {
-        // Export images folder
         const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
 
-        // Create the images folder in the export directory
         await Filesystem.mkdir({
           path: exportImagesFolderPath,
           directory: Directory.Documents,
           recursive: true,
         });
 
-        // Copy images folder to export folder
         await Filesystem.copy({
           from: imagesFolderPath,
           to: exportImagesFolderPath,
@@ -336,10 +338,63 @@ const Settings: React.FC = () => {
         });
       }
 
+      const zip = new JSZip();
+      const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
+
+      const exportFolderFiles = await Filesystem.readdir({
+        path: exportFolderPath,
+        directory: Directory.Documents,
+      });
+
+      await Promise.all(
+        exportFolderFiles.files.map(async (file) => {
+          const filePath = `${exportFolderPath}/${file.name}`;
+          const fileContent = await Filesystem.readFile({
+            path: filePath,
+            directory: Directory.Documents,
+            encoding: FilesystemEncoding.UTF8,
+          });
+          exportFolderZip!.file(file.name, fileContent.data);
+        })
+      );
+
+      const zipContentBase64 = await zip.generateAsync({ type: "base64" });
+
+      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
+      await Filesystem.writeFile({
+        path: zipFilePath,
+        data: zipContentBase64,
+        directory: Directory.Cache,
+      });
+
+      await shareZipFile();
 
       alert(translations.home.exportSuccess);
     } catch (error) {
       alert(translations.home.exportError + (error as any).message);
+    }
+  };
+
+  const shareZipFile = async () => {
+    try {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
+
+      const result = await Filesystem.getUri({
+        directory: Directory.Cache,
+        path: zipFilePath,
+      });
+
+      const resolvedFilePath = result.uri;
+
+      await Share.share({
+        title: `${translations.home.shareTitle}`,
+        url: resolvedFilePath,
+        dialogTitle: `${translations.home.shareTitle}`,
+      });
+    } catch (error) {
+      alert(translations.home.shareError + (error as any).message);
     }
   };
 
@@ -517,7 +572,7 @@ const Settings: React.FC = () => {
       importSuccess: "home.importSuccess",
       importError: "home.importError",
       importInvalid: "home.importInvalid",
-    }
+    },
   });
 
   useEffect(() => {
@@ -554,7 +609,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div>
+    <div {...handlers}>
       <div className="grid sm:grid-cols-[auto,1fr]">
         <Sidebar
           onCreateNewNote={handleCreateNewNote}
@@ -567,7 +622,7 @@ const Settings: React.FC = () => {
         <div className="overflow-y-hidden">
           {!activeNoteId && (
             <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-              <div className="mx-10 md:px-24 overflow-y-auto flex-grow">
+              <div className="mx-6 md:px-24 overflow-y-auto flex-grow">
                 <p className="text-4xl font-bold">
                   {" "}
                   {translations.settings.title || "-"}

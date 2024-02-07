@@ -25,6 +25,8 @@ import {
 } from "./store/notes";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/it";
+import { useSwipeable } from 'react-swipeable';
+import { useNavigate } from 'react-router-dom';
 
 // Import Remix icons
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
@@ -687,10 +689,28 @@ const Archive: React.FC = () => {
     };
 
     loadTranslations();
-  }, []); // Empty dependency array means this effect runs once on mount
+  }, []); 
+
+  const navigate = useNavigate();
+
+  const handleSwipe = (eventData: any) => {
+
+    const isRightSwipe = eventData.dir === "Right";
+    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
+
+    if (isRightSwipe && isSmallSwipe) {
+      eventData.event.preventDefault();
+    } else if (isRightSwipe) {
+      navigate(-1); // Navigate back
+    }
+  };
+
+  const handlers = useSwipeable({
+    onSwiped: handleSwipe,
+  });
 
   return (
-    <div>
+    <div {...handlers}>
       <div className="grid sm:grid-cols-[auto,1fr]">
         <Sidebar
           onCreateNewNote={handleCreateNewNote}
@@ -712,7 +732,7 @@ const Archive: React.FC = () => {
                 exportData={exportData}
                 handleImportData={handleImportData}
               />
-              <div className="py-6 p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
+              <div className="py-6 p-2 mx-6 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
                 <h2 className="text-3xl font-bold">{translations.archive.archived || "-"}</h2>
                 {notesList.filter((note) => note.isArchived).length === 0 && (
                   <div className="mx-auto">
@@ -728,7 +748,7 @@ const Archive: React.FC = () => {
                     </p>
                   </div>
                 )}
-                <div className="grid py-2 grid-cols-1 md:grid-cols-2 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 grid-cols-1 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList
                     .filter((note) => note.isArchived)
                     .map((note) => (
@@ -743,7 +763,7 @@ const Archive: React.FC = () => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-                        <div className="h-40 overflow-hidden">
+                        <div className="h-44 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
                             {note.isLocked ? (

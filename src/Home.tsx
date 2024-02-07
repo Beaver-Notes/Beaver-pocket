@@ -40,6 +40,8 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
+import { useSwipeable } from "react-swipeable";
+import { useNavigate } from "react-router-dom";
 
 const App: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -698,8 +700,26 @@ const App: React.FC = () => {
     loadTranslations();
   }, []);
 
+  const navigate = useNavigate();
+
+  const handleSwipe = (eventData: any) => {
+
+    const isRightSwipe = eventData.dir === "Right";
+    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
+
+    if (isRightSwipe && isSmallSwipe) {
+      eventData.event.preventDefault();
+    } else if (isRightSwipe) {
+      navigate(-1); // Navigate back
+    }
+  };
+
+  const handlers = useSwipeable({
+    onSwiped: handleSwipe,
+  });
+
   return (
-    <div>
+    <div {...handlers}>
       <div className="grid sm:grid-cols-[auto,1fr]">
         <Sidebar
           onCreateNewNote={handleCreateNewNote}
@@ -721,7 +741,7 @@ const App: React.FC = () => {
                 exportData={exportData}
                 handleImportData={handleImportData}
               />
-              <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
+              <div className="p-2 mb-10 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
                 {notesList.filter(
                   (note) => note.isBookmarked && !note.isArchived
                 ).length > 0 && (
@@ -757,7 +777,7 @@ const App: React.FC = () => {
                     </p>
                   </div>
                 )}
-                <div className="grid py-2 grid-cols-1 md:grid-cols-2 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 grid-cols-1 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList
                     .filter((note) => !note.isBookmarked && !note.isArchived)
                     .map((note) => (
@@ -772,7 +792,7 @@ const App: React.FC = () => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-                        <div className="h-40 overflow-hidden">
+                        <div className="h-44 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
                             {note.isLocked ? (
@@ -782,7 +802,7 @@ const App: React.FC = () => {
                             ) : (
                               <div>
                                 {note.labels.length > 0 && (
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-1 overflow-hidden">
                                     {note.labels.map((label) => (
                                       <span
                                         key={label}
