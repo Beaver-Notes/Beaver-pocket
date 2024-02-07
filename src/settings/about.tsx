@@ -17,6 +17,8 @@ import {
 import dayjs from "dayjs";
 import { Share } from "@capacitor/share";
 import JSZip from "jszip";
+import { useNavigate } from "react-router-dom";
+import { useSwipeable } from "react-swipeable";
 
 async function createNotesDirectory() {
   const directoryPath = "notes";
@@ -499,9 +501,27 @@ const About: React.FC = ({}) => {
     saveNote(newNote);
   };
 
+  const navigate = useNavigate();
+
+  const handleSwipe = (eventData: any) => {
+
+    const isRightSwipe = eventData.dir === "Right";
+    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
+
+    if (isRightSwipe && isSmallSwipe) {
+      eventData.event.preventDefault();
+    } else if (isRightSwipe) {
+      navigate(-1); // Navigate back
+    }
+  };
+
+  const handlers = useSwipeable({
+    onSwiped: handleSwipe,
+  });
+
   const [isArchiveVisible, setIsArchiveVisible] = useState(false);
   return (
-    <div className="">
+    <div {...handlers}>
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}
@@ -511,7 +531,7 @@ const About: React.FC = ({}) => {
       />
       <div className="overflow-y">
         {!activeNoteId && (
-          <div className="py-2 mx-10 sm:px-20 mb-2">
+          <div className="py-2 mx-6 sm:px-20 mb-2">
             <div className="general space-y-3 w-full">
               <p className="text-4xl font-bold">{translations.about.title}</p>
               <img src="./imgs/icon.png" alt="Beaver Notes Icon" className="w-32 h-32 rounded-full"/>

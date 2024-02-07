@@ -22,8 +22,11 @@ import Mathblock from "./lib/tiptap/math-block/Index";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
 import HeadingTree from "./lib/HeadingTree";
+import Table from "@tiptap/extension-table";
+import TableCell from "@tiptap/extension-table-cell";
+import TableHeader from "@tiptap/extension-table-header";
+import TableRow from "@tiptap/extension-table-row";
 import { isPlatform } from "@ionic/react";
-import { useSwipeable } from "react-swipeable";
 import Drawer from "./components/Drawer";
 // import Paper from "./lib/tiptap/paper/Paper"
 
@@ -46,12 +49,21 @@ import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
+import TableIcon from "remixicon-react/TableLineIcon";
+import InsertRowTopIcon from "remixicon-react/InsertRowTopIcon";
+import InsertRowBottom from "remixicon-react/InsertRowBottomIcon";
+import DeleteRow from "remixicon-react/DeleteRowIcon"
+import InsertColumnLeft from "remixicon-react/InsertColumnLeftIcon"
+import InsertColumnRight from "remixicon-react/InsertColumnRightIcon"
+import DeleteColumn from "remixicon-react/DeleteColumnIcon"
 
 // Languages
 import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
 import html from "highlight.js/lib/languages/xml";
+import { useNavigate } from "react-router-dom";
+import { useSwipeable } from "react-swipeable";
 
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("css", css);
@@ -71,6 +83,10 @@ const extensions = [
   Link,
   Mathblock,
   Highlight,
+  Table,
+  TableCell,
+  TableHeader,
+  TableRow,
   Underline,
   Placeholder,
   OrderedList,
@@ -298,10 +314,16 @@ function NoteEditor({
 
   const addPaddingTop = isPlatform("ios") ? "pt-6 sm:pt-1" : "";
 
+  const navigate = useNavigate();
+
   const handleSwipe = (eventData: any) => {
-    // Check the direction of the swipe
-    if (eventData.dir === "Right") {
-      onCloseEditor();
+    const isRightSwipe = eventData.dir === "Right";
+    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
+
+    if (isRightSwipe && isSmallSwipe) {
+      eventData.event.preventDefault();
+    } else if (isRightSwipe) {
+      navigate(-1); // Navigate back
     }
   };
 
@@ -520,15 +542,15 @@ function NoteEditor({
             />
           </div>
         </div>
-        <div className="sm:hidden">
-          <Drawer defaultHeight={100} maxHeight={180}>
+        <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>
+          <Drawer defaultHeight={100} maxHeight={230}>
             <div className="p-3 overflow-hidden max-auto flex flex-wrap">
               <div className="flex flex-wrap">
                 <button
                   className={
                     editor?.isActive("heading", { level: 1 })
                       ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#333232] cursor-pointer"
+                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={() =>
                     editor?.chain().focus().toggleHeading({ level: 1 }).run()
@@ -540,7 +562,7 @@ function NoteEditor({
                   className={
                     editor?.isActive("heading", { level: 2 })
                       ? "p-2 rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-2 rounded-r-xl text-white bg-[#333232] cursor-pointer"
+                      : "p-2 rounded-r-xl text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={() =>
                     editor?.chain().focus().toggleHeading({ level: 2 }).run()
@@ -554,7 +576,7 @@ function NoteEditor({
                   className={
                     editor?.isActive("bold")
                       ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#333232] cursor-pointer"
+                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={toggleBold}
                 >
@@ -564,7 +586,7 @@ function NoteEditor({
                   className={
                     editor?.isActive("italic")
                       ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#333232] cursor-pointer"
+                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={toggleItalic}
                 >
@@ -574,7 +596,7 @@ function NoteEditor({
                   className={
                     editor?.isActive("underline")
                       ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#333232] cursor-pointer"
+                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={toggleUnderline}
                 >
@@ -584,7 +606,7 @@ function NoteEditor({
                   className={
                     editor?.isActive("strike")
                       ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#333232] cursor-pointer"
+                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={toggleStrike}
                 >
@@ -594,7 +616,7 @@ function NoteEditor({
                   className={
                     editor?.isActive("highlight")
                       ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-r-xl text-white bg-[#333232] cursor-pointer"
+                      : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={toggleHighlight}
                 >
@@ -605,14 +627,14 @@ function NoteEditor({
                 <button
                   onClick={setLink}
                   className={
-                    "p-[11px] rounded-full text-white  bg-[#333232] cursor-pointer"
+                    "p-[11px] rounded-full text-white  bg-[#393939] cursor-pointer"
                   }
                 >
                   <LinkIcon className="border-none text-white text-xl w-7 h-7" />
                 </button>
               </div>
               <div className="flex py-3 pl-1.5">
-              <div className="p-[11px] rounded-full text-white bg-[#333232] cursor-pointer">
+                <div className="p-[11px] rounded-full text-white bg-[#393939] cursor-pointer">
                   <label htmlFor="image-upload-input">
                     <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
                   </label>
@@ -634,7 +656,7 @@ function NoteEditor({
                   className={
                     editor?.isActive("OrderedList")
                       ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#333232] cursor-pointer"
+                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={toggleOrderedList}
                 >
@@ -644,7 +666,7 @@ function NoteEditor({
                   className={
                     editor?.isActive("UnorderedList")
                       ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px]text-white bg-[#333232] cursor-pointer"
+                      : "p-[11px]text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={toggleUnorderedList}
                 >
@@ -654,7 +676,7 @@ function NoteEditor({
                   className={
                     editor?.isActive("Tasklist")
                       ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-r-xl text-white bg-[#333232] cursor-pointer"
+                      : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={toggleTaskList}
                 >
@@ -662,11 +684,11 @@ function NoteEditor({
                 </button>
               </div>
               <div className="flex py-3 pl-1.5">
-              <button
+                <button
                   className={
                     editor?.isActive("Blockquote")
-                    ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
-                    : "p-[11px] rounded-full text-white bg-[#333232] cursor-pointer"
+                      ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
+                      : "p-[11px] rounded-full text-white bg-[#393939] cursor-pointer"
                   }
                   onClick={toggleBlockquote}
                 >
@@ -674,15 +696,95 @@ function NoteEditor({
                 </button>
               </div>
               <div className="flex py-3 pl-1">
-              <button
+                <button
                   className={
                     editor?.isActive("CodeBlock")
-                    ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
-                    : "p-[11px] rounded-full text-white bg-[#333232] cursor-pointer"
+                      ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
+                      : "p-[11px] rounded-full text-white bg-[#393939] cursor-pointer"
                   }
-                  onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+                  onClick={() =>
+                    editor?.chain().focus().toggleCodeBlock().run()
+                  }
                 >
                   <CodeBox className="border-none text-white text-xl w-7 h-7" />
+                </button>
+              </div>
+              <div className="flex px-1.5">
+                <button
+                  className={
+                    editor?.isActive("table")
+                      ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
+                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
+                  }
+                  onClick={() =>
+                    editor
+                      ?.chain()
+                      .focus()
+                      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                      .run()
+                  }
+                >
+                  <TableIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("rowBefore")
+                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
+                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
+                  }
+                  onClick={() => editor?.chain().focus().addRowBefore().run()}
+                >
+                  <InsertRowTopIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("rowAfter")
+                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
+                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
+                  }
+                  onClick={() => editor?.chain().focus().addRowAfter().run()}
+                >
+                  <InsertRowBottom className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("deleteRow")
+                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
+                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
+                  }
+                  onClick={() => editor?.chain().focus().deleteRow().run()}
+                >
+                  <DeleteRow className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("columnBefore")
+                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
+                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
+                  }
+                  onClick={() => editor?.chain().focus().addColumnBefore().run()}
+                >
+                  <InsertColumnLeft className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("columnAfter")
+                    ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
+                    : "p-[11px] text-white bg-[#393939] cursor-pointer"
+                  }
+                  onClick={() => editor?.chain().focus().addColumnAfter().run()}
+                >
+                  <InsertColumnRight className="border-none text-white text-xl w-7 h-7" />
+                </button>
+                <button
+                  className={
+                    editor?.isActive("deleteColumn")
+                      ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
+                      : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
+                  }
+                  onClick={() => editor?.chain().focus().deleteColumn().run()}
+                >
+                  <DeleteColumn className="border-none text-white text-xl w-7 h-7" />
                 </button>
               </div>
             </div>
