@@ -80,9 +80,7 @@ const App: React.FC = () => {
 
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    const isConfirmed = window.confirm(
-      translations.home.confirmDelete
-    );
+    const isConfirmed = window.confirm(translations.home.confirmDelete);
 
     if (isConfirmed) {
       await deleteNote(noteId);
@@ -174,7 +172,7 @@ const App: React.FC = () => {
       const exportedData: any = {
         data: {
           notes: {},
-          lockedNotes: {}, 
+          lockedNotes: {},
         },
         labels: [],
       };
@@ -456,7 +454,7 @@ const App: React.FC = () => {
       content.content[0].type === "paragraph" &&
       (!content.content[0].content || content.content[0].content.length === 0)
     ) {
-      return ""; 
+      return "";
     }
 
     const paragraphText = content.content
@@ -464,7 +462,7 @@ const App: React.FC = () => {
       .map((node) => {
         if (node.content && Array.isArray(node.content)) {
           const textContent = node.content
-            .filter((innerNode) => innerNode.type === "text") 
+            .filter((innerNode) => innerNode.type === "text")
             .map((innerNode) => innerNode.text)
             .join(" ");
           return textContent;
@@ -532,7 +530,7 @@ const App: React.FC = () => {
             subtitle: translations.home.subtitle,
             description: isFaceID
               ? translations.home.biometricFace
-              : translations.home.biometricTouch
+              : translations.home.biometricTouch,
           });
         } catch (verificationError) {
           alert(translations.home.biometricError);
@@ -553,12 +551,10 @@ const App: React.FC = () => {
           localStorage.setItem("sharedKey", sharedKey);
         }
 
-        const enteredKey = prompt(
-          translations.home.biometricPassword
-        );
+        const enteredKey = prompt(translations.home.biometricPassword);
 
         if (enteredKey === null) {
-          alert(translations.home.biometricError);          
+          alert(translations.home.biometricError);
           return;
         }
 
@@ -622,9 +618,7 @@ const App: React.FC = () => {
             return;
           }
         } else {
-          const userSharedKey = prompt(
-            translations.home.biometricUnlock
-          );
+          const userSharedKey = prompt(translations.home.biometricUnlock);
 
           if (userSharedKey === null) {
             return;
@@ -641,8 +635,7 @@ const App: React.FC = () => {
       }
 
       setActiveNoteId(note.id);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   dayjs.extend(relativeTime);
@@ -703,7 +696,6 @@ const App: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSwipe = (eventData: any) => {
-
     const isRightSwipe = eventData.dir === "Right";
     const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
 
@@ -802,15 +794,17 @@ const App: React.FC = () => {
                             ) : (
                               <div>
                                 {note.labels.length > 0 && (
-                                  <div className="flex gap-1 overflow-hidden">
-                                    {note.labels.map((label) => (
-                                      <span
-                                        key={label}
-                                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                      >
-                                        #{label}
-                                      </span>
-                                    ))}
+                                  <div className="flex flex-col gap-1 overflow-hidden">
+                                    <div className="flex flex-wrap gap-1">
+                                      {note.labels.map((label) => (
+                                        <span
+                                          key={label}
+                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                        >
+                                          #{label}
+                                        </span>
+                                      ))}
+                                    </div>
                                   </div>
                                 )}
                               </div>
