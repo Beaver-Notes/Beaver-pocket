@@ -3,53 +3,53 @@
 @tailwind utilities;
 
 :root {
-  --selected-font: 'Arimo', sans-serif;
+  --selected-font: "Arimo", sans-serif;
   -webkit-tap-highlight-color: transparent;
   padding-top: constant(safe-area-inset-top) !important;
   padding-top: env(safe-area-inset-top) !important;
 }
 
 body {
-    @apply dark:text-white bg-white dark:bg-[#232222];
-    font-family: var(--selected-font);
-    transition: background-color 0.3s ease;
+  @apply dark:text-white bg-white dark:bg-[#232222];
+  font-family: var(--selected-font);
+  transition: background-color 0.3s ease;
 }
 
 h1 {
-  @apply text-3xl font-bold leading-relaxed 
+  @apply text-3xl font-bold leading-relaxed;
 }
 
 h2 {
-  @apply text-3xl font-bold leading-relaxed 
+  @apply text-3xl font-bold leading-relaxed;
 }
 
 h3 {
-  @apply text-2xl font-bold leading-relaxed 
+  @apply text-2xl font-bold leading-relaxed;
 }
 
 h4 {
-  @apply text-xl font-bold leading-relaxed 
+  @apply text-xl font-bold leading-relaxed;
 }
 
 h5 {
-  @apply text-lg font-bold leading-relaxed 
+  @apply text-lg font-bold leading-relaxed;
 }
 
 h6 {
-  @apply text-base font-bold leading-relaxed 
+  @apply text-base font-bold leading-relaxed;
 }
 
 ol {
-  @apply px-6 list-decimal
+  @apply px-6 list-decimal;
 }
 
 ul {
-  @apply px-6 list-disc
+  @apply px-6 list-disc;
 }
 
 code {
   @apply bg-neutral-100 dark:bg-neutral-700 rounded-xl p-1 px-1;
- }
+}
 
 .ProseMirror a {
   @apply text-amber-400 dark:text-amber-400 !important;
@@ -80,7 +80,7 @@ code {
 }
 
 .ProseMirror {
-  min-height:  400px;
+  min-height: 400px;
   & > :first-child {
     margin-top: 0;
   }
@@ -116,19 +116,19 @@ code {
       }
 
       input[type="checkbox"]:checked {
-        border-color: #FBBF24;
+        border-color: #fbbf24;
       }
 
       /* Optional: You can add a custom background or other styles for the checked state */
       input[type="checkbox"]:checked::before {
-        content:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(251,191,36,1)'%3E%3C/path%3E%3C/svg%3E");
+        content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(251,191,36,1)'%3E%3C/path%3E%3C/svg%3E");
         display: block;
         width: 100%;
         height: 100%;
         font-size: 16px;
         line-height: 20px;
         text-align: center;
-        color: #FBBF24;
+        color: #fbbf24;
       }
 
       display: flex;
@@ -158,15 +158,59 @@ code {
 }
 
 .labelinput:empty::before {
-  content:attr(data-placeholder);
-  @apply bg-transparent text-neutral-600 dark:text-[#A1A1AA] !important; 
+  content: attr(data-placeholder);
+  @apply bg-transparent text-neutral-600 dark:text-[#A1A1AA] !important;
 }
-
 
 /* Basic editor styles */
 .tiptap {
   > * + * {
     margin-top: 0.75em;
+  }
+
+  table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    td,
+    th {
+      min-width: 1em;
+      border: 2px solid #ced4da;
+      padding: 3px 5px;
+      vertical-align: top;
+      box-sizing: border-box;
+      position: relative;
+      > * {
+        margin-bottom: 0;
+      }
+    }
+    th {
+      font-weight: bold;
+      text-align: left;
+      background-color: #f1f3f5;
+    }
+    .selectedCell:after {
+      z-index: 2;
+      position: absolute;
+      content: "";
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      background: rgba(200, 200, 255, 0.4);
+      pointer-events: none;
+    }
+    .column-resize-handle {
+      position: absolute;
+      right: -2px;
+      top: 0;
+      bottom: -2px;
+      width: 4px;
+      background-color: #adf;
+      pointer-events: none;
+    }
   }
 
   img {
@@ -178,9 +222,9 @@ code {
   }
 
   pre {
-    background: #0D0D0D;
-    color: #FFF;
-    font-family: 'JetBrainsMono', monospace;
+    background: #0d0d0d;
+    color: #fff;
+    font-family: "JetBrainsMono", monospace;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
 
@@ -206,7 +250,7 @@ code {
     .hljs-name,
     .hljs-selector-id,
     .hljs-selector-class {
-      color: #F98181;
+      color: #f98181;
     }
 
     .hljs-number,
@@ -216,23 +260,23 @@ code {
     .hljs-literal,
     .hljs-type,
     .hljs-params {
-      color: #FBBC88;
+      color: #fbbc88;
     }
 
     .hljs-string,
     .hljs-symbol,
     .hljs-bullet {
-      color: #B9F18D;
+      color: #b9f18d;
     }
 
     .hljs-title,
     .hljs-section {
-      color: #FAF594;
+      color: #faf594;
     }
 
     .hljs-keyword,
     .hljs-selector-tag {
-      color: #70CFF8;
+      color: #70cff8;
     }
 
     .hljs-emphasis {
