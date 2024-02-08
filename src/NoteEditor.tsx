@@ -49,13 +49,6 @@ import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
-import TableIcon from "remixicon-react/TableLineIcon";
-import InsertRowTopIcon from "remixicon-react/InsertRowTopIcon";
-import InsertRowBottom from "remixicon-react/InsertRowBottomIcon";
-import DeleteRow from "remixicon-react/DeleteRowIcon"
-import InsertColumnLeft from "remixicon-react/InsertColumnLeftIcon"
-import InsertColumnRight from "remixicon-react/InsertColumnRightIcon"
-import DeleteColumn from "remixicon-react/DeleteColumnIcon"
 
 // Languages
 import css from "highlight.js/lib/languages/css";
@@ -543,7 +536,7 @@ function NoteEditor({
           </div>
         </div>
         <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>
-          <Drawer defaultHeight={100} maxHeight={230}>
+          <Drawer defaultHeight={100} maxHeight={180}>
             <div className="p-3 overflow-hidden max-auto flex flex-wrap">
               <div className="flex flex-wrap">
                 <button
@@ -707,84 +700,6 @@ function NoteEditor({
                   }
                 >
                   <CodeBox className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex px-1.5">
-                <button
-                  className={
-                    editor?.isActive("table")
-                      ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() =>
-                    editor
-                      ?.chain()
-                      .focus()
-                      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-                      .run()
-                  }
-                >
-                  <TableIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("rowBefore")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() => editor?.chain().focus().addRowBefore().run()}
-                >
-                  <InsertRowTopIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("rowAfter")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() => editor?.chain().focus().addRowAfter().run()}
-                >
-                  <InsertRowBottom className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("deleteRow")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() => editor?.chain().focus().deleteRow().run()}
-                >
-                  <DeleteRow className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("columnBefore")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() => editor?.chain().focus().addColumnBefore().run()}
-                >
-                  <InsertColumnLeft className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("columnAfter")
-                    ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                    : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() => editor?.chain().focus().addColumnAfter().run()}
-                >
-                  <InsertColumnRight className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("deleteColumn")
-                      ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() => editor?.chain().focus().deleteColumn().run()}
-                >
-                  <DeleteColumn className="border-none text-white text-xl w-7 h-7" />
                 </button>
               </div>
             </div>

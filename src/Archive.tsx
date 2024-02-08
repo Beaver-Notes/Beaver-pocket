@@ -25,8 +25,8 @@ import {
 } from "./store/notes";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/it";
-import { useSwipeable } from 'react-swipeable';
-import { useNavigate } from 'react-router-dom';
+import { useSwipeable } from "react-swipeable";
+import { useNavigate } from "react-router-dom";
 
 // Import Remix icons
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
@@ -58,9 +58,7 @@ const Archive: React.FC = () => {
 
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event propagation
-    const isConfirmed = window.confirm(
-      translations.home.confirmDelete
-    );
+    const isConfirmed = window.confirm(translations.home.confirmDelete);
 
     if (isConfirmed) {
       // Correct usage: Call deleteNote with the noteId parameter
@@ -157,7 +155,7 @@ const Archive: React.FC = () => {
       const exportedData: any = {
         data: {
           notes: {},
-          lockedNotes: {}, 
+          lockedNotes: {},
         },
         labels: [],
       };
@@ -524,7 +522,7 @@ const Archive: React.FC = () => {
             subtitle: translations.home.subtitle,
             description: isFaceID
               ? translations.home.biometricFace
-              : translations.home.biometricTouch
+              : translations.home.biometricTouch,
           });
         } catch (verificationError) {
           alert(translations.home.biometricError);
@@ -545,12 +543,10 @@ const Archive: React.FC = () => {
           localStorage.setItem("sharedKey", sharedKey);
         }
 
-        const enteredKey = prompt(
-          translations.home.biometricPassword
-        );
+        const enteredKey = prompt(translations.home.biometricPassword);
 
         if (enteredKey === null) {
-          alert(translations.home.biometricError);          
+          alert(translations.home.biometricError);
           return;
         }
 
@@ -614,9 +610,7 @@ const Archive: React.FC = () => {
             return;
           }
         } else {
-          const userSharedKey = prompt(
-            translations.home.biometricUnlock
-          );
+          const userSharedKey = prompt(translations.home.biometricUnlock);
 
           if (userSharedKey === null) {
             return;
@@ -633,8 +627,7 @@ const Archive: React.FC = () => {
       }
 
       setActiveNoteId(note.id);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   dayjs.extend(relativeTime);
@@ -642,12 +635,12 @@ const Archive: React.FC = () => {
   // Translations
   const [translations, setTranslations] = useState({
     archive: {
-     archived: "archive.archived",
-     messagePt1: "archive.messagePt1",
-     messagePt2: "archive.messagePt2",
-     unlocktoeditor: "archive.unlocktoeditor",
-     noContent: "archive.noContent",
-     title: "archive.title",
+      archived: "archive.archived",
+      messagePt1: "archive.messagePt1",
+      messagePt2: "archive.messagePt2",
+      unlocktoeditor: "archive.unlocktoeditor",
+      noContent: "archive.noContent",
+      title: "archive.title",
     },
     home: {
       exportSuccess: "home.exportSuccess",
@@ -689,12 +682,11 @@ const Archive: React.FC = () => {
     };
 
     loadTranslations();
-  }, []); 
+  }, []);
 
   const navigate = useNavigate();
 
   const handleSwipe = (eventData: any) => {
-
     const isRightSwipe = eventData.dir === "Right";
     const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
 
@@ -733,7 +725,9 @@ const Archive: React.FC = () => {
                 handleImportData={handleImportData}
               />
               <div className="py-6 p-2 mx-6 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
-                <h2 className="text-3xl font-bold">{translations.archive.archived || "-"}</h2>
+                <h2 className="text-3xl font-bold">
+                  {translations.archive.archived || "-"}
+                </h2>
                 {notesList.filter((note) => note.isArchived).length === 0 && (
                   <div className="mx-auto">
                     <img
@@ -742,7 +736,7 @@ const Archive: React.FC = () => {
                       alt="No content"
                     />
                     <p className="py-2 text-lg text-center">
-                    {translations.archive.messagePt1 || "-"}
+                      {translations.archive.messagePt1 || "-"}
                       <ArchiveDrawerLineIcon className="inline-block w-5 h-5" />{" "}
                       {translations.archive.messagePt2 || "-"}
                     </p>
@@ -773,15 +767,17 @@ const Archive: React.FC = () => {
                             ) : (
                               <div>
                                 {note.labels.length > 0 && (
-                                  <div className="flex gap-2">
-                                    {note.labels.map((label) => (
-                                      <span
-                                        key={label}
-                                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                      >
-                                        #{label}
-                                      </span>
-                                    ))}
+                                  <div className="flex flex-col gap-1 overflow-hidden">
+                                    <div className="flex flex-wrap gap-1">
+                                      {note.labels.map((label) => (
+                                        <span
+                                          key={label}
+                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                        >
+                                          #{label}
+                                        </span>
+                                      ))}
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -792,7 +788,7 @@ const Archive: React.FC = () => {
                                   <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
                                 </button>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                {translations.archive.unlocktoeditor || "-"}
+                                  {translations.archive.unlocktoeditor || "-"}
                                 </p>
                               </div>
                             ) : (
@@ -825,7 +821,7 @@ const Archive: React.FC = () => {
                         </button>
                         <button
                           className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                              onClick={(e) => handleDeleteNote(note.id, e)}
+                          onClick={(e) => handleDeleteNote(note.id, e)}
                         >
                           <DeleteBinLineIcon className="w-8 h-8 mr-2" />
                         </button>

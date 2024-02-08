@@ -28,16 +28,17 @@ const App: React.FC = () => {
       setCheckedFirstTime(true);
     }
   }, [checkedFirstTime, history]);
-
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/archive" element={<Archive />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/shortcuts" element={<Shortcuts />} />
-      <Route path="/welcome" element={<Welcome />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/archive" element={<Archive />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/shortcuts" element={<Shortcuts />} />
+        <Route path="/welcome" element={<Welcome />} />
+      </Routes>
+    </>
   );
 };
 
