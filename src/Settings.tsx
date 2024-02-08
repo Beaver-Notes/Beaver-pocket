@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
@@ -21,7 +21,7 @@ import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
 import InformationLineIcon from "remixicon-react/InformationLineIcon";
 import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
 import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
-
+import { useSwipeable } from "react-swipeable";
 
 async function createNotesDirectory() {
   const directoryPath = "notes";
@@ -50,6 +50,23 @@ const Settings: React.FC = () => {
     "OpenDyslexic",
     "Ubuntu",
   ];
+
+  const navigate = useNavigate();
+
+  const handleSwipe = (eventData: any) => {
+    const isRightSwipe = eventData.dir === "Right";
+    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
+
+    if (isRightSwipe && isSmallSwipe) {
+      eventData.event.preventDefault();
+    } else if (isRightSwipe) {
+      navigate(-1); // Navigate back
+    }
+  };
+
+  const handlers = useSwipeable({
+    onSwiped: handleSwipe,
+  });
 
   useEffect(() => {
     document.documentElement.style.setProperty("--selected-font", selectedFont);
@@ -336,7 +353,6 @@ const Settings: React.FC = () => {
         });
       }
 
-
       alert(translations.home.exportSuccess);
     } catch (error) {
       alert(translations.home.exportError + (error as any).message);
@@ -517,7 +533,7 @@ const Settings: React.FC = () => {
       importSuccess: "home.importSuccess",
       importError: "home.importError",
       importInvalid: "home.importInvalid",
-    }
+    },
   });
 
   useEffect(() => {
@@ -554,7 +570,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div>
+    <div {...handlers}>
       <div className="grid sm:grid-cols-[auto,1fr]">
         <Sidebar
           onCreateNewNote={handleCreateNewNote}
@@ -567,7 +583,7 @@ const Settings: React.FC = () => {
         <div className="overflow-y-hidden">
           {!activeNoteId && (
             <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-              <div className="mx-10 md:px-24 overflow-y-auto flex-grow">
+              <div className="mx-6 md:px-24 overflow-y-auto flex-grow">
                 <p className="text-4xl font-bold">
                   {" "}
                   {translations.settings.title || "-"}

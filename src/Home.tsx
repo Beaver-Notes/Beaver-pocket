@@ -40,6 +40,8 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
+import { useSwipeable } from "react-swipeable";
+import { useNavigate } from "react-router-dom";
 
 const App: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -78,9 +80,7 @@ const App: React.FC = () => {
 
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    const isConfirmed = window.confirm(
-      translations.home.confirmDelete
-    );
+    const isConfirmed = window.confirm(translations.home.confirmDelete);
 
     if (isConfirmed) {
       await deleteNote(noteId);
@@ -172,7 +172,7 @@ const App: React.FC = () => {
       const exportedData: any = {
         data: {
           notes: {},
-          lockedNotes: {}, 
+          lockedNotes: {},
         },
         labels: [],
       };
@@ -454,7 +454,7 @@ const App: React.FC = () => {
       content.content[0].type === "paragraph" &&
       (!content.content[0].content || content.content[0].content.length === 0)
     ) {
-      return ""; 
+      return "";
     }
 
     const paragraphText = content.content
@@ -462,7 +462,7 @@ const App: React.FC = () => {
       .map((node) => {
         if (node.content && Array.isArray(node.content)) {
           const textContent = node.content
-            .filter((innerNode) => innerNode.type === "text") 
+            .filter((innerNode) => innerNode.type === "text")
             .map((innerNode) => innerNode.text)
             .join(" ");
           return textContent;
@@ -530,7 +530,7 @@ const App: React.FC = () => {
             subtitle: translations.home.subtitle,
             description: isFaceID
               ? translations.home.biometricFace
-              : translations.home.biometricTouch
+              : translations.home.biometricTouch,
           });
         } catch (verificationError) {
           alert(translations.home.biometricError);
@@ -551,12 +551,10 @@ const App: React.FC = () => {
           localStorage.setItem("sharedKey", sharedKey);
         }
 
-        const enteredKey = prompt(
-          translations.home.biometricPassword
-        );
+        const enteredKey = prompt(translations.home.biometricPassword);
 
         if (enteredKey === null) {
-          alert(translations.home.biometricError);          
+          alert(translations.home.biometricError);
           return;
         }
 
@@ -620,9 +618,7 @@ const App: React.FC = () => {
             return;
           }
         } else {
-          const userSharedKey = prompt(
-            translations.home.biometricUnlock
-          );
+          const userSharedKey = prompt(translations.home.biometricUnlock);
 
           if (userSharedKey === null) {
             return;
@@ -639,8 +635,7 @@ const App: React.FC = () => {
       }
 
       setActiveNoteId(note.id);
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   dayjs.extend(relativeTime);
@@ -698,8 +693,25 @@ const App: React.FC = () => {
     loadTranslations();
   }, []);
 
+  const navigate = useNavigate();
+
+  const handleSwipe = (eventData: any) => {
+    const isRightSwipe = eventData.dir === "Right";
+    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
+
+    if (isRightSwipe && isSmallSwipe) {
+      eventData.event.preventDefault();
+    } else if (isRightSwipe) {
+      navigate(-1); // Navigate back
+    }
+  };
+
+  const handlers = useSwipeable({
+    onSwiped: handleSwipe,
+  });
+
   return (
-    <div>
+    <div {...handlers}>
       <div className="grid sm:grid-cols-[auto,1fr]">
         <Sidebar
           onCreateNewNote={handleCreateNewNote}
@@ -721,7 +733,7 @@ const App: React.FC = () => {
                 exportData={exportData}
                 handleImportData={handleImportData}
               />
-              <div className="p-2 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
+              <div className="p-2 mb-10 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
                 {notesList.filter(
                   (note) => note.isBookmarked && !note.isArchived
                 ).length > 0 && (
@@ -757,7 +769,7 @@ const App: React.FC = () => {
                     </p>
                   </div>
                 )}
-                <div className="grid py-2 grid-cols-1 md:grid-cols-2 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 grid-cols-1 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList
                     .filter((note) => !note.isBookmarked && !note.isArchived)
                     .map((note) => (
@@ -772,7 +784,7 @@ const App: React.FC = () => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-                        <div className="h-40 overflow-hidden">
+                        <div className="h-44 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-2xl">{note.title}</div>
                             {note.isLocked ? (
@@ -782,15 +794,17 @@ const App: React.FC = () => {
                             ) : (
                               <div>
                                 {note.labels.length > 0 && (
-                                  <div className="flex gap-2">
-                                    {note.labels.map((label) => (
-                                      <span
-                                        key={label}
-                                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                      >
-                                        #{label}
-                                      </span>
-                                    ))}
+                                  <div className="flex flex-col gap-1 overflow-hidden">
+                                    <div className="flex flex-wrap gap-1">
+                                      {note.labels.map((label) => (
+                                        <span
+                                          key={label}
+                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                        >
+                                          #{label}
+                                        </span>
+                                      ))}
+                                    </div>
                                   </div>
                                 )}
                               </div>

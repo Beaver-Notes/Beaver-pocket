@@ -15,6 +15,8 @@ import {
 import dayjs from "dayjs";
 import JSZip from "jszip";
 import { Share } from "@capacitor/share";
+import { useSwipeable } from "react-swipeable";
+import { useNavigate } from "react-router-dom";
 
 async function createNotesDirectory() {
   const directoryPath = "notes";
@@ -545,8 +547,26 @@ const Shortcuts: React.FC = () => {
     },
   ];
 
+  const navigate = useNavigate();
+
+  const handleSwipe = (eventData: any) => {
+
+    const isRightSwipe = eventData.dir === "Right";
+    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
+
+    if (isRightSwipe && isSmallSwipe) {
+      eventData.event.preventDefault();
+    } else if (isRightSwipe) {
+      navigate(-1); // Navigate back
+    }
+  };
+
+  const handlers = useSwipeable({
+    onSwiped: handleSwipe,
+  });
+
   return (
-    <div>
+    <div {...handlers}>
     <div className="grid sm:grid-cols-[auto,1fr]">
     <Sidebar
           onCreateNewNote={handleCreateNewNote}
@@ -558,7 +578,7 @@ const Shortcuts: React.FC = () => {
 
       <div className="overflow-y">
       {!activeNoteId && (
-        <div className="mx-10 sm:px-20 mb-2"> 
+        <div className="mx-6 sm:px-20 mb-2"> 
         <div className="general py-2 space-y-8 w-full">
           <p className="text-4xl font-bold">{translations.settings.title}</p>
           {shortcuts.map((shortcut) => (
