@@ -334,11 +334,9 @@ function NoteEditor({
       >
         {toolbarVisible && (
           <div
-            className={
-              isFullScreen
-                ? "overflow-auto w-full"
-                : "fixed hidden sm:block z-10 pt-2 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
-            }
+          className={
+            isFullScreen ? "overflow-auto w-full" : "z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent top-0 z-50 no-scrollbar"
+          }
           >
             <div className="flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
               <button

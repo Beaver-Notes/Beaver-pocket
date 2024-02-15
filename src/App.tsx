@@ -28,6 +28,7 @@ const App: React.FC = () => {
       setCheckedFirstTime(true);
     }
   }, [checkedFirstTime, history]);
+
   return (
     <>
       <Routes>

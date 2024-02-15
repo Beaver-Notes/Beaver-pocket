@@ -35,7 +35,8 @@ const Welcome: React.FC = () => {
   const [languageIndex, setLanguageIndex] = useState(0);
   const languagetitle = [
     "🌎 Select your language",
-    "🌍 seleziona la tua lingua",
+    "🌍 Seleziona la tua lingua",
+    "🌍 Wählen Sie Ihre Sprache",
   ];
 
   useEffect(() => {
