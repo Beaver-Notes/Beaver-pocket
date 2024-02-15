@@ -187,7 +187,7 @@ export const useToggleBookmark = () => {
   return { toggleBookmark };
 };
 
-// Archive 
+// Archive
 export const useToggleArchive = () => {
   const toggleArchive = async (noteId: string) => {
     try {
@@ -216,4 +216,3 @@ export const useToggleArchive = () => {
 
   return { toggleArchive };
 };
-

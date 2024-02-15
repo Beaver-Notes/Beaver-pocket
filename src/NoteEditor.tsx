@@ -335,7 +335,7 @@ function NoteEditor({
         {toolbarVisible && (
           <div
           className={
-            isFullScreen ? "overflow-auto w-full" : "z-10 inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent top-0 z-50 no-scrollbar"
+            isFullScreen ? "overflow-auto w-full" : "hidden pt-4 sm:block inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent top-0 z-50 no-scrollbar"
           }
           >
             <div className="flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
@@ -520,7 +520,7 @@ function NoteEditor({
         <div
           contentEditable
           suppressContentEditableWarning
-          className="text-3xl mt-[2em] font-bold overflow-y-scroll outline-none mt-4 sm:mt-2"
+          className="text-3xl mt-[1em] font-bold overflow-y-scroll outline-none sm:mt-2"
           onBlur={handleTitleChange}
           dangerouslySetInnerHTML={{ __html: localTitle }}
         />

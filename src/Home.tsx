@@ -22,7 +22,7 @@ import "dayjs/locale/it";
 import relativeTime from "dayjs/plugin/relativeTime";
 import SearchBar from "./components/Search";
 import * as CryptoJS from "crypto-js";
-import ShortcutPrompt from "./components/CommandPrompt";
+import CommandPrompt from "./components/CommandPrompt";
 import {
   loadNotes,
   useSaveNote,
@@ -30,6 +30,7 @@ import {
   useToggleBookmark,
   useToggleArchive,
 } from "./store/notes";
+import { useNotesState, useActiveNote } from  "./store/Activenote";
 
 // Import Remix icons
 import AddFillIcon from "remixicon-react/AddFillIcon";
@@ -113,9 +114,8 @@ const App: React.FC = () => {
   };
 
   const STORAGE_PATH = "notes/data.json";
-
-  const [notesState, setNotesState] = useState<Record<string, Note>>({});
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+  const { notesState, setNotesState, activeNoteId, setActiveNoteId } = useNotesState();
+  const activeNote = useActiveNote(activeNoteId, notesState);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
@@ -369,9 +369,6 @@ const App: React.FC = () => {
 
     reader.readAsText(file);
   };
-
-  const activeNote = activeNoteId ? notesState[activeNoteId] : null;
-
   const [title, setTitle] = useState(
     activeNoteId ? notesState[activeNoteId].title : ""
   );
@@ -711,7 +708,7 @@ const App: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
-  const [isShortcutPromptOpen, setIsShortcutPromptOpen] = useState(false);
+  const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
 
   useEffect(() => {
     // Listen for key combination
@@ -721,7 +718,7 @@ const App: React.FC = () => {
         e.shiftKey &&
         e.key.toLowerCase() === "p"
       ) {
-        setIsShortcutPromptOpen(true);
+        setIsCommandPromptOpen(true);
       }
     };
 
@@ -904,7 +901,14 @@ const App: React.FC = () => {
             </div>
           )}
         </div>
-        <ShortcutPrompt  setIsShortcutPromptOpen={setIsShortcutPromptOpen} isOpen={isShortcutPromptOpen} notes={notesList} onClickNote={handleClickNote} />
+        <CommandPrompt
+          onCreateNewNote={handleCreateNewNote}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          setIsCommandPromptOpen={setIsCommandPromptOpen}
+          isOpen={isCommandPromptOpen}
+          notes={notesList}
+          onClickNote={handleClickNote}
+        />
       </div>
       <div>
         {activeNote && (
