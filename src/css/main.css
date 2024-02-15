@@ -222,11 +222,10 @@ code {
   }
 
   pre {
-    background: #0d0d0d;
-    color: #fff;
-    font-family: "JetBrainsMono", monospace;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
+    @apply bg-black bg-opacity-5 rounded-lg dark:bg-gray-600 dark:bg-opacity-30 text-gray-700 dark:text-gray-200 pt-10 !important;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    tab-size: 2;
+    font-variant-ligatures: normal;
 
     code {
       color: inherit;
