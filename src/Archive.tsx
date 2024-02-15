@@ -742,7 +742,7 @@ const Archive: React.FC = () => {
                     </p>
                   </div>
                 )}
-                <div className="grid py-2 grid-cols-1 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList
                     .filter((note) => note.isArchived)
                     .map((note) => (
@@ -799,32 +799,39 @@ const Archive: React.FC = () => {
                             )}
                           </div>
                         </div>
-                        <button
-                          className="text-[#52525C] py-2 dark:text-white w-auto"
-                          onClick={(e) => handleToggleArchive(note.id, e)}
-                        >
-                          {note.isArchived ? (
-                            <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
-                          ) : (
-                            <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
-                          )}
-                        </button>
-                        <button
-                          className="text-[#52525C] py-2 dark:text-white w-auto"
-                          onClick={(e) => handleToggleLock(note.id, e)}
-                        >
-                          {note.isLocked ? (
-                            <LockClosedIcon className="w-8 h-8 mr-2" />
-                          ) : (
-                            <LockOpenIcon className="w-8 h-8 mr-2" />
-                          )}
-                        </button>
-                        <button
-                          className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                          onClick={(e) => handleDeleteNote(note.id, e)}
-                        >
-                          <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                        </button>
+                        <div className="flex items-center justify-between pt-2">
+                          <div className="flex items-center">
+                            <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
+                            >
+                              {note.isBookmarked ? (
+                                <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
+                              )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleLock(note.id, e)}
+                            >
+                              {note.isLocked ? (
+                                <LockClosedIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <LockOpenIcon className="w-8 h-8 mr-2" />
+                              )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto"
+                              onClick={(e) => handleDeleteNote(note.id, e)}
+                            >
+                              <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                            </button>
+                          </div>
+                          <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
+                            {dayjs(note.createdAt).fromNow()}
+                          </div>
+                        </div>
                       </div>
                     ))}
                 </div>

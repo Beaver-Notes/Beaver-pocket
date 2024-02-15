@@ -22,6 +22,7 @@ import "dayjs/locale/it";
 import relativeTime from "dayjs/plugin/relativeTime";
 import SearchBar from "./components/Search";
 import * as CryptoJS from "crypto-js";
+import ShortcutPrompt from "./components/CommandPrompt";
 import {
   loadNotes,
   useSaveNote,
@@ -710,6 +711,27 @@ const App: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
+  const [isShortcutPromptOpen, setIsShortcutPromptOpen] = useState(false);
+
+  useEffect(() => {
+    // Listen for key combination
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "p"
+      ) {
+        setIsShortcutPromptOpen(true);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  });
+
   return (
     <div {...handlers}>
       <div className="grid sm:grid-cols-[auto,1fr]">
@@ -769,7 +791,7 @@ const App: React.FC = () => {
                     </p>
                   </div>
                 )}
-                <div className="grid py-2 grid-cols-1 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList
                     .filter((note) => !note.isBookmarked && !note.isArchived)
                     .map((note) => (
@@ -882,6 +904,7 @@ const App: React.FC = () => {
             </div>
           )}
         </div>
+        <ShortcutPrompt  setIsShortcutPromptOpen={setIsShortcutPromptOpen} isOpen={isShortcutPromptOpen} notes={notesList} onClickNote={handleClickNote} />
       </div>
       <div>
         {activeNote && (
