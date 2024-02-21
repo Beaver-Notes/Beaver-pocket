@@ -30,6 +30,7 @@ import {
   useToggleBookmark,
   useToggleArchive,
 } from "./store/notes";
+import useNoteEditor from "./store/useNoteActions";
 import { useNotesState, useActiveNote } from  "./store/Activenote";
 
 // Import Remix icons
@@ -369,33 +370,13 @@ const App: React.FC = () => {
 
     reader.readAsText(file);
   };
-  const [title, setTitle] = useState(
-    activeNoteId ? notesState[activeNoteId].title : ""
+
+  const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
+    activeNoteId,
+    notesState,
+    setNotesState,
+    saveNote
   );
-
-  const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
-    if (activeNoteId) {
-      const existingNote = notesState[activeNoteId];
-      const updatedTitle =
-        newTitle !== undefined && newTitle.trim() !== ""
-          ? newTitle
-          : existingNote.title;
-
-      const updateNote = {
-        ...existingNote,
-        updatedAt: new Date(),
-        content,
-        title: updatedTitle,
-      };
-
-      setNotesState((prevNotes) => ({
-        ...prevNotes,
-        [activeNoteId]: updateNote,
-      }));
-
-      saveNote(updateNote);
-    }
-  };
 
   const handleCreateNewNote = () => {
     const newNote = {

@@ -28,6 +28,8 @@ import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import { isPlatform } from "@ionic/react";
 import Drawer from "./components/Drawer";
+import SearchAndReplace from "./lib/tiptap/search-&-replace";
+import Find from "./components/Note/Find";
 // import Paper from "./lib/tiptap/paper/Paper"
 
 // Icons
@@ -42,7 +44,6 @@ import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
 import ItalicIcon from "remixicon-react/ItalicIcon";
 import UnderlineIcon from "remixicon-react/UnderlineIcon";
 import StrikethroughIcon from "remixicon-react/StrikethroughIcon";
-import ArrowLeftSLineIcon from "remixicon-react/ArrowLeftLineIcon";
 import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
@@ -78,6 +79,7 @@ const extensions = [
   Highlight,
   Table,
   TableCell,
+  SearchAndReplace,
   TableHeader,
   TableRow,
   Underline,
@@ -102,7 +104,6 @@ type Props = {
 function NoteEditor({
   note,
   onChange,
-  onCloseEditor,
   onTitleChange,
   isFullScreen = false,
 }: Props) {
@@ -334,17 +335,13 @@ function NoteEditor({
       >
         {toolbarVisible && (
           <div
-          className={
-            isFullScreen ? "overflow-auto w-full" : "hidden pt-4 sm:block inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent top-0 z-50 no-scrollbar"
-          }
+            className={
+              isFullScreen
+                ? "overflow-auto w-full"
+                : "hidden pt-4 sm:block inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent top-0 z-50 no-scrollbar"
+            }
           >
             <div className="flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
-              <button
-                className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
-                onClick={onCloseEditor}
-              >
-                <ArrowLeftSLineIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
               <div className="sm:mx-auto flex overflow-y-hidden w-fit">
                 <button
                   className={
@@ -485,12 +482,6 @@ function NoteEditor({
         <div
           className={`sm:hidden bg-white dark:bg-[#232222] pr-4 pl-4 fixed top-0 inset-x-0 overflow-auto h-auto w-full bg-transparent z-50 no-scrollbar flex justify-between ${addPaddingTop}`}
         >
-          <button
-            className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
-            onClick={onCloseEditor}
-          >
-            <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
-          </button>
           <div className="flex">
             <button
               className="p-2  mt-4 rounded-md text-white bg-transparent cursor-pointer"
@@ -529,7 +520,7 @@ function NoteEditor({
           <div className="py-2 h-full w-full" id="container">
             <EditorContent
               editor={editor}
-              className="overflow-auto w-full mb-[6em] min-h-[25em]"
+              className="overflow-auto w-full mb-[6em] min-h-[25em] editor-content"
             />
           </div>
         </div>
@@ -703,6 +694,7 @@ function NoteEditor({
             </div>
           </Drawer>{" "}
         </div>
+        <Find editor={editor} />
       </div>
     </div>
   );
