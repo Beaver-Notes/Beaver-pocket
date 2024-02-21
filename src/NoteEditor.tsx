@@ -50,6 +50,7 @@ import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
+import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
 
 // Languages
 import css from "highlight.js/lib/languages/css";
@@ -105,6 +106,7 @@ function NoteEditor({
   note,
   onChange,
   onTitleChange,
+  onCloseEditor,
   isFullScreen = false,
 }: Props) {
   const [localTitle, setLocalTitle] = useState<string>(note.title);
@@ -325,6 +327,22 @@ function NoteEditor({
     onSwiped: handleSwipe,
   });
 
+  const [showFind, setShowFind] = useState(false);
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "f" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setShowFind(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, []);
+
   return (
     <div {...handlers}>
       <div
@@ -343,6 +361,12 @@ function NoteEditor({
           >
             <div className="flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
               <div className="sm:mx-auto flex overflow-y-hidden w-fit">
+                <button
+                  className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
+                  onClick={onCloseEditor}
+                >
+                  <ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
                 <button
                   className={
                     editor?.isActive("bold")
@@ -480,8 +504,14 @@ function NoteEditor({
           </div>
         )}
         <div
-          className={`sm:hidden bg-white dark:bg-[#232222] pr-4 pl-4 fixed top-0 inset-x-0 overflow-auto h-auto w-full bg-transparent z-50 no-scrollbar flex justify-between ${addPaddingTop}`}
+          className={`sm:hidden bg-white dark:bg-[#232222] px-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full z-10 no-scrollbar flex justify-between ${addPaddingTop}`}
         >
+          <button
+            className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
+            onClick={onCloseEditor}
+          >
+            <ArrowLeftLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+          </button>
           <div className="flex">
             <button
               className="p-2  mt-4 rounded-md text-white bg-transparent cursor-pointer"
@@ -511,7 +541,7 @@ function NoteEditor({
         <div
           contentEditable
           suppressContentEditableWarning
-          className="text-3xl mt-[1em] font-bold overflow-y-scroll outline-none sm:mt-2"
+          className="text-3xl mt-[1.2em] font-bold overflow-y-scroll outline-none sm:mt-2"
           onBlur={handleTitleChange}
           dangerouslySetInnerHTML={{ __html: localTitle }}
         />
@@ -525,7 +555,7 @@ function NoteEditor({
           </div>
         </div>
         <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>
-          <Drawer defaultHeight={100} maxHeight={180}>
+          <Drawer editor={editor} defaultHeight={100} maxHeight={180}>
             <div className="p-3 overflow-hidden max-auto flex flex-wrap">
               <div className="flex flex-wrap">
                 <button
@@ -694,7 +724,7 @@ function NoteEditor({
             </div>
           </Drawer>{" "}
         </div>
-        <Find editor={editor} />
+        {showFind && <Find editor={editor} />}
       </div>
     </div>
   );
