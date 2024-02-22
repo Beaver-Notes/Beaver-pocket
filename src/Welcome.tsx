@@ -298,7 +298,7 @@ const Welcome: React.FC = () => {
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] mx-10 rounded-3xl">
             <div className="pt-2">
-            <img src="./imgs/icon.png" alt="Beaver Notes Icon" className="w-48 h-48 mx-auto rounded-full"/>
+            <img src="./imgs/icon.png" alt="Beaver Notes Icon" className="w-40 h-40 mx-auto rounded-full"/>
             </div>
             <h3 className="text-center">
               {" "}
