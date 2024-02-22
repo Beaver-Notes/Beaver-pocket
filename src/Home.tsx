@@ -733,7 +733,7 @@ const App: React.FC = () => {
                 exportData={exportData}
                 handleImportData={handleImportData}
               />
-              <div className="p-2 mb-10 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
+              <div className="p-2 mb-10 mx-4 cursor-pointer rounded-md items-center justify-center h-full">
                 {notesList.filter(
                   (note) => note.isBookmarked && !note.isArchived
                 ).length > 0 && (

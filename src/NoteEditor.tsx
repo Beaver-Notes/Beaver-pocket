@@ -35,9 +35,6 @@ import Find from "./components/Note/Find";
 // Icons
 
 import BoldIcon from "remixicon-react/BoldIcon";
-import Heading1Icon from "remixicon-react/H1Icon";
-import Heading2Icon from "remixicon-react/H2Icon";
-import CodeBox from "remixicon-react/CodeBoxLineIcon";
 import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
 import ImageLineIcon from "remixicon-react/ImageLineIcon";
 import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
@@ -541,7 +538,7 @@ function NoteEditor({
         <div
           contentEditable
           suppressContentEditableWarning
-          className="text-3xl mt-[1.2em] font-bold overflow-y-scroll outline-none sm:mt-2"
+          className="text-3xl mt-[2.1em] font-bold overflow-y-scroll outline-none sm:mt-2"
           onBlur={handleTitleChange}
           dangerouslySetInnerHTML={{ __html: localTitle }}
         />
@@ -554,177 +551,17 @@ function NoteEditor({
             />
           </div>
         </div>
-        <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>
-          <Drawer editor={editor} defaultHeight={100} maxHeight={180}>
-            <div className="p-3 overflow-hidden max-auto flex flex-wrap">
-              <div className="flex flex-wrap">
-                <button
-                  className={
-                    editor?.isActive("heading", { level: 1 })
-                      ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() =>
-                    editor?.chain().focus().toggleHeading({ level: 1 }).run()
-                  }
-                >
-                  <Heading1Icon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("heading", { level: 2 })
-                      ? "p-2 rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-2 rounded-r-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() =>
-                    editor?.chain().focus().toggleHeading({ level: 2 }).run()
-                  }
-                >
-                  <Heading2Icon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex pl-1.5">
-                <button
-                  className={
-                    editor?.isActive("bold")
-                      ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleBold}
-                >
-                  <BoldIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("italic")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleItalic}
-                >
-                  <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("underline")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleUnderline}
-                >
-                  <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("strike")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleStrike}
-                >
-                  <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("highlight")
-                      ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleHighlight}
-                >
-                  <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex py-3">
-                <button
-                  onClick={setLink}
-                  className={
-                    "p-[11px] rounded-full text-white  bg-[#393939] cursor-pointer"
-                  }
-                >
-                  <LinkIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex py-3 pl-1.5">
-                <div className="p-[11px] rounded-full text-white bg-[#393939] cursor-pointer">
-                  <label htmlFor="image-upload-input">
-                    <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files) {
-                        handleImageUpload(e.target.files[0], note.id);
-                      }
-                    }}
-                    id="image-upload-input"
-                    className="hidden"
-                  />
-                </div>
-              </div>
-              <div className="flex py-3 pl-1.5">
-                <button
-                  className={
-                    editor?.isActive("OrderedList")
-                      ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleOrderedList}
-                >
-                  <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("UnorderedList")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px]text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleUnorderedList}
-                >
-                  <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("Tasklist")
-                      ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleTaskList}
-                >
-                  <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex py-3 pl-1.5">
-                <button
-                  className={
-                    editor?.isActive("Blockquote")
-                      ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-full text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleBlockquote}
-                >
-                  <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex py-3 pl-1">
-                <button
-                  className={
-                    editor?.isActive("CodeBlock")
-                      ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-full text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() =>
-                    editor?.chain().focus().toggleCodeBlock().run()
-                  }
-                >
-                  <CodeBox className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-            </div>
-          </Drawer>{" "}
+        <div className="fixed bottom-24 sm:bottom-6">
+          {showFind && <Find editor={editor} />}
         </div>
-        {showFind && <Find editor={editor} />}
+        <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>
+          <Drawer
+            note={note}
+            editor={editor}
+            defaultHeight={100}
+            maxHeight={180}
+          />
+        </div>
       </div>
     </div>
   );

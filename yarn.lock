@@ -3572,6 +3572,11 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+crypto-es@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/crypto-es/-/crypto-es-2.1.0.tgz#1095f324ffd7dc1ccab8e21d0960e17025da8ce9"
+  integrity sha512-C5Dbuv4QTPGuloy5c5Vv/FZHtmK+lobLAypFfuRaBbwCsk3qbCWWESCH3MUcBsrgXloRNMrzwUAiPg4U6+IaKA==
+
 crypto-js@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-4.2.0.tgz#4d931639ecdfd12ff80e8186dba6af2c2e856631"
@@ -7858,6 +7863,11 @@ tiptap-commands@^1.17.1:
     prosemirror-state "^1.3.3"
     prosemirror-tables "^1.1.1"
     tiptap-utils "^1.13.1"
+
+tiptap-extension-resize-image@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/tiptap-extension-resize-image/-/tiptap-extension-resize-image-1.0.3.tgz#1aef252c3109051fe4a1042fe53988c3e906bd71"
+  integrity sha512-4kjAgRCliVjE9YzZFO+adAk0yZZVKOYMGhwaSX3Fl7czl67qWtqDn0vEBh/Za4KDVfo0OM8MkuAM9JriHfbKLQ==
 
 tiptap-utils@^1.13.1:
   version "1.13.1"
