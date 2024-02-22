@@ -38,7 +38,7 @@ const Find: React.FC<FindProps> = ({ editor }) => {
     };
 
   return (
-    <div className="pt-4 sm:block inset-x-2 bottom-0 overflow-enabled h-auto w-full bg-transparent z-50 no-scrollbar">
+    <div className="pt-4 sm:block bg-white dark:bg-[#232222] inset-x-2 px-8 overflow-enabled h-auto w-full bg-transparent z-50 no-scrollbar">
       <div className="flex items-center mb-2 space-x-2 w-full">
         <div className="flex mr-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-gray-800">
           <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6 mr-2" />

@@ -585,7 +585,7 @@ const Settings: React.FC = () => {
         <div className="overflow-y-hidden">
           {!activeNoteId && (
             <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-              <div className="mx-6 md:px-24 overflow-y-auto flex-grow">
+              <div className="mx-4 md:px-24 overflow-y-auto flex-grow">
                 <p className="text-4xl font-bold">
                   {" "}
                   {translations.settings.title || "-"}

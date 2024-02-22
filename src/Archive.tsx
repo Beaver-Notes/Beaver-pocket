@@ -724,7 +724,7 @@ const Archive: React.FC = () => {
                 exportData={exportData}
                 handleImportData={handleImportData}
               />
-              <div className="py-6 p-2 mx-6 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
+              <div className="py-6 p-2 mx-4 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
                 <h2 className="text-3xl font-bold">
                   {translations.archive.archived || "-"}
                 </h2>
