@@ -9,7 +9,7 @@ import BottomNavBar from "./components/BottomNavBar";
 import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import "./css/main.css";
 import "./css/fonts.css";
-import Bookmarked from "./components/Bookmarked";
+import Bookmarked from "./components/Home/Bookmarked";
 import {
   Filesystem,
   Directory,

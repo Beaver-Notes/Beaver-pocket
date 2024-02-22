@@ -340,6 +340,8 @@ function NoteEditor({
     };
   }, []);
 
+  // Switch between input fields
+
   return (
     <div {...handlers}>
       <div
@@ -551,7 +553,7 @@ function NoteEditor({
             />
           </div>
         </div>
-        <div className="fixed bottom-24 sm:bottom-6">
+        <div className="sm:ml-16 fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60  bottom-24 sm:bottom-6">
           {showFind && <Find editor={editor} />}
         </div>
         <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>

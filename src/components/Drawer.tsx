@@ -18,6 +18,7 @@ import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import { isPlatform } from "@ionic/react";
 
 interface DrawerProps {
   defaultHeight: number;
@@ -121,9 +122,11 @@ const Drawer: React.FC<DrawerProps> = ({
     setIsDragging(false);
   };
 
+  const ios = isPlatform("ios") ? "p-[11px] !important" : "";
+
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 bg-[#2D2C2C] rounded-tl-3xl rounded-tr-3xl cursor-grab overflow-hidden transition-height duration-300 ease-in-out"
+      className="sm:px-10 md:px-20 lg:px-60 fixed bottom-0 left-0 right-0 bg-[#2D2C2C] rounded-tl-3xl rounded-tr-3xl cursor-grab overflow-hidden transition-height duration-300 ease-in-out"
       style={{ height: `${drawerHeight}px` }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -136,8 +139,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("heading", { level: 1 })
-                ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer`
+                : `p-3 ${ios} rounded-l-xl text-white bg-[#393939] cursor-pointer`
             }
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 1 }).run()
@@ -148,8 +151,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("heading", { level: 2 })
-                ?  "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                :  "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer`
+                : `p-3 ${ios} rounded-r-xl text-white bg-[#393939] cursor-pointer`
             }
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 2 }).run()
@@ -162,8 +165,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("bold")
-                ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer`
+                : `p-3 ${ios} rounded-l-xl text-white bg-[#393939] cursor-pointer`
             }
             onClick={() => editor?.chain().focus().toggleBold().run()}
           >
@@ -172,8 +175,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("italic")
-                ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} text-amber-400 bg-[#424242] cursor-pointer`
+                : `p-3 ${ios} text-white bg-[#393939] cursor-pointer`
             }
             onClick={() => editor?.chain().focus().toggleItalic().run()}
           >
@@ -182,8 +185,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("underline")
-                ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} text-amber-400 bg-[#424242] cursor-pointer`
+                : `p-3 ${ios} text-white bg-[#393939] cursor-pointer`
             }
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
           >
@@ -192,8 +195,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("strike")
-                ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} text-amber-400 bg-[#424242] cursor-pointer`
+                : `p-3 ${ios} text-white bg-[#393939] cursor-pointer`
             }
             onClick={() => editor?.chain().focus().toggleStrike().run()}
           >
@@ -202,8 +205,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("highlight")
-                ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer`
+                : `p-3 ${ios} rounded-r-xl text-white bg-[#393939] cursor-pointer`
             }
             onClick={() => editor?.chain().focus().toggleHighlight().run()}
           >
@@ -213,15 +216,15 @@ const Drawer: React.FC<DrawerProps> = ({
         <div className="flex py-3">
           <button
             onClick={setLink}
-            className={
-              "p-[11px] rounded-full text-white  bg-[#393939] cursor-pointer"
-            }
+            className={`p-3 ${ios} rounded-full text-white  bg-[#393939] cursor-pointer`}
           >
             <LinkIcon className="border-none text-white text-xl w-7 h-7" />
           </button>
         </div>
         <div className="flex py-3 pl-1.5">
-          <div className="p-[11px] rounded-full text-white bg-[#393939] cursor-pointer">
+          <div
+            className={`p-3 ${ios} rounded-full text-white  bg-[#393939] cursor-pointer`}
+          >
             <label htmlFor="image-upload-input">
               <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
             </label>
@@ -242,8 +245,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("OrderedList")
-                ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer `
+                : `p-3 ${ios} rounded-l-xl text-white bg-[#393939] cursor-pointer `
             }
             onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           >
@@ -252,8 +255,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("UnorderedList")
-                ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px]text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} text-amber-400 bg-[#424242] cursor-pointer `
+                : `p-[11px]text-white bg-[#393939] cursor-pointer `
             }
             onClick={() => editor?.chain().focus().toggleBulletList().run()}
           >
@@ -262,8 +265,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("Tasklist")
-                ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer `
+                : `p-3 ${ios} rounded-r-xl text-white bg-[#393939] cursor-pointer `
             }
             onClick={() => editor?.chain().focus().toggleTaskList().run}
           >
@@ -274,8 +277,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("Blockquote")
-                ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] rounded-full text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} rounded-full text-amber-400 bg-[#424242] cursor-pointer `
+                : `p-3 ${ios} rounded-full text-white bg-[#393939] cursor-pointer `
             }
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           >
@@ -286,8 +289,8 @@ const Drawer: React.FC<DrawerProps> = ({
           <button
             className={
               editor?.isActive("CodeBlock")
-                ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
-                : "p-[11px] rounded-full text-white bg-[#393939] cursor-pointer"
+                ? `p-3 ${ios} rounded-full text-amber-400 bg-[#424242] cursor-pointer `
+                : `p-3 ${ios} rounded-full text-white bg-[#393939] cursor-pointer `
             }
             onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
           >
