@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plugins } from '@capacitor/core';
+import { Capacitor, Plugins } from '@capacitor/core';
 import { Directory, FilesystemDirectory } from '@capacitor/filesystem';
 import ImageLineIcon from 'remixicon-react/ImageLineIcon'
 
@@ -37,34 +37,40 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({ onImageUpload, noteI
     try {
       await createDirectory();
       const fileName = `${Date.now()}_${file.name}`;
-  
+    
       // Read file data as base64 encoded string
       const reader = new FileReader();
       reader.readAsDataURL(file);
-  
+    
       // Wait for reader to load the file data
       await new Promise<void>((resolve, reject) => {
         reader.onload = () => resolve();
         reader.onerror = () => reject(new Error('Error reading file'));
       });
-  
+    
       // Get base64 encoded string
       const base64Data = reader.result as string;
-  
+    
       // Extract the actual base64 data (remove metadata)
       const base64DataWithoutMetadata = base64Data.split(',')[1];
-  
+    
       // Write file to filesystem under "note-assets/noteId" directory
+      const filePath = `note-assets/${noteId}/${fileName}`;
       await Filesystem.writeFile({
-        path: `note-assets/${noteId}/${fileName}`, // Save under "note-assets" directory
-        data: base64DataWithoutMetadata, // Pass base64 encoded string
+        path: filePath,
+        data: base64DataWithoutMetadata,
         directory: FilesystemDirectory.Documents,
         recursive: true,
       });
+      
+      // Read the saved file to get its URL
+      const { uri } = await Filesystem.getUri({
+        directory: FilesystemDirectory.Documents,
+        path: filePath,
+      });
   
-      const imageUrl = URL.createObjectURL(file);
-      const fileUri = `${FilesystemDirectory.Documents}/note-assets/${noteId}/${fileName}`;
-      return { imageUrl, fileUri };
+      const imageUrl = Capacitor.convertFileSrc(uri); // Convert file URI to displayable URL
+      return { imageUrl, fileUri: uri };
     } catch (error) {
       console.error('Error saving image to file system:', error);
       return { imageUrl: '', fileUri: '' };
@@ -74,8 +80,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({ onImageUpload, noteI
   return (
     <div>
       <input className="hidden sm:block" type="file" accept="image/*" onChange={handleFileChange} />
-      <div className="flex py-3 pl-1.5">
-                <div className="p-[11px] rounded-full text-white bg-[#393939] cursor-pointer">
+                <div className="p-[11px] sm:hidden rounded-full text-white bg-[#393939] cursor-pointer">
                   <label htmlFor="image-upload-input">
                     <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
                   </label>
@@ -87,7 +92,6 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({ onImageUpload, noteI
                     className="hidden"
                   />
                 </div>
-              </div>
     </div>
   );
 };

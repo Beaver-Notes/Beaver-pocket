@@ -154,23 +154,25 @@ const App: React.FC = () => {
     try {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-
+  
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
         directory: Directory.Documents,
         recursive: true,
       });
-
+  
       const exportFolderName = `Beaver Notes ${formattedDate}`;
       const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
-
+  
       await Filesystem.mkdir({
         path: exportFolderPath,
         directory: Directory.Documents,
         recursive: true,
       });
-
+  
+      const jsonDataPath = `${exportFolderPath}/data.json`;
+  
       const exportedData: any = {
         data: {
           notes: {},
@@ -178,13 +180,14 @@ const App: React.FC = () => {
         },
         labels: [],
       };
-
+  
+      // Loop through notes to populate exportedData
       Object.values(notesState).forEach((note) => {
         const createdAtTimestamp =
           note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
         const updatedAtTimestamp =
           note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
-
+  
         exportedData.data.notes[note.id] = {
           id: note.id,
           title: note.title,
@@ -197,65 +200,49 @@ const App: React.FC = () => {
           isLocked: note.isLocked,
           lastCursorPosition: note.lastCursorPosition,
         };
-
+  
         exportedData.labels = exportedData.labels.concat(note.labels);
-
+  
         if (note.isLocked) {
           exportedData.data.lockedNotes[note.id] = true;
         }
       });
-
+  
       exportedData.labels = Array.from(new Set(exportedData.labels));
-
-      const jsonData = JSON.stringify(exportedData, null, 2);
-      const jsonFilePath = `${exportFolderPath}/data.json`;
-
+  
+      // Modify image src based on alt attribute
+      Object.values(exportedData.data.notes).forEach((note: any) => {
+        if (note.content && note.content.content) {
+          note.content.content.forEach((node: any) => {
+            if (node.type === "image" && node.attrs && node.attrs.src && node.attrs.alt) {
+              const altParts = node.attrs.alt.split("/");
+              if (altParts.length >= 3) {
+                const fileName = altParts.slice(2).join("/");
+                node.attrs.src = `assets://${fileName}`;
+              }
+            }
+          });
+        }
+      });
+  
+      // Write modified JSON data to data.json
       await Filesystem.writeFile({
-        path: jsonFilePath,
-        data: jsonData,
+        path: jsonDataPath,
+        data: JSON.stringify(exportedData, null, 2),
         directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
-
-      const imagesFolderPath = `images`;
-      let imagesFolderExists = false;
-
-      try {
-        const imagesFolderInfo = await (Filesystem as any).getInfo({
-          path: imagesFolderPath,
-          directory: Directory.Documents,
-        });
-        imagesFolderExists = imagesFolderInfo.type === "directory";
-      } catch (error) {
-        console.error("Error checking images folder:", error);
-      }
-
-      if (imagesFolderExists) {
-        const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-
-        await Filesystem.mkdir({
-          path: exportImagesFolderPath,
-          directory: Directory.Documents,
-          recursive: true,
-        });
-
-        await Filesystem.copy({
-          from: imagesFolderPath,
-          to: exportImagesFolderPath,
-          directory: Directory.Documents,
-        });
-      }
-
+  
       const zip = new JSZip();
       const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
-
+  
       const exportFolderFiles = await Filesystem.readdir({
         path: exportFolderPath,
         directory: Directory.Documents,
       });
-
+  
       await Promise.all(
-        exportFolderFiles.files.map(async (file) => {
+        exportFolderFiles.files.map(async (file: any) => {
           const filePath = `${exportFolderPath}/${file.name}`;
           const fileContent = await Filesystem.readFile({
             path: filePath,
@@ -265,24 +252,24 @@ const App: React.FC = () => {
           exportFolderZip!.file(file.name, fileContent.data);
         })
       );
-
+  
       const zipContentBase64 = await zip.generateAsync({ type: "base64" });
-
+  
       const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
       await Filesystem.writeFile({
         path: zipFilePath,
         data: zipContentBase64,
         directory: Directory.Cache,
       });
-
+  
       await shareZipFile();
-
+  
       alert(translations.home.exportSuccess);
     } catch (error) {
       alert(translations.home.exportError + (error as any).message);
     }
   };
-
+  
   const shareZipFile = async () => {
     try {
       const currentDate = new Date();
