@@ -6,7 +6,7 @@ import Document from "@tiptap/extension-document";
 import Placeholder from "@tiptap/extension-placeholder";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
+import ImageResize from 'tiptap-extension-resize-image';
 import "./css/NoteEditor.module.css";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Highlight from "@tiptap/extension-highlight";
@@ -19,7 +19,6 @@ import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import NoteLabels from "./components/NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
-import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
 import HeadingTree from "./lib/HeadingTree";
 import Table from "@tiptap/extension-table";
@@ -28,27 +27,26 @@ import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import { isPlatform } from "@ionic/react";
 import Drawer from "./components/Drawer";
+import SearchAndReplace from "./lib/tiptap/search-&-replace";
+import Find from "./components/Note/Find";
 // import Paper from "./lib/tiptap/paper/Paper"
 
 // Icons
 
 import BoldIcon from "remixicon-react/BoldIcon";
-import Heading1Icon from "remixicon-react/H1Icon";
-import Heading2Icon from "remixicon-react/H2Icon";
-import CodeBox from "remixicon-react/CodeBoxLineIcon";
 import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
-import ImageLineIcon from "remixicon-react/ImageLineIcon";
 import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
 import ItalicIcon from "remixicon-react/ItalicIcon";
 import UnderlineIcon from "remixicon-react/UnderlineIcon";
 import StrikethroughIcon from "remixicon-react/StrikethroughIcon";
-import ArrowLeftSLineIcon from "remixicon-react/ArrowLeftLineIcon";
 import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
+import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
+import ImageUploadComponent from './components/Note/ImageUpload';
 
 // Languages
 import css from "highlight.js/lib/languages/css";
@@ -78,6 +76,7 @@ const extensions = [
   Highlight,
   Table,
   TableCell,
+  SearchAndReplace,
   TableHeader,
   TableRow,
   Underline,
@@ -87,7 +86,7 @@ const extensions = [
   TaskItem.configure({
     nested: true,
   }),
-  Image.configure({}),
+  ImageResize
 ];
 
 type Props = {
@@ -102,8 +101,8 @@ type Props = {
 function NoteEditor({
   note,
   onChange,
-  onCloseEditor,
   onTitleChange,
+  onCloseEditor,
   isFullScreen = false,
 }: Props) {
   const [localTitle, setLocalTitle] = useState<string>(note.title);
@@ -141,72 +140,7 @@ function NoteEditor({
   const [focusMode, setFocusMode] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(true);
 
-  async function handleImageUpload(file: File, noteId: string) {
-    try {
-      // Construct the directory path
-      const directoryPath = `/assets/${noteId}`;
-
-      // Ensure the directory exists using Capacitor Filesystem
-      await Filesystem.mkdir({
-        path: directoryPath,
-        directory: FilesystemDirectory.Data,
-        recursive: true, // Create directories recursively
-      });
-
-      const imageFileName = `${directoryPath}/${file.name}`;
-
-      // Read the file as a data URL
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onload = async () => {
-        const imageDataUrl = reader.result as string;
-
-        // Save the image using Capacitor Filesystem
-        await Filesystem.writeFile({
-          path: imageFileName,
-          data: imageDataUrl.split(",")[1], // Extract base64 data
-          directory: FilesystemDirectory.Data,
-        });
-
-        // Construct the image source URL
-        const imageSrc = imageDataUrl;
-
-        // Insert the image into the editor
-        editor?.chain().focus().setImage({ src: imageSrc }).run();
-      };
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    }
-  }
-
-  const handlePaste = async (event: React.ClipboardEvent) => {
-    const items = event.clipboardData?.items;
-
-    if (items) {
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-
-        if (item.type.indexOf("image") !== -1) {
-          const file = item.getAsFile();
-          if (file) {
-            await handleImageUpload(file, note.id);
-          }
-        }
-      }
-    }
-  };
-
-  const handleDrop = async (event: React.DragEvent) => {
-    event.preventDefault();
-
-    const files = event.dataTransfer?.files;
-
-    if (files && files.length > 0) {
-      await handleImageUpload(files[0], note.id);
-    }
-  };
-
+ 
   const toggleBold = () => {
     editor?.chain().focus().toggleBold().run();
   };
@@ -241,6 +175,10 @@ function NoteEditor({
 
   const toggleBlockquote = () => {
     editor?.chain().focus().toggleBlockquote().run();
+  };
+
+  const handleImageUpload = (imageUrl: string, fileUri: string) => {
+    editor?.chain().setImage({ src: imageUrl, alt: fileUri }).run();
   };
 
   const setLink = useCallback(() => {
@@ -324,12 +262,28 @@ function NoteEditor({
     onSwiped: handleSwipe,
   });
 
+  const [showFind, setShowFind] = useState(false);
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "f" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        setShowFind(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, []);
+
+  // Switch between input fields
+
   return (
     <div {...handlers}>
       <div
         className="sm:ml-16 overflow-auto h-full justify-center items-start px-4 text-black dark:text-white sm:px-10 md:px-20 lg:px-60 text-base "
-        onPaste={handlePaste}
-        onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
       >
         {toolbarVisible && (
@@ -337,17 +291,17 @@ function NoteEditor({
             className={
               isFullScreen
                 ? "overflow-auto w-full"
-                : "fixed hidden sm:block z-10 pt-2 overflow-auto h-auto w-full bg-transparent md:sticky md:top-0 md:z-50 no-scrollbar"
+                : "hidden pt-4 sm:block inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent top-0 z-50 no-scrollbar"
             }
           >
             <div className="flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
-              <button
-                className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
-                onClick={onCloseEditor}
-              >
-                <ArrowLeftSLineIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
               <div className="sm:mx-auto flex overflow-y-hidden w-fit">
+                <button
+                  className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
+                  onClick={onCloseEditor}
+                >
+                  <ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
+                </button>
                 <button
                   className={
                     editor?.isActive("bold")
@@ -448,22 +402,7 @@ function NoteEditor({
                 >
                   <LinkIcon className="border-none text-white text-xl w-7 h-7" />
                 </button>
-                <div className="p-2 rounded-md text-white bg-transparent cursor-pointer">
-                  <label htmlFor="image-upload-input">
-                    <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files) {
-                        handleImageUpload(e.target.files[0], note.id);
-                      }
-                    }}
-                    id="image-upload-input"
-                    className="hidden"
-                  />
-                </div>
+                <ImageUploadComponent onImageUpload={handleImageUpload} noteId={note.id} />
               </div>
               <button
                 className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
@@ -485,13 +424,13 @@ function NoteEditor({
           </div>
         )}
         <div
-          className={`sm:hidden bg-white dark:bg-[#232222] pr-4 pl-4 fixed top-0 inset-x-0 overflow-auto h-auto w-full bg-transparent z-50 no-scrollbar flex justify-between ${addPaddingTop}`}
+          className={`sm:hidden bg-white dark:bg-[#232222] px-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full z-10 no-scrollbar flex justify-between ${addPaddingTop}`}
         >
           <button
             className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
             onClick={onCloseEditor}
           >
-            <ArrowLeftSLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+            <ArrowLeftLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
           </button>
           <div className="flex">
             <button
@@ -522,7 +461,7 @@ function NoteEditor({
         <div
           contentEditable
           suppressContentEditableWarning
-          className="text-3xl mt-[2em] font-bold overflow-y-scroll outline-none mt-4 sm:mt-2"
+          className="text-3xl mt-[2.1em] font-bold overflow-y-scroll outline-none sm:mt-2"
           onBlur={handleTitleChange}
           dangerouslySetInnerHTML={{ __html: localTitle }}
         />
@@ -531,179 +470,21 @@ function NoteEditor({
           <div className="py-2 h-full w-full" id="container">
             <EditorContent
               editor={editor}
-              className="overflow-auto w-full mb-[6em] min-h-[25em]"
+              className="overflow-auto w-full mb-[6em] min-h-[25em] editor-content"
             />
           </div>
         </div>
+        <div className="sm:ml-16 fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60  bottom-24 sm:bottom-6">
+          {showFind && <Find editor={editor} />}
+        </div>
         <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>
-          <Drawer defaultHeight={100} maxHeight={180}>
-            <div className="p-3 overflow-hidden max-auto flex flex-wrap">
-              <div className="flex flex-wrap">
-                <button
-                  className={
-                    editor?.isActive("heading", { level: 1 })
-                      ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() =>
-                    editor?.chain().focus().toggleHeading({ level: 1 }).run()
-                  }
-                >
-                  <Heading1Icon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("heading", { level: 2 })
-                      ? "p-2 rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-2 rounded-r-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() =>
-                    editor?.chain().focus().toggleHeading({ level: 2 }).run()
-                  }
-                >
-                  <Heading2Icon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex pl-1.5">
-                <button
-                  className={
-                    editor?.isActive("bold")
-                      ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleBold}
-                >
-                  <BoldIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("italic")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleItalic}
-                >
-                  <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("underline")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleUnderline}
-                >
-                  <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("strike")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleStrike}
-                >
-                  <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("highlight")
-                      ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleHighlight}
-                >
-                  <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex py-3">
-                <button
-                  onClick={setLink}
-                  className={
-                    "p-[11px] rounded-full text-white  bg-[#393939] cursor-pointer"
-                  }
-                >
-                  <LinkIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex py-3 pl-1.5">
-                <div className="p-[11px] rounded-full text-white bg-[#393939] cursor-pointer">
-                  <label htmlFor="image-upload-input">
-                    <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files) {
-                        handleImageUpload(e.target.files[0], note.id);
-                      }
-                    }}
-                    id="image-upload-input"
-                    className="hidden"
-                  />
-                </div>
-              </div>
-              <div className="flex py-3 pl-1.5">
-                <button
-                  className={
-                    editor?.isActive("OrderedList")
-                      ? "p-[11px] rounded-l-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-l-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleOrderedList}
-                >
-                  <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("UnorderedList")
-                      ? "p-[11px] text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px]text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleUnorderedList}
-                >
-                  <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("Tasklist")
-                      ? "p-[11px] rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-r-xl text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleTaskList}
-                >
-                  <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex py-3 pl-1.5">
-                <button
-                  className={
-                    editor?.isActive("Blockquote")
-                      ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-full text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={toggleBlockquote}
-                >
-                  <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-              <div className="flex py-3 pl-1">
-                <button
-                  className={
-                    editor?.isActive("CodeBlock")
-                      ? "p-[11px] rounded-full text-amber-400 bg-[#424242] cursor-pointer"
-                      : "p-[11px] rounded-full text-white bg-[#393939] cursor-pointer"
-                  }
-                  onClick={() =>
-                    editor?.chain().focus().toggleCodeBlock().run()
-                  }
-                >
-                  <CodeBox className="border-none text-white text-xl w-7 h-7" />
-                </button>
-              </div>
-            </div>
-          </Drawer>{" "}
+          <Drawer
+            noteId={note.id}
+            note={note}
+            editor={editor}
+            defaultHeight={100}
+            maxHeight={180}
+          />
         </div>
       </div>
     </div>

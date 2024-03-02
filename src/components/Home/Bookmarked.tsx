@@ -1,4 +1,4 @@
-import { Note } from "../store/types";
+import { Note } from "../../store/types";
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
 import Bookmark3LineIcon from "remixicon-react/Bookmark3LineIcon";
 import Bookmark3FillIcon from "remixicon-react/Bookmark3FillIcon";
@@ -45,7 +45,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
         const translationModule = await import(
-          `../assets/locales/${selectedLanguage}.json`
+          `../../assets/locales/${selectedLanguage}.json`
         );
 
         setTranslations({ ...translations, ...translationModule.default });
@@ -116,38 +116,38 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
                 </div>
               </div>
               <div className="flex items-center justify-between pt-2">
-                <div>
-                  <button
-                    className="text-[#52525C] py-2 dark:text-white w-auto"
-                    onClick={(e) => handleToggleBookmark(note.id, e)}
-                  >
-                    {note.isBookmarked ? (
-                      <Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                    ) : (
-                      <Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                    )}
-                  </button>
-                  <button
-                    className="text-[#52525C] py-2 dark:text-white w-auto"
-                    onClick={(e) => handleToggleLock(note.id, e)}
-                  >
-                    {note.isLocked ? (
-                      <LockClosedIcon className="w-8 h-8 mr-2" />
-                    ) : (
-                      <LockOpenIcon className="w-8 h-8 mr-2" />
-                    )}
-                  </button>
-                  <button
-                    className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto w-8 h-8"
-                    onClick={(e) => handleDeleteNote(note.id, e)}
-                  >
-                    <DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                  </button>
-                </div>
-                <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
-                  {dayjs(note.createdAt).fromNow()}
-                </div>
-              </div>
+                          <div className="flex items-center">
+                            <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleBookmark(note.id, e)}
+                            >
+                              {note.isBookmarked ? (
+                                <Bookmark3FillIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <Bookmark3LineIcon className="w-8 h-8 mr-2" />
+                              )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              onClick={(e) => handleToggleLock(note.id, e)}
+                            >
+                              {note.isLocked ? (
+                                <LockClosedIcon className="w-8 h-8 mr-2" />
+                              ) : (
+                                <LockOpenIcon className="w-8 h-8 mr-2" />
+                              )}
+                            </button>
+                            <button
+                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto"
+                              onClick={(e) => handleDeleteNote(note.id, e)}
+                            >
+                              <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                            </button>
+                          </div>
+                          <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
+                            {dayjs(note.createdAt).fromNow()}
+                          </div>
+                        </div>
             </div>
           );
         }
