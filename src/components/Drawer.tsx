@@ -70,16 +70,27 @@ const Drawer: React.FC<DrawerProps> = ({
 
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
     if (isDragging && editor) {
-      // Check if editor exists
       const deltaY = dragStartY - event.touches[0].clientY;
-      const newHeight = drawerHeight + deltaY;
-
-      if (newHeight >= defaultHeight && newHeight <= maxHeight) {
-        setDrawerHeight(newHeight);
+      let newHeight = drawerHeight + deltaY;
+  
+      // Ensure new height stays within bounds
+      newHeight = Math.max(defaultHeight, Math.min(maxHeight, newHeight));
+  
+      // Set the direction of the swipe
+      const direction = deltaY > 0 ? 'up' : 'down';
+  
+      // If swiping up, set drawerHeight to maxHeight; if swiping down, set drawerHeight to defaultHeight
+      if (direction === 'up') {
+        setDrawerHeight(maxHeight);
+      } else {
+        setDrawerHeight(defaultHeight);
       }
+  
+      // You may also want to update the dragStartY
+      setDragStartY(event.touches[0].clientY);
     }
   };
-
+  
   const handleImageUpload = (imageUrl: string) => {
     editor?.chain().setImage({ src: imageUrl }).run();
   };
@@ -217,7 +228,7 @@ const Drawer: React.FC<DrawerProps> = ({
                 ? `p-3 ${ios} rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer `
                 : `p-3 ${ios} rounded-r-xl text-white bg-[#393939] cursor-pointer `
             }
-            onClick={() => editor?.chain().focus().toggleTaskList().run}
+            onClick={() => editor?.chain().focus().toggleTaskList().run()}
           >
             <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
           </button>

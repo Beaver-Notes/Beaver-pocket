@@ -26,6 +26,7 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import { isPlatform } from "@ionic/react";
+import BulletList from '@tiptap/extension-bullet-list'
 import Drawer from "./components/Drawer";
 import SearchAndReplace from "./lib/tiptap/search-&-replace";
 import Find from "./components/Note/Find";
@@ -83,6 +84,7 @@ const extensions = [
   Placeholder,
   OrderedList,
   TaskList,
+  BulletList,
   TaskItem.configure({
     nested: true,
   }),
