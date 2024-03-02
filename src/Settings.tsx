@@ -15,6 +15,7 @@ import {
 } from "@capacitor/filesystem";
 import enTranslations from "./assets/locales/en.json";
 import itTranslations from "./assets/locales/it.json";
+import deTranslations from "./assets/locales/de.json";
 import * as CryptoJS from "crypto-js";
 
 import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
@@ -560,6 +561,7 @@ const Settings: React.FC = () => {
   const languages = [
     { code: "en", name: "English", translations: enTranslations },
     { code: "it", name: "Italiano", translations: itTranslations },
+    { code: "de", name: "Deutsch", translations: deTranslations },
   ];
 
   const updateLanguage = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -583,7 +585,7 @@ const Settings: React.FC = () => {
         <div className="overflow-y-hidden">
           {!activeNoteId && (
             <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-              <div className="mx-6 md:px-24 overflow-y-auto flex-grow">
+              <div className="mx-4 md:px-24 overflow-y-auto flex-grow">
                 <p className="text-4xl font-bold">
                   {" "}
                   {translations.settings.title || "-"}

@@ -9,7 +9,7 @@ import BottomNavBar from "./components/BottomNavBar";
 import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import "./css/main.css";
 import "./css/fonts.css";
-import Bookmarked from "./components/Bookmarked";
+import Bookmarked from "./components/Home/Bookmarked";
 import {
   Filesystem,
   Directory,
@@ -22,6 +22,7 @@ import "dayjs/locale/it";
 import relativeTime from "dayjs/plugin/relativeTime";
 import SearchBar from "./components/Search";
 import * as CryptoJS from "crypto-js";
+import CommandPrompt from "./components/CommandPrompt";
 import {
   loadNotes,
   useSaveNote,
@@ -29,6 +30,8 @@ import {
   useToggleBookmark,
   useToggleArchive,
 } from "./store/notes";
+import useNoteEditor from "./store/useNoteActions";
+import { useNotesState, useActiveNote } from  "./store/Activenote";
 
 // Import Remix icons
 import AddFillIcon from "remixicon-react/AddFillIcon";
@@ -112,9 +115,8 @@ const App: React.FC = () => {
   };
 
   const STORAGE_PATH = "notes/data.json";
-
-  const [notesState, setNotesState] = useState<Record<string, Note>>({});
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+  const { notesState, setNotesState, activeNoteId, setActiveNoteId } = useNotesState();
+  const activeNote = useActiveNote(activeNoteId, notesState);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
@@ -369,35 +371,12 @@ const App: React.FC = () => {
     reader.readAsText(file);
   };
 
-  const activeNote = activeNoteId ? notesState[activeNoteId] : null;
-
-  const [title, setTitle] = useState(
-    activeNoteId ? notesState[activeNoteId].title : ""
+  const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
+    activeNoteId,
+    notesState,
+    setNotesState,
+    saveNote
   );
-
-  const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
-    if (activeNoteId) {
-      const existingNote = notesState[activeNoteId];
-      const updatedTitle =
-        newTitle !== undefined && newTitle.trim() !== ""
-          ? newTitle
-          : existingNote.title;
-
-      const updateNote = {
-        ...existingNote,
-        updatedAt: new Date(),
-        content,
-        title: updatedTitle,
-      };
-
-      setNotesState((prevNotes) => ({
-        ...prevNotes,
-        [activeNoteId]: updateNote,
-      }));
-
-      saveNote(updateNote);
-    }
-  };
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -710,6 +689,27 @@ const App: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
+  const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
+
+  useEffect(() => {
+    // Listen for key combination
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "p"
+      ) {
+        setIsCommandPromptOpen(true);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  });
+
   return (
     <div {...handlers}>
       <div className="grid sm:grid-cols-[auto,1fr]">
@@ -733,7 +733,7 @@ const App: React.FC = () => {
                 exportData={exportData}
                 handleImportData={handleImportData}
               />
-              <div className="p-2 mb-10 mx-6 cursor-pointer rounded-md items-center justify-center h-full">
+              <div className="p-2 mb-10 mx-4 cursor-pointer rounded-md items-center justify-center h-full">
                 {notesList.filter(
                   (note) => note.isBookmarked && !note.isArchived
                 ).length > 0 && (
@@ -769,7 +769,7 @@ const App: React.FC = () => {
                     </p>
                   </div>
                 )}
-                <div className="grid py-2 grid-cols-1 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
                   {notesList
                     .filter((note) => !note.isBookmarked && !note.isArchived)
                     .map((note) => (
@@ -882,6 +882,14 @@ const App: React.FC = () => {
             </div>
           )}
         </div>
+        <CommandPrompt
+          onCreateNewNote={handleCreateNewNote}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          setIsCommandPromptOpen={setIsCommandPromptOpen}
+          isOpen={isCommandPromptOpen}
+          notes={notesList}
+          onClickNote={handleClickNote}
+        />
       </div>
       <div>
         {activeNote && (

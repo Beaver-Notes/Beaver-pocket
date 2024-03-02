@@ -38,7 +38,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({
 
   return (
     <div className={`spacingdiv ${isVisible ? 'visible' : 'hidden'}`}>
-      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full md:hidden w-[calc(100%-1rem)]">
+      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full sm:hidden w-[calc(100%-1rem)]">
         <div className="flex justify-between">
           <a href="#" className="p-2" onClick={onCreateNewNote}>
             <AddFillIcon className="text-white hover:text-amber-400 h-8 w-8" />

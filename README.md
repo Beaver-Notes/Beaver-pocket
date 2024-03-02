@@ -6,7 +6,9 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 
 > 🔩 Please be aware that this application is still under heavy development. Therefore, you might want to backup the notes you take with it and check this repository weekly for updates and new features. Not everything works, so just scroll below to see if the state of the app fits your needs or not.
 
-![Pocket-2](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/2826a010-1a26-4ce7-b5e3-771f15a553ad)
+![Untitled](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/31e3f7e6-b152-4fd0-973f-5e3c281066be)
+
+
 
 ## What Works 
 
@@ -21,26 +23,22 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 - [x] Inline Block
 - [x] Toolbar
 - [x] Search
+- [x] Images
 - [x] QuoteBlock
 - [x] Lists
 - [x] Archive
 - [x] Bookmark
 - [x] Links
-- [x] Exporting data to Beavernotes
-- [x] Dark Mode 
+- [x] Exporting data to Beavernotes 
       
 ## Kinda Works
 - [ ] Tags (Needs tighter integration with Tiptap)
-- [ ] Tables (Can be displayed but not inserted)
-
+- [ ] Dark Mode (No toggle is available)
 
 ## Doesn't work / not implemented 
 
 - [ ] Importing data from Beavernotes (Might not work due to the lack of certain features).
 - [ ] Note Linking
-- [ ] Images
-- [ ] Suggestions for labels and note linking
-- [ ] Accessibility (Furhter testing needed)
 
 ## To set up your machine for running Beaver Notes Pocket, follow these steps:
 
