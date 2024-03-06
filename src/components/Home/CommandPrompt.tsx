@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Note } from "../store/types";
+import { Note } from "../../store/types";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import { useNavigate } from "react-router-dom";
 

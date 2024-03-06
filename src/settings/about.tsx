@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import BottomNavBar from "../components/BottomNavBar";
+import BottomNavBar from "../components/Home/BottomNavBar";
 import { Note } from "../store/types";
 import NoteEditor from "../NoteEditor";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../components/Home/Sidebar";
 import { version } from "../../package.json";
 import GlobalLineIcon from "remixicon-react/GlobalLineIcon";
 import GithubFillIcon from "remixicon-react/GithubFillIcon";
