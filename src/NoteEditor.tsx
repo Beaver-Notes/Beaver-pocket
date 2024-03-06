@@ -17,7 +17,7 @@ import TaskList from "@tiptap/extension-task-list";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
-import NoteLabels from "./components/NoteLabel";
+import NoteLabels from "./components/Editor/NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
 import HeadingTree from "./lib/HeadingTree";
@@ -27,9 +27,9 @@ import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import { isPlatform } from "@ionic/react";
 import BulletList from '@tiptap/extension-bullet-list'
-import Drawer from "./components/Drawer";
+import Drawer from "./components/Editor/Drawer";
 import SearchAndReplace from "./lib/tiptap/search-&-replace";
-import Find from "./components/Note/Find";
+import Find from "./components/Editor/Find";
 // import Paper from "./lib/tiptap/paper/Paper"
 
 // Icons
@@ -47,7 +47,7 @@ import LinkIcon from "remixicon-react/LinkMIcon";
 import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
-import ImageUploadComponent from './components/Note/ImageUpload';
+import ImageUploadComponent from './components/Editor/ImageUpload';
 
 // Languages
 import css from "highlight.js/lib/languages/css";

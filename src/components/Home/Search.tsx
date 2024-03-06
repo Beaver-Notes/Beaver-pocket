@@ -39,7 +39,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   useEffect(() => {
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem('selectedLanguage') || 'en';
-      const translationModule = await import(`../assets/locales/${selectedLanguage}.json`);
+      const translationModule = await import(`../../assets/locales/${selectedLanguage}.json`);
       setTranslations({ ...translations, ...translationModule.default });
     };
 

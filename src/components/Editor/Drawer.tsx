@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { Editor } from "@tiptap/react";
-import { Note } from "../store/types";
-import ImageUploadComponent from './Note/ImageUpload';
+import { Note } from "../../store/types";
+import ImageUploadComponent from './ImageUpload';
 
 
 // Icons
