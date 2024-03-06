@@ -3,11 +3,11 @@ import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
 import NoteEditor from "./NoteEditor";
 import { JSONContent } from "@tiptap/react";
-import BottomNavBar from "./components/BottomNavBar";
-import Sidebar from "./components/Sidebar";
+import BottomNavBar from "./components/Home/BottomNavBar";
+import Sidebar from "./components/Home/Sidebar";
 import "./css/main.css";
 import "./css/fonts.css";
-import SearchBar from "./components/Search";
+import SearchBar from "./components/Home/Search";
 import {
   Filesystem,
   Directory,

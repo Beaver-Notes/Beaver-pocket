@@ -1,6 +1,8 @@
 import React, { useCallback, useState } from "react";
 import { Editor } from "@tiptap/react";
-import { Note } from "../store/types";
+import { Note } from "../../store/types";
+import ImageUploadComponent from './ImageUpload';
+
 
 // Icons
 import BoldIcon from "remixicon-react/BoldIcon";
@@ -8,7 +10,6 @@ import Heading1Icon from "remixicon-react/H1Icon";
 import Heading2Icon from "remixicon-react/H2Icon";
 import CodeBox from "remixicon-react/CodeBoxLineIcon";
 import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
-import ImageLineIcon from "remixicon-react/ImageLineIcon";
 import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
 import ItalicIcon from "remixicon-react/ItalicIcon";
 import UnderlineIcon from "remixicon-react/UnderlineIcon";
@@ -17,21 +18,21 @@ import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
-import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { isPlatform } from "@ionic/react";
 
 interface DrawerProps {
   defaultHeight: number;
   maxHeight: number;
   note: Note;
+  noteId: string;
   editor: Editor | null;
 }
 
 const Drawer: React.FC<DrawerProps> = ({
   defaultHeight,
   maxHeight,
-  note,
   editor,
+  noteId,
 }) => {
   const [dragStartY, setDragStartY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -41,45 +42,6 @@ const Drawer: React.FC<DrawerProps> = ({
     setDragStartY(event.touches[0].clientY);
     setIsDragging(true);
   };
-
-  async function handleImageUpload(file: File, noteId: string) {
-    try {
-      // Construct the directory path
-      const directoryPath = `/assets/${noteId}`;
-
-      // Ensure the directory exists using Capacitor Filesystem
-      await Filesystem.mkdir({
-        path: directoryPath,
-        directory: FilesystemDirectory.Data,
-        recursive: true, // Create directories recursively
-      });
-
-      const imageFileName = `${directoryPath}/${file.name}`;
-
-      // Read the file as a data URL
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onload = async () => {
-        const imageDataUrl = reader.result as string;
-
-        // Save the image using Capacitor Filesystem
-        await Filesystem.writeFile({
-          path: imageFileName,
-          data: imageDataUrl.split(",")[1], // Extract base64 data
-          directory: FilesystemDirectory.Data,
-        });
-
-        // Construct the image source URL
-        const imageSrc = imageDataUrl;
-
-        // Insert the image into the editor
-        editor?.chain().focus().setImage({ src: imageSrc }).run();
-      };
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    }
-  }
 
   const setLink = useCallback(() => {
     const previousUrl = editor?.getAttributes("link").href;
@@ -108,14 +70,29 @@ const Drawer: React.FC<DrawerProps> = ({
 
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
     if (isDragging && editor) {
-      // Check if editor exists
       const deltaY = dragStartY - event.touches[0].clientY;
-      const newHeight = drawerHeight + deltaY;
-
-      if (newHeight >= defaultHeight && newHeight <= maxHeight) {
-        setDrawerHeight(newHeight);
+      let newHeight = drawerHeight + deltaY;
+  
+      // Ensure new height stays within bounds
+      newHeight = Math.max(defaultHeight, Math.min(maxHeight, newHeight));
+  
+      // Set the direction of the swipe
+      const direction = deltaY > 0 ? 'up' : 'down';
+  
+      // If swiping up, set drawerHeight to maxHeight; if swiping down, set drawerHeight to defaultHeight
+      if (direction === 'up') {
+        setDrawerHeight(maxHeight);
+      } else {
+        setDrawerHeight(defaultHeight);
       }
+  
+      // You may also want to update the dragStartY
+      setDragStartY(event.touches[0].clientY);
     }
+  };
+  
+  const handleImageUpload = (imageUrl: string) => {
+    editor?.chain().setImage({ src: imageUrl }).run();
   };
 
   const handleTouchEnd = () => {
@@ -222,24 +199,7 @@ const Drawer: React.FC<DrawerProps> = ({
           </button>
         </div>
         <div className="flex py-3 pl-1.5">
-          <div
-            className={`p-3 ${ios} rounded-full text-white  bg-[#393939] cursor-pointer`}
-          >
-            <label htmlFor="image-upload-input">
-              <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                if (e.target.files) {
-                  handleImageUpload(e.target.files[0], note.id);
-                }
-              }}
-              id="image-upload-input"
-              className="hidden"
-            />
-          </div>
+        <ImageUploadComponent onImageUpload={handleImageUpload} noteId={noteId} />
         </div>
         <div className="flex py-3 pl-1.5">
           <button
@@ -268,7 +228,7 @@ const Drawer: React.FC<DrawerProps> = ({
                 ? `p-3 ${ios} rounded-r-xl text-amber-400 bg-[#424242] cursor-pointer `
                 : `p-3 ${ios} rounded-r-xl text-white bg-[#393939] cursor-pointer `
             }
-            onClick={() => editor?.chain().focus().toggleTaskList().run}
+            onClick={() => editor?.chain().focus().toggleTaskList().run()}
           >
             <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
           </button>
