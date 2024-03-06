@@ -4,8 +4,8 @@ import { Note } from "./store/types";
 import NoteEditor from "./NoteEditor";
 import "./css/NoteEditor.module.css";
 import { JSONContent } from "@tiptap/react";
-import Sidebar from "./components/Sidebar";
-import BottomNavBar from "./components/BottomNavBar";
+import Sidebar from "./components/Home/Sidebar";
+import BottomNavBar from "./components/Home/BottomNavBar";
 import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import "./css/main.css";
 import "./css/fonts.css";
@@ -14,15 +14,16 @@ import {
   Filesystem,
   Directory,
   FilesystemEncoding,
+  FilesystemDirectory,
 } from "@capacitor/filesystem";
 import JSZip from "jszip";
 import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import "dayjs/locale/it";
 import relativeTime from "dayjs/plugin/relativeTime";
-import SearchBar from "./components/Search";
+import SearchBar from "./components/Home/Search";
 import * as CryptoJS from "crypto-js";
-import CommandPrompt from "./components/CommandPrompt";
+import CommandPrompt from "./components/Home/CommandPrompt";
 import {
   loadNotes,
   useSaveNote,
@@ -31,7 +32,7 @@ import {
   useToggleArchive,
 } from "./store/notes";
 import useNoteEditor from "./store/useNoteActions";
-import { useNotesState, useActiveNote } from  "./store/Activenote";
+import { useNotesState, useActiveNote } from "./store/Activenote";
 
 // Import Remix icons
 import AddFillIcon from "remixicon-react/AddFillIcon";
@@ -115,7 +116,8 @@ const App: React.FC = () => {
   };
 
   const STORAGE_PATH = "notes/data.json";
-  const { notesState, setNotesState, activeNoteId, setActiveNoteId } = useNotesState();
+  const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
+    useNotesState();
   const activeNote = useActiveNote(activeNoteId, notesState);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
@@ -171,6 +173,8 @@ const App: React.FC = () => {
         recursive: true,
       });
 
+      const jsonDataPath = `${exportFolderPath}/data.json`;
+
       const exportedData: any = {
         data: {
           notes: {},
@@ -179,6 +183,7 @@ const App: React.FC = () => {
         labels: [],
       };
 
+      // Loop through notes to populate exportedData
       Object.values(notesState).forEach((note) => {
         const createdAtTimestamp =
           note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
@@ -207,44 +212,26 @@ const App: React.FC = () => {
 
       exportedData.labels = Array.from(new Set(exportedData.labels));
 
-      const jsonData = JSON.stringify(exportedData, null, 2);
-      const jsonFilePath = `${exportFolderPath}/data.json`;
+      // Modify image src based on alt attribute
+      Object.values(exportedData.data.notes).forEach((note: any) => {
+        if (note.content && note.content.content) {
+          note.content.content.forEach((node: any) => {
+            if (node.type === "image" && node.attrs && node.attrs.src) {
+              const srcParts = node.attrs.src.split("/");
+              const fileName = srcParts[srcParts.length - 1]; // Get the last part as the filename
+              node.attrs.src = `assets://${note.id}/${fileName}`;
+            }
+          });
+        }
+      });
 
+      // Write modified JSON data to data.json
       await Filesystem.writeFile({
-        path: jsonFilePath,
-        data: jsonData,
+        path: jsonDataPath,
+        data: JSON.stringify(exportedData, null, 2),
         directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
-
-      const imagesFolderPath = `images`;
-      let imagesFolderExists = false;
-
-      try {
-        const imagesFolderInfo = await (Filesystem as any).getInfo({
-          path: imagesFolderPath,
-          directory: Directory.Documents,
-        });
-        imagesFolderExists = imagesFolderInfo.type === "directory";
-      } catch (error) {
-        console.error("Error checking images folder:", error);
-      }
-
-      if (imagesFolderExists) {
-        const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-
-        await Filesystem.mkdir({
-          path: exportImagesFolderPath,
-          directory: Directory.Documents,
-          recursive: true,
-        });
-
-        await Filesystem.copy({
-          from: imagesFolderPath,
-          to: exportImagesFolderPath,
-          directory: Directory.Documents,
-        });
-      }
 
       const zip = new JSZip();
       const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
@@ -255,7 +242,7 @@ const App: React.FC = () => {
       });
 
       await Promise.all(
-        exportFolderFiles.files.map(async (file) => {
+        exportFolderFiles.files.map(async (file: any) => {
           const filePath = `${exportFolderPath}/${file.name}`;
           const fileContent = await Filesystem.readFile({
             path: filePath,
@@ -310,66 +297,97 @@ const App: React.FC = () => {
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
-
+  
     if (!file) {
       return;
     }
-
+  
     const reader = new FileReader();
-
+  
     reader.onload = async (e) => {
       try {
         const importedData = JSON.parse(e.target?.result as string);
-
+  
         if (importedData && importedData.data && importedData.data.notes) {
           const importedNotes: Record<string, Note> = importedData.data.notes;
-
+  
+          // Write a dummy file to the note-assets folder
+          const dummyFileName = "dummy.txt";
+          const dummyFilePath = `note-assets/${dummyFileName}`;
+          console.log("Writing dummy file:", dummyFilePath); // Debugging
+  
+          await Filesystem.writeFile({
+            path: dummyFilePath,
+            data: "dummy file",
+            directory: FilesystemDirectory.Documents,
+            encoding: FilesystemEncoding.UTF8,
+          });
+  
+          // Get the URL of the note-assets folder
+          const { uri: noteAssetsUri } = await Filesystem.getUri({
+            directory: FilesystemDirectory.Documents,
+            path: `note-assets/`,
+          });
+          console.log("Note assets URI:", noteAssetsUri); // Debugging
+  
+          // Remove the dummy file
+          await Filesystem.deleteFile({
+            path: dummyFilePath,
+            directory: FilesystemDirectory.Documents,
+          });
+          console.log("Dummy file removed"); // Debugging
+  
+          // Modify the src attribute of images in the imported notes
+          Object.values(importedNotes).forEach((note) => {
+            if (Array.isArray(note.content)) {
+              note.content.forEach((contentItem) => {
+                if (contentItem.type === 'image' && typeof contentItem.attrs?.src === 'string') {
+                  const srcParts = contentItem.attrs.src.split('assets://');
+                  if (srcParts.length === 2) {
+                    contentItem.attrs.src = `${noteAssetsUri}${srcParts[1]}`;
+                  }
+                }
+              });
+            }
+          });
+          console.log("Modified imported notes:", importedNotes); // Debugging
+  
+          // Merge the imported notes with existing ones and update state
           const existingNotes = await loadNotes();
-
           const mergedNotes: Record<string, Note> = {
             ...existingNotes,
             ...importedNotes,
           };
-
           setNotesState(mergedNotes);
-
+  
+          // Filter notes based on search query
           const filtered = Object.values(mergedNotes).filter((note) => {
-            const titleMatch = note.title
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-            const contentMatch = JSON.stringify(note.content)
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
+            const titleMatch = note.title.toLowerCase().includes(searchQuery.toLowerCase());
+            const contentMatch = JSON.stringify(note.content).toLowerCase().includes(searchQuery.toLowerCase());
             return titleMatch || contentMatch;
           });
-
-          setFilteredNotes(
-            Object.fromEntries(filtered.map((note) => [note.id, note]))
-          );
-
-          Object.values(importedNotes).forEach((note) => {
-            note.createdAt = new Date(note.createdAt);
-            note.updatedAt = new Date(note.updatedAt);
-          });
-
+          setFilteredNotes(Object.fromEntries(filtered.map((note) => [note.id, note])));
+  
+          // Write merged notes to storage
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify({ data: { notes: mergedNotes } }),
             directory: Directory.Documents,
             encoding: FilesystemEncoding.UTF8,
           });
-
+  
           alert(translations.home.importSuccess);
         } else {
           alert(translations.home.importInvalid);
         }
       } catch (error) {
+        console.error("Error during import:", error); // Debugging
         alert(translations.home.importError);
       }
     };
-
+  
     reader.readAsText(file);
-  };
+  };  
 
   const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,

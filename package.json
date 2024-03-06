@@ -29,6 +29,8 @@
     "@ionic/react": "7.6.2",
     "@nytimes/react-prosemirror": "^0.4.2",
     "@tiptap/extension-blockquote": "^2.1.13",
+    "@tiptap/extension-bubble-menu": "^2.2.4",
+    "@tiptap/extension-bullet-list": "^2.2.4",
     "@tiptap/extension-code": "^2.1.13",
     "@tiptap/extension-code-block": "^2.1.13",
     "@tiptap/extension-code-block-lowlight": "^2.1.13",

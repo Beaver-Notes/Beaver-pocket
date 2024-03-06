@@ -1,4 +1,4 @@
-import { Note } from "../store/types";
+import { Note } from "../../store/types";
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
 import Bookmark3LineIcon from "remixicon-react/Bookmark3LineIcon";
 import Bookmark3FillIcon from "remixicon-react/Bookmark3FillIcon";
@@ -45,7 +45,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
         const translationModule = await import(
-          `../assets/locales/${selectedLanguage}.json`
+          `../../assets/locales/${selectedLanguage}.json`
         );
 
         setTranslations({ ...translations, ...translationModule.default });

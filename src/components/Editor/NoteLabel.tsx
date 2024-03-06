@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { JSONContent } from "@tiptap/react";
-import { Note } from "../store/types";
+import { Note } from "../../store/types";
 import dayjs from "dayjs";
 
 type Props = {
@@ -134,7 +134,7 @@ function NoteLabels({
           const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
           try {
             const translationModule = await import(
-              `../assets/locales/${selectedLanguage}.json`
+              `../../assets/locales/${selectedLanguage}.json`
             );
     
             setTranslations({ ...translations, ...translationModule.default });
