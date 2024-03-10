@@ -24,6 +24,7 @@ import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import NoteLabels from "./components/Editor/NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
+import { blackCallout, blueCallout, greenCallout, purpleCallout, redCallout, yellowCallout } from "./lib/tiptap/Callouts/Index";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
 import HeadingTree from "./lib/HeadingTree";
 import Table from "@tiptap/extension-table";
@@ -78,6 +79,12 @@ const extensions = [
   Document,
   NoteLabel,
   Text,
+  blackCallout,
+  blueCallout,
+  greenCallout,
+  purpleCallout,
+  redCallout, 
+  yellowCallout,
   StarterKit,
   Link,
   Mathblock,
