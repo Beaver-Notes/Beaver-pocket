@@ -160,7 +160,7 @@ const App: React.FC = () => {
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
 
@@ -169,7 +169,7 @@ const App: React.FC = () => {
 
       await Filesystem.mkdir({
         path: exportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
 
@@ -229,7 +229,7 @@ const App: React.FC = () => {
       await Filesystem.writeFile({
         path: jsonDataPath,
         data: JSON.stringify(exportedData, null, 2),
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -238,7 +238,7 @@ const App: React.FC = () => {
 
       const exportFolderFiles = await Filesystem.readdir({
         path: exportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       await Promise.all(
@@ -246,7 +246,7 @@ const App: React.FC = () => {
           const filePath = `${exportFolderPath}/${file.name}`;
           const fileContent = await Filesystem.readFile({
             path: filePath,
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
           exportFolderZip!.file(file.name, fileContent.data);
@@ -319,13 +319,13 @@ const App: React.FC = () => {
           await Filesystem.writeFile({
             path: dummyFilePath,
             data: "dummy file",
-            directory: FilesystemDirectory.Documents,
+            directory: FilesystemDirectory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
   
           // Get the URL of the note-assets folder
           const { uri: noteAssetsUri } = await Filesystem.getUri({
-            directory: FilesystemDirectory.Documents,
+            directory: FilesystemDirectory.Data,
             path: `note-assets/`,
           });
           console.log("Note assets URI:", noteAssetsUri); // Debugging
@@ -333,7 +333,7 @@ const App: React.FC = () => {
           // Remove the dummy file
           await Filesystem.deleteFile({
             path: dummyFilePath,
-            directory: FilesystemDirectory.Documents,
+            directory: FilesystemDirectory.Data,
           });
           console.log("Dummy file removed"); // Debugging
   
@@ -372,7 +372,7 @@ const App: React.FC = () => {
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify({ data: { notes: mergedNotes } }),
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
   
@@ -580,7 +580,7 @@ const App: React.FC = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
