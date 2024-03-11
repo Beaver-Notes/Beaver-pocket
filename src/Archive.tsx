@@ -139,7 +139,7 @@ const Archive: React.FC = () => {
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
 
@@ -148,7 +148,7 @@ const Archive: React.FC = () => {
 
       await Filesystem.mkdir({
         path: exportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
 
@@ -194,7 +194,7 @@ const Archive: React.FC = () => {
       await Filesystem.writeFile({
         path: jsonFilePath,
         data: jsonData,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -204,7 +204,7 @@ const Archive: React.FC = () => {
       try {
         const imagesFolderInfo = await (Filesystem as any).getInfo({
           path: imagesFolderPath,
-          directory: Directory.Documents,
+          directory: Directory.Data,
         });
         imagesFolderExists = imagesFolderInfo.type === "directory";
       } catch (error) {
@@ -216,14 +216,14 @@ const Archive: React.FC = () => {
 
         await Filesystem.mkdir({
           path: exportImagesFolderPath,
-          directory: Directory.Documents,
+          directory: Directory.Data,
           recursive: true,
         });
 
         await Filesystem.copy({
           from: imagesFolderPath,
           to: exportImagesFolderPath,
-          directory: Directory.Documents,
+          directory: Directory.Data,
         });
       }
 
@@ -232,7 +232,7 @@ const Archive: React.FC = () => {
 
       const exportFolderFiles = await Filesystem.readdir({
         path: exportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       await Promise.all(
@@ -240,7 +240,7 @@ const Archive: React.FC = () => {
           const filePath = `${exportFolderPath}/${file.name}`;
           const fileContent = await Filesystem.readFile({
             path: filePath,
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
           exportFolderZip!.file(file.name, fileContent.data);
@@ -341,7 +341,7 @@ const Archive: React.FC = () => {
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify({ data: { notes: mergedNotes } }),
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
 
@@ -575,7 +575,7 @@ const Archive: React.FC = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
