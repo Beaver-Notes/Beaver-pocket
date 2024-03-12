@@ -76,8 +76,10 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
         path: filePath,
       });
 
-      const imageUrl = Capacitor.convertFileSrc(uri); // Convert file URI to displayable URL
-      return { imageUrl, fileUri: uri };
+      console.log('upload', uri);
+
+      // const imageUrl = Capacitor.convertFileSrc(uri); // Convert file URI to displayable URL
+      return { imageUrl: filePath, fileUri: uri };
     } catch (error) {
       console.error("Error saving image to file system:", error);
       return { imageUrl: "", fileUri: "" };
