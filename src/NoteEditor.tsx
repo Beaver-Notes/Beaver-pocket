@@ -64,6 +64,7 @@ import ts from "highlight.js/lib/languages/typescript";
 import html from "highlight.js/lib/languages/xml";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
+import {useDataPath} from "./store/useDataPath";
 
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("css", css);
@@ -102,7 +103,19 @@ const extensions = [
   TaskItem.configure({
     nested: true,
   }),
-  ImageResize,
+  ImageResize.extend({
+    addNodeView() {
+      const viewer = this.parent?.() as any;
+      return (props) => {
+        const attrs = props.node.attrs;
+        const node = { ...props.node, attrs: { ...attrs, src: useDataPath().getRemotePath(attrs.src) } };
+        console.log('img', node)
+        const newProps = { ...props, node };
+        console.log(newProps);
+        return viewer(newProps);
+      };
+    }
+  }),
 ];
 
 type Props = {
