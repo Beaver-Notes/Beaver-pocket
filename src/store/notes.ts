@@ -2,9 +2,12 @@ import {
   Directory,
   Filesystem,
   FilesystemEncoding,
+  FilesystemDirectory
 } from "@capacitor/filesystem";
 import React, { useState } from "react";
 import { Note } from "./types";
+import {Capacitor} from "@capacitor/core";
+import {setStoreRemotePath} from "./useDataPath";
 
 const STORAGE_PATH = "notes/data.json";
 
@@ -28,6 +31,11 @@ async function createNotesDirectory() {
 
 export const loadNotes = async () => {
   try {
+    const { uri } = await Filesystem.getUri({
+      directory: FilesystemDirectory.Documents,
+      path: "",
+    });
+    setStoreRemotePath(Capacitor.convertFileSrc(uri));
     await createNotesDirectory(); // Create the directory before reading/writing
 
     const fileExists = await Filesystem.stat({
