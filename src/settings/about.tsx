@@ -26,7 +26,7 @@ async function createNotesDirectory() {
   try {
     await Filesystem.mkdir({
       path: directoryPath,
-      directory: Directory.Documents,
+      directory: Directory.Data,
       recursive: true,
     });
   } catch (error: any) {
@@ -41,13 +41,13 @@ const About: React.FC = ({}) => {
 
       const fileExists = await Filesystem.stat({
         path: STORAGE_PATH,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       if (fileExists) {
         const data = await Filesystem.readFile({
           path: STORAGE_PATH,
-          directory: Directory.Documents,
+          directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
 
@@ -139,7 +139,7 @@ const About: React.FC = ({}) => {
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify(data),
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
         } else {
@@ -237,7 +237,7 @@ const About: React.FC = ({}) => {
         const parentExportFolderPath = `export`;
         await Filesystem.mkdir({
           path: parentExportFolderPath,
-          directory: Directory.Documents,
+          directory: Directory.Data,
           recursive: true,
         });
   
@@ -246,7 +246,7 @@ const About: React.FC = ({}) => {
   
         await Filesystem.mkdir({
           path: exportFolderPath,
-          directory: Directory.Documents,
+          directory: Directory.Data,
           recursive: true,
         });
   
@@ -292,7 +292,7 @@ const About: React.FC = ({}) => {
         await Filesystem.writeFile({
           path: jsonFilePath,
           data: jsonData,
-          directory: Directory.Documents,
+          directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
   
@@ -302,7 +302,7 @@ const About: React.FC = ({}) => {
         try {
           const imagesFolderInfo = await (Filesystem as any).getInfo({
             path: imagesFolderPath,
-            directory: Directory.Documents,
+            directory: Directory.Data,
           });
           imagesFolderExists = imagesFolderInfo.type === "directory";
         } catch (error) {
@@ -314,14 +314,14 @@ const About: React.FC = ({}) => {
   
           await Filesystem.mkdir({
             path: exportImagesFolderPath,
-            directory: Directory.Documents,
+            directory: Directory.Data,
             recursive: true,
           });
   
           await Filesystem.copy({
             from: imagesFolderPath,
             to: exportImagesFolderPath,
-            directory: Directory.Documents,
+            directory: Directory.Data,
           });
         }
   
@@ -330,7 +330,7 @@ const About: React.FC = ({}) => {
   
         const exportFolderFiles = await Filesystem.readdir({
           path: exportFolderPath,
-          directory: Directory.Documents,
+          directory: Directory.Data,
         });
   
         await Promise.all(
@@ -338,7 +338,7 @@ const About: React.FC = ({}) => {
             const filePath = `${exportFolderPath}/${file.name}`;
             const fileContent = await Filesystem.readFile({
               path: filePath,
-              directory: Directory.Documents,
+              directory: Directory.Data,
               encoding: FilesystemEncoding.UTF8,
             });
             exportFolderZip!.file(file.name, fileContent.data);
@@ -435,7 +435,7 @@ const About: React.FC = ({}) => {
             await Filesystem.writeFile({
               path: STORAGE_PATH,
               data: JSON.stringify({ data: { notes: mergedNotes } }),
-              directory: Directory.Documents,
+              directory: Directory.Data,
               encoding: FilesystemEncoding.UTF8,
             });
   
@@ -522,6 +522,7 @@ const About: React.FC = ({}) => {
   const [isArchiveVisible, setIsArchiveVisible] = useState(false);
   return (
     <div {...handlers}>
+            <div className="safe-area"></div>
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}

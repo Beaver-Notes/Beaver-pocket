@@ -9,6 +9,16 @@
   padding-top: env(safe-area-inset-top) !important;
 }
 
+.safe-area {
+  padding-top: constant(safe-area-inset-top) !important;
+  padding-top: env(safe-area-inset-top) !important;
+  @apply bg-white dark:bg-[#232222];
+  /* background-color: red; */
+  position: fixed;
+  top: 0;
+  width: 100%
+}
+
 body {
   @apply dark:text-white bg-white dark:bg-[#232222];
   font-family: var(--selected-font);

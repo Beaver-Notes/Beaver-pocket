@@ -115,7 +115,7 @@ const Welcome: React.FC = () => {
     try {
       await Filesystem.mkdir({
         path: directoryPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
     } catch (error: any) {
@@ -128,13 +128,13 @@ const Welcome: React.FC = () => {
 
       const fileExists = await Filesystem.stat({
         path: STORAGE_PATH,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       if (fileExists) {
         const data = await Filesystem.readFile({
           path: STORAGE_PATH,
-          directory: Directory.Documents,
+          directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
 
@@ -217,7 +217,7 @@ const Welcome: React.FC = () => {
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify({ data: { notes: mergedNotes } }),
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
 
@@ -294,6 +294,7 @@ const Welcome: React.FC = () => {
 
   return (
     <div className={`view ${currentView}`}>
+      <div className="safe-area"></div>
       {currentView === "view1" && (
         <div className="flex items-center justify-center mt-[5em]">
           <div className="sm:w-[32em] mx-10 rounded-3xl">
@@ -481,7 +482,7 @@ const Welcome: React.FC = () => {
       )}
 
       {currentView === "view4" && (
-        <div className="flex items-center justify-center mt-[5em]">
+        <div className="flex items-center justify-center mt-[3em]">
           <div className="sm:w-[32em] mx-10 rounded-3xl">
             <h3 className="pt-4 text-center">
               {translations.welcome.typographyTitle || "-"}

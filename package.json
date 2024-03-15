@@ -12,6 +12,7 @@
     "ionic:serve": "vite"
   },
   "dependencies": {
+    "@aashu-dubey/capacitor-statusbar-safe-area": "^2.1.1",
     "@benrbray/prosemirror-math": "^0.2.2",
     "@capacitor/android": "5.6.0",
     "@capacitor/app": "5.0.6",
@@ -24,7 +25,7 @@
     "@capacitor/keyboard": "5.0.7",
     "@capacitor/share": "^5.0.6",
     "@capacitor/splash-screen": "^5.0.6",
-    "@capacitor/status-bar": "5.0.6",
+    "@capacitor/status-bar": "^5.0.7",
     "@ionic/cli": "^7.1.6",
     "@ionic/react": "7.6.2",
     "@nytimes/react-prosemirror": "^0.4.2",

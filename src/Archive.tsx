@@ -703,6 +703,7 @@ const Archive: React.FC = () => {
 
   return (
     <div {...handlers}>
+      <div className="safe-area"></div>
       <div className="grid sm:grid-cols-[auto,1fr]">
         <Sidebar
           onCreateNewNote={handleCreateNewNote}
