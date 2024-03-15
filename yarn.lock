@@ -3292,6 +3292,10 @@ capacitor-native-biometric@^4.2.2:
   dependencies:
     "@capacitor/core" "^3.4.3"
 
+"capacitor-native-filepicker@https://github.com/ourcodeworld/capacitor-native-filepicker":
+  version "0.0.1"
+  resolved "https://github.com/ourcodeworld/capacitor-native-filepicker#716a6a0b5c836f1d699b54d4d965d50689b31328"
+
 case-anything@^2.1.13:
   version "2.1.13"
   resolved "https://registry.yarnpkg.com/case-anything/-/case-anything-2.1.13.tgz#0cdc16278cb29a7fcdeb072400da3f342ba329e9"

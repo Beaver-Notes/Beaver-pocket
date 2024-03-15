@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
+import { CapacitorNativeFilePicker } from "capacitor-native-filepicker"; 
 import { Note } from "./store/types";
 import NoteEditor from "./NoteEditor";
 import "./css/NoteEditor.module.css";
@@ -149,88 +150,89 @@ const App: React.FC = () => {
   const handleCloseEditor = () => {
     setActiveNoteId(null);
   };
-
   const exportData = async () => {
     try {
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-  
-      const parentExportFolderPath = `export`;
-      await Filesystem.mkdir({
-        path: parentExportFolderPath,
-        directory: Directory.Data,
-        recursive: true,
-      });
-  
-      const exportFolderName = `Beaver Notes ${formattedDate}`;
-      const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
-  
-      await Filesystem.mkdir({
-        path: exportFolderPath,
-        directory: Directory.Data,
-        recursive: true,
-      });
-  
-      // Copy the note-assets folder
-      await Filesystem.copy({
-        from: 'note-assets',
-        to: `${exportFolderPath}/note-assets`,
-        directory: Directory.Data,
-      });
-  
-      const exportedData: any = {
-        data: {
-          notes: {},
-          lockedNotes: {}, 
-        },
-        labels: [],
-      };
-  
-      Object.values(notesState).forEach((note) => {
-        const createdAtTimestamp =
-          note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
-        const updatedAtTimestamp =
-          note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
-  
-        exportedData.data.notes[note.id] = {
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          labels: note.labels,
-          createdAt: createdAtTimestamp,
-          updatedAt: updatedAtTimestamp,
-          isBookmarked: note.isBookmarked,
-          isArchived: note.isArchived,
-          isLocked: note.isLocked,
-          lastCursorPosition: note.lastCursorPosition,
+        const currentDate = new Date();
+        const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+    
+        const parentExportFolderPath = `export`;
+        await Filesystem.mkdir({
+            path: parentExportFolderPath,
+            directory: Directory.Data,
+            recursive: true,
+        });
+    
+        const exportFolderName = `Beaver Notes ${formattedDate}`;
+        const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
+    
+        await Filesystem.mkdir({
+            path: exportFolderPath,
+            directory: Directory.Data,
+            recursive: true,
+        });
+    
+        // Copy the note-assets folder
+        await Filesystem.copy({
+            from: 'note-assets',
+            to: `${exportFolderPath}/note-assets`,
+            directory: Directory.Data,
+        });
+    
+        const exportedData: any = {
+            data: {
+                notes: {},
+                lockedNotes: {}, 
+            },
+            labels: [],
         };
-  
-        exportedData.labels = exportedData.labels.concat(note.labels);
-  
-        if (note.isLocked) {
-          exportedData.data.lockedNotes[note.id] = true;
-        }
-      });
-  
-      exportedData.labels = Array.from(new Set(exportedData.labels));
-  
-      const jsonData = JSON.stringify(exportedData, null, 2);
-      const jsonFilePath = `${exportFolderPath}/data.json`;
-  
-      await Filesystem.writeFile({
-        path: jsonFilePath,
-        data: jsonData,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-  
-      alert(translations.home.exportSuccess);
-  
-      await shareExportFolder(exportFolderPath);
+    
+        Object.values(notesState).forEach((note) => {
+            // Check if note.content exists and is not null
+            if (note.content && typeof note.content === 'object' && 'content' in note.content) {
+                // Check if note.content.content is defined
+                if (note.content.content) {
+                    // Replace src attribute in each note's content
+                    const updatedContent = note.content.content.map(node => {
+                        if (node.type === 'image' && node.attrs && node.attrs.src) {
+                            node.attrs.src = node.attrs.src.replace('note-assets/', 'assets://');
+                        }
+                        return node;
+                    });
+                    
+                    // Update note's content with modified content
+                    note.content.content = updatedContent;
+                    
+                    // Add the modified note to exportedData
+                    exportedData.data.notes[note.id] = note;
+            
+                    exportedData.labels = exportedData.labels.concat(note.labels);
+            
+                    if (note.isLocked) {
+                        exportedData.data.lockedNotes[note.id] = true;
+                    }
+                }
+            }
+        });
+    
+        exportedData.labels = Array.from(new Set(exportedData.labels));
+    
+        const jsonData = JSON.stringify(exportedData, null, 2);
+        const jsonFilePath = `${exportFolderPath}/data.json`;
+    
+        await Filesystem.writeFile({
+            path: jsonFilePath,
+            data: jsonData,
+            directory: Directory.Data,
+            encoding: FilesystemEncoding.UTF8,
+        });
+    
+        alert(translations.home.exportSuccess);
+    
+        await shareExportFolder(exportFolderPath);
     } catch (error) {
-      alert(translations.home.exportError + (error as any).message);
+        alert(translations.home.exportError + (error as any).message);
     }
-  };
+};
   
   const shareExportFolder = async (folderPath: string) => {
     try {
@@ -252,70 +254,98 @@ const App: React.FC = () => {
   };
   
 
-  const handleImportData = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+  const handleImportData = async () => {
+    try {
+        // Launch folder picker
+        const folders = await CapacitorNativeFilePicker.launchFolderPicker({
+            limit: -1, // No limit on the number of folders that can be selected
+            showHiddenFiles: true, // Show hidden files in the folder picker
+        });
 
-    if (!file) {
-      return;
-    }
+        // Check if any folders were selected
+        if (!folders || !folders.folders || folders.folders.length === 0) {
+            // No folder selected, return early
+            return;
+        }
 
-    const reader = new FileReader();
+        // Assuming folders.folders[0] contains the path to the selected folder
+        const folderPath = folders.folders[0];
 
-    reader.onload = async (e) => {
-      try {
-        const importedData = JSON.parse(e.target?.result as string);
+        console.log("Selected folder path:", folderPath);
 
-        if (importedData && importedData.data && importedData.data.notes) {
-          const importedNotes: Record<string, Note> = importedData.data.notes;
+        // Now you have the folder path, you can proceed with reading the data.json file inside it
+        const jsonFilePath = `${folderPath}/data.json`;
 
-          const existingNotes = await loadNotes();
-
-          const mergedNotes: Record<string, Note> = {
-            ...existingNotes,
-            ...importedNotes,
-          };
-
-          setNotesState(mergedNotes);
-
-          const filtered = Object.values(mergedNotes).filter((note) => {
-            const titleMatch = note.title
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-            const contentMatch = JSON.stringify(note.content)
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-            return titleMatch || contentMatch;
-          });
-
-          setFilteredNotes(
-            Object.fromEntries(filtered.map((note) => [note.id, note]))
-          );
-
-          Object.values(importedNotes).forEach((note) => {
-            note.createdAt = new Date(note.createdAt);
-            note.updatedAt = new Date(note.updatedAt);
-          });
-
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes: mergedNotes } }),
+        // Read the content of the data.json file
+        const jsonData = await Filesystem.readFile({
+            path: jsonFilePath,
             directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
+        });
+
+        // Parse the JSON data
+        const importedData = JSON.parse(jsonData.data as string);
+
+        // Handle imported data as before
+        if (importedData && importedData.data && importedData.data.notes) {
+            const importedNotes = importedData.data.notes as Record<string, Note>; // Assuming Note is the type
+
+
+            const existingNotes = await loadNotes();
+
+            const mergedNotes = {
+                ...existingNotes,
+                ...importedNotes,
+            };
+
+            // Reverse the changes made to imported notes' content
+            Object.values(importedNotes).forEach((note) => {
+                if (note.content && typeof note.content === 'object' && 'content' in note.content) {
+                    if (note.content.content) {
+                        const updatedContent = note.content.content.map((node) => {
+                            if (node.type === 'image' && node.attrs && node.attrs.src) {
+                                node.attrs.src = node.attrs.src.replace('assets://', 'note-assets/');
+                            }
+                            return node;
+                        });
+                        note.content.content = updatedContent;
+                    }
+                }
+            });
+
+            setNotesState(mergedNotes);
+
+            const filtered = Object.values<Note>(mergedNotes).filter((note: Note) => {
+              const titleMatch = note.title.toLowerCase().includes(searchQuery.toLowerCase());
+              const contentMatch = JSON.stringify(note.content).toLowerCase().includes(searchQuery.toLowerCase());
+              return titleMatch || contentMatch;
           });
+          
+          setFilteredNotes(Object.fromEntries(filtered.map((note: Note) => [note.id, note])));          
+          
 
-          alert(translations.home.importSuccess);
+            Object.values(importedNotes).forEach((note) => {
+                note.createdAt = new Date(note.createdAt);
+                note.updatedAt = new Date(note.updatedAt);
+            });
+
+            await Filesystem.writeFile({
+                path: STORAGE_PATH,
+                data: JSON.stringify({ data: { notes: mergedNotes } }),
+                directory: Directory.Data,
+                encoding: FilesystemEncoding.UTF8,
+            });
+
+            alert(translations.home.importSuccess);
         } else {
-          alert(translations.home.importInvalid);
+            alert(translations.home.importInvalid);
         }
-      } catch (error) {
+    } catch (error) {
+        console.error("Error importing data:", error);
         alert(translations.home.importError);
-      }
-    };
+    }
+};
 
-    reader.readAsText(file);
-  };
 
   const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,

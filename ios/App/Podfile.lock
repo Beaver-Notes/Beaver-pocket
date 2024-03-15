@@ -16,6 +16,8 @@ PODS:
     - Capacitor
   - CapacitorNativeBiometric (0.0.1):
     - Capacitor
+  - CapacitorNativeFilepicker (0.0.1):
+    - Capacitor
   - CapacitorShare (5.0.6):
     - Capacitor
   - CapacitorSplashScreen (5.0.6):
@@ -33,6 +35,7 @@ DEPENDENCIES:
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
   - CapacitorNativeBiometric (from `../../node_modules/capacitor-native-biometric`)
+  - CapacitorNativeFilepicker (from `../../node_modules/capacitor-native-filepicker`)
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
@@ -56,6 +59,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/keyboard"
   CapacitorNativeBiometric:
     :path: "../../node_modules/capacitor-native-biometric"
+  CapacitorNativeFilepicker:
+    :path: "../../node_modules/capacitor-native-filepicker"
   CapacitorShare:
     :path: "../../node_modules/@capacitor/share"
   CapacitorSplashScreen:
@@ -73,10 +78,11 @@ SPEC CHECKSUMS:
   CapacitorHaptics: 1fffc1217c7e64a472d7845be50fb0c2f7d4204c
   CapacitorKeyboard: ce5e01064cf57a2c05b32565310713b7fe6cc6f9
   CapacitorNativeBiometric: b47637a8cd349bdac014424bb4ddcae9ee5d4919
+  CapacitorNativeFilepicker: 959c7a508b0e48ccfe248623cef68915e34f2229
   CapacitorShare: cd41743331cb71d217c029de54b681cbd91e0fcc
   CapacitorSplashScreen: 5fa2ab5e46cf5cc530cf16a51c80c7a986579ccd
   CapacitorStatusBar: f390fbb49b82ffb754ea4b3cf71dc8b048baf3e7
 
-PODFILE CHECKSUM: 082a4ede56f4c11cf8d8769449edb1e94e42122f
+PODFILE CHECKSUM: 71e88fd936feb70c7692b58bc0b076fd5ea593cd
 
 COCOAPODS: 1.15.2
