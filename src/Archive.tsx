@@ -35,6 +35,7 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 import dayjs from "dayjs";
+import { CapacitorNativeFilePicker } from "capacitor-native-filepicker";
 
 const Archive: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -287,75 +288,95 @@ const Archive: React.FC = () => {
     }
   };
 
-  const handleImportData = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+  const handleImportData = async () => {
+    try {
+        // Launch folder picker
+        const folders = await CapacitorNativeFilePicker.launchFolderPicker({
+            limit: -1, // No limit on the number of folders that can be selected
+            showHiddenFiles: true, // Show hidden files in the folder picker
+        });
 
-    if (!file) {
-      return;
-    }
+        // Check if any folders were selected
+        if (!folders || !folders.folders || folders.folders.length === 0) {
+            // No folder selected, return early
+            return;
+        }
 
-    const reader = new FileReader();
+        // Assuming folders.folders[0] contains the path to the selected folder
+        const folderPath = folders.folders[0];
 
-    reader.onload = async (e) => {
-      try {
-        const importedData = JSON.parse(e.target?.result as string);
+        // Now you have the folder path, you can proceed with reading the data.json file inside it
+        const jsonFilePath = `${folderPath}/data.json`;
 
-        if (importedData && importedData.data && importedData.data.notes) {
-          const importedNotes: Record<string, Note> = importedData.data.notes;
-
-          // Load existing notes from data.json
-          const existingNotes = await loadNotes();
-
-          // Merge the imported notes with the existing notes
-          const mergedNotes: Record<string, Note> = {
-            ...existingNotes,
-            ...importedNotes,
-          };
-
-          // Update the notesState with the merged notes
-          setNotesState(mergedNotes);
-
-          // Update the filteredNotes based on the search query
-          const filtered = Object.values(mergedNotes).filter((note) => {
-            const titleMatch = note.title
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-            const contentMatch = JSON.stringify(note.content)
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-            return titleMatch || contentMatch;
-          });
-
-          setFilteredNotes(
-            Object.fromEntries(filtered.map((note) => [note.id, note]))
-          );
-
-          Object.values(importedNotes).forEach((note) => {
-            note.createdAt = new Date(note.createdAt);
-            note.updatedAt = new Date(note.updatedAt);
-          });
-
-          // Save the merged notes to the data.json file
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes: mergedNotes } }),
+        // Read the content of the data.json file
+        const jsonData = await Filesystem.readFile({
+            path: jsonFilePath,
             directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
+        });
+
+        // Parse the JSON data
+        const importedData = JSON.parse(jsonData.data as string);
+
+        // Handle imported data as before
+        if (importedData && importedData.data && importedData.data.notes) {
+            const importedNotes = importedData.data.notes as Record<string, Note>; // Assuming Note is the type
+
+
+            const existingNotes = await loadNotes();
+
+            const mergedNotes = {
+                ...existingNotes,
+                ...importedNotes,
+            };
+
+            // Reverse the changes made to imported notes' content
+            Object.values(importedNotes).forEach((note) => {
+                if (note.content && typeof note.content === 'object' && 'content' in note.content) {
+                    if (note.content.content) {
+                        const updatedContent = note.content.content.map((node) => {
+                            if (node.type === 'image' && node.attrs && node.attrs.src) {
+                                node.attrs.src = node.attrs.src.replace('assets://', 'note-assets/');
+                            }
+                            return node;
+                        });
+                        note.content.content = updatedContent;
+                    }
+                }
+            });
+
+            setNotesState(mergedNotes);
+
+            const filtered = Object.values<Note>(mergedNotes).filter((note: Note) => {
+              const titleMatch = note.title.toLowerCase().includes(searchQuery.toLowerCase());
+              const contentMatch = JSON.stringify(note.content).toLowerCase().includes(searchQuery.toLowerCase());
+              return titleMatch || contentMatch;
           });
+          
+          setFilteredNotes(Object.fromEntries(filtered.map((note: Note) => [note.id, note])));          
+          
 
-          alert(translations.home.importSuccess);
+            Object.values(importedNotes).forEach((note) => {
+                note.createdAt = new Date(note.createdAt);
+                note.updatedAt = new Date(note.updatedAt);
+            });
+
+            await Filesystem.writeFile({
+                path: STORAGE_PATH,
+                data: JSON.stringify({ data: { notes: mergedNotes } }),
+                directory: Directory.Data,
+                encoding: FilesystemEncoding.UTF8,
+            });
+
+            alert(translations.home.importSuccess);
         } else {
-          alert(translations.home.importInvalid);
+            alert(translations.home.importInvalid);
         }
-      } catch (error) {
+    } catch (error) {
+        console.error("Error importing data:", error);
         alert(translations.home.importError);
-      }
-    };
-
-    reader.readAsText(file);
-  };
+    }
+};
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 

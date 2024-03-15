@@ -14,7 +14,7 @@ interface SearchBarProps {
   uniqueLabels: string[];
 
   exportData: () => void;
-  handleImportData: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleImportData: () => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -101,20 +101,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
             </button>
           </div>
           <div className="border-l-2 border-gray-300 dark:border-neutral-800 p-3 rounded-r-full bg-[#F8F8F7] dark:bg-[#2D2C2C] text-center flex-grow mr-2 text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
-            <div className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center">
-              <label htmlFor="file">
-                <Download2LineIcon />
-              </label>
-              <input
-                className="hidden"
-                type="file"
-                onChange={handleImportData}
-                id="file"
-                // @ts-ignore
-                directory=""
-                webkitdirectory=""
-              />
-            </div>
+          <button
+              className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center"
+              onClick={handleImportData}
+            >
+              <Download2LineIcon />
+            </button>
           </div>
           <div className="relative inline-flex items-center">
             <select
