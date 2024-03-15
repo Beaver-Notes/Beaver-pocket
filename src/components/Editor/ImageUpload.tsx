@@ -1,5 +1,5 @@
 import React from "react";
-import { Capacitor, Plugins } from "@capacitor/core";
+import { Plugins } from "@capacitor/core";
 import { Directory, FilesystemDirectory } from "@capacitor/filesystem";
 import ImageLineIcon from "remixicon-react/ImageLineIcon";
 
@@ -30,7 +30,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
     try {
       await Filesystem.mkdir({
         path: directoryPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
     } catch (error: unknown) {
@@ -66,13 +66,13 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
       await Filesystem.writeFile({
         path: filePath,
         data: base64DataWithoutMetadata,
-        directory: FilesystemDirectory.Documents,
+        directory: FilesystemDirectory.Data,
         recursive: true,
       });
 
       // Read the saved file to get its URL
       const { uri } = await Filesystem.getUri({
-        directory: FilesystemDirectory.Documents,
+        directory: FilesystemDirectory.Data,
         path: filePath,
       });
 

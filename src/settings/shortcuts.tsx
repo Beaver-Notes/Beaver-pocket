@@ -24,7 +24,7 @@ async function createNotesDirectory() {
   try {
     await Filesystem.mkdir({
       path: directoryPath,
-      directory: Directory.Documents,
+      directory: Directory.Data,
       recursive: true,
     });
   } catch (error: any) {
@@ -39,13 +39,13 @@ const Shortcuts: React.FC = () => {
 
       const fileExists = await Filesystem.stat({
         path: STORAGE_PATH,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       if (fileExists) {
         const data = await Filesystem.readFile({
           path: STORAGE_PATH,
-          directory: Directory.Documents,
+          directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
 
@@ -137,7 +137,7 @@ const Shortcuts: React.FC = () => {
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify(data),
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
         } else {
@@ -193,7 +193,7 @@ const Shortcuts: React.FC = () => {
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
 
@@ -202,7 +202,7 @@ const Shortcuts: React.FC = () => {
 
       await Filesystem.mkdir({
         path: exportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
 
@@ -248,7 +248,7 @@ const Shortcuts: React.FC = () => {
       await Filesystem.writeFile({
         path: jsonFilePath,
         data: jsonData,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -258,7 +258,7 @@ const Shortcuts: React.FC = () => {
       try {
         const imagesFolderInfo = await (Filesystem as any).getInfo({
           path: imagesFolderPath,
-          directory: Directory.Documents,
+          directory: Directory.Data,
         });
         imagesFolderExists = imagesFolderInfo.type === "directory";
       } catch (error) {
@@ -270,14 +270,14 @@ const Shortcuts: React.FC = () => {
 
         await Filesystem.mkdir({
           path: exportImagesFolderPath,
-          directory: Directory.Documents,
+          directory: Directory.Data,
           recursive: true,
         });
 
         await Filesystem.copy({
           from: imagesFolderPath,
           to: exportImagesFolderPath,
-          directory: Directory.Documents,
+          directory: Directory.Data,
         });
       }
 
@@ -286,7 +286,7 @@ const Shortcuts: React.FC = () => {
 
       const exportFolderFiles = await Filesystem.readdir({
         path: exportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       await Promise.all(
@@ -294,7 +294,7 @@ const Shortcuts: React.FC = () => {
           const filePath = `${exportFolderPath}/${file.name}`;
           const fileContent = await Filesystem.readFile({
             path: filePath,
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
           exportFolderZip!.file(file.name, fileContent.data);
@@ -390,7 +390,7 @@ const Shortcuts: React.FC = () => {
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify({ data: { notes: mergedNotes } }),
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
 
@@ -567,6 +567,7 @@ const Shortcuts: React.FC = () => {
 
   return (
     <div {...handlers}>
+            <div className="safe-area"></div>
     <div className="grid sm:grid-cols-[auto,1fr]">
     <Sidebar
           onCreateNewNote={handleCreateNewNote}

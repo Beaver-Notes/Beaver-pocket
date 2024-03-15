@@ -32,7 +32,7 @@ async function createNotesDirectory() {
 export const loadNotes = async () => {
   try {
     const { uri } = await Filesystem.getUri({
-      directory: FilesystemDirectory.Documents,
+      directory: FilesystemDirectory.Data,
       path: "",
     });
     setStoreRemotePath(Capacitor.convertFileSrc(uri));
