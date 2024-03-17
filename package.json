@@ -26,6 +26,7 @@
     "@capacitor/share": "^5.0.6",
     "@capacitor/splash-screen": "^5.0.6",
     "@capacitor/status-bar": "^5.0.7",
+    "@capawesome/capacitor-file-picker": "^5.3.0",
     "@ionic/cli": "^7.1.6",
     "@ionic/react": "7.6.2",
     "@nytimes/react-prosemirror": "^0.4.2",
