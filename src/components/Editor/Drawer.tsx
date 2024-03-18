@@ -24,7 +24,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
   return (
     <div
       className={`sm:hidden block fixed bottom-0 left-0 right-0 ${
-        isVisible ? "bg-[#F8F8F7] dark:bg-[#2D2C2C]" : "bg-white dark:bg-[#232222]"
+        isVisible ? "bg-[#F8F8F7] dark:bg-[#2D2C2C] p-1" : "bg-white dark:bg-[#232222] p-3"
       } cursor-grab overflow-hidden transition-height duration-200 ease-in-out`}
     >
       <div className="overflow-hidden max-auto flex justify-center">

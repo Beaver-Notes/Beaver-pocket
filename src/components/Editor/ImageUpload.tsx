@@ -88,12 +88,18 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
 
   return (
     <div>
-      <input
-        className="hidden sm:block"
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-      />
+      <div className="p-[11px] hidden sm:block rounded-full cursor-pointer">
+        <label htmlFor="image-upload-input">
+          <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          id="image-upload-input"
+          className="hidden"
+        />
+      </div>
       <div className="p-[11px] sm:hidden rounded-full cursor-pointer">
         <label htmlFor="image-upload-input">
           <ImageLineIcon className="border-none text-black dark:text-white text-xl w-8 h-8 cursor-pointer" />
