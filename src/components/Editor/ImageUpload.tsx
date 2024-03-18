@@ -94,9 +94,9 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
         accept="image/*"
         onChange={handleFileChange}
       />
-      <div className="p-[11px] sm:hidden rounded-full text-white bg-[#393939] cursor-pointer">
+      <div className="p-[11px] sm:hidden rounded-full cursor-pointer">
         <label htmlFor="image-upload-input">
-          <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
+          <ImageLineIcon className="border-none text-black dark:text-white text-xl w-8 h-8 cursor-pointer" />
         </label>
         <input
           type="file"

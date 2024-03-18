@@ -296,7 +296,7 @@ const Welcome: React.FC = () => {
     <div className={`view ${currentView}`}>
       <div className="safe-area"></div>
       {currentView === "view1" && (
-        <div className="flex items-center justify-center mt-[5em]">
+        <div className="flex items-center justify-center mt-[3em]">
           <div className="sm:w-[32em] mx-10 rounded-3xl">
             <div className="pt-2">
             <img src="./imgs/icon.png" alt="Beaver Notes Icon" className="w-40 h-40 mx-auto rounded-full"/>
