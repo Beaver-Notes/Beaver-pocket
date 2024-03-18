@@ -8,6 +8,7 @@ import {
   BubbleMenu,
 } from "@tiptap/react";
 import Document from "@tiptap/extension-document";
+import { Keyboard } from "@capacitor/keyboard";
 import Placeholder from "@tiptap/extension-placeholder";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -24,7 +25,14 @@ import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import NoteLabels from "./components/Editor/NoteLabel";
 import Mathblock from "./lib/tiptap/math-block/Index";
-import { blackCallout, blueCallout, greenCallout, purpleCallout, redCallout, yellowCallout } from "./lib/tiptap/Callouts/Index";
+import {
+  blackCallout,
+  blueCallout,
+  greenCallout,
+  purpleCallout,
+  redCallout,
+  yellowCallout,
+} from "./lib/tiptap/Callouts/Index";
 import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
 import HeadingTree from "./lib/HeadingTree";
 import Table from "@tiptap/extension-table";
@@ -64,7 +72,7 @@ import ts from "highlight.js/lib/languages/typescript";
 import html from "highlight.js/lib/languages/xml";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
-import {useDataPath} from "./store/useDataPath";
+import { useDataPath } from "./store/useDataPath";
 
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("css", css);
@@ -84,7 +92,7 @@ const extensions = [
   blueCallout,
   greenCallout,
   purpleCallout,
-  redCallout, 
+  redCallout,
   yellowCallout,
   StarterKit,
   Link,
@@ -108,13 +116,16 @@ const extensions = [
       const viewer = this.parent?.() as any;
       return (props) => {
         const attrs = props.node.attrs;
-        const node = { ...props.node, attrs: { ...attrs, src: useDataPath().getRemotePath(attrs.src) } };
-        console.log('img', node)
+        const node = {
+          ...props.node,
+          attrs: { ...attrs, src: useDataPath().getRemotePath(attrs.src) },
+        };
+        console.log("img", node);
         const newProps = { ...props, node };
         console.log(newProps);
         return viewer(newProps);
       };
-    }
+    },
   }),
 ];
 
@@ -306,7 +317,22 @@ function NoteEditor({
     };
   }, []);
 
-  // Switch between input fields
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardShowListener = Keyboard.addListener("keyboardDidShow", () => {
+      setIsKeyboardVisible(true);
+    });
+
+    const keyboardHideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardShowListener.remove();
+      keyboardHideListener.remove();
+    };
+  }, []);
 
   return (
     <div {...handlers}>
@@ -495,77 +521,109 @@ function NoteEditor({
             className="bg-[#2D2C2C] p-1 rounded-xl"
             tippyOptions={{ duration: 100 }}
           >
-              <button
+            <button
               className={
                 editor?.isActive("heading", { level: 1 })
-                ? "p-1 text-amber-400 bg-[#353333] cursor-pointer"
+                  ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
               onClick={() =>
                 editor?.chain().focus().toggleHeading({ level: 1 }).run()
-              }            >
-            <Heading1Icon className="border-none text-white text-xl w-7 h-7" />
+              }
+            >
+              <Heading1Icon className={
+                 editor?.isActive("heading", { level: 1 })
+                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
+                    : "p-1 border-none text-white text-xl w-9 h-9"
+                } />
             </button>
             <button
               className={
                 editor?.isActive("heading", { level: 2 })
-                  ? "p-1 text-amber-400 bg-[#353333] cursor-pointer"
+                  ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
               onClick={() =>
                 editor?.chain().focus().toggleHeading({ level: 2 }).run()
-              }            >
-            <Heading2Icon className="border-none text-white text-xl w-7 h-7" />
+              }
+            >
+              <Heading2Icon className={
+                 editor?.isActive("heading", { level: 2 })
+                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
+                    : "p-1 border-none text-white text-xl w-9 h-9"
+                } />
             </button>
             <button
               className={
                 editor?.isActive("bold")
-                  ? "p-1 text-amber-400 bg-[#353333] cursor-pointer"
+                  ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
               onClick={toggleBold}
             >
-              <BoldIcon className="border-none text-white text-xl w-7 h-7" />
+              <BoldIcon
+                className={
+                  editor?.isActive("bold")
+                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
+                    : "p-1 border-none text-white text-xl w-9 h-9"
+                }
+              />
             </button>
             <button
               className={
                 editor?.isActive("italic")
-                  ? "p-1 text-amber-400 bg-[#353333] cursor-pointer"
+                  ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
               onClick={toggleItalic}
             >
-              <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
+              <ItalicIcon className={
+                  editor?.isActive("italic")
+                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
+                    : "p-1 border-none text-white text-xl w-9 h-9"
+                } />
             </button>
             <button
               className={
                 editor?.isActive("underline")
-                  ? "p-1 text-amber-400 bg-[#353333] cursor-pointer"
+                  ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
               onClick={toggleUnderline}
             >
-              <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
+              <UnderlineIcon className={
+                  editor?.isActive("underline")
+                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
+                    : "p-1 border-none text-white text-xl w-9 h-9"
+                } />
             </button>
             <button
               className={
                 editor?.isActive("strike")
-                  ? "p-1 text-amber-400 bg-[#353333] cursor-pointer"
+                  ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
               onClick={toggleStrike}
             >
-              <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
+              <StrikethroughIcon className={
+                  editor?.isActive("stike")
+                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
+                    : "p-1 border-none text-white text-xl w-9 h-9"
+                } />
             </button>
             <button
               className={
                 editor?.isActive("highlight")
-                  ? "p-1 text-amber-400 bg-[#353333] cursor-pointer"
+                  ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
               onClick={toggleHighlight}
             >
-              <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
+              <MarkPenLineIcon className={
+                  editor?.isActive("highlight")
+                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
+                    : "p-1 border-none text-white text-xl w-9 h-9"
+                } />
             </button>
           </BubbleMenu>
         )}
@@ -590,11 +648,10 @@ function NoteEditor({
         </div>
         <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>
           <Drawer
+            isVisible={isKeyboardVisible}
             noteId={note.id}
             note={note}
             editor={editor}
-            defaultHeight={100}
-            maxHeight={180}
           />
         </div>
       </div>
