@@ -1,65 +1,51 @@
-import React, { useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Editor, BubbleMenu } from "@tiptap/react";
 
-// Icons
-import BoldIcon from "remixicon-react/BoldIcon";
-import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
-import ItalicIcon from "remixicon-react/ItalicIcon";
-import UnderlineIcon from "remixicon-react/UnderlineIcon";
-import StrikethroughIcon from "remixicon-react/StrikethroughIcon";
-import LinkIcon from "remixicon-react/LinkMIcon";
+//icons
+import InsertRowTopIcon from "remixicon-react/InsertRowTopIcon";
+import InsertRowBottomIcon from "remixicon-react/InsertRowBottomIcon";
+import DeleteRow from "remixicon-react/DeleteRowIcon";
+import InsertColumnLeftIcon from "remixicon-react/InsertColumnLeftIcon";
+import InsertColumnRightIcon from "remixicon-react/InsertColumnRightIcon";
+import DeleteColumn from "remixicon-react/DeleteColumnIcon";
+import Brush2Fill from "remixicon-react/Brush2LineIcon";
 
-interface BubblemenuProps {
+interface Props {
   editor: Editor | null;
 }
 
-const Bubblemenu: React.FC<BubblemenuProps> = ({ editor }) => {
-  const setLink = useCallback(() => {
-    const previousUrl = editor?.getAttributes("link").href;
-    const url = window.prompt("URL", previousUrl);
+const BlubblemenuTable: React.FC<Props> = ({ editor }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
 
-    // cancelled
-    if (url === null) {
-      return;
-    }
+  useEffect(() => {
+    if (!editor) return;
 
-    // empty
-    if (url === "") {
-      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
-
-      return;
-    }
-
-    // update link
-    editor
-      ?.chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: url })
-      .run();
+    const isTableCellActive = editor.isActive("tableCell");
+    const isTableHeaderActive = editor.isActive("tableHeader");
+    setMenuOpen(isTableCellActive || isTableHeaderActive);
   }, [editor]);
 
   return (
     <>
-      {editor &&
-        editor.isActive("tableCell") &&
-        editor.isActive("tableHeader") && (
-          <BubbleMenu
-            editor={editor}
-            className="bg-[#2D2C2C] p-1 rounded-xl"
-            tippyOptions={{ duration: 100 }}
-          >
+      {editor && (
+        <BubbleMenu
+          editor={editor}
+          shouldShow={() => true}
+          tippyOptions={{ duration: 100 }}
+          className="bg-[#2D2C2C] p-1 rounded-lg max-w-xs"
+        >
+          <div style={{ display: menuOpen ? "block" : "none" }}>
             <button
               className={
-                editor?.isActive("bold")
+                editor?.isActive("heading", { level: 1 })
                   ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
-              onClick={() => editor?.chain().focus().toggleBold().run()}
+              onClick={() => editor?.chain().focus().addRowAfter().run()}
             >
-              <BoldIcon
+              <InsertRowBottomIcon
                 className={
-                  editor?.isActive("bold")
+                  editor?.isActive("heading", { level: 1 })
                     ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
                     : "p-1 border-none text-white text-xl w-9 h-9"
                 }
@@ -67,15 +53,15 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({ editor }) => {
             </button>
             <button
               className={
-                editor?.isActive("italic")
+                editor?.isActive("heading", { level: 1 })
                   ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
-              onClick={() => editor?.chain().focus().toggleItalic().run}
+              onClick={() => editor?.chain().focus().addRowBefore().run()}
             >
-              <ItalicIcon
+              <InsertRowTopIcon
                 className={
-                  editor?.isActive("italic")
+                  editor?.isActive("heading", { level: 1 })
                     ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
                     : "p-1 border-none text-white text-xl w-9 h-9"
                 }
@@ -83,15 +69,15 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({ editor }) => {
             </button>
             <button
               className={
-                editor?.isActive("underline")
+                editor?.isActive("heading", { level: 1 })
                   ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
-              onClick={() => editor?.chain().focus().toggleUnderline().run()}
+              onClick={() => editor?.chain().focus().deleteRow().run()}
             >
-              <UnderlineIcon
+              <DeleteRow
                 className={
-                  editor?.isActive("underline")
+                  editor?.isActive("heading", { level: 1 })
                     ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
                     : "p-1 border-none text-white text-xl w-9 h-9"
                 }
@@ -99,15 +85,15 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({ editor }) => {
             </button>
             <button
               className={
-                editor?.isActive("strike")
+                editor?.isActive("heading", { level: 1 })
                   ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
-              onClick={() => editor?.chain().focus().toggleStrike().run()}
+              onClick={() => editor?.chain().focus().addColumnBefore().run()}
             >
-              <StrikethroughIcon
+              <InsertColumnLeftIcon
                 className={
-                  editor?.isActive("stike")
+                  editor?.isActive("heading", { level: 1 })
                     ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
                     : "p-1 border-none text-white text-xl w-9 h-9"
                 }
@@ -115,15 +101,15 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({ editor }) => {
             </button>
             <button
               className={
-                editor?.isActive("highlight")
+                editor?.isActive("heading", { level: 1 })
                   ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
-              onClick={() => editor?.chain().focus().toggleHighlight().run()}
+              onClick={() => editor?.chain().focus().addColumnAfter().run()}
             >
-              <MarkPenLineIcon
+              <InsertColumnRightIcon
                 className={
-                  editor?.isActive("highlight")
+                  editor?.isActive("heading", { level: 1 })
                     ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
                     : "p-1 border-none text-white text-xl w-9 h-9"
                 }
@@ -131,23 +117,41 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({ editor }) => {
             </button>
             <button
               className={
-                editor?.isActive("link")
+                editor?.isActive("heading", { level: 1 })
                   ? "p-1 text-amber-400 cursor-pointer"
                   : "p-1 bg-transparent cursor-pointer"
               }
-              onClick={setLink}
+              onClick={() => editor?.chain().focus().deleteColumn().run()}
             >
-              <LinkIcon
+              <DeleteColumn
                 className={
-                  editor?.isActive("link")
+                  editor?.isActive("heading", { level: 1 })
                     ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
                     : "p-1 border-none text-white text-xl w-9 h-9"
                 }
               />
             </button>
-          </BubbleMenu>
-        )}
+            <button
+              className={
+                editor?.isActive("heading", { level: 1 })
+                  ? "p-1 text-amber-400 cursor-pointer"
+                  : "p-1 bg-transparent cursor-pointer"
+              }
+              onClick={() => editor?.chain().focus().toggleHeaderCell().run()}
+            >
+              <Brush2Fill
+                className={
+                  editor?.isActive("heading", { level: 1 })
+                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
+                    : "p-1 border-none text-white text-xl w-9 h-9"
+                }
+              />
+            </button>
+          </div>
+        </BubbleMenu>
+      )}
     </>
   );
 };
-export default Bubblemenu;
+
+export default BlubblemenuTable;
