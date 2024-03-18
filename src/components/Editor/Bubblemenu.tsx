@@ -144,7 +144,7 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({
           >
             <StrikethroughIcon
               className={
-                editor?.isActive("stike")
+                editor?.isActive("strike")
                   ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
                   : "p-1 border-none text-white text-xl w-9 h-9"
               }

@@ -6,7 +6,7 @@ import ImageUploadComponent from "./ImageUpload";
 // Icons
 import BoldIcon from "remixicon-react/BoldIcon";
 import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
-import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
+import Table2Icon from "remixicon-react/Table2Icon";
 import ItalicIcon from "remixicon-react/ItalicIcon";
 import UnderlineIcon from "remixicon-react/UnderlineIcon";
 import StrikethroughIcon from "remixicon-react/StrikethroughIcon";
@@ -74,7 +74,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               : "hidden pt-4 sm:block inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent top-0 z-50 no-scrollbar"
           }
         >
-          <div className="flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
+          <div className="flex overflow-y-hidden w-fit p-2 md:w-full bg-[#2D2C2C] rounded-full">
           <button
                 className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
                 onClick={onCloseEditor}
@@ -140,10 +140,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
                     : "p-2 rounded-md text-white bg-transparent cursor-pointer"
                 }
                 onClick={() =>
-                  editor?.chain().focus().toggleOrderedList().run()
+                  editor?.commands.insertTable({
+                    rows: 3,
+                    cols: 3,
+                    withHeaderRow: true,
+                  })
                 }
               >
-                <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
+                <Table2Icon className="border-none text-white text-xl w-7 h-7" />
               </button>
               <button
                 className={
