@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Note } from "./store/types";
 import { lowlight } from "lowlight";
-import {
-  EditorContent,
-  useEditor,
-  JSONContent,
-  BubbleMenu,
-} from "@tiptap/react";
+import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
+import Bubblemenu from "./components/Editor/Bubblemenu";
+import Toolbar from "./components/Editor/Toolbar";
 import Document from "@tiptap/extension-document";
 import { Keyboard } from "@capacitor/keyboard";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -24,6 +21,7 @@ import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import NoteLabels from "./components/Editor/NoteLabel";
+import BubleMenutable from "./components/Editor/Bubblemenutable";
 import Mathblock from "./lib/tiptap/math-block/Index";
 import {
   blackCallout,
@@ -48,22 +46,9 @@ import Find from "./components/Editor/Find";
 
 // Icons
 
-import BoldIcon from "remixicon-react/BoldIcon";
-import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
-import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
-import ItalicIcon from "remixicon-react/ItalicIcon";
-import UnderlineIcon from "remixicon-react/UnderlineIcon";
-import StrikethroughIcon from "remixicon-react/StrikethroughIcon";
-import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
-import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
-import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
-import Heading1Icon from "remixicon-react/H1Icon";
-import Heading2Icon from "remixicon-react/H2Icon";
-import LinkIcon from "remixicon-react/LinkMIcon";
 import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
-import ImageUploadComponent from "./components/Editor/ImageUpload";
 
 // Languages
 import css from "highlight.js/lib/languages/css";
@@ -180,71 +165,6 @@ function NoteEditor({
   const [focusMode, setFocusMode] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(true);
 
-  const toggleBold = () => {
-    editor?.chain().focus().toggleBold().run();
-  };
-
-  const toggleItalic = () => {
-    editor?.chain().focus().toggleItalic().run();
-  };
-
-  const toggleUnderline = () => {
-    editor?.chain().focus().toggleUnderline().run();
-  };
-
-  const toggleStrike = () => {
-    editor?.chain().focus().toggleStrike().run();
-  };
-
-  const toggleHighlight = () => {
-    editor?.chain().focus().toggleHighlight().run();
-  };
-
-  const toggleOrderedList = () => {
-    editor?.chain().focus().toggleOrderedList().run();
-  };
-
-  const toggleUnorderedList = () => {
-    editor?.chain().focus().toggleBulletList().run();
-  };
-
-  const toggleTaskList = () => {
-    editor?.chain().focus().toggleTaskList().run();
-  };
-
-  const toggleBlockquote = () => {
-    editor?.chain().focus().toggleBlockquote().run();
-  };
-
-  const handleImageUpload = (imageUrl: string, fileUri: string) => {
-    editor?.chain().setImage({ src: imageUrl, alt: fileUri }).run();
-  };
-
-  const setLink = useCallback(() => {
-    const previousUrl = editor?.getAttributes("link").href;
-    const url = window.prompt("URL", previousUrl);
-
-    // cancelled
-    if (url === null) {
-      return;
-    }
-
-    // empty
-    if (url === "") {
-      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
-
-      return;
-    }
-
-    // update link
-    editor
-      ?.chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: url })
-      .run();
-  }, [editor]);
-
   const handleHeadingClick = (heading: string) => {
     console.log("Heading clicked:", heading);
   };
@@ -340,136 +260,15 @@ function NoteEditor({
         className="sm:ml-16 overflow-auto h-full justify-center items-start px-4 text-black dark:text-white sm:px-10 md:px-20 lg:px-60 text-base "
         onDragOver={(e) => e.preventDefault()}
       >
-        {toolbarVisible && (
-          <div
-            className={
-              isFullScreen
-                ? "overflow-auto w-full"
-                : "hidden pt-4 sm:block inset-x-2 bottom-6 overflow-auto h-auto w-full bg-transparent top-0 z-50 no-scrollbar"
-            }
-          >
-            <div className="flex overflow-y-hidden w-fit md:p-2 md:w-full p-4 bg-[#2D2C2C] rounded-full">
-              <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-                <button
-                  className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
-                  onClick={onCloseEditor}
-                >
-                  <ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("bold")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleBold}
-                >
-                  <BoldIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("italic")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleItalic}
-                >
-                  <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("underline")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleUnderline}
-                >
-                  <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("strike")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleStrike}
-                >
-                  <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("highlight")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleHighlight}
-                >
-                  <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-
-                <button
-                  className={
-                    editor?.isActive("OrderedList")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleOrderedList}
-                >
-                  <ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("UnorderedList")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleUnorderedList}
-                >
-                  <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("Tasklist")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleTaskList}
-                >
-                  <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <button
-                  className={
-                    editor?.isActive("Blockquote")
-                      ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                      : "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                  onClick={toggleBlockquote}
-                >
-                  <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-
-                <button
-                  onClick={setLink}
-                  className={
-                    "p-2 rounded-md text-white bg-transparent cursor-pointer"
-                  }
-                >
-                  <LinkIcon className="border-none text-white text-xl w-7 h-7" />
-                </button>
-                <ImageUploadComponent
-                  onImageUpload={handleImageUpload}
-                  noteId={note.id}
-                />
-              </div>
-              <button
-                className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
-                onClick={toggleHeadingTree}
-              >
-                <Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
-              </button>
-            </div>
-          </div>
-        )}
+        <Toolbar
+          toolbarVisible={toolbarVisible}
+          isFullScreen={isFullScreen}
+          note={note}
+          onCloseEditor={onCloseEditor}
+          noteId={note.id}
+          editor={editor}
+          toggleHeadingTree={toggleHeadingTree}
+        />
         {headingTreeVisible && editor && (
           <div
             ref={headingTreeRef}
@@ -515,118 +314,8 @@ function NoteEditor({
             </button>
           </div>
         </div>
-        {editor && (
-          <BubbleMenu
-            editor={editor}
-            className="bg-[#2D2C2C] p-1 rounded-xl"
-            tippyOptions={{ duration: 100 }}
-          >
-            <button
-              className={
-                editor?.isActive("heading", { level: 1 })
-                  ? "p-1 text-amber-400 cursor-pointer"
-                  : "p-1 bg-transparent cursor-pointer"
-              }
-              onClick={() =>
-                editor?.chain().focus().toggleHeading({ level: 1 }).run()
-              }
-            >
-              <Heading1Icon className={
-                 editor?.isActive("heading", { level: 1 })
-                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
-                    : "p-1 border-none text-white text-xl w-9 h-9"
-                } />
-            </button>
-            <button
-              className={
-                editor?.isActive("heading", { level: 2 })
-                  ? "p-1 text-amber-400 cursor-pointer"
-                  : "p-1 bg-transparent cursor-pointer"
-              }
-              onClick={() =>
-                editor?.chain().focus().toggleHeading({ level: 2 }).run()
-              }
-            >
-              <Heading2Icon className={
-                 editor?.isActive("heading", { level: 2 })
-                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
-                    : "p-1 border-none text-white text-xl w-9 h-9"
-                } />
-            </button>
-            <button
-              className={
-                editor?.isActive("bold")
-                  ? "p-1 text-amber-400 cursor-pointer"
-                  : "p-1 bg-transparent cursor-pointer"
-              }
-              onClick={toggleBold}
-            >
-              <BoldIcon
-                className={
-                  editor?.isActive("bold")
-                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
-                    : "p-1 border-none text-white text-xl w-9 h-9"
-                }
-              />
-            </button>
-            <button
-              className={
-                editor?.isActive("italic")
-                  ? "p-1 text-amber-400 cursor-pointer"
-                  : "p-1 bg-transparent cursor-pointer"
-              }
-              onClick={toggleItalic}
-            >
-              <ItalicIcon className={
-                  editor?.isActive("italic")
-                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
-                    : "p-1 border-none text-white text-xl w-9 h-9"
-                } />
-            </button>
-            <button
-              className={
-                editor?.isActive("underline")
-                  ? "p-1 text-amber-400 cursor-pointer"
-                  : "p-1 bg-transparent cursor-pointer"
-              }
-              onClick={toggleUnderline}
-            >
-              <UnderlineIcon className={
-                  editor?.isActive("underline")
-                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
-                    : "p-1 border-none text-white text-xl w-9 h-9"
-                } />
-            </button>
-            <button
-              className={
-                editor?.isActive("strike")
-                  ? "p-1 text-amber-400 cursor-pointer"
-                  : "p-1 bg-transparent cursor-pointer"
-              }
-              onClick={toggleStrike}
-            >
-              <StrikethroughIcon className={
-                  editor?.isActive("stike")
-                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
-                    : "p-1 border-none text-white text-xl w-9 h-9"
-                } />
-            </button>
-            <button
-              className={
-                editor?.isActive("highlight")
-                  ? "p-1 text-amber-400 cursor-pointer"
-                  : "p-1 bg-transparent cursor-pointer"
-              }
-              onClick={toggleHighlight}
-            >
-              <MarkPenLineIcon className={
-                  editor?.isActive("highlight")
-                    ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
-                    : "p-1 border-none text-white text-xl w-9 h-9"
-                } />
-            </button>
-          </BubbleMenu>
-        )}
+        <Bubblemenu editor={editor} />
+        <BubleMenutable editor={editor} />
         <div
           contentEditable
           suppressContentEditableWarning
