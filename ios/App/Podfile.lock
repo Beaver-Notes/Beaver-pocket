@@ -24,6 +24,8 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (5.0.7):
     - Capacitor
+  - CapawesomeCapacitorFilePicker (5.3.0):
+    - Capacitor
 
 DEPENDENCIES:
   - "AashuDubeyCapacitorStatusbarSafeArea (from `../../node_modules/@aashu-dubey/capacitor-statusbar-safe-area`)"
@@ -39,6 +41,7 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "CapawesomeCapacitorFilePicker (from `../../node_modules/@capawesome/capacitor-file-picker`)"
 
 EXTERNAL SOURCES:
   AashuDubeyCapacitorStatusbarSafeArea:
@@ -67,6 +70,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
+  CapawesomeCapacitorFilePicker:
+    :path: "../../node_modules/@capawesome/capacitor-file-picker"
 
 SPEC CHECKSUMS:
   AashuDubeyCapacitorStatusbarSafeArea: 4833bf7ac284b54c6650f0d80634552094fd3229
@@ -82,7 +87,8 @@ SPEC CHECKSUMS:
   CapacitorShare: cd41743331cb71d217c029de54b681cbd91e0fcc
   CapacitorSplashScreen: 5fa2ab5e46cf5cc530cf16a51c80c7a986579ccd
   CapacitorStatusBar: f390fbb49b82ffb754ea4b3cf71dc8b048baf3e7
+  CapawesomeCapacitorFilePicker: 41f486cb4a89c6a7c8a4f5d683dbf96658894182
 
-PODFILE CHECKSUM: 71e88fd936feb70c7692b58bc0b076fd5ea593cd
+PODFILE CHECKSUM: 0f839ac66fee55c5ea3b5c9ffba6ff2b485e8a01
 
 COCOAPODS: 1.15.2
