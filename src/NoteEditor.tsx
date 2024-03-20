@@ -254,10 +254,16 @@ function NoteEditor({
     };
   }, []);
 
+  const [bg, setBg] = useState<boolean>(localStorage.getItem('background') === 'true');
+
+  useEffect(() => {
+    setBg(localStorage.getItem('background') === 'true');
+  }, []);
+
   return (
     <div {...handlers}>
       <div
-        className="sm:ml-16 overflow-auto h-full justify-center items-start px-4 text-black dark:text-white sm:px-10 md:px-20 lg:px-60 text-base "
+        className={`sm:ml-16 editor overflow-auto h-full justify-center items-start px-4 ${bg ? 'sm:px-5 md:px-10 lg:px-30' : 'sm:px-10 md:px-20 lg:px-60'} text-black dark:text-white text-base`}
         onDragOver={(e) => e.preventDefault()}
       >
         <Toolbar

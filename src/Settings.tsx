@@ -537,6 +537,20 @@ const Settings: React.FC = () => {
     },
   });
 
+  const [bg, setBg] = useState<boolean>(
+    localStorage.getItem("background") === "true"
+  );
+
+  useEffect(() => {
+    setBg(localStorage.getItem("background") === "true");
+  }, []);
+
+  const toggleBackground = () => {
+    const newValue = !bg;
+    localStorage.setItem("background", newValue.toString());
+    setBg(newValue);
+  };
+
   useEffect(() => {
     // Load translations
     const loadTranslations = async () => {
@@ -733,6 +747,17 @@ const Settings: React.FC = () => {
                     </svg>
                   </div>
                 </div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="backgroundToggle"
+                    checked={bg}
+                    onChange={toggleBackground}
+                  />
+                  <span className="inline-block py-0.5 align-middle">
+                    Expand page
+                  </span>
+                </label>
                 <p className="text-xl pt-4 text-neutral-700 dark:text-white">
                   {translations.settings.iedata || "-"}
                 </p>
