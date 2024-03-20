@@ -58,9 +58,9 @@ input[type="checkbox"] {
   border: 2px solid #ccc;
   outline: none;
   cursor: pointer;
-  margin-right: 10px;
+  margin-right: 2px;
   transition: border-color 0.3s;
-  margin-top: 4px;
+  margin-top: 1px
 }
 
 input[type="checkbox"]:checked {
