@@ -20,6 +20,7 @@ import TaskList from "@tiptap/extension-task-list";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
+import { NoteLink } from "./lib/tiptap/note-link";
 import NoteLabels from "./components/Editor/NoteLabel";
 import BubleMenutable from "./components/Editor/Bubblemenutable";
 import Mathblock from "./lib/tiptap/math-block/Index";
@@ -88,6 +89,7 @@ const extensions = [
   SearchAndReplace,
   TableHeader,
   TableRow,
+  NoteLink,
   Underline,
   Placeholder,
   OrderedList,
