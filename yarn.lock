@@ -1217,10 +1217,10 @@
   resolved "https://registry.yarnpkg.com/@capacitor/device/-/device-5.0.6.tgz#11322a9c737196f2df8f82abbe6d1a5b32e35fb7"
   integrity sha512-tmjK0H8IKbDLMcmzZzJPbV+9yLkKJ76QOdz4A7fZAOYx2GnFHsFngxldq/wKotGAJuDX/ih3ZzHNrzVguzlv2g==
 
-"@capacitor/filesystem@5.2.0":
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/@capacitor/filesystem/-/filesystem-5.2.0.tgz#6e4529eb059c85869ecc68643f25123dbe38768f"
-  integrity sha512-fyv+yWVFfglobPPveIRm4+ryMGI8vW27vjX63HDwB7K5fscSYajid+ie3qfwl2wkbPhlX8KTPes7IPij0lCmQg==
+"@capacitor/filesystem@^5.2.1":
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/@capacitor/filesystem/-/filesystem-5.2.1.tgz#c6183dce64fe95375a254d841029c5b88211392a"
+  integrity sha512-mexkJHUbNhydzfJywEUTIGARlB/HRogrtbjCZdA+mQxOi07T2887a70CwFaYRu1nKLMoKoliTM5UsLSsdl0PlA==
 
 "@capacitor/haptics@5.0.6":
   version "5.0.6"

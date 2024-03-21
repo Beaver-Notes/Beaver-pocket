@@ -537,18 +537,18 @@ const Settings: React.FC = () => {
     },
   });
 
-  const [bg, setBg] = useState<boolean>(
-    localStorage.getItem("background") === "true"
+  const [wd, setwd] = useState<boolean>(
+    localStorage.getItem("expand-editor") === "true"
   );
 
   useEffect(() => {
-    setBg(localStorage.getItem("background") === "true");
+    setwd(localStorage.getItem("expand-editor") === "true");
   }, []);
 
   const toggleBackground = () => {
-    const newValue = !bg;
-    localStorage.setItem("background", newValue.toString());
-    setBg(newValue);
+    const newValue = !wd;
+    localStorage.setItem("expand-editor", newValue.toString());
+    setwd(newValue);
   };
 
   useEffect(() => {
@@ -747,11 +747,11 @@ const Settings: React.FC = () => {
                     </svg>
                   </div>
                 </div>
-                <label className="flex items-center space-x-2">
+                <label className="flex hidden md:block lg:block items-center space-x-2">
                   <input
                     type="checkbox"
                     id="backgroundToggle"
-                    checked={bg}
+                    checked={wd}
                     onChange={toggleBackground}
                   />
                   <span className="inline-block py-0.5 align-middle">
