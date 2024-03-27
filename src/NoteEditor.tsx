@@ -242,6 +242,7 @@ function NoteEditor({
 
       // Set the new content in the editor
       editor?.commands.setContent(newContent, true);
+      setPopupPosition(null);
     }
   };
 
