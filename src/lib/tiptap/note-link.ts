@@ -1,19 +1,20 @@
-import { Node, nodeInputRule, RawCommands } from '@tiptap/react';
+import { Node, nodeInputRule, RawCommands } from "@tiptap/react";
 
-export interface NoteLinkOptions {
+
+export interface LinkNoteOptions {
   HTMLAttributes: Record<string, any>;
 }
 
-declare module '@tiptap/core' {
-    interface Commands<ReturnType> {
-      noteLink: (options: { noteId: string; noteTitle: string }) => ReturnType;
-    }
-  }  
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    linkNote: (options: { noteId: string; noteTitle: string }) => ReturnType;
+  }
+}
 
-export const NoteLink = Node.create({
-  name: 'noteLink',
+export const LinkNote = Node.create({
+  name: "linkNote",
 
-  group: 'inline', // Display inline
+  group: "inline", // Display inline
 
   inline: true, // Inline node
 
@@ -21,10 +22,10 @@ export const NoteLink = Node.create({
 
   addAttributes() {
     return {
-      noteId: {
+      id: {
         default: null,
       },
-      noteTitle: {
+      label: {
         default: null,
       },
     };
@@ -33,43 +34,64 @@ export const NoteLink = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'a[data-link-note]',
+        tag: "linkNote", // Change the tag name to 'linkNote'
         getAttrs: (dom) => ({
-          noteId: (dom as HTMLElement).getAttribute('data-id'),
-          noteTitle: (dom as HTMLElement).getAttribute('data-label'),
+          id: (dom as HTMLElement).getAttribute("id"), // Use 'id' attribute instead of 'data-id'
+          label: (dom as HTMLElement).getAttribute("label"), // Use 'label' attribute instead of 'data-label'
         }),
       },
     ];
-  },  
+  },
 
   renderHTML({ HTMLAttributes }) {
-    const { noteId, noteTitle } = HTMLAttributes;
-
+    const { id, label } = HTMLAttributes;
+  
+    const link = document.createElement('a');
+    link.href = `note://${id}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer nofollow';
+    link.textContent = label;
+    
+    // Attach event listener to emit custom event
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const href = link.getAttribute('href');
+      if (href) {
+        const noteId = href.replace('note://', '');
+        const event = new CustomEvent('lognoteid', { detail: { noteId } });
+        document.dispatchEvent(event);
+      }
+    });
+  
     return [
-      'a',
+      'linkNote', // Use 'linkNote' as the top-level node
       {
-        ...HTMLAttributes,
-        href: `note://${noteId}`,
+        id,
+        label,
       },
-      ['span', { 'data-link-note': '', 'data-id': noteId, 'data-label': noteTitle }, noteTitle],
+      link,
     ];
-  },
+  },  
 
   addCommands() {
     return {
-      noteLink: ({ noteId, noteTitle }: { noteId: string; noteTitle: string }) => ({ commands }: { commands: any }) =>
-        commands.insertContent(`<a href="note://${noteId}"><span data-link-note='' data-id='${noteId}' data-label='${noteTitle}'>${noteTitle}</span></a>`),
+      linkNote:
+        ({ noteId, noteTitle }: { noteId: string; noteTitle: string }) =>
+        ({ commands }: { commands: any }) =>
+          commands.insertContent(
+            `<linkNote id="${noteId}" label="${noteTitle}"><a href="note://${noteId}" target="_blank" rel="noopener noreferrer nofollow">${noteTitle}</a></linkNote>`
+          ),
     } as Partial<RawCommands>;
-  },  
-  
+  },
+
   addInputRules() {
     return [
       nodeInputRule({
-        find: /<a data-link-note='.*?' data-id='(.+?)' data-label='(.*?)'>.*?<\/span><\/a>/,
+        find: /<linkNote id="([^"]+)" label="([^"]+)"><a href="note:\/\/([^"]+)" target="_blank" rel="noopener noreferrer nofollow">([^<]+)<\/a><\/linkNote>/,
         type: this.type,
         getAttributes: (match) => {
-          const [, noteId, noteTitle] = match;
-          return { noteId, noteTitle };
+          const [, id, label] = match;
+          return { id, label };
         },
       }),
     ];

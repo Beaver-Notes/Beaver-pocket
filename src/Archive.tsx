@@ -895,13 +895,14 @@ const Archive: React.FC = () => {
       </div>
       <div>
         {activeNote && (
-          <NoteEditor
-            note={activeNote}
-            title={title}
-            onTitleChange={setTitle}
-            onChange={handleChangeNoteContent}
-            onCloseEditor={handleCloseEditor}
-          />
+             <NoteEditor
+             notesList={notesList}
+              note={activeNote}
+              title={title}
+              onTitleChange={setTitle}
+              onChange={handleChangeNoteContent}
+              onCloseEditor={handleCloseEditor}
+            />
         )}
       </div>
     </div>

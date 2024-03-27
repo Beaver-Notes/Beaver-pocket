@@ -23,7 +23,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
 
   const insertNoteLink = () => {
     //@ts-expect-error
-    editor?.commands.noteLink({ noteId: 'noteId', noteTitle: 'Note Title' });
+    editor?.commands.linkNote({ noteId: 'noteId', noteTitle: 'Note Title' });
   };
   
 

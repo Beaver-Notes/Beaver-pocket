@@ -20,7 +20,7 @@ import TaskList from "@tiptap/extension-task-list";
 import Link from "@tiptap/extension-link";
 import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
-import { NoteLink } from "./lib/tiptap/note-link";
+import { LinkNote } from "./lib/tiptap/note-link";
 import NoteLabels from "./components/Editor/NoteLabel";
 import BubleMenutable from "./components/Editor/Bubblemenutable";
 import Mathblock from "./lib/tiptap/math-block/Index";
@@ -59,6 +59,7 @@ import html from "highlight.js/lib/languages/xml";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { useDataPath } from "./store/useDataPath";
+import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
 
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("css", css);
@@ -89,7 +90,7 @@ const extensions = [
   SearchAndReplace,
   TableHeader,
   TableRow,
-  NoteLink,
+  LinkNote,
   Underline,
   Placeholder,
   OrderedList,
@@ -118,6 +119,7 @@ const extensions = [
 
 type Props = {
   note: Note;
+  notesList: Note[];
   onCloseEditor: () => void;
   onChange: (content: JSONContent, title?: string) => void;
   isFullScreen?: boolean;
@@ -127,6 +129,7 @@ type Props = {
 
 function NoteEditor({
   note,
+  notesList,
   onChange,
   onTitleChange,
   onCloseEditor,
@@ -225,6 +228,23 @@ function NoteEditor({
 
   const [showFind, setShowFind] = useState(false);
 
+  const handleClickNote = (note: Note) => {
+    const editorContent = editor?.getHTML() || "";
+    const atIndex = editorContent.lastIndexOf("@@");
+
+    if (atIndex !== -1) {
+      // Replace @@ with the link to the selected note
+      const link = `<linkNote id="${note.id}" label="${note.title}"><a href="note://${note.id}" target="_blank" rel="noopener noreferrer nofollow">${note.title}</a></linkNote>`;
+      const newContent =
+        editorContent.substring(0, atIndex) +
+        link +
+        editorContent.substring(atIndex + 2);
+
+      // Set the new content in the editor
+      editor?.commands.setContent(newContent, true);
+    }
+  };
+
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === "f" && (event.metaKey || event.ctrlKey)) {
@@ -256,16 +276,55 @@ function NoteEditor({
     };
   }, []);
 
-  const [wd, setwd] = useState<boolean>(localStorage.getItem('expand-editor') === 'true');
+  const [wd, setwd] = useState<boolean>(
+    localStorage.getItem("expand-editor") === "true"
+  );
 
   useEffect(() => {
-    setwd(localStorage.getItem('expand-editor') === 'true');
+    setwd(localStorage.getItem("expand-editor") === "true");
   }, []);
+
+  const [popupPosition, setPopupPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+
+  const handleEditorTyping = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const { key } = event;
+    const text = event.currentTarget.innerText;
+    const atIndex = text.lastIndexOf("@");
+
+    if (key === "@" && text[atIndex - 1] === "@") {
+      // '@@' typed, show the pop-up menu
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+
+        // Get the editor content area and its scroll position
+        const editorContent = document.querySelector(".editor-content");
+        if (editorContent) {
+          const editorRect = editorContent.getBoundingClientRect();
+
+          // Calculate the position of the pop-up menu relative to the line in the editor
+          const top = rect.top - editorRect.top + editorContent.scrollTop;
+          const left = rect.left - editorRect.left;
+
+          setPopupPosition({ top, left });
+        }
+      }
+    } else if (key === "Backspace" && text[atIndex] === "@") {
+      // Delete the pop-up menu when any '@' is deleted
+      setPopupPosition(null);
+    }
+  };
 
   return (
     <div {...handlers}>
       <div
-        className={`sm:ml-16 editor overflow-auto h-full justify-center items-start px-4 ${wd ? 'sm:px-10 md:px-10 lg:px-30' : 'sm:px-10 md:px-20 lg:px-60'} text-black dark:text-white text-base`}
+        className={`sm:ml-16 editor overflow-auto h-full justify-center items-start px-4 ${
+          wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
+        } text-black dark:text-white text-base`}
         onDragOver={(e) => e.preventDefault()}
       >
         <Toolbar
@@ -334,13 +393,21 @@ function NoteEditor({
         <div>
           <NoteLabels note={note} onChange={onChange} />
           <div className="py-2 h-full w-full" id="container">
+            {popupPosition && (
+              <BubblemenuNoteLink
+                notes={notesList}
+                position={popupPosition}
+                onClickNote={handleClickNote}
+              />
+            )}
             <EditorContent
+              onKeyUp={handleEditorTyping}
               editor={editor}
               className="overflow-auto w-full mb-[6em] min-h-[25em] editor-content"
             />
           </div>
         </div>
-        <div className="sm:ml-16 fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60  bottom-24 sm:bottom-6">
+        <div className="sm:ml-16 fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60 bottom-20 sm:bottom-6">
           {showFind && <Find editor={editor} />}
         </div>
         <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>

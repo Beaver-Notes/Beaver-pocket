@@ -208,7 +208,6 @@ const Settings: React.FC = () => {
 
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [searchQuery] = useState<string>("");
-  const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
 
   useEffect(() => {
     const loadNotesFromStorage = async () => {
@@ -484,6 +483,32 @@ const Settings: React.FC = () => {
       saveNote(updateNote);
     }
   };
+
+    // @ts-ignore
+    const [sortingOption, setSortingOption] = useState("updatedAt");
+    const [filteredNotes, setFilteredNotes] =
+    useState<Record<string, Note>>(notesState);
+
+  const notesList = Object.values(filteredNotes).sort((a, b) => {
+    switch (sortingOption) {
+      case "alphabetical":
+        return a.title.localeCompare(b.title);
+      case "createdAt":
+        const createdAtA =
+          a.createdAt instanceof Date ? a.createdAt : new Date(0);
+        const createdAtB =
+          b.createdAt instanceof Date ? b.createdAt : new Date(0);
+        return createdAtA.getTime() - createdAtB.getTime();
+      case "updatedAt":
+      default:
+        const updatedAtA =
+          a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
+        const updatedAtB =
+          b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
+        return updatedAtA.getTime() - updatedAtB.getTime();
+    }
+  });
+  
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -839,6 +864,7 @@ const Settings: React.FC = () => {
       <div>
         {activeNote && (
           <NoteEditor
+            notesList={notesList}
             note={activeNote}
             title={title}
             onTitleChange={setTitle}

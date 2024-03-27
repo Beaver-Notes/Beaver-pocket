@@ -495,6 +495,13 @@ const App: React.FC = () => {
     );
   };
 
+  document.addEventListener('lognoteid', (event: Event) => {
+    const customEvent = event as CustomEvent;
+    const noteId = customEvent.detail.noteId;
+    setActiveNoteId(noteId);
+  });
+  
+
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
 
@@ -900,6 +907,7 @@ const App: React.FC = () => {
       <div>
         {activeNote && (
           <NoteEditor
+           notesList={notesList}
             note={activeNote}
             title={title}
             onTitleChange={setTitle}
