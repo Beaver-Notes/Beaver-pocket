@@ -156,7 +156,6 @@ const About: React.FC = ({}) => {
 
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [searchQuery] = useState<string>("");
-  const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
 
   useEffect(() => {
     const loadNotesFromStorage = async () => {
@@ -187,269 +186,293 @@ const About: React.FC = ({}) => {
     setActiveNoteId(null);
   };
 
-    // Translations
-    const [translations, setTranslations] = useState({
-      about: {
-       title: "about.title",
-       app: "about.app",
-       description: "about.description",
-       version: "about.version",
-       website: "about.website",
-       github: "about.github",
-       donate: "about.donate",
-       copyright: "about.Copyright",
-      },
-      home: {
-        exportSuccess: "home.exportSuccess",
-        exportError: "home.exportError",
-        shareTitle: "home.shareTitle",
-        shareError: "home.shareError",
-        importSuccess: "home.importSuccess",
-        importError: "home.importError",
-        importInvalid: "home.importInvalid",
-      }
-    });
-  
-    useEffect(() => {
-      // Load translations
-      const loadTranslations = async () => {
-        const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-        try {
-          const translationModule = await import(
-            `../assets/locales/${selectedLanguage}.json`
-          );
-  
-          setTranslations({ ...translations, ...translationModule.default });
-          dayjs.locale(selectedLanguage);
-        } catch (error) {
-          console.error("Error loading translations:", error);
-        }
-      };
-  
-      loadTranslations();
-    }, []); 
+  // Translations
+  const [translations, setTranslations] = useState({
+    about: {
+      title: "about.title",
+      app: "about.app",
+      description: "about.description",
+      version: "about.version",
+      website: "about.website",
+      github: "about.github",
+      donate: "about.donate",
+      copyright: "about.Copyright",
+    },
+    home: {
+      exportSuccess: "home.exportSuccess",
+      exportError: "home.exportError",
+      shareTitle: "home.shareTitle",
+      shareError: "home.shareError",
+      importSuccess: "home.importSuccess",
+      importError: "home.importError",
+      importInvalid: "home.importInvalid",
+    },
+  });
 
-    const exportData = async () => {
+  useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
-        const currentDate = new Date();
-        const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-  
-        const parentExportFolderPath = `export`;
-        await Filesystem.mkdir({
-          path: parentExportFolderPath,
-          directory: Directory.Data,
-          recursive: true,
-        });
-  
-        const exportFolderName = `Beaver Notes ${formattedDate}`;
-        const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
-  
-        await Filesystem.mkdir({
-          path: exportFolderPath,
-          directory: Directory.Data,
-          recursive: true,
-        });
-  
-        const exportedData: any = {
-          data: {
-            notes: {},
-            lockedNotes: {}, 
-          },
-          labels: [],
-        };
-  
-        Object.values(notesState).forEach((note) => {
-          const createdAtTimestamp =
-            note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
-          const updatedAtTimestamp =
-            note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
-  
-          exportedData.data.notes[note.id] = {
-            id: note.id,
-            title: note.title,
-            content: note.content,
-            labels: note.labels,
-            createdAt: createdAtTimestamp,
-            updatedAt: updatedAtTimestamp,
-            isBookmarked: note.isBookmarked,
-            isArchived: note.isArchived,
-            isLocked: note.isLocked,
-            lastCursorPosition: note.lastCursorPosition,
-          };
-  
-          exportedData.labels = exportedData.labels.concat(note.labels);
-  
-          if (note.isLocked) {
-            exportedData.data.lockedNotes[note.id] = true;
-          }
-        });
-  
-        exportedData.labels = Array.from(new Set(exportedData.labels));
-  
-        const jsonData = JSON.stringify(exportedData, null, 2);
-        const jsonFilePath = `${exportFolderPath}/data.json`;
-  
-        await Filesystem.writeFile({
-          path: jsonFilePath,
-          data: jsonData,
-          directory: Directory.Data,
-          encoding: FilesystemEncoding.UTF8,
-        });
-  
-        const imagesFolderPath = `images`;
-        let imagesFolderExists = false;
-  
-        try {
-          const imagesFolderInfo = await (Filesystem as any).getInfo({
-            path: imagesFolderPath,
-            directory: Directory.Data,
-          });
-          imagesFolderExists = imagesFolderInfo.type === "directory";
-        } catch (error) {
-          console.error("Error checking images folder:", error);
-        }
-  
-        if (imagesFolderExists) {
-          const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-  
-          await Filesystem.mkdir({
-            path: exportImagesFolderPath,
-            directory: Directory.Data,
-            recursive: true,
-          });
-  
-          await Filesystem.copy({
-            from: imagesFolderPath,
-            to: exportImagesFolderPath,
-            directory: Directory.Data,
-          });
-        }
-  
-        const zip = new JSZip();
-        const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
-  
-        const exportFolderFiles = await Filesystem.readdir({
-          path: exportFolderPath,
-          directory: Directory.Data,
-        });
-  
-        await Promise.all(
-          exportFolderFiles.files.map(async (file) => {
-            const filePath = `${exportFolderPath}/${file.name}`;
-            const fileContent = await Filesystem.readFile({
-              path: filePath,
-              directory: Directory.Data,
-              encoding: FilesystemEncoding.UTF8,
-            });
-            exportFolderZip!.file(file.name, fileContent.data);
-          })
+        const translationModule = await import(
+          `../assets/locales/${selectedLanguage}.json`
         );
-  
-        const zipContentBase64 = await zip.generateAsync({ type: "base64" });
-  
-        const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
-        await Filesystem.writeFile({
-          path: zipFilePath,
-          data: zipContentBase64,
-          directory: Directory.Cache,
-        });
-  
-        await shareZipFile();
-  
-        alert(translations.home.exportSuccess);
-      } catch (error) {
-        alert(translations.home.exportError + (error as any).message);
-      }
-    };
-  
-    const shareZipFile = async () => {
-      try {
-        const currentDate = new Date();
-        const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-        const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
-  
-        const result = await Filesystem.getUri({
-          directory: Directory.Cache,
-          path: zipFilePath,
-        });
-  
-        const resolvedFilePath = result.uri;
-  
-        await Share.share({
-          title: `${translations.home.shareTitle}`,
-          url: resolvedFilePath,
-          dialogTitle: `${translations.home.shareTitle}`,
-        });
-      } catch (error) {
-        alert(translations.home.shareError + (error as any).message);
-      }
-    };
-  
 
-    const handleImportData = async (
-      event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-      const file = event.target.files?.[0];
-  
-      if (!file) {
-        return;
+        setTranslations({ ...translations, ...translationModule.default });
+        dayjs.locale(selectedLanguage);
+      } catch (error) {
+        console.error("Error loading translations:", error);
       }
-  
-      const reader = new FileReader();
-  
-      reader.onload = async (e) => {
-        try {
-          const importedData = JSON.parse(e.target?.result as string);
-  
-          if (importedData && importedData.data && importedData.data.notes) {
-            const importedNotes: Record<string, Note> = importedData.data.notes;
-  
-            const existingNotes = await loadNotes();
-  
-            const mergedNotes: Record<string, Note> = {
-              ...existingNotes,
-              ...importedNotes,
-            };
-  
-            setNotesState(mergedNotes);
-  
-            const filtered = Object.values(mergedNotes).filter((note) => {
-              const titleMatch = note.title
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase());
-              const contentMatch = JSON.stringify(note.content)
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase());
-              return titleMatch || contentMatch;
-            });
-  
-            setFilteredNotes(
-              Object.fromEntries(filtered.map((note) => [note.id, note]))
-            );
-  
-            Object.values(importedNotes).forEach((note) => {
-              note.createdAt = new Date(note.createdAt);
-              note.updatedAt = new Date(note.updatedAt);
-            });
-  
-            await Filesystem.writeFile({
-              path: STORAGE_PATH,
-              data: JSON.stringify({ data: { notes: mergedNotes } }),
-              directory: Directory.Data,
-              encoding: FilesystemEncoding.UTF8,
-            });
-  
-            alert(translations.home.importSuccess);
-          } else {
-            alert(translations.home.importInvalid);
-          }
-        } catch (error) {
-          alert(translations.home.importError);
-        }
-      };
-  
-      reader.readAsText(file);
     };
+
+    loadTranslations();
+  }, []);
+
+  const exportData = async () => {
+    try {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+
+      const parentExportFolderPath = `export`;
+      await Filesystem.mkdir({
+        path: parentExportFolderPath,
+        directory: Directory.Data,
+        recursive: true,
+      });
+
+      const exportFolderName = `Beaver Notes ${formattedDate}`;
+      const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
+
+      await Filesystem.mkdir({
+        path: exportFolderPath,
+        directory: Directory.Data,
+        recursive: true,
+      });
+
+      const exportedData: any = {
+        data: {
+          notes: {},
+          lockedNotes: {},
+        },
+        labels: [],
+      };
+
+      Object.values(notesState).forEach((note) => {
+        const createdAtTimestamp =
+          note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
+        const updatedAtTimestamp =
+          note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
+
+        exportedData.data.notes[note.id] = {
+          id: note.id,
+          title: note.title,
+          content: note.content,
+          labels: note.labels,
+          createdAt: createdAtTimestamp,
+          updatedAt: updatedAtTimestamp,
+          isBookmarked: note.isBookmarked,
+          isArchived: note.isArchived,
+          isLocked: note.isLocked,
+          lastCursorPosition: note.lastCursorPosition,
+        };
+
+        exportedData.labels = exportedData.labels.concat(note.labels);
+
+        if (note.isLocked) {
+          exportedData.data.lockedNotes[note.id] = true;
+        }
+      });
+
+      exportedData.labels = Array.from(new Set(exportedData.labels));
+
+      const jsonData = JSON.stringify(exportedData, null, 2);
+      const jsonFilePath = `${exportFolderPath}/data.json`;
+
+      await Filesystem.writeFile({
+        path: jsonFilePath,
+        data: jsonData,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+
+      const imagesFolderPath = `images`;
+      let imagesFolderExists = false;
+
+      try {
+        const imagesFolderInfo = await (Filesystem as any).getInfo({
+          path: imagesFolderPath,
+          directory: Directory.Data,
+        });
+        imagesFolderExists = imagesFolderInfo.type === "directory";
+      } catch (error) {
+        console.error("Error checking images folder:", error);
+      }
+
+      if (imagesFolderExists) {
+        const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
+
+        await Filesystem.mkdir({
+          path: exportImagesFolderPath,
+          directory: Directory.Data,
+          recursive: true,
+        });
+
+        await Filesystem.copy({
+          from: imagesFolderPath,
+          to: exportImagesFolderPath,
+          directory: Directory.Data,
+        });
+      }
+
+      const zip = new JSZip();
+      const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
+
+      const exportFolderFiles = await Filesystem.readdir({
+        path: exportFolderPath,
+        directory: Directory.Data,
+      });
+
+      await Promise.all(
+        exportFolderFiles.files.map(async (file) => {
+          const filePath = `${exportFolderPath}/${file.name}`;
+          const fileContent = await Filesystem.readFile({
+            path: filePath,
+            directory: Directory.Data,
+            encoding: FilesystemEncoding.UTF8,
+          });
+          exportFolderZip!.file(file.name, fileContent.data);
+        })
+      );
+
+      const zipContentBase64 = await zip.generateAsync({ type: "base64" });
+
+      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
+      await Filesystem.writeFile({
+        path: zipFilePath,
+        data: zipContentBase64,
+        directory: Directory.Cache,
+      });
+
+      await shareZipFile();
+
+      alert(translations.home.exportSuccess);
+    } catch (error) {
+      alert(translations.home.exportError + (error as any).message);
+    }
+  };
+
+  const shareZipFile = async () => {
+    try {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
+
+      const result = await Filesystem.getUri({
+        directory: Directory.Cache,
+        path: zipFilePath,
+      });
+
+      const resolvedFilePath = result.uri;
+
+      await Share.share({
+        title: `${translations.home.shareTitle}`,
+        url: resolvedFilePath,
+        dialogTitle: `${translations.home.shareTitle}`,
+      });
+    } catch (error) {
+      alert(translations.home.shareError + (error as any).message);
+    }
+  };
+
+  const handleImportData = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string);
+
+        if (importedData && importedData.data && importedData.data.notes) {
+          const importedNotes: Record<string, Note> = importedData.data.notes;
+
+          const existingNotes = await loadNotes();
+
+          const mergedNotes: Record<string, Note> = {
+            ...existingNotes,
+            ...importedNotes,
+          };
+
+          setNotesState(mergedNotes);
+
+          const filtered = Object.values(mergedNotes).filter((note) => {
+            const titleMatch = note.title
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase());
+            const contentMatch = JSON.stringify(note.content)
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase());
+            return titleMatch || contentMatch;
+          });
+
+          setFilteredNotes(
+            Object.fromEntries(filtered.map((note) => [note.id, note]))
+          );
+
+          Object.values(importedNotes).forEach((note) => {
+            note.createdAt = new Date(note.createdAt);
+            note.updatedAt = new Date(note.updatedAt);
+          });
+
+          await Filesystem.writeFile({
+            path: STORAGE_PATH,
+            data: JSON.stringify({ data: { notes: mergedNotes } }),
+            directory: Directory.Data,
+            encoding: FilesystemEncoding.UTF8,
+          });
+
+          alert(translations.home.importSuccess);
+        } else {
+          alert(translations.home.importInvalid);
+        }
+      } catch (error) {
+        alert(translations.home.importError);
+      }
+    };
+
+    reader.readAsText(file);
+  };
+
+  // @ts-ignore
+  const [sortingOption, setSortingOption] = useState("updatedAt");
+  const [filteredNotes, setFilteredNotes] =
+  useState<Record<string, Note>>(notesState);
+
+const notesList = Object.values(filteredNotes).sort((a, b) => {
+  switch (sortingOption) {
+    case "alphabetical":
+      return a.title.localeCompare(b.title);
+    case "createdAt":
+      const createdAtA =
+        a.createdAt instanceof Date ? a.createdAt : new Date(0);
+      const createdAtB =
+        b.createdAt instanceof Date ? b.createdAt : new Date(0);
+      return createdAtA.getTime() - createdAtB.getTime();
+    case "updatedAt":
+    default:
+      const updatedAtA =
+        a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
+      const updatedAtB =
+        b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
+      return updatedAtA.getTime() - updatedAtB.getTime();
+  }
+});
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
@@ -504,7 +527,6 @@ const About: React.FC = ({}) => {
   const navigate = useNavigate();
 
   const handleSwipe = (eventData: any) => {
-
     const isRightSwipe = eventData.dir === "Right";
     const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
 
@@ -522,7 +544,7 @@ const About: React.FC = ({}) => {
   const [isArchiveVisible, setIsArchiveVisible] = useState(false);
   return (
     <div {...handlers}>
-            <div className="safe-area"></div>
+      <div className="safe-area"></div>
       <Sidebar
         onCreateNewNote={handleCreateNewNote}
         isDarkMode={darkMode}
@@ -535,13 +557,16 @@ const About: React.FC = ({}) => {
           <div className="py-2 mx-6 sm:px-20 mb-2">
             <div className="general space-y-3 w-full">
               <p className="text-4xl font-bold">{translations.about.title}</p>
-              <img src="./imgs/icon.png" alt="Beaver Notes Icon" className="w-32 h-32 rounded-full"/>
+              <img
+                src="./imgs/icon.png"
+                alt="Beaver Notes Icon"
+                className="w-32 h-32 rounded-full"
+              />
               <h4 className="mt-4 font-bold"> {translations.about.app}</h4>
-              <p>
-              {translations.about.description}
-              </p>
+              <p>{translations.about.description}</p>
               <p className="mt-2">
-                {translations.about.version} <span className="ml-8">{version}</span>
+                {translations.about.version}{" "}
+                <span className="ml-8">{version}</span>
               </p>
 
               <p>{translations.about.copyright}</p>
@@ -583,6 +608,7 @@ const About: React.FC = ({}) => {
       <div>
         {activeNote && (
           <NoteEditor
+            notesList={notesList}
             note={activeNote}
             title={title}
             onTitleChange={setTitle}
