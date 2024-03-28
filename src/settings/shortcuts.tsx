@@ -13,7 +13,6 @@ import {
   FilesystemEncoding,
 } from "@capacitor/filesystem";
 import dayjs from "dayjs";
-import JSZip from "jszip";
 import { Share } from "@capacitor/share";
 import { useSwipeable } from "react-swipeable";
 import { useNavigate } from "react-router-dom";
@@ -205,6 +204,13 @@ const Shortcuts: React.FC = () => {
         recursive: true,
       });
 
+      // Copy the note-assets folder
+      await Filesystem.copy({
+        from: "note-assets",
+        to: `${exportFolderPath}/assets`,
+        directory: Directory.Data,
+      });
+
       const exportedData: any = {
         data: {
           notes: {},
@@ -214,28 +220,37 @@ const Shortcuts: React.FC = () => {
       };
 
       Object.values(notesState).forEach((note) => {
-        const createdAtTimestamp =
-          note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
-        const updatedAtTimestamp =
-          note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
+        // Check if note.content exists and is not null
+        if (
+          note.content &&
+          typeof note.content === "object" &&
+          "content" in note.content
+        ) {
+          // Check if note.content.content is defined
+          if (note.content.content) {
+            // Replace src attribute in each note's content
+            const updatedContent = note.content.content.map((node) => {
+              if (node.type === "image" && node.attrs && node.attrs.src) {
+                node.attrs.src = node.attrs.src.replace(
+                  "note-assets/",
+                  "assets://"
+                );
+              }
+              return node;
+            });
 
-        exportedData.data.notes[note.id] = {
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          labels: note.labels,
-          createdAt: createdAtTimestamp,
-          updatedAt: updatedAtTimestamp,
-          isBookmarked: note.isBookmarked,
-          isArchived: note.isArchived,
-          isLocked: note.isLocked,
-          lastCursorPosition: note.lastCursorPosition,
-        };
+            // Update note's content with modified content
+            note.content.content = updatedContent;
 
-        exportedData.labels = exportedData.labels.concat(note.labels);
+            // Add the modified note to exportedData
+            exportedData.data.notes[note.id] = note;
 
-        if (note.isLocked) {
-          exportedData.data.lockedNotes[note.id] = true;
+            exportedData.labels = exportedData.labels.concat(note.labels);
+
+            if (note.isLocked) {
+              exportedData.data.lockedNotes[note.id] = true;
+            }
+          }
         }
       });
 
@@ -251,88 +266,26 @@ const Shortcuts: React.FC = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      const imagesFolderPath = `images`;
-      let imagesFolderExists = false;
-
-      try {
-        const imagesFolderInfo = await (Filesystem as any).getInfo({
-          path: imagesFolderPath,
-          directory: Directory.Data,
-        });
-        imagesFolderExists = imagesFolderInfo.type === "directory";
-      } catch (error) {
-        console.error("Error checking images folder:", error);
-      }
-
-      if (imagesFolderExists) {
-        const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-
-        await Filesystem.mkdir({
-          path: exportImagesFolderPath,
-          directory: Directory.Data,
-          recursive: true,
-        });
-
-        await Filesystem.copy({
-          from: imagesFolderPath,
-          to: exportImagesFolderPath,
-          directory: Directory.Data,
-        });
-      }
-
-      const zip = new JSZip();
-      const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
-
-      const exportFolderFiles = await Filesystem.readdir({
-        path: exportFolderPath,
-        directory: Directory.Data,
-      });
-
-      await Promise.all(
-        exportFolderFiles.files.map(async (file) => {
-          const filePath = `${exportFolderPath}/${file.name}`;
-          const fileContent = await Filesystem.readFile({
-            path: filePath,
-            directory: Directory.Data,
-            encoding: FilesystemEncoding.UTF8,
-          });
-          exportFolderZip!.file(file.name, fileContent.data);
-        })
-      );
-
-      const zipContentBase64 = await zip.generateAsync({ type: "base64" });
-
-      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
-      await Filesystem.writeFile({
-        path: zipFilePath,
-        data: zipContentBase64,
-        directory: Directory.Cache,
-      });
-
-      await shareZipFile();
-
       alert(translations.home.exportSuccess);
+
+      await shareExportFolder(exportFolderPath);
     } catch (error) {
       alert(translations.home.exportError + (error as any).message);
     }
   };
 
-  const shareZipFile = async () => {
+  const shareExportFolder = async (folderPath: string) => {
     try {
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
-
       const result = await Filesystem.getUri({
-        directory: Directory.Cache,
-        path: zipFilePath,
+        directory: Directory.Data,
+        path: folderPath,
       });
 
-      const resolvedFilePath = result.uri;
+      const resolvedFolderPath = result.uri;
 
       await Share.share({
         title: `${translations.home.shareTitle}`,
-        url: resolvedFilePath,
+        url: resolvedFolderPath,
         dialogTitle: `${translations.home.shareTitle}`,
       });
     } catch (error) {
@@ -340,34 +293,86 @@ const Shortcuts: React.FC = () => {
     }
   };
 
-  const handleImportData = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+  const handleImportData = async () => {
+    try {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split("T")[0];
+      const importFolderPath = `/export/Beaver Notes ${formattedDate}`;
+      const importDataPath = `${importFolderPath}/data.json`;
+      const importAssetsPath = `${importFolderPath}/assets`;
 
-    if (!file) {
-      return;
-    }
+      const existingAssets = await Filesystem.readdir({
+        path: "note-assets", // Change this to your app's note-assets folder
+        directory: Directory.Data,
+      });
 
-    const reader = new FileReader();
+      const existingFiles = new Set(
+        existingAssets.files.map((file) => file.name)
+      );
 
-    reader.onload = async (e) => {
-      try {
-        const importedData = JSON.parse(e.target?.result as string);
+      const importedAssets = await Filesystem.readdir({
+        path: importAssetsPath,
+        directory: Directory.Data,
+      });
 
-        if (importedData && importedData.data && importedData.data.notes) {
-          const importedNotes: Record<string, Note> = importedData.data.notes;
+      for (const file of importedAssets.files) {
+        if (!existingFiles.has(file.name)) {
+          await Filesystem.copy({
+            from: `${importAssetsPath}/${file.name}`,
+            to: `note-assets/${file.name}`, // Change this to your app's note-assets folder
+            directory: Directory.Data,
+          });
+        }
+      }
 
-          const existingNotes = await loadNotes();
+      const importedData = await Filesystem.readFile({
+        path: importDataPath,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
 
-          const mergedNotes: Record<string, Note> = {
-            ...existingNotes,
-            ...importedNotes,
-          };
+      const importedJsonString: string =
+        typeof importedData.data === "string"
+          ? importedData.data
+          : await importedData.data.text();
+      const parsedData = JSON.parse(importedJsonString);
 
-          setNotesState(mergedNotes);
+      if (parsedData && parsedData.data && parsedData.data.notes) {
+        const importedNotes = parsedData.data.notes;
 
-          const filtered = Object.values(mergedNotes).filter((note) => {
+        // Merge imported notes with existing notes
+        const existingNotes = await loadNotes();
+        const mergedNotes = {
+          ...existingNotes,
+          ...importedNotes,
+        };
+
+        Object.values<Note>(importedNotes).forEach((note) => {
+          if (
+            note.content &&
+            typeof note.content === "object" &&
+            "content" in note.content
+          ) {
+            if (note.content.content) {
+              const updatedContent = note.content.content.map((node: any) => {
+                if (node.type === "image" && node.attrs && node.attrs.src) {
+                  node.attrs.src = node.attrs.src.replace(
+                    "assets://",
+                    "note-assets/"
+                  );
+                }
+                return node;
+              });
+              note.content.content = updatedContent;
+            }
+          }
+        });
+
+        setNotesState(mergedNotes);
+
+        // Filter notes based on search query
+        const filtered = Object.values<Note>(mergedNotes).filter(
+          (note: Note) => {
             const titleMatch = note.title
               .toLowerCase()
               .includes(searchQuery.toLowerCase());
@@ -375,34 +380,34 @@ const Shortcuts: React.FC = () => {
               .toLowerCase()
               .includes(searchQuery.toLowerCase());
             return titleMatch || contentMatch;
-          });
+          }
+        );
 
-          setFilteredNotes(
-            Object.fromEntries(filtered.map((note) => [note.id, note]))
-          );
+        setFilteredNotes(
+          Object.fromEntries(filtered.map((note) => [note.id, note]))
+        );
 
-          Object.values(importedNotes).forEach((note) => {
-            note.createdAt = new Date(note.createdAt);
-            note.updatedAt = new Date(note.updatedAt);
-          });
+        // Update note createdAt and updatedAt properties
+        Object.values(importedNotes).forEach((note: any) => {
+          note.createdAt = new Date(note.createdAt);
+          note.updatedAt = new Date(note.updatedAt);
+        });
 
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes: mergedNotes } }),
-            directory: Directory.Data,
-            encoding: FilesystemEncoding.UTF8,
-          });
+        // Save merged notes to storage
+        await Filesystem.writeFile({
+          path: STORAGE_PATH,
+          data: JSON.stringify({ data: { notes: mergedNotes } }),
+          directory: Directory.Documents,
+          encoding: FilesystemEncoding.UTF8,
+        });
 
-          alert(translations.home.importSuccess);
-        } else {
-          alert(translations.home.importInvalid);
-        }
-      } catch (error) {
-        alert(translations.home.importError);
+        alert(translations.home.importSuccess);
+      } else {
+        alert(translations.home.importInvalid);
       }
-    };
-
-    reader.readAsText(file);
+    } catch (error) {
+      alert(translations.home.importError);
+    }
   };
 
   // @ts-ignore

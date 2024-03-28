@@ -245,7 +245,6 @@ const Settings: React.FC = () => {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
 
-      // Create the parent export folder
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
@@ -253,66 +252,85 @@ const Settings: React.FC = () => {
         recursive: true,
       });
 
-      // Create the export folder structure
       const exportFolderName = `Beaver Notes ${formattedDate}`;
       const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
 
-      // Create the export folder
       await Filesystem.mkdir({
         path: exportFolderPath,
         directory: Directory.Data,
         recursive: true,
       });
 
-      // Export data.json
-      let exportedData: any = {
+      // Copy the note-assets folder
+      await Filesystem.copy({
+        from: "note-assets",
+        to: `${exportFolderPath}/assets`,
+        directory: Directory.Data,
+      });
+
+      const exportedData: any = {
         data: {
           notes: {},
+          lockedNotes: {},
         },
+        labels: [],
       };
 
       Object.values(notesState).forEach((note) => {
-        const createdAtTimestamp =
-          note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
-        const updatedAtTimestamp =
-          note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
+        // Check if note.content exists and is not null
+        if (
+          note.content &&
+          typeof note.content === "object" &&
+          "content" in note.content
+        ) {
+          // Check if note.content.content is defined
+          if (note.content.content) {
+            // Replace src attribute in each note's content
+            const updatedContent = note.content.content.map((node) => {
+              if (node.type === "image" && node.attrs && node.attrs.src) {
+                node.attrs.src = node.attrs.src.replace(
+                  "note-assets/",
+                  "assets://"
+                );
+              }
+              return node;
+            });
 
-        exportedData.data.notes[note.id] = {
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          labels: note.labels,
-          createdAt: createdAtTimestamp,
-          updatedAt: updatedAtTimestamp,
-          isBookmarked: note.isBookmarked,
-          isArchived: note.isArchived,
-          lastCursorPosition: note.lastCursorPosition,
-        };
+            // Update note's content with modified content
+            note.content.content = updatedContent;
+
+            // Add the modified note to exportedData
+            exportedData.data.notes[note.id] = note;
+
+            exportedData.labels = exportedData.labels.concat(note.labels);
+
+            if (note.isLocked) {
+              exportedData.data.lockedNotes[note.id] = true;
+            }
+          }
+        }
       });
+
+      exportedData.labels = Array.from(new Set(exportedData.labels));
 
       let jsonData = JSON.stringify(exportedData, null, 2);
 
-      // Check if password protection is enabled
+      // Encrypt data if "encrypt with password" option is checked
       if (withPassword) {
-        // Prompt the user for a password
-        const passwordPrompt =
-          translations.settings.Inputpassword || "Enter password for export:";
-        const password = prompt(passwordPrompt);
-
-        // Check if the user provided a password
-        if (password !== null) {
-          // Encrypt the data using CryptoJS and the user's password
-          jsonData = CryptoJS.AES.encrypt(jsonData, password).toString();
-        } else {
-          // User canceled password input, abort export
-          console.log("Export canceled.");
+        const password = prompt("Enter your password:") || "";
+        if (!password) {
+          alert("Password cannot be empty.");
           return;
         }
+        const encryptedData = CryptoJS.AES.encrypt(
+          jsonData,
+          password
+        ).toString();
+        jsonData = encryptedData;
       }
 
       const jsonFilePath = `${exportFolderPath}/data.json`;
 
-      // Save data.json
       await Filesystem.writeFile({
         path: jsonFilePath,
         data: jsonData,
@@ -320,103 +338,115 @@ const Settings: React.FC = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      // Check if the images folder exists
-      const imagesFolderPath = `images`;
-      let imagesFolderExists = false;
-
-      try {
-        const imagesFolderInfo = await (Filesystem as any).getInfo({
-          path: imagesFolderPath,
-          directory: Directory.Data,
-        });
-        imagesFolderExists = imagesFolderInfo.type === "directory";
-      } catch (error) {
-        console.error("Error checking images folder:", error);
-      }
-
-      if (imagesFolderExists) {
-        // Export images folder
-        const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-
-        // Create the images folder in the export directory
-        await Filesystem.mkdir({
-          path: exportImagesFolderPath,
-          directory: Directory.Data,
-          recursive: true,
-        });
-
-        // Copy images folder to export folder
-        await Filesystem.copy({
-          from: imagesFolderPath,
-          to: exportImagesFolderPath,
-          directory: Directory.Data,
-        });
-      }
-
       alert(translations.home.exportSuccess);
     } catch (error) {
       alert(translations.home.exportError + (error as any).message);
     }
   };
 
-  const handleImportData = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+  const handleImportData = async () => {
+    try {
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().split("T")[0];
+      const importFolderPath = `/export/Beaver Notes ${formattedDate}`;
+      const importDataPath = `${importFolderPath}/data.json`;
+      const importAssetsPath = `${importFolderPath}/assets`;
 
-    if (!file) {
-      return;
-    }
+      // Read the list of existing assets
+      const existingAssets = await Filesystem.readdir({
+        path: "note-assets",
+        directory: Directory.Data,
+      });
 
-    const reader = new FileReader();
+      const existingFiles = new Set(
+        existingAssets.files.map((file) => file.name)
+      );
 
-    reader.onload = async (e) => {
-      try {
-        const importedData = e.target?.result as string;
+      // Copy imported assets to the app's assets folder
+      const importedAssets = await Filesystem.readdir({
+        path: importAssetsPath,
+        directory: Directory.Data,
+      });
 
-        let jsonData: string;
-
-        try {
-          // Try parsing the data as JSON
-          JSON.parse(importedData);
-          // If successful, it's JSON, no need for password
-          jsonData = importedData;
-        } catch (jsonError) {
-          // Parsing as JSON failed, assume it's encrypted and ask for password
-          const password = prompt("Enter password for import:");
-
-          // Check if the user provided a password
-          if (password !== null) {
-            // Decrypt the data using CryptoJS and the user's password
-            jsonData = CryptoJS.AES.decrypt(importedData, password).toString(
-              CryptoJS.enc.Utf8
-            );
-          } else {
-            // User canceled password input, abort import
-            console.log("Import canceled.");
-            return;
-          }
+      for (const file of importedAssets.files) {
+        if (!existingFiles.has(file.name)) {
+          await Filesystem.copy({
+            from: `${importAssetsPath}/${file.name}`,
+            to: `note-assets/${file.name}`,
+            directory: Directory.Data,
+          });
         }
+      }
 
-        const parsedData = JSON.parse(jsonData);
+      // Read the encrypted data from the file
+      const importedData = await Filesystem.readFile({
+        path: importDataPath,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
 
-        if (parsedData && parsedData.data && parsedData.data.notes) {
-          const importedNotes: Record<string, Note> = parsedData.data.notes;
+      // Prompt the user for the password
+      const password = prompt("Enter the password to decrypt the data:");
 
-          // Load existing notes from data.json
-          const existingNotes = await loadNotes();
+      if (!password) {
+        alert("Password is required to decrypt the data.");
+        return;
+      }
 
-          // Merge the imported notes with the existing notes
-          const mergedNotes: Record<string, Note> = {
-            ...existingNotes,
-            ...importedNotes,
-          };
+      // Convert Blob to string if necessary
+      const importedDataString =
+        typeof importedData.data === "string"
+          ? importedData.data
+          : await importedData.data.text();
 
-          // Update the notesState with the merged notes
-          setNotesState(mergedNotes);
+      // Decrypt the encrypted data using the password
+      const decryptedData = CryptoJS.AES.decrypt(
+        importedDataString,
+        password
+      ).toString(CryptoJS.enc.Utf8);
 
-          // Update the filteredNotes based on the search query
-          const filtered = Object.values(mergedNotes).filter((note) => {
+      // Parse the decrypted data as JSON
+      const parsedData = JSON.parse(decryptedData);
+
+      // Check if the parsed data is valid
+      if (parsedData && parsedData.data && parsedData.data.notes) {
+        const importedNotes = parsedData.data.notes;
+
+        // Merge imported notes with existing notes
+        const existingNotes = await loadNotes();
+        const mergedNotes = {
+          ...existingNotes,
+          ...importedNotes,
+        };
+
+        // Update imported notes content
+        Object.values<Note>(importedNotes).forEach((note) => {
+          if (
+            note.content &&
+            typeof note.content === "object" &&
+            "content" in note.content
+          ) {
+            if (note.content.content) {
+              const updatedContent = note.content.content.map((node: any) => {
+                if (node.type === "image" && node.attrs && node.attrs.src) {
+                  node.attrs.src = node.attrs.src.replace(
+                    "assets://",
+                    "note-assets/"
+                  );
+                }
+                return node;
+              });
+              note.content.content = updatedContent;
+            }
+          }
+        });
+
+        // Update notes state with merged notes
+        setNotesState(mergedNotes);
+
+        // Filter notes based on search query
+        const filtered = Object.values<Note>(mergedNotes).filter(
+          (note: Note) => {
             const titleMatch = note.title
               .toLowerCase()
               .includes(searchQuery.toLowerCase());
@@ -424,35 +454,35 @@ const Settings: React.FC = () => {
               .toLowerCase()
               .includes(searchQuery.toLowerCase());
             return titleMatch || contentMatch;
-          });
+          }
+        );
 
-          setFilteredNotes(
-            Object.fromEntries(filtered.map((note) => [note.id, note]))
-          );
+        // Set filtered notes
+        setFilteredNotes(
+          Object.fromEntries(filtered.map((note) => [note.id, note]))
+        );
 
-          Object.values(importedNotes).forEach((note) => {
-            note.createdAt = new Date(note.createdAt);
-            note.updatedAt = new Date(note.updatedAt);
-          });
+        // Update createdAt and updatedAt properties
+        Object.values(importedNotes).forEach((note: any) => {
+          note.createdAt = new Date(note.createdAt);
+          note.updatedAt = new Date(note.updatedAt);
+        });
 
-          // Save the merged notes to the data.json file
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes: mergedNotes } }),
-            directory: Directory.Data,
-            encoding: FilesystemEncoding.UTF8,
-          });
+        // Save merged notes to storage
+        await Filesystem.writeFile({
+          path: STORAGE_PATH,
+          data: JSON.stringify({ data: { notes: mergedNotes } }),
+          directory: Directory.Documents,
+          encoding: FilesystemEncoding.UTF8,
+        });
 
-          alert(translations.home.importSuccess);
-        } else {
-          alert(translations.home.importInvalid);
-        }
-      } catch (error) {
-        alert(translations.home.importError);
+        alert("Data imported successfully.");
+      } else {
+        alert("Invalid imported data format.");
       }
-    };
-
-    reader.readAsText(file);
+    } catch (error) {
+      alert("An error occurred while importing data. Please try again.");
+    }
   };
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
@@ -484,9 +514,9 @@ const Settings: React.FC = () => {
     }
   };
 
-    // @ts-ignore
-    const [sortingOption, setSortingOption] = useState("updatedAt");
-    const [filteredNotes, setFilteredNotes] =
+  // @ts-ignore
+  const [sortingOption, setSortingOption] = useState("updatedAt");
+  const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
@@ -508,7 +538,6 @@ const Settings: React.FC = () => {
         return updatedAtA.getTime() - updatedAtB.getTime();
     }
   });
-  
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -772,41 +801,35 @@ const Settings: React.FC = () => {
                     </svg>
                   </div>
                 </div>
-                <label className="flex hidden md:block lg:block items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="backgroundToggle"
-                    checked={wd}
-                    onChange={toggleBackground}
-                  />
-                  <span className="inline-block py-0.5 align-middle">
-                    Expand page
-                  </span>
-                </label>
+                <p className="text-xl pt-4 text-neutral-700 dark:text-white">
+                  Utilities
+                </p>
+                <div className="py-2">
+                  <label className="flex hidden sm:block md:block lg:block items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="backgroundToggle"
+                      checked={wd}
+                      onChange={toggleBackground}
+                    />
+                    <span className="inline-block align-top">Expand page</span>
+                  </label>
+                </div>
                 <p className="text-xl pt-4 text-neutral-700 dark:text-white">
                   {translations.settings.iedata || "-"}
                 </p>
                 <div className="relative pt-2 gap-4 flex flex-col sm:flex-row">
-                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
+                <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
                       <FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
                     </div>
-                    <div className="w-full mt-11 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
-                      <label
-                        htmlFor="file"
-                        className="w-full flex items-center justify-center"
-                      >
-                        {translations.settings.importdata || "-"}
-                      </label>
-                      <input
-                        className="hidden"
-                        type="file"
-                        onChange={handleImportData}
-                        id="file"
-                        // @ts-ignore
-                        directory=""
-                        webkitdirectory=""
-                      />
+                    <div className="bottom-0">
+                    <button
+                      className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]"
+                      onClick={handleImportData}
+                    >
+                      {translations.settings.importdata || "-"}
+                    </button>
                     </div>
                   </div>
 
@@ -819,9 +842,8 @@ const Settings: React.FC = () => {
                         type="checkbox"
                         checked={withPassword}
                         onChange={() => setWithPassword(!withPassword)}
-                        className="mr-2 mb-"
                       />
-                      <span>{translations.settings.encryptwpasswd || "-"}</span>
+                      <span className="ml-2">{translations.settings.encryptwpasswd || "-"}</span>
                     </div>
 
                     <button

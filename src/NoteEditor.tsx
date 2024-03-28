@@ -348,7 +348,7 @@ function NoteEditor({
           </div>
         )}
         <div
-          className={`sm:hidden bg-white dark:bg-[#232222] px-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full z-10 no-scrollbar flex justify-between ${addPaddingTop}`}
+          className={`sm:hidden bg-white dark:bg-[#232222] px-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between ${addPaddingTop}`}
         >
           <button
             className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"

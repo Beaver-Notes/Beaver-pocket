@@ -172,8 +172,8 @@ const App: React.FC = () => {
 
       // Copy the note-assets folder
       await Filesystem.copy({
-        from: "assets",
-        to: `${exportFolderPath}/note-assets`,
+        from: "note-assets",
+        to: `${exportFolderPath}/assets`,
         directory: Directory.Data,
       });
 
