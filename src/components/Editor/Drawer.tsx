@@ -21,9 +21,8 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
     editor?.chain().setImage({ src: imageUrl }).run();
   };
 
-  const insertNoteLink = () => {
-    //@ts-expect-error
-    editor?.commands.linkNote({ noteId: 'noteId', noteTitle: 'Note Title' });
+  const handlefileUpload = () => {
+    alert("Note implemented yet");
   };
   
 
@@ -82,7 +81,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
               className={`p-1 ${
                 editor?.isActive("embedded-file") ? "text-amber-400" : ""
               } cursor-pointer`}
-              onClick={() => insertNoteLink()}
+              onClick={() => handlefileUpload()}
             >
               <File2LineIcon className="border-none text-neutral-700 dark:text-white text-xl w-8 h-8 cursor-pointer" />
             </button>

@@ -172,7 +172,7 @@ const App: React.FC = () => {
 
       // Copy the note-assets folder
       await Filesystem.copy({
-        from: "note-assets",
+        from: "assets",
         to: `${exportFolderPath}/note-assets`,
         directory: Directory.Data,
       });
@@ -265,7 +265,7 @@ const App: React.FC = () => {
       const formattedDate = currentDate.toISOString().split("T")[0];
       const importFolderPath = `/export/Beaver Notes ${formattedDate}`;
       const importDataPath = `${importFolderPath}/data.json`;
-      const importAssetsPath = `${importFolderPath}/note-assets`;
+      const importAssetsPath = `${importFolderPath}/assets`;
 
       const existingAssets = await Filesystem.readdir({
         path: "note-assets", // Change this to your app's note-assets folder
