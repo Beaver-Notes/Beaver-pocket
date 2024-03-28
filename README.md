@@ -9,36 +9,33 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 ![Untitled](https://github.com/Daniele-rolli/Beaver-notes-pocket/assets/67503004/31e3f7e6-b152-4fd0-973f-5e3c281066be)
 
 
+| 🛠️ Features                          | ✅ Working | 🚧 WIP                     |
+|--------------------------------------|------------|-----------------------------|
+| Android Support                      |            | ❌ ([#8](https://github.com/Daniele-rolli/Beaver-pocket/issues/8)) |
+| Board Block                          |            | ❌                            |
+| Code Block                           | ✅         |                              |
+| Code Block w. syntax highlighting    | ✅         |                              |
+| Dark Mode                            | ✅         |                              |
+| Embeded Files                        |            | ❌                          |
+| Find in the Editor                   | ✅         |                              |
+| Headings from 1-6                    | ✅         |                              |
+| Headings Search                      | ✅         |                              |
+| Images                               | ✅         |                              |
+| Import / Export                      | ✅         |                              |
+| Import / Export parity w Beaver Notes|            | ❌ (missing embeded files)   |
+| Import / Export w. Password          | ✅         |                              |
+| Inline Code                          | ✅         |                              |
+| Labels                               | ✅         |                              |
+| Linked Notes                         | ✅         |                              |
+| Links                                | ✅         |                              |
+| Lists                                | ✅         |                              |
+| Paragraph                            | ✅         |                              |
+| Quote Block                          | ✅         |                              |
+| Sync Reminder                        |            | ❌                            |
+| Text Formatting                      | ✅         |                              |
 
-## What Works 
 
-- [x] Headinds
-- [x] CodeBlock
-- [x] Syntax highlighting
-- [x] Paragraphs
-- [x] Highlight
-- [x] Bold
-- [x] Underline
-- [x] Strikethorugh
-- [x] Inline Block
-- [x] Toolbar
-- [x] Search
-- [x] Images
-- [x] QuoteBlock
-- [x] Lists
-- [x] Archive
-- [x] Bookmark
-- [x] Links
-- [x] Exporting data to Beavernotes 
-      
-## Kinda Works
-- [ ] Tags (Needs tighter integration with Tiptap)
-- [ ] Dark Mode (No toggle is available)
 
-## Doesn't work / not implemented 
-
-- [ ] Importing data from Beavernotes (Might not work due to the lack of certain features).
-- [ ] Note Linking
 
 ## To set up your machine for running Beaver Notes Pocket, follow these steps:
 
