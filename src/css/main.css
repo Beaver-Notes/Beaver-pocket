@@ -12,7 +12,7 @@
 .safe-area {
   padding-top: constant(safe-area-inset-top) !important;
   padding-top: env(safe-area-inset-top) !important;
-  @apply bg-white dark:bg-[#232222];
+  @apply bg-white dark:bg-[#232222] z-40;
   /* background-color: red; */
   position: fixed;
   top: 0;
@@ -187,7 +187,7 @@ code {
     td,
     th {
       min-width: 1em;
-      border: 2px solid #ced4da;
+      @apply border-2 border-neutral-300 dark:border-neutral-500;
       padding: 3px 5px;
       vertical-align: top;
       box-sizing: border-box;
@@ -199,7 +199,7 @@ code {
     th {
       font-weight: bold;
       text-align: left;
-      background-color: #f1f3f5;
+      @apply bg-neutral-100 dark:bg-black dark:bg-opacity-30;
     }
     .selectedCell:after {
       z-index: 2;
