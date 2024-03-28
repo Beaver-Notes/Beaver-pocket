@@ -18,6 +18,7 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 | Dark Mode                            | ✅         |                              |
 | Embeded Files                        |            | ❌                          |
 | Find in the Editor                   | ✅         |                              |
+| Focus Mode                           | ✅         |                              |
 | Headings from 1-6                    | ✅         |                              |
 | Headings Search                      | ✅         |                              |
 | Images                               | ✅         |                              |
@@ -30,6 +31,7 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 | Links                                | ✅         |                              |
 | Lists                                | ✅         |                              |
 | Paragraph                            | ✅         |                              |
+| Print / Export as PDF                |            |   ❌                           |
 | Quote Block                          | ✅         |                              |
 | Sync Reminder                        |            | ❌                            |
 | Text Formatting                      | ✅         |                              |
