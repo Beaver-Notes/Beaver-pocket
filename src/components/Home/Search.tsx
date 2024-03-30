@@ -87,7 +87,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <option value="createdAt">{translations.search.creationDate}</option>
             <option value="alphabetical">{translations.search.alphabetical}</option>
           </select>
-          <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+          <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
         </div>
       </div>
       <div className="items-center">
