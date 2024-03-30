@@ -13,6 +13,7 @@ const Paper: React.FC<ComponentProps> = ({ node, updateAttributes }) => {
   const [color, setColor] = useState<string>('#A975FF');
   const [size, setSize] = useState<number>(Math.ceil(Math.random() * 10));
   const [drawing, setDrawing] = useState<boolean>(false);
+  const [eraserMode, setEraserMode] = useState<boolean>(false);
   const [id, setId] = useState<string>(uuid());
 
   const pathRef = useRef<d3.Selection<SVGPathElement, [number, number][], null, undefined> | null>(null);
@@ -85,7 +86,7 @@ const Paper: React.FC<ComponentProps> = ({ node, updateAttributes }) => {
     return svg.append<SVGPathElement>('path')
       .data<[number, number][]>([[]])  // Explicitly specify the data type as [number, number][]
       .attr('id', `id-${id}`)
-      .attr('stroke', color)
+      .attr('stroke', eraserMode ? 'white' : color) // Set initial stroke color based on eraser mode
       .attr('stroke-width', size)
       .attr('fill', 'none');
   };
@@ -105,7 +106,7 @@ const Paper: React.FC<ComponentProps> = ({ node, updateAttributes }) => {
               ...lines,
               {
                 id,
-                color,
+                color: eraserMode ? 'white' : color, // If eraser mode is active, set color to white
                 size,
                 path: currentPath.attr('d') || '',
               },
@@ -114,7 +115,7 @@ const Paper: React.FC<ComponentProps> = ({ node, updateAttributes }) => {
         }, 0);
       }
     });
-  }, [node.attrs.lines, updateAttributes, id, color, size]);
+  }, [node.attrs.lines, updateAttributes, id, color, size, eraserMode]);
 
   const clear = () => {
     updateAttributes({
@@ -128,6 +129,9 @@ const Paper: React.FC<ComponentProps> = ({ node, updateAttributes }) => {
         <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ marginBottom: '8px' }} />
         <input type="number" min="1" max="10" value={size} onChange={(e) => setSize(Number(e.target.value))} style={{ marginBottom: '8px' }} />
         <button onClick={clear} style={{ marginBottom: '8px' }}>Clear</button>
+        <button onClick={() => setEraserMode(!eraserMode)} style={{ marginBottom: '8px' }}>
+          {eraserMode ? 'Disable Eraser' : 'Enable Eraser'}
+        </button>
         <svg viewBox="0 0 500 250" ref={svgRef} style={{ border: '1px solid #ccc' }}>
           {node.attrs.lines.map((item: any) => (
             item.id !== id && (

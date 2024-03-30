@@ -22,6 +22,7 @@ import Text from "@tiptap/extension-text";
 import { NoteLabel } from "./lib/tiptap/NoteLabel";
 import { LinkNote } from "./lib/tiptap/note-link";
 import NoteLabels from "./components/Editor/NoteLabel";
+import FileEmbed from "./lib/tiptap/FileEmbed";
 import BubleMenutable from "./components/Editor/Bubblemenutable";
 import Mathblock from "./lib/tiptap/math-block/Index";
 import {
@@ -43,7 +44,7 @@ import BulletList from "@tiptap/extension-bullet-list";
 import Drawer from "./components/Editor/Drawer";
 import SearchAndReplace from "./lib/tiptap/search-&-replace";
 import Find from "./components/Editor/Find";
-// import Paper from "./lib/tiptap/paper/Paper"
+import Paper from "./lib/tiptap/drawing-paper/Paper"
 
 // Icons
 
@@ -75,6 +76,7 @@ const extensions = [
   Document,
   NoteLabel,
   Text,
+  FileEmbed,
   blackCallout,
   blueCallout,
   greenCallout,
@@ -92,6 +94,7 @@ const extensions = [
   TableRow,
   LinkNote,
   Underline,
+  Paper,
   Placeholder,
   OrderedList,
   TaskList,

@@ -21,7 +21,6 @@ def capacitor_pods
   pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
   pod 'CapacitorNativeBiometric', :path => '../../node_modules/capacitor-native-biometric'
-  pod 'CapacitorNativeFilepicker', :path => '../../node_modules/capacitor-native-filepicker'
 end
 
 target 'App' do
