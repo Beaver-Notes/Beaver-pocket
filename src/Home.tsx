@@ -83,11 +83,21 @@ const App: React.FC = () => {
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     const isConfirmed = window.confirm(translations.home.confirmDelete);
-
+  
     if (isConfirmed) {
-      await deleteNote(noteId);
+      try {
+        await deleteNote(noteId);
+        // Remove the deleted note from filteredNotes state
+        setFilteredNotes((prevFilteredNotes) => {
+          const updatedFilteredNotes = { ...prevFilteredNotes };
+          delete updatedFilteredNotes[noteId];
+          return updatedFilteredNotes;
+        });
+      } catch (error) {
+        alert(error);
+      }
     }
-  };
+  };  
 
   const [themeMode, setThemeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
