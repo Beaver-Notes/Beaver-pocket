@@ -143,35 +143,29 @@ export const useSaveNote = () => {
 // Delete
 
 export const useDeleteNote = () => {
-  const [, setNotesState] = useState<Record<string, Note>>({});
+  const [notesState, setNotesState] = useState<Record<string, Note>>({});
 
   const deleteNote = React.useCallback(
     async (noteId: string) => {
       try {
-        const notes = await loadNotes();
-
-        if (notes[noteId]) {
-          delete notes[noteId];
-
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes } }),
-            directory: Directory.Data,
-            encoding: FilesystemEncoding.UTF8,
-          });
-
-          setNotesState(notes);
-          window.location.reload();
-        } else {
-          console.log(`Note with id ${noteId} not found.`);
-        }
+        const notes = { ...notesState }; // Create a copy of notesState
+        delete notes[noteId]; // Delete the note with the given noteId
+  
+        await Filesystem.writeFile({
+          path: STORAGE_PATH,
+          data: JSON.stringify({ data: { notes } }),
+          directory: Directory.Data,
+          encoding: FilesystemEncoding.UTF8,
+        });
+  
+        setNotesState(notes); // Update the state with the new notes object
       } catch (error) {
         console.error("Error deleting note:", error);
         alert("Error deleting note: " + (error as any).message);
       }
     },
-    [loadNotes, setNotesState]
-  );
+    [notesState, setNotesState]
+  );  
 
   return { deleteNote };
 };
