@@ -1165,6 +1165,11 @@
   resolved "https://registry.yarnpkg.com/@benrbray/prosemirror-math/-/prosemirror-math-0.2.2.tgz#5b2aeb7c8c5a41d2e39317fe1fbd7040fd347cc9"
   integrity sha512-n+V8MNKaQ9HtA1IASzoBFwthFY55kpu2I+0aF103AbqUw5eM8YlxHeltnLqjnYRVY4/a6A9t9YlBMBQOli5jgw==
 
+"@capacitor-community/file-opener@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@capacitor-community/file-opener/-/file-opener-1.0.5.tgz#bfb5fe97e6d54478f17c5d5ba8506bb695ad1e3e"
+  integrity sha512-OYR0+MXkp81z9cAyRfFkwJdvRzklVzxWqSzDBkBL87fB2jTD7m2Z2N84m8enUxQ+v96ESf+GZ2S4JAwzLimM+A==
+
 "@capacitor/android@5.6.0":
   version "5.6.0"
   resolved "https://registry.yarnpkg.com/@capacitor/android/-/android-5.6.0.tgz#62a5e4697466beed4265da6f3939b42e8f00e642"

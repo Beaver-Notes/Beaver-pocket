@@ -12,6 +12,7 @@ def capacitor_pods
   pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
   pod 'AashuDubeyCapacitorStatusbarSafeArea', :path => '../../node_modules/@aashu-dubey/capacitor-statusbar-safe-area'
+  pod 'CapacitorCommunityFileOpener', :path => '../../node_modules/@capacitor-community/file-opener'
   pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
   pod 'CapacitorDevice', :path => '../../node_modules/@capacitor/device'
   pod 'CapacitorFilesystem', :path => '../../node_modules/@capacitor/filesystem'
