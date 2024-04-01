@@ -515,13 +515,27 @@ const App: React.FC = () => {
 
   // catching file-embed's emits
 
-  document.addEventListener("fileEmbedClick", (event: Event) => {
+  document.addEventListener('fileEmbedClick', async (event: Event) => {
     const customEvent = event as CustomEvent;
     const eventData = customEvent.detail;
     const { src, fileName } = eventData;
-
-    // Handle the click event as needed
-    console.log(`File Embed Clicked: src=${src}, fileName=${fileName}`);
+  
+    try {
+      const result = await Filesystem.getUri({
+        directory: Directory.Data,
+        path: src, // Assuming src contains the path to the file
+      });
+  
+      const resolvedFilePath = result.uri;
+  
+      await Share.share({
+        title: `Open ${fileName}`, // Title for the sharing dialog
+        url: resolvedFilePath, // URL to be shared
+        dialogTitle: `Share ${fileName}`, // Title for the sharing dialog
+      });
+    } catch (error) {
+      alert(`Error sharing ${fileName}: ${(error as any).message}`);
+    }
   });
 
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
