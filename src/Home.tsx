@@ -83,7 +83,7 @@ const App: React.FC = () => {
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     const isConfirmed = window.confirm(translations.home.confirmDelete);
-  
+
     if (isConfirmed) {
       try {
         await deleteNote(noteId);
@@ -97,7 +97,7 @@ const App: React.FC = () => {
         alert(error);
       }
     }
-  };  
+  };
 
   const [themeMode, setThemeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
@@ -505,12 +505,24 @@ const App: React.FC = () => {
     );
   };
 
-  document.addEventListener('lognoteid', (event: Event) => {
+  // catching note-link's emits
+
+  document.addEventListener("lognoteid", (event: Event) => {
     const customEvent = event as CustomEvent;
     const noteId = customEvent.detail.noteId;
     setActiveNoteId(noteId);
   });
-  
+
+  // catching file-embed's emits
+
+  document.addEventListener("fileEmbedClick", (event: Event) => {
+    const customEvent = event as CustomEvent;
+    const eventData = customEvent.detail;
+    const { src, fileName } = eventData;
+
+    // Handle the click event as needed
+    console.log(`File Embed Clicked: src=${src}, fileName=${fileName}`);
+  });
 
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
@@ -917,7 +929,7 @@ const App: React.FC = () => {
       <div>
         {activeNote && (
           <NoteEditor
-           notesList={notesList}
+            notesList={notesList}
             note={activeNote}
             title={title}
             onTitleChange={setTitle}
