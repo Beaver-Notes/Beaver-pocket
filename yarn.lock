@@ -1257,6 +1257,11 @@
   resolved "https://registry.yarnpkg.com/@capacitor/status-bar/-/status-bar-5.0.7.tgz#a341e8dec9f93769bed4a42e8ad397e5df1b5287"
   integrity sha512-KblB3gV2LDMEjx3fQoNBAzxb+Tr+2mv68SfFLLDCMiMUD3Eile2TAWRWd1yxy496pDFTOs2BJtup8++iuuuJ/w==
 
+"@capawesome-team/capacitor-file-opener@^5.0.4":
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/@capawesome-team/capacitor-file-opener/-/capacitor-file-opener-5.0.4.tgz#3c5ca65ec0380fba39720ce5e12946bcc3576c96"
+  integrity sha512-l5jOFIos3QJJNg8bI1T7Vqi3cKUMsN2jOap8vTzbxuAqOO5J/5ECQrD77W7X50F7nTYQB/6LPy1BUO3oTCLmHA==
+
 "@csstools/selector-specificity@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@csstools/selector-specificity/-/selector-specificity-3.0.0.tgz#798622546b63847e82389e473fd67f2707d82247"
