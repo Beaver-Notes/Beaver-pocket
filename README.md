@@ -9,14 +9,14 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 ![Artboard](https://github.com/Daniele-rolli/Beaver-pocket/assets/67503004/79a53b64-9d84-427d-a212-5f4edbe1050c)
 
 
-| 🛠️ Features                          | ✅ Working | 🚧 WIP                     |
-|--------------------------------------|------------|-----------------------------|
+| 🛠️ Features                          | ✅ Working | 🚧 WIP                      |
+|--------------------------------------|------------|------------------------------|
 | Android Support                      |            | ❌ ([#8](https://github.com/Daniele-rolli/Beaver-pocket/issues/8)) |
-| Board Block                          |            | ❌                            |
+| Board Block                          |            | ❌                           |
 | Code Block                           | ✅         |                              |
 | Code Block w. syntax highlighting    | ✅         |                              |
 | Dark Mode                            | ✅         |                              |
-| Embeded Files                        |            | ❌                          |
+| Embeded Files                        | ✅         |                              |
 | Find in the Editor                   | ✅         |                              |
 | Focus Mode                           | ✅         |                              |
 | Headings from 1-6                    | ✅         |                              |
@@ -31,9 +31,9 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 | Links                                | ✅         |                              |
 | Lists                                | ✅         |                              |
 | Paragraph                            | ✅         |                              |
-| Print / Export as PDF                |            |   ❌                           |
+| Print / Export as PDF                |            |   ❌                         |
 | Quote Block                          | ✅         |                              |
-| Sync Reminder                        |            | ❌                            |
+| Sync Reminder                        |            | ❌                           |
 | Text Formatting                      | ✅         |                              |
 
 
