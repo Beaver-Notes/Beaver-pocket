@@ -1,5 +1,4 @@
 import { Node, nodeInputRule, RawCommands } from '@tiptap/core';
-import { useDataPath } from "../../store/useDataPath";
 
 const FileEmbed = Node.create({
   name: 'fileEmbed',
@@ -33,13 +32,11 @@ const FileEmbed = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    const remoteSrc = useDataPath().getRemotePath(HTMLAttributes.src);
-
     const span = document.createElement('span');
-    span.setAttribute('data-src', remoteSrc || ''); // Set data-src attribute
+    span.setAttribute('data-src', HTMLAttributes.src || ''); // Set data-src attribute
     span.setAttribute('data-file-name', HTMLAttributes.fileName || ''); // Set data-file-name attribute
-    span.className = 'p-2 w-full bg-[#F8F8F7] hover:bg-[#EFEFEF] dark:hover:bg-[#373737] dark:bg-[#353333] rounded-lg cursor-pointer';
-
+    span.className = 'fixed p-2 w-auto text-lg bg-[#F8F8F7] hover:bg-[#EFEFEF] dark:hover:bg-[#373737] dark:bg-[#353333] rounded-lg cursor-pointer';
+  
     // Attach event listener to emit custom event
     span.addEventListener('click', (event) => {
       event.preventDefault(); // Prevent default action
@@ -51,12 +48,12 @@ const FileEmbed = Node.create({
         document.dispatchEvent(customEvent); // Dispatch custom event
       }
     });
-
+  
     span.textContent = HTMLAttributes.fileName || ''; // Set text content
-
+  
     return span;
   },
-
+  
   addCommands() {
     return {
       setFileEmbed:

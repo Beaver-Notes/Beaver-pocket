@@ -523,14 +523,16 @@ const App: React.FC = () => {
     try {
       const result = await Filesystem.getUri({
         directory: Directory.Data,
-        path: src, // Assuming src contains the path to the file
+        path: src, // Assuming src contains the full path relative to the file-assets directory
       });
   
       const resolvedFilePath = result.uri;
   
+      const encodedFilePath = encodeURI(resolvedFilePath);
+  
       await Share.share({
         title: `Open ${fileName}`, // Title for the sharing dialog
-        url: resolvedFilePath, // URL to be shared
+        url: encodedFilePath, // URL to be shared
         dialogTitle: `Share ${fileName}`, // Title for the sharing dialog
       });
     } catch (error) {

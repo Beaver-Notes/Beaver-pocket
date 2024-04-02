@@ -6,7 +6,7 @@ import FileIcon from "remixicon-react/FileLineIcon";
 const { Filesystem } = Plugins;
 
 interface FileUploadProps {
-  onFileUpload: (fileUrl: string, fileUri: string) => void;
+  onFileUpload: (fileUrl: string, fileName: string) => void;
   noteId: string; // New prop to hold the note ID
 }
 
@@ -19,8 +19,8 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
   ) => {
     const file = event.target.files && event.target.files[0];
     if (file) {
-      const { fileUrl, fileUri } = await saveFileToFileSystem(file);
-      onFileUpload(fileUrl, fileUri);
+      const { fileUrl, fileName } = await saveFileToFileSystem(file);
+      onFileUpload(fileUrl, fileName);
     }
   };
 
@@ -40,7 +40,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
 
   const saveFileToFileSystem = async (
     file: File
-  ): Promise<{ fileUrl: string; fileUri: string }> => {
+  ): Promise<{ fileUrl: string; fileName: string }> => {
     try {
       await createDirectory();
       const fileName = `${Date.now()}_${file.name}`;
@@ -62,15 +62,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             recursive: true,
           });
   
-          // Read the saved file to get its URL
-          const { uri } = await Filesystem.getUri({
-            directory: FilesystemDirectory.Data,
-            path: filePath,
-          });
-  
-          console.log('upload', uri);
-  
-          resolve({ fileUrl: filePath, fileUri: uri });
+          resolve({ fileUrl: filePath, fileName: file.name });
         };
   
         fileReader.onerror = (error) => {
@@ -79,7 +71,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
       });
     } catch (error) {
       console.error("Error saving file to file system:", error);
-      return { fileUrl: "", fileUri: "" };
+      return { fileUrl: "", fileName: "" };
     }
   };
   
