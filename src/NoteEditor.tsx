@@ -407,7 +407,7 @@ function NoteEditor({
             <EditorContent
               onKeyUp={handleEditorTyping}
               editor={editor}
-              className="overflow-auto w-full mb-[6em] min-h-[25em] editor-content"
+              className="overflow-hidden w-full mb-[6em] min-h-[25em] editor-content"
             />
           </div>
         </div>
