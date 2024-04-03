@@ -17,8 +17,14 @@ async function createNotesDirectory() {
   const notesPath = "notes";
   const exportPath = "export";
   const assetsPath = "note-assets";
+  const fileAssetsPath = "file-assets";
 
   try {
+    await Filesystem.mkdir({
+      path: fileAssetsPath,
+      directory: Directory.Data,
+      recursive: true,
+    });
     await Filesystem.mkdir({
       path: assetsPath,
       directory: Directory.Data,
