@@ -35,7 +35,7 @@ const FileEmbed = Node.create({
     const span = document.createElement('span');
     span.setAttribute('data-src', HTMLAttributes.src || ''); // Set data-src attribute
     span.setAttribute('data-file-name', HTMLAttributes.fileName || ''); // Set data-file-name attribute
-    span.className = 'fixed p-2 w-auto text-lg bg-[#F8F8F7] hover:bg-[#EFEFEF] dark:hover:bg-[#373737] dark:bg-[#353333] rounded-lg cursor-pointer';
+    span.className = 'p-1 w-auto text-lg bg-[#F8F8F7] hover:bg-[#EFEFEF] dark:hover:bg-[#373737] dark:bg-[#353333] rounded-lg cursor-pointer';
   
     // Attach event listener to emit custom event
     span.addEventListener('click', (event) => {
