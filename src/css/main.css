@@ -159,7 +159,7 @@ code {
     height: 0;
   }
   mark {
-    @apply bg-yellow-200 dark:bg-yellow-100;
+    @apply bg-yellow-300 dark:bg-yellow-200;
   }
 }
 

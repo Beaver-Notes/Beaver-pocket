@@ -443,7 +443,6 @@ const App: React.FC = () => {
       alert(translations.home.importError);
     }
   };  
-
   const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
     notesState,
@@ -573,21 +572,21 @@ const App: React.FC = () => {
 
   // catching file-embed's emits
 
-  document.addEventListener('fileEmbedClick', async (event: Event) => {
+  document.addEventListener("fileEmbedClick", async (event: Event) => {
     const customEvent = event as CustomEvent;
     const eventData = customEvent.detail;
     const { src, fileName } = eventData;
-  
+
     try {
       const result = await Filesystem.getUri({
         directory: Directory.Data,
         path: src, // Assuming src contains the full path relative to the file-assets directory
       });
-  
+
       const resolvedFilePath = result.uri;
-  
-      const encodedFilePath = resolvedFilePath.replace(/ /g, '%20');
-  
+
+      const encodedFilePath = resolvedFilePath.replace(/ /g, "%20");
+
       await Share.share({
         title: `Open ${fileName}`, // Title for the sharing dialog
         url: encodedFilePath, // URL to be shared
@@ -895,7 +894,7 @@ const App: React.FC = () => {
                       >
                         <div className="h-44 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
-                            <div className="text-2xl">{note.title}</div>
+                            <div className="text-xl font-bold">{note.title}</div>
                             {note.isLocked ? (
                               <div>
                                 <p></p>

@@ -331,6 +331,7 @@ function NoteEditor({
         } text-black dark:text-white text-base`}
         onDragOver={(e) => e.preventDefault()}
       >
+        <div className="p-8"></div>
         <Toolbar
           toolbarVisible={toolbarVisible}
           isFullScreen={isFullScreen}

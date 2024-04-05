@@ -815,7 +815,7 @@ const Archive: React.FC = () => {
                       >
                         <div className="h-44 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
-                            <div className="text-2xl">{note.title}</div>
+                          <div className="text-xl font-bold">{note.title}</div>
                             {note.isLocked ? (
                               <div>
                                 <p></p>
