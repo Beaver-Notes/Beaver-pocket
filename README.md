@@ -23,14 +23,14 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 | Headings Search                      | ✅         |                              |
 | Images                               | ✅         |                              |
 | Import / Export                      | ✅         |                              |
-| Import / Export parity w Beaver Notes|            | ❌ (locked notes)            |
+| Import / Export parity w Beaver Notes| ✅         |                              |
 | Import / Export w. Password          | ✅         |                              |
 | Inline Code                          | ✅         |                              |
 | Labels                               | ✅         |                              |
 | Linked Notes                         | ✅         |                              |
 | Links                                | ✅         |                              |
 | Lists                                | ✅         |                              |
-| Locked Notes                         |            | ⚠️ (rewriting needed)        |
+| Locked Notes                         | ✅         |                              |
 | Paragraph                            | ✅         |                              |
 | Print / Export as PDF                |            |   ❌                         |
 | Quote Block                          | ✅         |                              |
