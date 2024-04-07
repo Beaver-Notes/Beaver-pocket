@@ -4,8 +4,8 @@ export type Note = {
   id: string;
   title: string;
   content: Content;
-  updatedAt: Date;
-  createdAt: Date;
+  updatedAt: number;
+  createdAt: number;
   labels: string[];
   isBookmarked: boolean;
   isArchived: boolean;

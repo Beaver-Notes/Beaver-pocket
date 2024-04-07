@@ -13,20 +13,20 @@ import {
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import JSZip from "jszip";
 import { Share } from "@capacitor/share";
 import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import * as CryptoJS from "crypto-js";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/it";
+import { useSwipeable } from "react-swipeable";
+import { useNavigate } from "react-router-dom";
 import {
   loadNotes,
   useSaveNote,
   useDeleteNote,
   useToggleArchive,
 } from "./store/notes";
-import relativeTime from "dayjs/plugin/relativeTime";
-import "dayjs/locale/it";
-import { useSwipeable } from "react-swipeable";
-import { useNavigate } from "react-router-dom";
+import useNoteEditor from "./store/useNoteActions";
 
 // Import Remix icons
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
@@ -59,7 +59,7 @@ const Archive: React.FC = () => {
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     const isConfirmed = window.confirm(translations.home.confirmDelete);
-  
+
     if (isConfirmed) {
       try {
         await deleteNote(noteId);
@@ -73,7 +73,7 @@ const Archive: React.FC = () => {
         alert(error);
       }
     }
-  };  
+  };
 
   const [themeMode, setThemeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
@@ -161,37 +161,62 @@ const Archive: React.FC = () => {
         recursive: true,
       });
 
+      // Copy note-assets folder
+      await Filesystem.copy({
+        from: "note-assets",
+        to: `${exportFolderPath}/assets`,
+        directory: Directory.Data,
+      });
+
+      // Copy file-assets folder
+      await Filesystem.copy({
+        from: "file-assets",
+        to: `${exportFolderPath}/file-assets`,
+        directory: Directory.Data,
+      });
+
       const exportedData: any = {
         data: {
           notes: {},
-          lockedNotes: {},
+          lockStatus: {},
+          isLocked: {},
         },
         labels: [],
       };
 
       Object.values(notesState).forEach((note) => {
-        const createdAtTimestamp =
-          note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
-        const updatedAtTimestamp =
-          note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
+        // Check if note.content exists and is not null
+        if (
+          note.content &&
+          typeof note.content === "object" &&
+          "content" in note.content
+        ) {
+          // Check if note.content.content is defined
+          if (note.content.content) {
+            // Replace src attribute in each note's content
+            const updatedContent = note.content.content.map((node) => {
+              if (node.type === "image" && node.attrs && node.attrs.src) {
+                node.attrs.src = node.attrs.src.replace(
+                  "note-assets/",
+                  "assets://"
+                );
+              }
+              return node;
+            });
 
-        exportedData.data.notes[note.id] = {
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          labels: note.labels,
-          createdAt: createdAtTimestamp,
-          updatedAt: updatedAtTimestamp,
-          isBookmarked: note.isBookmarked,
-          isArchived: note.isArchived,
-          isLocked: note.isLocked,
-          lastCursorPosition: note.lastCursorPosition,
-        };
+            // Update note's content with modified content
+            note.content.content = updatedContent;
 
-        exportedData.labels = exportedData.labels.concat(note.labels);
+            // Add the modified note to exportedData
+            exportedData.data.notes[note.id] = note;
 
-        if (note.isLocked) {
-          exportedData.data.lockedNotes[note.id] = true;
+            exportedData.labels = exportedData.labels.concat(note.labels);
+
+            if (note.isLocked) {
+              exportedData.data.lockStatus[note.id] = "locked";
+              exportedData.data.isLocked[note.id] = true;
+            }
+          }
         }
       });
 
@@ -207,89 +232,27 @@ const Archive: React.FC = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      const imagesFolderPath = `images`;
-      let imagesFolderExists = false;
-
-      try {
-        const imagesFolderInfo = await (Filesystem as any).getInfo({
-          path: imagesFolderPath,
-          directory: Directory.Data,
-        });
-        imagesFolderExists = imagesFolderInfo.type === "directory";
-      } catch (error) {
-        console.error("Error checking images folder:", error);
-      }
-
-      if (imagesFolderExists) {
-        const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-
-        await Filesystem.mkdir({
-          path: exportImagesFolderPath,
-          directory: Directory.Data,
-          recursive: true,
-        });
-
-        await Filesystem.copy({
-          from: imagesFolderPath,
-          to: exportImagesFolderPath,
-          directory: Directory.Data,
-        });
-      }
-
-      const zip = new JSZip();
-      const exportFolderZip = zip.folder(`Beaver Notes ${formattedDate}`);
-
-      const exportFolderFiles = await Filesystem.readdir({
-        path: exportFolderPath,
-        directory: Directory.Data,
-      });
-
-      await Promise.all(
-        exportFolderFiles.files.map(async (file) => {
-          const filePath = `${exportFolderPath}/${file.name}`;
-          const fileContent = await Filesystem.readFile({
-            path: filePath,
-            directory: Directory.Data,
-            encoding: FilesystemEncoding.UTF8,
-          });
-          exportFolderZip!.file(file.name, fileContent.data);
-        })
-      );
-
-      const zipContentBase64 = await zip.generateAsync({ type: "base64" });
-
-      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
-      await Filesystem.writeFile({
-        path: zipFilePath,
-        data: zipContentBase64,
-        directory: Directory.Cache,
-      });
-
-      await shareZipFile();
-
       alert(translations.home.exportSuccess);
+
+      await shareExportFolder(exportFolderPath);
     } catch (error) {
       alert(translations.home.exportError + (error as any).message);
     }
   };
 
-  const shareZipFile = async () => {
+  const shareExportFolder = async (folderPath: string) => {
     try {
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-      const zipFilePath = `/Beaver_Notes_${formattedDate}.zip`;
-
       const result = await Filesystem.getUri({
-        directory: Directory.Cache,
-        path: zipFilePath,
+        directory: Directory.Data,
+        path: folderPath,
       });
 
-      const resolvedFilePath = result.uri;
+      const resolvedFolderPath = result.uri;
 
       await Share.share({
-        title: "Share Beaver Notes Export",
-        url: resolvedFilePath,
-        dialogTitle: "Share Beaver Notes Export",
+        title: `${translations.home.shareTitle}`,
+        url: resolvedFolderPath,
+        dialogTitle: `${translations.home.shareTitle}`,
       });
     } catch (error) {
       alert(translations.home.shareError + (error as any).message);
@@ -414,43 +377,23 @@ const Archive: React.FC = () => {
   };
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
-  const [title, setTitle] = useState(
-    activeNoteId ? notesState[activeNoteId].title : ""
+  const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
+    activeNoteId,
+    notesState,
+    setNotesState,
+    saveNote
   );
-  const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
-    if (activeNoteId) {
-      const existingNote = notesState[activeNoteId];
-      const updatedTitle =
-        newTitle !== undefined && newTitle.trim() !== ""
-          ? newTitle
-          : existingNote.title;
-
-      const updateNote = {
-        ...existingNote,
-        updatedAt: new Date(),
-        content,
-        title: updatedTitle,
-      };
-
-      setNotesState((prevNotes) => ({
-        ...prevNotes,
-        [activeNoteId]: updateNote,
-      }));
-
-      saveNote(updateNote);
-    }
-  };
 
   const handleCreateNewNote = () => {
     const newNote = {
       id: uuid(),
       title: translations.archive.title || "New Note",
       content: { type: "doc", content: [] },
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
       labels: [],
       isBookmarked: false,
-      isArchived: true,
+      isArchived: false,
       isLocked: false,
       lastCursorPosition: 0,
     };
@@ -471,18 +414,14 @@ const Archive: React.FC = () => {
       case "alphabetical":
         return a.title.localeCompare(b.title);
       case "createdAt":
-        const createdAtA =
-          a.createdAt instanceof Date ? a.createdAt : new Date(0);
-        const createdAtB =
-          b.createdAt instanceof Date ? b.createdAt : new Date(0);
-        return createdAtA.getTime() - createdAtB.getTime();
+        const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
+        const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
+        return createdAtA - createdAtB;
       case "updatedAt":
       default:
-        const updatedAtA =
-          a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
-        const updatedAtB =
-          b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
-        return updatedAtA.getTime() - updatedAtB.getTime();
+        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
+        const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
+        return updatedAtA - updatedAtB;
     }
   });
 
@@ -579,6 +518,25 @@ const Archive: React.FC = () => {
               ? translations.home.biometricFace
               : translations.home.biometricTouch,
           });
+
+          // Use the previously entered encryption key
+          const sharedKey = localStorage.getItem("sharedKey");
+
+          if (!sharedKey) {
+            alert(translations.home.biometricError);
+            return;
+          }
+
+          // Encrypt the content using the shared key
+          const encryptedContent = CryptoJS.AES.encrypt(
+            JSON.stringify(updatedNote.content),
+            CryptoJS.enc.Utf8.parse(sharedKey),
+            {
+              mode: CryptoJS.mode.ECB,
+              padding: CryptoJS.pad.Pkcs7,
+            }
+          ).toString();
+          updatedNote.content = encryptedContent;
         } catch (verificationError) {
           alert(translations.home.biometricError);
           return;
@@ -611,6 +569,17 @@ const Archive: React.FC = () => {
           alert(translations.home.biometricWrongPassword);
           return;
         }
+
+        // Encrypt the content using the entered key
+        const encryptedContent = CryptoJS.AES.encrypt(
+          JSON.stringify(updatedNote.content),
+          CryptoJS.enc.Utf8.parse(sharedKey),
+          {
+            mode: CryptoJS.mode.ECB,
+            padding: CryptoJS.pad.Pkcs7,
+          }
+        ).toString();
+        updatedNote.content = encryptedContent;
       }
 
       updatedNote.isLocked = !updatedNote.isLocked;
@@ -717,6 +686,7 @@ const Archive: React.FC = () => {
       biometricSuccess: "home.biometricSuccess",
       biometricUnlock: "home.biometricUnlock",
       subtitle2: "home.subtitle2",
+      shareTitle: "home.shareTitle",
     },
   });
 
@@ -815,7 +785,9 @@ const Archive: React.FC = () => {
                       >
                         <div className="h-44 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
-                          <div className="text-xl font-bold">{note.title}</div>
+                            <div className="text-xl font-bold">
+                              {note.title}
+                            </div>
                             {note.isLocked ? (
                               <div>
                                 <p></p>
@@ -904,14 +876,14 @@ const Archive: React.FC = () => {
       </div>
       <div>
         {activeNote && (
-             <NoteEditor
-             notesList={notesList}
-              note={activeNote}
-              title={title}
-              onTitleChange={setTitle}
-              onChange={handleChangeNoteContent}
-              onCloseEditor={handleCloseEditor}
-            />
+          <NoteEditor
+            notesList={notesList}
+            note={activeNote}
+            title={title}
+            onTitleChange={setTitle}
+            onChange={handleChangeNoteContent}
+            onCloseEditor={handleCloseEditor}
+          />
         )}
       </div>
     </div>
