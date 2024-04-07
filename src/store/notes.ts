@@ -104,15 +104,15 @@ export const useSaveNote = () => {
         if (typeof note === "object" && note !== null) {
           const typedNote = note as Note;
 
-          // Use getTime() to get the Unix timestamp in milliseconds
+          // Check if createdAt and updatedAt are Dates
           const createdAtTimestamp =
-            typedNote.createdAt instanceof Date
-              ? typedNote.createdAt.getTime()
+            typeof typedNote.createdAt === "number"
+              ? typedNote.createdAt
               : Date.now();
 
           const updatedAtTimestamp =
-            typedNote.updatedAt instanceof Date
-              ? typedNote.updatedAt.getTime()
+            typeof typedNote.updatedAt === "number"
+              ? typedNote.updatedAt
               : Date.now();
 
           notes[typedNote.id] = {
@@ -145,6 +145,8 @@ export const useSaveNote = () => {
 
   return { saveNote };
 };
+
+
 
 // Delete
 

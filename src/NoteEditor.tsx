@@ -331,7 +331,7 @@ function NoteEditor({
         } text-black dark:text-white text-base`}
         onDragOver={(e) => e.preventDefault()}
       >
-        <div className="p-8"></div>
+        <div className="hidden sm:block sm:p-12"></div>
         <Toolbar
           toolbarVisible={toolbarVisible}
           isFullScreen={isFullScreen}
@@ -391,7 +391,7 @@ function NoteEditor({
         <div
           contentEditable
           suppressContentEditableWarning
-          className="text-3xl mt-[2.1em] font-bold overflow-y-scroll outline-none sm:mt-2"
+          className="text-3xl mt-[2em] font-bold overflow-y-scroll outline-none sm:mt-2"
           onBlur={handleTitleChange}
           dangerouslySetInnerHTML={{ __html: localTitle }}
         />

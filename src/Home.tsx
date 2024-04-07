@@ -197,7 +197,8 @@ const App: React.FC = () => {
       const exportedData: any = {
         data: {
           notes: {},
-          lockedNotes: {},
+          lockStatus: {},
+          isLocked: {},
         },
         labels: [],
       };
@@ -231,7 +232,8 @@ const App: React.FC = () => {
             exportedData.labels = exportedData.labels.concat(note.labels);
 
             if (note.isLocked) {
-              exportedData.data.lockedNotes[note.id] = true;
+              exportedData.data.lockStatus[note.id] = "locked";
+              exportedData.data.isLocked[note.id] = true;
             }
           }
         }
@@ -284,22 +286,22 @@ const App: React.FC = () => {
       const importDataPath = `${importFolderPath}/data.json`;
       const importAssetsPath = `${importFolderPath}/assets`;
       const importFileAssetsPath = `${importFolderPath}/file-assets`;
-  
+
       // Import note-assets
       const existingNoteAssets = await Filesystem.readdir({
         path: "note-assets", // Change this to your app's note-assets folder
         directory: Directory.Data,
       });
-  
+
       const existingNoteFiles = new Set(
         existingNoteAssets.files.map((file) => file.name)
       );
-  
+
       const importedNoteAssets = await Filesystem.readdir({
         path: importAssetsPath,
         directory: Directory.Data,
       });
-  
+
       for (const file of importedNoteAssets.files) {
         if (!existingNoteFiles.has(file.name)) {
           await Filesystem.copy({
@@ -309,22 +311,22 @@ const App: React.FC = () => {
           });
         }
       }
-  
+
       // Import file-assets
       const existingFileAssets = await Filesystem.readdir({
         path: "file-assets", // Change this to your app's file-assets folder
         directory: Directory.Data,
       });
-  
+
       const existingFileFiles = new Set(
         existingFileAssets.files.map((file) => file.name)
       );
-  
+
       const importedFileAssets = await Filesystem.readdir({
         path: importFileAssetsPath,
         directory: Directory.Data,
       });
-  
+
       for (const file of importedFileAssets.files) {
         if (!existingFileFiles.has(file.name)) {
           await Filesystem.copy({
@@ -334,22 +336,28 @@ const App: React.FC = () => {
           });
         }
       }
-  
+
       const importedData = await Filesystem.readFile({
         path: importDataPath,
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
-  
+
       const importedJsonString: string =
         typeof importedData.data === "string"
           ? importedData.data
           : await importedData.data.text();
       const parsedData = JSON.parse(importedJsonString);
-  
+
+      // Check if sharedKey already exists in local storage
+      const existingSharedKey = localStorage.getItem("sharedKey");
+      if (!existingSharedKey && parsedData && parsedData.sharedKey) {
+        localStorage.setItem("sharedKey", parsedData.sharedKey);
+      }
+
       if (parsedData && parsedData.data && parsedData.data.notes) {
         const importedNotes = parsedData.data.notes;
-  
+
         // Update image src paths in imported notes
         Object.values<Note>(importedNotes).forEach((note) => {
           if (
@@ -371,7 +379,7 @@ const App: React.FC = () => {
             }
           }
         });
-  
+
         // Handle fileEmbed src paths in imported notes
         Object.values<Note>(importedNotes).forEach((note) => {
           if (
@@ -394,14 +402,14 @@ const App: React.FC = () => {
             }
           }
         });
-  
+
         // Merge imported notes with existing notes
         const existingNotes = await loadNotes();
         const mergedNotes = {
           ...existingNotes,
           ...importedNotes,
         };
-  
+
         // Filter notes based on search query
         const filtered = Object.values<Note>(mergedNotes).filter(
           (note: Note) => {
@@ -414,13 +422,13 @@ const App: React.FC = () => {
             return titleMatch || contentMatch;
           }
         );
-  
+
         // Update note createdAt and updatedAt properties
         Object.values(importedNotes).forEach((note: any) => {
           note.createdAt = new Date(note.createdAt);
           note.updatedAt = new Date(note.updatedAt);
         });
-  
+
         // Save merged notes to storage
         await Filesystem.writeFile({
           path: STORAGE_PATH,
@@ -428,13 +436,13 @@ const App: React.FC = () => {
           directory: Directory.Documents,
           encoding: FilesystemEncoding.UTF8,
         });
-  
+
         // Update state
         setNotesState(mergedNotes);
         setFilteredNotes(
           Object.fromEntries(filtered.map((note) => [note.id, note]))
         );
-  
+
         alert(translations.home.importSuccess);
       } else {
         alert(translations.home.importInvalid);
@@ -442,7 +450,7 @@ const App: React.FC = () => {
     } catch (error) {
       alert(translations.home.importError);
     }
-  };  
+  };
   const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
     notesState,
@@ -455,8 +463,8 @@ const App: React.FC = () => {
       id: uuid(),
       title: translations.home.title || "New Note",
       content: { type: "doc", content: [] },
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
       labels: [],
       isBookmarked: false,
       isArchived: false,
@@ -479,21 +487,17 @@ const App: React.FC = () => {
       case "alphabetical":
         return a.title.localeCompare(b.title);
       case "createdAt":
-        const createdAtA =
-          a.createdAt instanceof Date ? a.createdAt : new Date(0);
-        const createdAtB =
-          b.createdAt instanceof Date ? b.createdAt : new Date(0);
-        return createdAtA.getTime() - createdAtB.getTime();
+        const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
+        const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
+        return createdAtA - createdAtB;
       case "updatedAt":
       default:
-        const updatedAtA =
-          a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
-        const updatedAtB =
-          b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
-        return updatedAtA.getTime() - updatedAtB.getTime();
+        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
+        const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
+        return updatedAtA - updatedAtB;
     }
   });
-
+  
   const MAX_CONTENT_PREVIEW_LENGTH = 150;
 
   function extractParagraphTextFromContent(content: JSONContent): string {
@@ -599,88 +603,90 @@ const App: React.FC = () => {
 
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-
+  
     try {
-      const notes = await loadNotes();
+      // Prompt the user for the password
+      const password = prompt("Please enter the password:");
+  
+      if (!password) {
+        // If the user cancels or enters nothing, exit the function
+        return;
+      }
+  
+      // Load the notes from storage
+      const result = await Filesystem.readFile({
+        path: STORAGE_PATH,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+  
+      let notes;
+      if (typeof result.data === "string") {
+        notes = JSON.parse(result.data).data.notes;
+      } else {
+        const dataText = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsText(result.data as Blob);
+        });
+        notes = JSON.parse(dataText).data.notes;
+      }
+  
       const updatedNote = { ...notes[noteId] };
-
-      const biometricResult = await NativeBiometric.isAvailable();
-
-      if (biometricResult.isAvailable) {
-        const isFaceID = biometricResult.biometryType === BiometryType.FACE_ID;
-
-        try {
-          await NativeBiometric.verifyIdentity({
-            reason: translations.home.biometricsReason,
-            title: translations.home.biometricsTitle,
-            subtitle: translations.home.subtitle,
-            description: isFaceID
-              ? translations.home.biometricFace
-              : translations.home.biometricTouch,
-          });
-        } catch (verificationError) {
-          alert(translations.home.biometricError);
-          return;
-        }
-      } else {
-        let sharedKey = localStorage.getItem("sharedKey");
-
-        if (!sharedKey) {
-          sharedKey = prompt(translations.home.biometricPassword);
-
-          if (!sharedKey) {
-            alert(translations.home.biometricError);
-            return;
-          }
-
-          sharedKey = CryptoJS.SHA256(sharedKey).toString();
-          localStorage.setItem("sharedKey", sharedKey);
-        }
-
-        const enteredKey = prompt(translations.home.biometricPassword);
-
-        if (enteredKey === null) {
-          alert(translations.home.biometricError);
-          return;
-        }
-
-        const hashedEnteredKey = CryptoJS.SHA256(enteredKey).toString();
-
-        if (hashedEnteredKey !== sharedKey) {
-          alert(translations.home.biometricWrongPassword);
-          return;
-        }
-      }
-
-      updatedNote.isLocked = !updatedNote.isLocked;
-
-      notes[noteId] = updatedNote;
-
-      const lockedNotes = JSON.parse(
-        localStorage.getItem("lockedNotes") || "{}"
-      );
+  
+      // Check if the note is locked
       if (updatedNote.isLocked) {
-        lockedNotes[noteId] = true;
+        // Note is locked, try to decrypt it
+        const decryptedContent = CryptoJS.AES.decrypt(
+          updatedNote.content.content[0],
+          password
+        ).toString(CryptoJS.enc.Utf8);
+  
+        if (!decryptedContent) {
+          // If decryption fails (wrong password), show error message and exit
+          alert("Incorrect password. Note remains locked.");
+          return;
+        }
+  
+        // Update note content with decrypted content and unlock the note
+        updatedNote.content = JSON.parse(decryptedContent);
+        updatedNote.isLocked = false;
       } else {
-        delete lockedNotes[noteId];
+        // Note is unlocked, encrypt the content
+        const encryptedContent = CryptoJS.AES.encrypt(
+          JSON.stringify(updatedNote.content),
+          password
+        ).toString();
+  
+        // Update note content with encrypted content and lock the note
+        updatedNote.content = { type: 'doc', content: [encryptedContent] };
+        updatedNote.isLocked = true;
       }
-      localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
-
+  
+      // Update the notes array with the updated note
+      notes[noteId] = updatedNote;
+  
+      // Save the updated notes array to storage
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
-
+  
+      // Update the state with the updated notes array
       setNotesState(notes);
-
-      alert(translations.home.biometricSuccess);
+  
+      // Show a success message to the user
+      alert("Note lock status updated successfully.");
     } catch (error) {
-      alert(translations.home.biometricError + (error as any).message);
+      // Show an error message if something goes wrong
+      console.error("Error toggling lock status:", error);
+      alert("An error occurred while toggling lock status.");
     }
   };
-
+  
   const handleClickNote = async (note: Note) => {
     try {
       if (note.isLocked) {
@@ -894,7 +900,9 @@ const App: React.FC = () => {
                       >
                         <div className="h-44 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
-                            <div className="text-xl font-bold">{note.title}</div>
+                            <div className="text-xl font-bold">
+                              {note.title}
+                            </div>
                             {note.isLocked ? (
                               <div>
                                 <p></p>
