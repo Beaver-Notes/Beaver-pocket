@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { Note } from "../store/types";
 import NoteEditor from "../NoteEditor";
-import { JSONContent } from "@tiptap/react";
+import useNoteEditor from "../store/useNoteActions";
 import Sidebar from "../components/Home/Sidebar";
 import BottomNavBar from "../components/Home/BottomNavBar";
 import "../css/main.css";
@@ -16,62 +16,13 @@ import dayjs from "dayjs";
 import { Share } from "@capacitor/share";
 import { useSwipeable } from "react-swipeable";
 import { useNavigate } from "react-router-dom";
-
-async function createNotesDirectory() {
-  const directoryPath = "notes";
-
-  try {
-    await Filesystem.mkdir({
-      path: directoryPath,
-      directory: Directory.Data,
-      recursive: true,
-    });
-  } catch (error: any) {
-    console.error("Error creating the directory:", error);
-  }
-}
+import {
+  loadNotes,
+  useSaveNote,
+} from "../store/notes";
 
 const Shortcuts: React.FC = () => {
-  const loadNotes = async () => {
-    try {
-      await createNotesDirectory(); // Create the directory before reading/writing
-
-      const fileExists = await Filesystem.stat({
-        path: STORAGE_PATH,
-        directory: Directory.Data,
-      });
-
-      if (fileExists) {
-        const data = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: Directory.Data,
-          encoding: FilesystemEncoding.UTF8,
-        });
-
-        if (data.data) {
-          const parsedData = JSON.parse(data.data as string);
-
-          if (parsedData?.data?.notes) {
-            return parsedData.data.notes;
-          } else {
-            console.log(
-              "The file is missing the 'notes' data. Returning an empty object."
-            );
-            return {};
-          }
-        } else {
-          console.log("The file is empty. Returning an empty object.");
-          return {};
-        }
-      } else {
-        console.log("The file doesn't exist. Returning an empty object.");
-        return {};
-      }
-    } catch (error) {
-      console.error("Error loading notes:", error);
-      return {};
-    }
-  };
+  const { saveNote } = useSaveNote();
 
   const [themeMode, setThemeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
@@ -101,53 +52,6 @@ const Shortcuts: React.FC = () => {
   };
 
   const STORAGE_PATH = "notes/data.json";
-
-  const saveNote = React.useCallback(
-    async (note: unknown) => {
-      try {
-        const notes = await loadNotes();
-
-        if (typeof note === "object" && note !== null) {
-          const typedNote = note as Note;
-
-          // Use getTime() to get the Unix timestamp in milliseconds
-          const createdAtTimestamp =
-            typedNote.createdAt instanceof Date
-              ? typedNote.createdAt.getTime()
-              : Date.now();
-
-          const updatedAtTimestamp =
-            typedNote.updatedAt instanceof Date
-              ? typedNote.updatedAt.getTime()
-              : Date.now();
-
-          notes[typedNote.id] = {
-            ...typedNote,
-            createdAt: createdAtTimestamp,
-            updatedAt: updatedAtTimestamp,
-          };
-
-          const data = {
-            data: {
-              notes,
-            },
-          };
-
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify(data),
-            directory: Directory.Data,
-            encoding: FilesystemEncoding.UTF8,
-          });
-        } else {
-          console.error("Invalid note object:", note);
-        }
-      } catch (error) {
-        console.error("Error saving note:", error);
-      }
-    },
-    [loadNotes]
-  );
 
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
 
@@ -415,62 +319,38 @@ const Shortcuts: React.FC = () => {
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
 
-  const notesList = Object.values(filteredNotes).sort((a, b) => {
-    switch (sortingOption) {
-      case "alphabetical":
-        return a.title.localeCompare(b.title);
-      case "createdAt":
-        const createdAtA =
-          a.createdAt instanceof Date ? a.createdAt : new Date(0);
-        const createdAtB =
-          b.createdAt instanceof Date ? b.createdAt : new Date(0);
-        return createdAtA.getTime() - createdAtB.getTime();
-      case "updatedAt":
-      default:
-        const updatedAtA =
-          a.updatedAt instanceof Date ? a.updatedAt : new Date(0);
-        const updatedAtB =
-          b.updatedAt instanceof Date ? b.updatedAt : new Date(0);
-        return updatedAtA.getTime() - updatedAtB.getTime();
-    }
-  });
+    const notesList = Object.values(filteredNotes).sort((a, b) => {
+      switch (sortingOption) {
+        case "alphabetical":
+          return a.title.localeCompare(b.title);
+        case "createdAt":
+          const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
+          const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
+          return createdAtA - createdAtB;
+        case "updatedAt":
+        default:
+          const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
+          const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
+          return updatedAtA - updatedAtB;
+      }
+    });
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
 
-  const [title, setTitle] = useState(
-    activeNoteId ? notesState[activeNoteId].title : ""
+  const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
+    activeNoteId,
+    notesState,
+    setNotesState,
+    saveNote
   );
-  const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
-    if (activeNoteId) {
-      const existingNote = notesState[activeNoteId];
-      const updatedTitle =
-        newTitle !== undefined && newTitle.trim() !== ""
-          ? newTitle
-          : existingNote.title;
-
-      const updateNote = {
-        ...existingNote,
-        updatedAt: new Date(),
-        content,
-        title: updatedTitle,
-      };
-
-      setNotesState((prevNotes) => ({
-        ...prevNotes,
-        [activeNoteId]: updateNote,
-      }));
-
-      saveNote(updateNote);
-    }
-  };
 
   const handleCreateNewNote = () => {
     const newNote = {
       id: uuid(),
-      title: "New Note",
+      title: translations.home.title || "New Note",
       content: { type: "doc", content: [] },
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
       labels: [],
       isBookmarked: false,
       isArchived: false,
@@ -517,6 +397,7 @@ const Shortcuts: React.FC = () => {
       importSuccess: "home.importSuccess",
       importError: "home.importError",
       importInvalid: "home.importInvalid",
+      title: "home.title",
     },
   });
 
