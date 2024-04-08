@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Note } from "./store/types";
 import { version } from "../package.json";
 import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
+import { useHandleImportData } from "./utils/importUtils";
 import {
   Directory,
   Filesystem,
@@ -17,6 +18,7 @@ import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
 
 const Welcome: React.FC = () => {
+  const { importUtils } = useHandleImportData();
   const [currentView, setCurrentView] = useState<
     "view1" | "view2" | "view3" | "view4" | "view5" | "view6"
   >("view1");
@@ -163,75 +165,8 @@ const Welcome: React.FC = () => {
     }
   };
 
-  const handleImportData = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-      try {
-        const importedData = JSON.parse(e.target?.result as string);
-
-        if (importedData && importedData.data && importedData.data.notes) {
-          const importedNotes: Record<string, Note> = importedData.data.notes;
-
-          // Load existing notes from data.json
-          const existingNotes = await loadNotes();
-
-          // Merge the imported notes with the existing notes
-          const mergedNotes: Record<string, Note> = {
-            ...existingNotes,
-            ...importedNotes,
-          };
-
-          // Update the notesState with the merged notes
-          setNotesState(mergedNotes);
-
-          // Update the filteredNotes based on the search query
-          const filtered = Object.values(mergedNotes).filter((note) => {
-            const titleMatch = note.title
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-            const contentMatch = JSON.stringify(note.content)
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-            return titleMatch || contentMatch;
-          });
-
-          setFilteredNotes(
-            Object.fromEntries(filtered.map((note) => [note.id, note]))
-          );
-
-          Object.values(importedNotes).forEach((note) => {
-            note.createdAt = new Date(note.createdAt);
-            note.updatedAt = new Date(note.updatedAt);
-          });
-
-          // Save the merged notes to the data.json file
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes: mergedNotes } }),
-            directory: Directory.Data,
-            encoding: FilesystemEncoding.UTF8,
-          });
-
-          alert("Data imported successfully!");
-        } else {
-          alert("Invalid data format.");
-        }
-      } catch (error) {
-        console.error("Error while importing data:", error);
-        alert("Error while importing data.");
-      }
-    };
-
-    reader.readAsText(file);
+  const handleImportData = () => {
+    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
   };
 
   const [themeMode, setThemeMode] = useState(() => {
