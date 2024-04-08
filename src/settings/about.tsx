@@ -23,9 +23,9 @@ import {
   useSaveNote,
 } from "../store/notes";
 
-const { saveNote } = useSaveNote();
 
 const About: React.FC = ({}) => {
+  const { saveNote } = useSaveNote();
 
   const [themeMode, setThemeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
