@@ -117,7 +117,7 @@ const Welcome: React.FC = () => {
     try {
       await Filesystem.mkdir({
         path: directoryPath,
-        directory: Directory.Data,
+        directory: Directory.Documents,
         recursive: true,
       });
     } catch (error: any) {
@@ -130,13 +130,13 @@ const Welcome: React.FC = () => {
 
       const fileExists = await Filesystem.stat({
         path: STORAGE_PATH,
-        directory: Directory.Data,
+        directory: Directory.Documents,
       });
 
       if (fileExists) {
         const data = await Filesystem.readFile({
           path: STORAGE_PATH,
-          directory: Directory.Data,
+          directory: Directory.Documents,
           encoding: FilesystemEncoding.UTF8,
         });
 
