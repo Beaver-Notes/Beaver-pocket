@@ -305,7 +305,7 @@ const App: React.FC = () => {
 
     try {
       const result = await Filesystem.getUri({
-        directory: Directory.Data,
+        directory: Directory.Documents,
         path: src, // Assuming src contains the full path relative to the file-assets directory
       });
 
@@ -360,7 +360,7 @@ const App: React.FC = () => {
       // Load the notes from storage
       const result = await Filesystem.readFile({
         path: STORAGE_PATH,
-        directory: Directory.Data,
+        directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
   
@@ -415,7 +415,7 @@ const App: React.FC = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Data,
+        directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
   
@@ -462,7 +462,7 @@ const App: React.FC = () => {
       // Load the notes from storage
       const result = await Filesystem.readFile({
         path: STORAGE_PATH,
-        directory: Directory.Data,
+        directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
   
@@ -517,7 +517,7 @@ const App: React.FC = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Data,
+        directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
   

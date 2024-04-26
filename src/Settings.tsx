@@ -151,7 +151,7 @@ const Settings: React.FC = () => {
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
-        directory: Directory.Data,
+        directory: Directory.Documents,
         recursive: true,
       });
 
@@ -160,7 +160,7 @@ const Settings: React.FC = () => {
 
       await Filesystem.mkdir({
         path: exportFolderPath,
-        directory: Directory.Data,
+        directory: Directory.Documents,
         recursive: true,
       });
 
@@ -168,7 +168,7 @@ const Settings: React.FC = () => {
       await Filesystem.copy({
         from: "note-assets",
         to: `${exportFolderPath}/assets`,
-        directory: Directory.Data,
+        directory: Directory.Documents,
       });
 
       const exportedData: any = {
@@ -257,7 +257,7 @@ const Settings: React.FC = () => {
       await Filesystem.writeFile({
         path: jsonFilePath,
         data: jsonData,
-        directory: Directory.Data,
+        directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -278,7 +278,7 @@ const Settings: React.FC = () => {
       // Read the list of existing assets
       const existingAssets = await Filesystem.readdir({
         path: "note-assets",
-        directory: Directory.Data,
+        directory: Directory.Documents,
       });
 
       const existingFiles = new Set(
@@ -288,7 +288,7 @@ const Settings: React.FC = () => {
       // Copy imported assets to the app's assets folder
       const importedAssets = await Filesystem.readdir({
         path: importAssetsPath,
-        directory: Directory.Data,
+        directory: Directory.Documents,
       });
 
       for (const file of importedAssets.files) {
@@ -296,7 +296,7 @@ const Settings: React.FC = () => {
           await Filesystem.copy({
             from: `${importAssetsPath}/${file.name}`,
             to: `note-assets/${file.name}`,
-            directory: Directory.Data,
+            directory: Directory.Documents,
           });
         }
       }
@@ -304,7 +304,7 @@ const Settings: React.FC = () => {
       // Read the encrypted data from the file
       const importedData = await Filesystem.readFile({
         path: importDataPath,
-        directory: Directory.Data,
+        directory: Directory.Documents,
         encoding: FilesystemEncoding.UTF8,
       });
 

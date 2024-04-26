@@ -287,11 +287,11 @@ function NoteEditor({
   useEffect(() => {
     const keyboardShowListener = Keyboard.addListener("keyboardDidShow", () => {
       setIsKeyboardVisible(true);
-    });
-
+    }) as any;
+    
     const keyboardHideListener = Keyboard.addListener("keyboardDidHide", () => {
       setIsKeyboardVisible(false);
-    });
+    }) as any;    
 
     return () => {
       keyboardShowListener.remove();
