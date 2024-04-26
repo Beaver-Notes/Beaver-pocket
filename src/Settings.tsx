@@ -6,6 +6,7 @@ import NoteEditor from "./NoteEditor";
 import useNoteEditor from "./store/useNoteActions";
 import Sidebar from "./components/Home/Sidebar";
 import BottomNavBar from "./components/Home/BottomNavBar";
+import ModularPrompt from "./components/ui/Dialog";
 import "./css/main.css";
 import "./css/fonts.css";
 import {
@@ -24,6 +25,7 @@ import InformationLineIcon from "remixicon-react/InformationLineIcon";
 import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
 import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
 import { useSwipeable } from "react-swipeable";
+import ReactDOM from "react-dom";
 
 const Settings: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -216,9 +218,29 @@ const Settings: React.FC = () => {
 
       let jsonData = JSON.stringify(exportedData, null, 2);
 
+      const promptRoot = document.createElement("div");
+      document.body.appendChild(promptRoot);
+
       // Encrypt data if "encrypt with password" option is checked
       if (withPassword) {
-        const password = prompt("Enter your password:") || "";
+        const password = await new Promise<string | null>((resolve) => {
+          const handleConfirm = (value: string | null) => {
+            ReactDOM.unmountComponentAtNode(promptRoot);
+            resolve(value);
+          };
+          const handleCancel = () => {
+            ReactDOM.unmountComponentAtNode(promptRoot);
+            resolve(null); // Resolving with null for cancel action
+          };
+          ReactDOM.render(
+            <ModularPrompt
+              title={translations.home.enterpasswd}
+              onConfirm={handleConfirm}
+              onCancel={handleCancel}
+            />,
+            promptRoot
+          );
+        });
         if (!password) {
           alert("Password cannot be empty.");
           return;
@@ -464,6 +486,7 @@ const Settings: React.FC = () => {
       importError: "home.importError",
       importInvalid: "home.importInvalid",
       title: "home.title",
+      enterpasswd: "home.enterpasswd",
     },
   });
 
@@ -677,9 +700,6 @@ const Settings: React.FC = () => {
                     </svg>
                   </div>
                 </div>
-                <p className="text-xl pt-4 text-neutral-700 dark:text-white">
-                  Utilities
-                </p>
                 <div className="py-2">
                   <label className="flex hidden sm:block md:block lg:block items-center space-x-2">
                     <input
@@ -695,7 +715,7 @@ const Settings: React.FC = () => {
                   {translations.settings.iedata || "-"}
                 </p>
                 <div className="relative pt-2 gap-4 flex flex-col sm:flex-row">
-                <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
+                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
                       <FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
                     </div>
@@ -733,7 +753,7 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <div className="flex gap-4 py-4">
+                  <div className="flex gap-2 pt-2 pb-4">
                     <Link
                       to="/about"
                       className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"

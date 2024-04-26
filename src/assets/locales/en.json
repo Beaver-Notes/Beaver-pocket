@@ -79,10 +79,14 @@
     "biometricError": "Something went wrong. Please try again.",
     "biometricPassword": "Set up a password to lock/unlock your notes: ",
     "biometricWrongPassword": "Wrong password. Please try again.",
-    "biometricUnlock": "Enter the password to unlock the note:",
+    "enterpasswd": "Enter the Password",
     "bookmarkError": "The following error accured while bookmarking a note:",
     "archiveError": "The following error accured while archiving a note:",
-    "shareTitle": "Share Beaver Notes Export"
+    "shareTitle": "Share Beaver Notes Export",
+    "wrongpasswd": "Incorrect password. Note cannot be unlocked.",
+    "lockerror": "Note cannot be unlocked.",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   },
   "editor": {
     "addLabel": "Add Label",
@@ -139,5 +143,8 @@
     "github" : "GitHub",
     "donate": "Donate",
     "copyright": "Copyright © 2023 - 2024. All rights reserved."
+  },
+  "tiptap": {
+    "placeholder": "Write something..."
   }
 }

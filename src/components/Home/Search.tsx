@@ -114,7 +114,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               onChange={(e) => handleLabelFilterChange(e.target.value)}
               className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
             >
-              <option value="">Select Label</option>
+              <option value="">{translations.search.selectlabel}</option>
               {uniqueLabels.map((label) => (
                 <option key={label} value={label}>
                   {label}

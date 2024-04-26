@@ -82,7 +82,10 @@
     "biometricUnlock": "Inserisci la password per sbloccare l'appunto:",
     "bookmarkError": "Si è verificato il seguente errore durante l'aggiunta ai preferiti di un appunto:",
     "archiveError": "Si è verificato il seguente errore durante l'archiviazione di un appunto:",
-    "shareTitle": "Condividi Esportazione Beaver Notes"
+    "shareTitle": "Condividi Esportazione Beaver Notes",
+    "enterpasswd": "Inserisci password",
+    "confirm": "Conferma",
+    "cancel": "Annulla"
   },
   "editor": {
     "addLabel": "Aggiungi Etichetta",
@@ -139,5 +142,8 @@
     "github" : "GitHub",
     "donate": "Dona",
     "copyright": "Copyright © 2023 - 2024. Tutti i diritti riservati."
+  },
+  "tiptap": {
+    "placeholder": "Scrivi qualcosa..."
   }
 }

@@ -46,26 +46,43 @@ import SearchAndReplace from "./lib/tiptap/search-&-replace";
 import Find from "./components/Editor/Find";
 import Paper from "./lib/tiptap/drawing-paper/Paper"
 
+import { useNavigate } from "react-router-dom";
+import { useSwipeable } from "react-swipeable";
+import { useDataPath } from "./store/useDataPath";
+import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
+
 // Icons
 
 import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
 
-// Languages
+// Programming Languages
 import css from "highlight.js/lib/languages/css";
 import js from "highlight.js/lib/languages/javascript";
 import ts from "highlight.js/lib/languages/typescript";
 import html from "highlight.js/lib/languages/xml";
-import { useNavigate } from "react-router-dom";
-import { useSwipeable } from "react-swipeable";
-import { useDataPath } from "./store/useDataPath";
-import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
+
+// Languages
+import enTranslations from './assets/locales/en.json';
+import itTranslations from './assets/locales/it.json';
+import deTranslations from './assets/locales/de.json';
 
 lowlight.registerLanguage("html", html);
 lowlight.registerLanguage("css", css);
 lowlight.registerLanguage("js", js);
 lowlight.registerLanguage("ts", ts);
+
+const selectedLanguage: string | null = localStorage.getItem('selectedLanguage') || 'en';
+
+let translations: any = enTranslations; // Assuming translations have a compatible structure with any language.
+
+if (selectedLanguage === 'it') {
+  translations = itTranslations;
+} else if (selectedLanguage === 'de') {
+  translations = deTranslations;
+}
+
 
 const extensions = [
   CodeBlockLowlight.extend({
@@ -95,7 +112,9 @@ const extensions = [
   LinkNote,
   Underline,
   Paper,
-  Placeholder,
+  Placeholder.configure({
+    placeholder: translations.tiptap.placeholder,
+  }),
   OrderedList,
   TaskList,
   BulletList,
