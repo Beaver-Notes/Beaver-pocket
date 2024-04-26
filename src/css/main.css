@@ -154,7 +154,7 @@ code {
   p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     float: left;
-    @apply text-neutral-600 dark:text-[#A1A1AA];
+    @apply text-gray-400 dark:text-gray-700;
     pointer-events: none;
     height: 0;
   }

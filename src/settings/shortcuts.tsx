@@ -388,6 +388,9 @@ const Shortcuts: React.FC = () => {
       Bulletlist: "shortcuts.Bulletlist",
       Blockquote: "shortcuts.Blockquote",
       Blockcode: "shortcuts.BlockCode",
+      General: "shortcuts.General",
+      Navigates: "shortcuts.Navigates",
+      Editor: "shortcuts.Editor",
     },
     home: {
       exportSuccess: "home.exportSuccess",
@@ -424,7 +427,7 @@ const Shortcuts: React.FC = () => {
 
   const shortcuts = [
     {
-      title: "General shortcuts",
+      title: translations.shortcuts.General,
       items: [
         { name: translations.shortcuts.Createnewnote, keys: ["Ctrl", "N"] },
         {
@@ -434,7 +437,7 @@ const Shortcuts: React.FC = () => {
       ],
     },
     {
-      title: "Navigates shortcuts",
+      title: translations.shortcuts.Navigates,
       items: [
         { name: translations.shortcuts.Tonotes, keys: ["Ctrl", "Shift", "N"] },
         {
@@ -445,7 +448,7 @@ const Shortcuts: React.FC = () => {
       ],
     },
     {
-      title: "Editor shortcuts",
+      title: translations.shortcuts.Editor,
       items: [
         { name: translations.shortcuts.Bold, keys: ["Ctrl", "B"] },
         { name: translations.shortcuts.Italic, keys: ["Ctrl", "I"] },

@@ -7,13 +7,13 @@ import BottomNavBar from "./components/Home/BottomNavBar";
 import Sidebar from "./components/Home/Sidebar";
 import "./css/main.css";
 import "./css/fonts.css";
+import ModularPrompt from "./components/ui/Dialog";
 import SearchBar from "./components/Home/Search";
 import {
   Filesystem,
   Directory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import * as CryptoJS from "crypto-js";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/it";
@@ -37,6 +37,7 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 import dayjs from "dayjs";
+import ReactDOM from "react-dom";
 
 const Archive: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -46,12 +47,11 @@ const Archive: React.FC = () => {
   const { exportUtils } = useExportData();
   const { importUtils } = useHandleImportData();
   const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
-  useNotesState();
+    useNotesState();
   const activeNote = useActiveNote(activeNoteId, notesState);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
-
 
   const handleToggleArchive = async (
     noteId: string,
@@ -117,7 +117,6 @@ const Archive: React.FC = () => {
   const handleCloseEditor = () => {
     setActiveNoteId(null);
   };
-
 
   useEffect(() => {
     const loadNotesFromStorage = async () => {
@@ -276,101 +275,90 @@ const Archive: React.FC = () => {
     event.stopPropagation();
 
     try {
-      const notes = await loadNotes();
+      // Define a div where the prompt will be rendered
+      const promptRoot = document.createElement("div");
+      document.body.appendChild(promptRoot);
+
+      // Show the modular prompt
+      const password = await new Promise<string | null>((resolve) => {
+        const handleConfirm = (value: string | null) => {
+          ReactDOM.unmountComponentAtNode(promptRoot);
+          resolve(value);
+        };
+        const handleCancel = () => {
+          ReactDOM.unmountComponentAtNode(promptRoot);
+          resolve(null); // Resolving with null for cancel action
+        };
+        ReactDOM.render(
+          <ModularPrompt
+            title={translations.home.enterpasswd}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />,
+          promptRoot
+        );
+      });
+
+      if (!password) {
+        // If the user cancels or enters nothing, exit the function
+        return;
+      }
+
+      // Load the notes from storage
+      const result = await Filesystem.readFile({
+        path: STORAGE_PATH,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+
+      let notes;
+      if (typeof result.data === "string") {
+        notes = JSON.parse(result.data).data.notes;
+      } else {
+        const dataText = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsText(result.data as Blob);
+        });
+        notes = JSON.parse(dataText).data.notes;
+      }
+
       const updatedNote = { ...notes[noteId] };
 
-      const biometricResult = await NativeBiometric.isAvailable();
+      // Check if the note is locked
+      if (updatedNote.isLocked) {
+        // Note is locked, try to decrypt it
+        const decryptedContent = CryptoJS.AES.decrypt(
+          updatedNote.content.content[0],
+          password
+        ).toString(CryptoJS.enc.Utf8);
 
-      if (biometricResult.isAvailable) {
-        const isFaceID = biometricResult.biometryType === BiometryType.FACE_ID;
-
-        try {
-          await NativeBiometric.verifyIdentity({
-            reason: translations.home.biometricsReason,
-            title: translations.home.biometricsTitle,
-            subtitle: translations.home.subtitle,
-            description: isFaceID
-              ? translations.home.biometricFace
-              : translations.home.biometricTouch,
-          });
-
-          // Use the previously entered encryption key
-          const sharedKey = localStorage.getItem("sharedKey");
-
-          if (!sharedKey) {
-            alert(translations.home.biometricError);
-            return;
-          }
-
-          // Encrypt the content using the shared key
-          const encryptedContent = CryptoJS.AES.encrypt(
-            JSON.stringify(updatedNote.content),
-            CryptoJS.enc.Utf8.parse(sharedKey),
-            {
-              mode: CryptoJS.mode.ECB,
-              padding: CryptoJS.pad.Pkcs7,
-            }
-          ).toString();
-          updatedNote.content = encryptedContent;
-        } catch (verificationError) {
-          alert(translations.home.biometricError);
+        if (!decryptedContent) {
+          // If decryption fails (wrong password), show error message and exit
+          alert(translations.home.wrongpasswd);
           return;
         }
+
+        // Update note content with decrypted content and unlock the note
+        updatedNote.content = JSON.parse(decryptedContent);
+        updatedNote.isLocked = false;
       } else {
-        let sharedKey = localStorage.getItem("sharedKey");
-
-        if (!sharedKey) {
-          sharedKey = prompt(translations.home.biometricPassword);
-
-          if (!sharedKey) {
-            alert(translations.home.biometricError);
-            return;
-          }
-
-          sharedKey = CryptoJS.SHA256(sharedKey).toString();
-          localStorage.setItem("sharedKey", sharedKey);
-        }
-
-        const enteredKey = prompt(translations.home.biometricPassword);
-
-        if (enteredKey === null) {
-          alert(translations.home.biometricError);
-          return;
-        }
-
-        const hashedEnteredKey = CryptoJS.SHA256(enteredKey).toString();
-
-        if (hashedEnteredKey !== sharedKey) {
-          alert(translations.home.biometricWrongPassword);
-          return;
-        }
-
-        // Encrypt the content using the entered key
+        // Note is unlocked, encrypt the content
         const encryptedContent = CryptoJS.AES.encrypt(
           JSON.stringify(updatedNote.content),
-          CryptoJS.enc.Utf8.parse(sharedKey),
-          {
-            mode: CryptoJS.mode.ECB,
-            padding: CryptoJS.pad.Pkcs7,
-          }
+          password
         ).toString();
-        updatedNote.content = encryptedContent;
+
+        // Update note content with encrypted content and lock the note
+        updatedNote.content = { type: "doc", content: [encryptedContent] };
+        updatedNote.isLocked = true;
       }
 
-      updatedNote.isLocked = !updatedNote.isLocked;
-
+      // Update the notes array with the updated note
       notes[noteId] = updatedNote;
 
-      const lockedNotes = JSON.parse(
-        localStorage.getItem("lockedNotes") || "{}"
-      );
-      if (updatedNote.isLocked) {
-        lockedNotes[noteId] = true;
-      } else {
-        delete lockedNotes[noteId];
-      }
-      localStorage.setItem("lockedNotes", JSON.stringify(lockedNotes));
-
+      // Save the updated notes array to storage
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
@@ -378,55 +366,122 @@ const Archive: React.FC = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
+      // Update the state with the updated notes array
       setNotesState(notes);
-
-      alert(translations.home.biometricSuccess);
     } catch (error) {
-      alert(translations.home.biometricError + (error as any).message);
+      alert(translations.home.lockerror);
+    }
+  };
+
+  const handleToggleUnlock = async (noteId: string) => {
+    try {
+      // Define a div where the prompt will be rendered
+      const promptRoot = document.createElement("div");
+      document.body.appendChild(promptRoot);
+
+      // Show the modular prompt
+      const password = await new Promise<string | null>((resolve) => {
+        const handleConfirm = (value: string | null) => {
+          ReactDOM.unmountComponentAtNode(promptRoot);
+          resolve(value);
+        };
+        const handleCancel = () => {
+          ReactDOM.unmountComponentAtNode(promptRoot);
+          resolve(null); // Resolving with null for cancel action
+        };
+        ReactDOM.render(
+          <ModularPrompt
+            title={translations.home.enterpasswd}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />,
+          promptRoot
+        );
+      });
+
+      if (!password) {
+        // If the user cancels or enters nothing, exit the function
+        return;
+      }
+
+      // Load the notes from storage
+      const result = await Filesystem.readFile({
+        path: STORAGE_PATH,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+
+      let notes;
+      if (typeof result.data === "string") {
+        notes = JSON.parse(result.data).data.notes;
+      } else {
+        const dataText = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsText(result.data as Blob);
+        });
+        notes = JSON.parse(dataText).data.notes;
+      }
+
+      const updatedNote = { ...notes[noteId] };
+
+      // Check if the note is locked
+      if (updatedNote.isLocked) {
+        // Note is locked, try to decrypt it
+        const decryptedContent = CryptoJS.AES.decrypt(
+          updatedNote.content.content[0],
+          password
+        ).toString(CryptoJS.enc.Utf8);
+
+        if (!decryptedContent) {
+          // If decryption fails (wrong password), show error message and exit
+          alert(translations.home.wrongpasswd);
+          return;
+        }
+
+        // Update note content with decrypted content and unlock the note
+        updatedNote.content = JSON.parse(decryptedContent);
+        updatedNote.isLocked = false;
+      } else {
+        // Note is unlocked, encrypt the content
+        const encryptedContent = CryptoJS.AES.encrypt(
+          JSON.stringify(updatedNote.content),
+          password
+        ).toString();
+
+        // Update note content with encrypted content and lock the note
+        updatedNote.content = { type: "doc", content: [encryptedContent] };
+        updatedNote.isLocked = true;
+      }
+
+      // Update the notes array with the updated note
+      notes[noteId] = updatedNote;
+
+      // Save the updated notes array to storage
+      await Filesystem.writeFile({
+        path: STORAGE_PATH,
+        data: JSON.stringify({ data: { notes } }),
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+
+      // Update the state with the updated notes array
+      setNotesState(notes);
+      setActiveNoteId(noteId);
+    } catch (error) {
+      alert(translations.home.lockerror);
     }
   };
 
   const handleClickNote = async (note: Note) => {
-    try {
-      if (note.isLocked) {
-        const biometricResult = await NativeBiometric.isAvailable();
-
-        if (biometricResult.isAvailable) {
-          const isFaceID =
-            biometricResult.biometryType === BiometryType.FACE_ID;
-
-          try {
-            await NativeBiometric.verifyIdentity({
-              reason: translations.home.biometricsReason,
-              title: translations.home.biometricsTitle,
-              subtitle: translations.home.subtitle2,
-              description: isFaceID
-                ? translations.home.biometricFace
-                : translations.home.biometricTouch,
-            });
-          } catch (verificationError) {
-            alert(translations.home.biometricError);
-            return;
-          }
-        } else {
-          const userSharedKey = prompt(translations.home.biometricUnlock);
-
-          if (userSharedKey === null) {
-            return;
-          }
-
-          const hashedUserSharedKey = CryptoJS.SHA256(userSharedKey).toString();
-
-          const storedSharedKey = localStorage.getItem("sharedKey");
-          if (hashedUserSharedKey !== storedSharedKey) {
-            alert(translations.home.biometricWrongPassword);
-            return;
-          }
-        }
-      }
-
+    if (note.isLocked) {
+      // Handle locked note using handleToggleLock
+      handleToggleUnlock(note.id);
+    } else {
+      // Set active note directly
       setActiveNoteId(note.id);
-    } catch (error) {}
+    }
   };
 
   dayjs.extend(relativeTime);
@@ -462,6 +517,10 @@ const Archive: React.FC = () => {
       biometricUnlock: "home.biometricUnlock",
       subtitle2: "home.subtitle2",
       shareTitle: "home.shareTitle",
+      wrongpasswd: "home.wrongpasswd",
+      lockerror: "home.lockerror",
+      enterpasswd: "home.enterpasswd",
+      unlocktoedit: "home.unlocktoedit",
     },
   });
 
@@ -591,7 +650,7 @@ const Archive: React.FC = () => {
                                   <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
                                 </button>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                  {translations.archive.unlocktoeditor || "-"}
+                                  {translations.home.unlocktoedit || "-"}
                                 </p>
                               </div>
                             ) : (

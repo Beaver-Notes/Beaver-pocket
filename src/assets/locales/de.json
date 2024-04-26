@@ -81,8 +81,11 @@
     "biometricWrongPassword": "Falsches Passwort. Bitte versuchen Sie es erneut.",
     "biometricUnlock": "Geben Sie das Passwort ein, um die Notiz zu entsperren:",
     "bookmarkError": "Beim Setzen eines Lesezeichens für die Notiz trat folgender Fehler auf:",
+    "enterpasswd": "Geben Sie das Passwort ein",
     "archiveError": "Beim Archivieren der Notiz trat folgender Fehler auf:",
-    "shareTitle": "Beaver Notes Export teilen"
+    "shareTitle": "Beaver Notes Export teilen",
+    "wrongpasswd": "Falsches Passwort. Notiz kann nicht entsperrt werden.",
+    "lockerror": "Die Notiz kann nicht entsperrt werden."
   },
   "editor": {
     "addLabel": "Kategorie hinzufügen",
@@ -139,5 +142,8 @@
     "github" : "GitHub",
     "donate": "Spenden",
     "copyright": "Copyright © 2023 - 2024. All rights reserved."
+  },
+  "tiptap": {
+    "placeholder": "Schreibe etwas..."
   }
 }

@@ -6,6 +6,7 @@ import Sidebar from "../components/Home/Sidebar";
 import { version } from "../../package.json";
 import GlobalLineIcon from "remixicon-react/GlobalLineIcon";
 import GithubFillIcon from "remixicon-react/GithubFillIcon";
+import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
 import CupLineIcon from "remixicon-react/CupLineIcon";
 import { v4 as uuid } from "uuid";
 import useNoteEditor from "../store/useNoteActions";
@@ -16,15 +17,11 @@ import {
 } from "@capacitor/filesystem";
 import dayjs from "dayjs";
 import { Share } from "@capacitor/share";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
-import {
-  loadNotes,
-  useSaveNote,
-} from "../store/notes";
+import { loadNotes, useSaveNote } from "../store/notes";
 
-
-const About: React.FC = ({}) => {
+const Shortcuts: React.FC = () => {
   const { saveNote } = useSaveNote();
 
   const [themeMode, setThemeMode] = useState(() => {
@@ -89,49 +86,6 @@ const About: React.FC = ({}) => {
   const handleCloseEditor = () => {
     setActiveNoteId(null);
   };
-
-  // Translations
-  const [translations, setTranslations] = useState({
-    about: {
-      title: "about.title",
-      app: "about.app",
-      description: "about.description",
-      version: "about.version",
-      website: "about.website",
-      github: "about.github",
-      donate: "about.donate",
-      copyright: "about.Copyright",
-    },
-    home: {
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareTitle: "home.shareTitle",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importError: "home.importError",
-      importInvalid: "home.importInvalid",
-      title: "home.title",
-    },
-  });
-
-  useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
-  }, []);
 
   const exportData = async () => {
     try {
@@ -359,10 +313,11 @@ const About: React.FC = ({}) => {
       alert(translations.home.importError);
     }
   };
+
   // @ts-ignore
   const [sortingOption, setSortingOption] = useState("updatedAt");
   const [filteredNotes, setFilteredNotes] =
-  useState<Record<string, Note>>(notesState);
+    useState<Record<string, Note>>(notesState);
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     switch (sortingOption) {
@@ -381,6 +336,7 @@ const About: React.FC = ({}) => {
   });
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
+
   const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
     notesState,
@@ -409,6 +365,50 @@ const About: React.FC = ({}) => {
     saveNote(newNote);
   };
 
+  // Translations
+  const [translations, setTranslations] = useState({
+    about: {
+      title: "about.title",
+      app: "about.app",
+      description: "about.description",
+      version: "about.version",
+      website: "about.website",
+      github: "about.github",
+      donate: "about.donate",
+      copyright: "about.Copyright",
+    },
+    home: {
+      exportSuccess: "home.exportSuccess",
+      exportError: "home.exportError",
+      shareTitle: "home.shareTitle",
+      shareError: "home.shareError",
+      importSuccess: "home.importSuccess",
+      importError: "home.importError",
+      importInvalid: "home.importInvalid",
+      title: "home.title",
+    },
+  });
+
+  useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+        dayjs.locale(selectedLanguage);
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSwipe = (eventData: any) => {
@@ -426,84 +426,111 @@ const About: React.FC = ({}) => {
     onSwiped: handleSwipe,
   });
 
-  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <Sidebar
-        onCreateNewNote={handleCreateNewNote}
-        isDarkMode={darkMode}
-        toggleTheme={() => toggleTheme(!darkMode)}
-        exportData={exportData}
-        handleImportData={handleImportData}
-      />
-      <div className="overflow-y">
-        {!activeNoteId && (
-          <div className="py-2 mx-6 sm:px-20 mb-2">
-            <div className="general space-y-3 w-full">
-              <p className="text-4xl font-bold">{translations.about.title}</p>
-              <img
-                src="./imgs/icon.png"
-                alt="Beaver Notes Icon"
-                className="w-32 h-32 rounded-full"
-              />
-              <h4 className="mt-4 font-bold"> {translations.about.app}</h4>
-              <p>{translations.about.description}</p>
-              <p className="mt-2">
-                {translations.about.version}{" "}
-                <span className="ml-8">{version}</span>
-              </p>
+      <div className="grid sm:grid-cols-[auto,1fr]">
+        <Sidebar
+          onCreateNewNote={handleCreateNewNote}
+          isDarkMode={darkMode}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          exportData={exportData}
+          handleImportData={handleImportData}
+        />
 
-              <p>{translations.about.copyright}</p>
+        <div className="overflow-y">
+          {!activeNoteId && (
+            <div className="mx-2 sm:px-20 mb-2">
+              <div className="general py-2 space-y-8 w-full">
+                <div className="py-2 mx-2 sm:px-20 mb-2">
+                  <div className="general space-y-3 w-full">
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <Link
+                        to="/"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          textDecoration: "none",
+                        }}
+                      >
+                        <ArrowLeftLineIcon className="w-8 h-8 fa fa-fw fa-plus-square" />
+                        <p className="text-4xl font-bold">
+                          {translations.about.title}
+                        </p>
+                      </Link>
+                    </div>
 
-              <div className="mt-4 flex gap-4">
-                <a href="https://beavernotes.com" className="flex items-center">
-                  <GlobalLineIcon className="w-6 h-6 mr-2" />
-                  {translations.about.website}
-                </a>
+                    <img
+                      src="./imgs/icon.png"
+                      alt="Beaver Notes Icon"
+                      className="w-32 h-32 rounded-full"
+                    />
+                    <h4 className="mt-4 font-bold">
+                      {" "}
+                      {translations.about.app}
+                    </h4>
+                    <p>{translations.about.description}</p>
+                    <p className="mt-2">
+                      {translations.about.version}{" "}
+                      <span className="ml-8">{version}</span>
+                    </p>
 
-                <a
-                  href="https://github.com/Daniele-rolli/Beaver-notes-pocket"
-                  className="flex items-center"
-                >
-                  <GithubFillIcon className="w-6 h-6 mr-2" />
-                  {translations.about.github}
-                </a>
+                    <p>{translations.about.copyright}</p>
 
-                <a
-                  href="https://www.buymeacoffee.com/beavernotes"
-                  className="flex items-center"
-                >
-                  <CupLineIcon className="w-6 h-6 mr-2" />
-                  {translations.about.donate}
-                </a>
+                    <div className="mt-4 flex gap-4">
+                      <a
+                        href="https://beavernotes.com"
+                        className="flex items-center"
+                      >
+                        <GlobalLineIcon className="w-6 h-6 mr-2" />
+                        {translations.about.website}
+                      </a>
+
+                      <a
+                        href="https://github.com/Daniele-rolli/Beaver-notes-pocket"
+                        className="flex items-center"
+                      >
+                        <GithubFillIcon className="w-6 h-6 mr-2" />
+                        {translations.about.github}
+                      </a>
+
+                      <a
+                        href="https://www.buymeacoffee.com/beavernotes"
+                        className="flex items-center"
+                      >
+                        <CupLineIcon className="w-6 h-6 mr-2" />
+                        {translations.about.donate}
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          )}
+          <div>
+            <BottomNavBar
+              onCreateNewNote={handleCreateNewNote}
+              onToggleArchiveVisibility={() =>
+                setIsArchiveVisible(!isArchiveVisible)
+              }
+            />
           </div>
-        )}
-        <div>
-          <BottomNavBar
-            onCreateNewNote={handleCreateNewNote}
-            onToggleArchiveVisibility={() =>
-              setIsArchiveVisible(!isArchiveVisible)
-            }
-          />
         </div>
-      </div>
-      <div>
-        {activeNote && (
-          <NoteEditor
-            notesList={notesList}
-            note={activeNote}
-            title={title}
-            onTitleChange={setTitle}
-            onChange={handleChangeNoteContent}
-            onCloseEditor={handleCloseEditor}
-          />
-        )}
+        <div>
+          {activeNote && (
+            <NoteEditor
+              notesList={notesList}
+              note={activeNote}
+              title={title}
+              onTitleChange={setTitle}
+              onChange={handleChangeNoteContent}
+              onCloseEditor={handleCloseEditor}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default About;
+export default Shortcuts;

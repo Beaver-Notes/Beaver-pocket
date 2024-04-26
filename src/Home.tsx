@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
+import ModularPrompt from './components/ui/Dialog';
 import NoteEditor from "./NoteEditor";
 import "./css/NoteEditor.module.css";
 import { JSONContent } from "@tiptap/react";
 import Sidebar from "./components/Home/Sidebar";
 import BottomNavBar from "./components/Home/BottomNavBar";
-import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import "./css/main.css";
 import "./css/fonts.css";
 import Bookmarked from "./components/Home/Bookmarked";
@@ -46,6 +46,7 @@ import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
+import ReactDOM from "react-dom";
 
 const App: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -327,8 +328,29 @@ const App: React.FC = () => {
     event.stopPropagation();
   
     try {
-      // Prompt the user for the password
-      const password = prompt("Please enter the password:");
+      // Define a div where the prompt will be rendered
+      const promptRoot = document.createElement('div');
+      document.body.appendChild(promptRoot);
+  
+      // Show the modular prompt
+      const password = await new Promise<string | null>((resolve) => {
+        const handleConfirm = (value: string | null) => {
+          ReactDOM.unmountComponentAtNode(promptRoot);
+          resolve(value);
+        };
+        const handleCancel = () => {
+          ReactDOM.unmountComponentAtNode(promptRoot);
+          resolve(null); // Resolving with null for cancel action
+        };
+        ReactDOM.render(
+          <ModularPrompt
+            title={translations.home.enterpasswd}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />,
+          promptRoot
+        );
+      });
   
       if (!password) {
         // If the user cancels or enters nothing, exit the function
@@ -367,7 +389,7 @@ const App: React.FC = () => {
   
         if (!decryptedContent) {
           // If decryption fails (wrong password), show error message and exit
-          alert("Incorrect password. Note remains locked.");
+          alert(translations.home.wrongpasswd);
           return;
         }
   
@@ -400,58 +422,124 @@ const App: React.FC = () => {
       // Update the state with the updated notes array
       setNotesState(notes);
   
-      // Show a success message to the user
-      alert("Note lock status updated successfully.");
     } catch (error) {
-      // Show an error message if something goes wrong
-      console.error("Error toggling lock status:", error);
-      alert("An error occurred while toggling lock status.");
+      alert(translations.home.lockerror);
+    }
+  };
+
+  const handleToggleUnlock = async (noteId: string) => {
+  
+    try {
+      // Define a div where the prompt will be rendered
+      const promptRoot = document.createElement('div');
+      document.body.appendChild(promptRoot);
+  
+      // Show the modular prompt
+      const password = await new Promise<string | null>((resolve) => {
+        const handleConfirm = (value: string | null) => {
+          ReactDOM.unmountComponentAtNode(promptRoot);
+          resolve(value);
+        };
+        const handleCancel = () => {
+          ReactDOM.unmountComponentAtNode(promptRoot);
+          resolve(null); // Resolving with null for cancel action
+        };
+        ReactDOM.render(
+          <ModularPrompt
+            title={translations.home.enterpasswd}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />,
+          promptRoot
+        );
+      });
+  
+      if (!password) {
+        // If the user cancels or enters nothing, exit the function
+        return;
+      }
+  
+      // Load the notes from storage
+      const result = await Filesystem.readFile({
+        path: STORAGE_PATH,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+  
+      let notes;
+      if (typeof result.data === "string") {
+        notes = JSON.parse(result.data).data.notes;
+      } else {
+        const dataText = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsText(result.data as Blob);
+        });
+        notes = JSON.parse(dataText).data.notes;
+      }
+  
+      const updatedNote = { ...notes[noteId] };
+  
+      // Check if the note is locked
+      if (updatedNote.isLocked) {
+        // Note is locked, try to decrypt it
+        const decryptedContent = CryptoJS.AES.decrypt(
+          updatedNote.content.content[0],
+          password
+        ).toString(CryptoJS.enc.Utf8);
+  
+        if (!decryptedContent) {
+          // If decryption fails (wrong password), show error message and exit
+          alert(translations.home.wrongpasswd);
+          return;
+        }
+  
+        // Update note content with decrypted content and unlock the note
+        updatedNote.content = JSON.parse(decryptedContent);
+        updatedNote.isLocked = false;
+      } else {
+        // Note is unlocked, encrypt the content
+        const encryptedContent = CryptoJS.AES.encrypt(
+          JSON.stringify(updatedNote.content),
+          password
+        ).toString();
+  
+        // Update note content with encrypted content and lock the note
+        updatedNote.content = { type: 'doc', content: [encryptedContent] };
+        updatedNote.isLocked = true;
+      }
+  
+      // Update the notes array with the updated note
+      notes[noteId] = updatedNote;
+  
+      // Save the updated notes array to storage
+      await Filesystem.writeFile({
+        path: STORAGE_PATH,
+        data: JSON.stringify({ data: { notes } }),
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+  
+      // Update the state with the updated notes array
+      setNotesState(notes);
+      setActiveNoteId(noteId);
+  
+    } catch (error) {
+      alert(translations.home.lockerror);
     }
   };
   
   const handleClickNote = async (note: Note) => {
-    try {
-      if (note.isLocked) {
-        const biometricResult = await NativeBiometric.isAvailable();
-
-        if (biometricResult.isAvailable) {
-          const isFaceID =
-            biometricResult.biometryType === BiometryType.FACE_ID;
-
-          try {
-            await NativeBiometric.verifyIdentity({
-              reason: translations.home.biometricsReason,
-              title: translations.home.biometricsTitle,
-              subtitle: translations.home.subtitle2,
-              description: isFaceID
-                ? translations.home.biometricFace
-                : translations.home.biometricTouch,
-            });
-          } catch (verificationError) {
-            alert(translations.home.biometricError);
-            return;
-          }
-        } else {
-          const userSharedKey = prompt(translations.home.biometricUnlock);
-
-          if (userSharedKey === null) {
-            return;
-          }
-
-          const hashedUserSharedKey = CryptoJS.SHA256(userSharedKey).toString();
-
-          const storedSharedKey = localStorage.getItem("sharedKey");
-          if (hashedUserSharedKey !== storedSharedKey) {
-            alert(translations.home.biometricWrongPassword);
-            return;
-          }
-        }
-      }
-
+    if (note.isLocked) {
+      // Handle locked note using handleToggleLock
+      handleToggleUnlock(note.id);
+    } else {
+      // Set active note directly
       setActiveNoteId(note.id);
-    } catch (error) {}
+    }
   };
-
+  
   dayjs.extend(relativeTime);
 
   // Translations
@@ -486,6 +574,9 @@ const App: React.FC = () => {
       bookmarkError: "home.bookmarkError",
       archiveError: "home.archiveError",
       shareTitle: "home.shareTitle",
+      wrongpasswd: "home.wrongpasswd",
+      lockerror: "home.lockerror",
+      enterpasswd: "home.enterpasswd",
     },
   });
 
