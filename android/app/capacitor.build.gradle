@@ -20,6 +20,7 @@ dependencies {
     implementation project(':capacitor-splash-screen')
     implementation project(':capacitor-status-bar')
     implementation project(':capawesome-team-capacitor-file-opener')
+    implementation project(':capawesome-capacitor-file-picker')
     implementation project(':capacitor-native-biometric')
 
 }

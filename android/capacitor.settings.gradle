@@ -35,5 +35,8 @@ project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacit
 include ':capawesome-team-capacitor-file-opener'
 project(':capawesome-team-capacitor-file-opener').projectDir = new File('../node_modules/@capawesome-team/capacitor-file-opener/android')
 
+include ':capawesome-capacitor-file-picker'
+project(':capawesome-capacitor-file-picker').projectDir = new File('../node_modules/@capawesome/capacitor-file-picker/android')
+
 include ':capacitor-native-biometric'
 project(':capacitor-native-biometric').projectDir = new File('../node_modules/capacitor-native-biometric/android')
