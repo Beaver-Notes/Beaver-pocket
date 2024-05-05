@@ -11,7 +11,7 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 
 | 🛠️ Features                          | ✅ Working | 🚧 WIP                      |
 |--------------------------------------|------------|------------------------------|
-| Android Support                      |            | ❌ ([#8](https://github.com/Daniele-rolli/Beaver-pocket/issues/8)) |
+| Android Support                      | ✅         |                              |
 | Board Block                          |            | ❌                           |
 | Code Block                           | ✅         |                              |
 | Code Block w. syntax highlighting    | ✅         |                              |
@@ -34,7 +34,7 @@ Welcome to the Beaver Notes Pocket repository. This app is your note-taking comp
 | Paragraph                            | ✅         |                              |
 | Print / Export as PDF                |            |   ❌                         |
 | Quote Block                          | ✅         |                              |
-| Sync Reminder                        |            | ❌                           |
+| Cloud Sync                           | ✅         |                              |
 | Text Formatting                      | ✅         |                              |
 
 
