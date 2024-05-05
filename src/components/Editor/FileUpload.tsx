@@ -75,7 +75,6 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
     }
   };
   
-
   return (
     <div>
       <div className="p-[11px] hidden sm:block rounded-full cursor-pointer">

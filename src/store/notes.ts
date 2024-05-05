@@ -22,22 +22,22 @@ async function createNotesDirectory() {
   try {
     await Filesystem.mkdir({
       path: fileAssetsPath,
-      directory: Directory.Documents,
+      directory: Directory.Data,
       recursive: true,
     });
     await Filesystem.mkdir({
       path: assetsPath,
-      directory: Directory.Documents,
+      directory: Directory.Data,
       recursive: true,
     });
     await Filesystem.mkdir({
       path: exportPath,
-      directory: Directory.Documents,
+      directory: Directory.Data,
       recursive: true,
     });
     await Filesystem.mkdir({
       path: notesPath,
-      directory: Directory.Documents,
+      directory: Directory.Data,
       recursive: true,
     });
   } catch (error: any) {
@@ -58,13 +58,13 @@ export const loadNotes = async () => {
 
     const fileExists = await Filesystem.stat({
       path: STORAGE_PATH,
-      directory: Directory.Documents,
+      directory: Directory.Data,
     });
 
     if (fileExists) {
       const data = await Filesystem.readFile({
         path: STORAGE_PATH,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -130,7 +130,7 @@ export const useSaveNote = () => {
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify(data),
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
         } else {
@@ -162,7 +162,7 @@ export const useDeleteNote = () => {
         await Filesystem.writeFile({
           path: STORAGE_PATH,
           data: JSON.stringify({ data: { notes } }),
-          directory: Directory.Documents,
+          directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
   
@@ -195,7 +195,7 @@ export const useToggleBookmark = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -225,7 +225,7 @@ export const useToggleArchive = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
