@@ -9,6 +9,7 @@ import BottomNavBar from "./components/Home/BottomNavBar";
 import ModularPrompt from "./components/ui/Dialog";
 import "./css/main.css";
 import "./css/fonts.css";
+import "./css/settings.css";
 import {
   Filesystem,
   Directory,
@@ -24,6 +25,8 @@ import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
 import InformationLineIcon from "remixicon-react/InformationLineIcon";
 import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
 import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
+import SyncLineIcon from "remixicon-react/RefreshLineIcon";
+import LockLineIcon from "remixicon-react/LockLineIcon";
 import { useSwipeable } from "react-swipeable";
 import ReactDOM from "react-dom";
 
@@ -151,7 +154,7 @@ const Settings: React.FC = () => {
       const parentExportFolderPath = `export`;
       await Filesystem.mkdir({
         path: parentExportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
 
@@ -160,7 +163,7 @@ const Settings: React.FC = () => {
 
       await Filesystem.mkdir({
         path: exportFolderPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         recursive: true,
       });
 
@@ -168,7 +171,7 @@ const Settings: React.FC = () => {
       await Filesystem.copy({
         from: "note-assets",
         to: `${exportFolderPath}/assets`,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       const exportedData: any = {
@@ -257,7 +260,7 @@ const Settings: React.FC = () => {
       await Filesystem.writeFile({
         path: jsonFilePath,
         data: jsonData,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -278,7 +281,7 @@ const Settings: React.FC = () => {
       // Read the list of existing assets
       const existingAssets = await Filesystem.readdir({
         path: "note-assets",
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       const existingFiles = new Set(
@@ -288,7 +291,7 @@ const Settings: React.FC = () => {
       // Copy imported assets to the app's assets folder
       const importedAssets = await Filesystem.readdir({
         path: importAssetsPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       for (const file of importedAssets.files) {
@@ -296,7 +299,7 @@ const Settings: React.FC = () => {
           await Filesystem.copy({
             from: `${importAssetsPath}/${file.name}`,
             to: `note-assets/${file.name}`,
-            directory: Directory.Documents,
+            directory: Directory.Data,
           });
         }
       }
@@ -304,7 +307,7 @@ const Settings: React.FC = () => {
       // Read the encrypted data from the file
       const importedData = await Filesystem.readFile({
         path: importDataPath,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -395,7 +398,7 @@ const Settings: React.FC = () => {
         await Filesystem.writeFile({
           path: STORAGE_PATH,
           data: JSON.stringify({ data: { notes: mergedNotes } }),
-          directory: Directory.Documents,
+          directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
 
@@ -538,6 +541,12 @@ const Settings: React.FC = () => {
     window.location.reload(); // Reload the page
   };
 
+  const [selectedOption, setSelectedOption] = useState("System");
+
+  const handleOptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedOption(event.target.value);
+  };
+
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
@@ -562,78 +571,52 @@ const Settings: React.FC = () => {
                   <p className="text-xl pt-4 text-neutral-700 dark:text-white">
                     {translations.settings.apptheme || "-"}
                   </p>
-                  <div className="grid py-2 w-full h-full grid-cols-3 gap-8 cursor-pointer rounded-md items-center justify-center">
-                    <button
-                      className="bg-transparent rounded-xl"
-                      onClick={() => toggleTheme(false)}
-                    >
-                      <div className="w-auto mt-4 object-fit">
-                        <svg
-                          className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
-                          viewBox="0 0 512 512"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            width="512"
-                            height="512"
-                            rx="256"
-                            fill="#FFFFFF"
-                          />
-                        </svg>
+                  <div className="w-auto p-4 mx-auto">
+                    <div className="switches-container">
+                      <input
+                        type="radio"
+                        id="switchMonthly"
+                        name="switchPlan"
+                        value="Light"
+                        checked={selectedOption === "Light"}
+                        onChange={(e) => {
+                          toggleTheme(false);
+                          handleOptionChange(e);
+                        }}
+                      />
+                      <input
+                        type="radio"
+                        id="switchYearly"
+                        name="switchPlan"
+                        value="Dark"
+                        checked={selectedOption === "Dark"}
+                        onChange={(e) => {
+                          toggleTheme(true);
+                          handleOptionChange(e);
+                        }}
+                      />
+                      <input
+                        type="radio"
+                        id="switchDay"
+                        name="switchPlan"
+                        value="System"
+                        checked={selectedOption === "System"}
+                        onChange={(e) => {
+                          setAutoMode();
+                          handleOptionChange(e);
+                        }}
+                      />
+                      <label htmlFor="switchMonthly">Light</label>
+                      <label htmlFor="switchYearly">Dark</label>
+                      <label htmlFor="switchDay">System</label>
+                      <div className="switch-wrapper">
+                        <div className="switch">
+                          <div>Light</div>
+                          <div>Dark</div>
+                          <div>System</div>
+                        </div>
                       </div>
-                      <p className="text-center py-2">
-                        {translations.settings.light || "-"}
-                      </p>
-                    </button>
-                    <button
-                      onClick={() => toggleTheme(true)}
-                      className="bg-transparent rounded-xl"
-                    >
-                      <div className="w-auto mt-4 object-fit">
-                        <svg
-                          className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
-                          viewBox="0 0 512 512"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            width="512"
-                            height="512"
-                            rx="256"
-                            fill="#282727"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-center py-2">
-                        {translations.settings.dark || "-"}
-                      </p>
-                    </button>
-                    <button
-                      onClick={setAutoMode}
-                      className="bg-transparent rounded-xl"
-                    >
-                      <div className="w-auto mt-4 object-contain">
-                        <svg
-                          className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
-                          viewBox="0 0 511 512"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M0 256C0 114.615 114.615 0 256 0V0V512V512C114.615 512 0 397.385 0 256V256Z"
-                            fill="white"
-                          />
-                          <path
-                            d="M256 0V0C396.833 0 511 115.167 511 256V256C511 396.833 396.833 512 256 512V512V0Z"
-                            fill="#282727"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-center py-2">
-                        {translations.settings.system || "-"}
-                      </p>
-                    </button>
+                    </div>
                   </div>
                 </div>
                 <p className="text-xl pt-4 text-neutral-700 dark:text-white">
@@ -752,8 +735,24 @@ const Settings: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                <div>
-                  <div className="flex gap-2 pt-2 pb-4">
+                <div className="pb-4">
+                <div className="flex gap-2 pt-2">
+                    <Link
+                      to="/Sync"
+                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    >
+                      <SyncLineIcon className="w-6 h-6 mr-2" />
+                      Sync
+                    </Link>
+                    <Link
+                      to="/shortcuts"
+                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    >
+                      <LockLineIcon className="w-6 h-6 mr-2" />
+                      Security
+                    </Link>
+                  </div>
+                  <div className="flex gap-2 py-2">
                     <Link
                       to="/about"
                       className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
@@ -769,7 +768,7 @@ const Settings: React.FC = () => {
                       {translations.settings.Shortcuts || "-"}
                     </Link>
                   </div>
-                </div>
+                  </div>
               </div>
               <BottomNavBar
                 onCreateNewNote={handleCreateNewNote}

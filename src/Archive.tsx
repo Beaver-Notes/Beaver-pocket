@@ -307,7 +307,7 @@ const Archive: React.FC = () => {
       // Load the notes from storage
       const result = await Filesystem.readFile({
         path: STORAGE_PATH,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -362,7 +362,7 @@ const Archive: React.FC = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -407,7 +407,7 @@ const Archive: React.FC = () => {
       // Load the notes from storage
       const result = await Filesystem.readFile({
         path: STORAGE_PATH,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -462,7 +462,7 @@ const Archive: React.FC = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 

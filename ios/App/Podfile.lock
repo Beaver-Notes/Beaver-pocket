@@ -5,7 +5,7 @@ PODS:
     - CapacitorCordova
   - CapacitorApp (6.0.0):
     - Capacitor
-  - CapacitorCommunityFileOpener (1.0.6):
+  - CapacitorBrowser (6.0.0):
     - Capacitor
   - CapacitorCordova (6.0.0)
   - CapacitorDevice (6.0.0):
@@ -24,16 +24,16 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (6.0.0):
     - Capacitor
-  - CapawesomeCapacitorFilePicker (5.3.0):
+  - DerrickoramaCapacitorZip (0.2.1):
     - Capacitor
-  - CapawesomeTeamCapacitorFileOpener (5.0.4):
-    - Capacitor
+    - ZIPFoundation (~> 0.9)
+  - ZIPFoundation (0.9.18)
 
 DEPENDENCIES:
   - "AashuDubeyCapacitorStatusbarSafeArea (from `../../node_modules/@aashu-dubey/capacitor-statusbar-safe-area`)"
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
-  - "CapacitorCommunityFileOpener (from `../../node_modules/@capacitor-community/file-opener`)"
+  - "CapacitorBrowser (from `../../node_modules/@capacitor/browser`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorDevice (from `../../node_modules/@capacitor/device`)"
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
@@ -43,8 +43,11 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
-  - "CapawesomeCapacitorFilePicker (from `../../node_modules/@capawesome/capacitor-file-picker`)"
-  - "CapawesomeTeamCapacitorFileOpener (from `../../node_modules/@capawesome-team/capacitor-file-opener`)"
+  - "DerrickoramaCapacitorZip (from `../../node_modules/@derrickorama/capacitor-zip`)"
+
+SPEC REPOS:
+  trunk:
+    - ZIPFoundation
 
 EXTERNAL SOURCES:
   AashuDubeyCapacitorStatusbarSafeArea:
@@ -53,8 +56,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorApp:
     :path: "../../node_modules/@capacitor/app"
-  CapacitorCommunityFileOpener:
-    :path: "../../node_modules/@capacitor-community/file-opener"
+  CapacitorBrowser:
+    :path: "../../node_modules/@capacitor/browser"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorDevice:
@@ -73,16 +76,14 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
-  CapawesomeCapacitorFilePicker:
-    :path: "../../node_modules/@capawesome/capacitor-file-picker"
-  CapawesomeTeamCapacitorFileOpener:
-    :path: "../../node_modules/@capawesome-team/capacitor-file-opener"
+  DerrickoramaCapacitorZip:
+    :path: "../../node_modules/@derrickorama/capacitor-zip"
 
 SPEC CHECKSUMS:
   AashuDubeyCapacitorStatusbarSafeArea: 4833bf7ac284b54c6650f0d80634552094fd3229
   Capacitor: 559d073c4ca6c27f8e7002c807eea94c3ba435a9
   CapacitorApp: 9d53aec7101f7b030a950c5bdc4df8612576b279
-  CapacitorCommunityFileOpener: 7d4e2cbddce32cbdc4d8d3165cd51a7038246440
+  CapacitorBrowser: 7e1e2cdbb3e372f09f0bad0c4c21a6d187b679ad
   CapacitorCordova: 8c4bfdf69368512e85b1d8b724dd7546abeb30af
   CapacitorDevice: f8fd88f9edd1261c55a109f32015b09bbbfdc4a0
   CapacitorFilesystem: 60e59ba274c234a979e7a3be2552feaadcee4263
@@ -92,9 +93,9 @@ SPEC CHECKSUMS:
   CapacitorShare: a771200d3b924a5d7ad9d9fecbac517e4c0aa74f
   CapacitorSplashScreen: 5431ab8d19c1c6e95777d53bfaa7a36a6c3d94c7
   CapacitorStatusBar: 2e4369f99166125435641b1908d05f561eaba6f6
-  CapawesomeCapacitorFilePicker: 41f486cb4a89c6a7c8a4f5d683dbf96658894182
-  CapawesomeTeamCapacitorFileOpener: 4f6cb29ee321173263d438d23cf7dd2c2be649a2
+  DerrickoramaCapacitorZip: 13fae3358e9d42a7615004840d0ce7b675c0fcaf
+  ZIPFoundation: fa9ae5af13b7cf168245f24d1c672a4fb972e37f
 
-PODFILE CHECKSUM: 3e8d342a92b26be444dfc72acb27d4af7f9885c6
+PODFILE CHECKSUM: d3345440b9dd1baf70fbe3069252a1e84eb44cb0
 
 COCOAPODS: 1.15.2
