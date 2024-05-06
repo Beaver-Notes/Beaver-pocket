@@ -37,3 +37,6 @@ project(':derrickorama-capacitor-zip').projectDir = new File('../node_modules/@d
 
 include ':capacitor-native-biometric'
 project(':capacitor-native-biometric').projectDir = new File('../node_modules/capacitor-native-biometric/android')
+
+include ':capacitor-secure-storage-plugin'
+project(':capacitor-secure-storage-plugin').projectDir = new File('../node_modules/capacitor-secure-storage-plugin/android')

@@ -37,11 +37,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Check if the URL scheme matches your custom scheme
         if url.scheme == "beaver-pocket" {
             // URL with your custom scheme was opened
-            // Navigate to the appropriate screen or handle the action
-return true                                                                                                                 
+            // Extract information from the URL
+            if let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "code" })?.value {
+                // Handle the authorization code (e.g., exchange it for tokens)
+                print("Authorization code:", code)
+                // Proceed with your authentication flow
+            } else {
+                print("Authorization code not found in URL")
+            }
+            
+            // Return true to indicate that the URL was handled successfully
+            return true
         }
-        // If it's not your custom scheme, call Capacitor's App API for further handling
-        return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
+        
+        // Return false if the URL scheme does not match
+        return false
     }
     
     func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {

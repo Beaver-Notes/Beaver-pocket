@@ -6,7 +6,7 @@ import Settings from "./Settings";
 import About from "./settings/about";
 import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
-import Dropbox from "./settings/screens/dropbox";
+import Dropbox from "./settings/screens/Dropbox";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./settings/screens/deps/auth0-config";
 import Sync from "./settings/sync";

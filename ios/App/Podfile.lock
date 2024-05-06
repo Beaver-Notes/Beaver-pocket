@@ -18,6 +18,11 @@ PODS:
     - Capacitor
   - CapacitorNativeBiometric (0.0.1):
     - Capacitor
+  - CapacitorPreferences (6.0.0):
+    - Capacitor
+  - CapacitorSecureStoragePlugin (0.10.0):
+    - Capacitor
+    - SwiftKeychainWrapper
   - CapacitorShare (6.0.0):
     - Capacitor
   - CapacitorSplashScreen (6.0.0):
@@ -27,6 +32,7 @@ PODS:
   - DerrickoramaCapacitorZip (0.2.1):
     - Capacitor
     - ZIPFoundation (~> 0.9)
+  - SwiftKeychainWrapper (4.0.1)
   - ZIPFoundation (0.9.18)
 
 DEPENDENCIES:
@@ -40,6 +46,8 @@ DEPENDENCIES:
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
   - CapacitorNativeBiometric (from `../../node_modules/capacitor-native-biometric`)
+  - "CapacitorPreferences (from `../../node_modules/@capacitor/preferences`)"
+  - CapacitorSecureStoragePlugin (from `../../node_modules/capacitor-secure-storage-plugin`)
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
@@ -47,6 +55,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - SwiftKeychainWrapper
     - ZIPFoundation
 
 EXTERNAL SOURCES:
@@ -70,6 +79,10 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/keyboard"
   CapacitorNativeBiometric:
     :path: "../../node_modules/capacitor-native-biometric"
+  CapacitorPreferences:
+    :path: "../../node_modules/@capacitor/preferences"
+  CapacitorSecureStoragePlugin:
+    :path: "../../node_modules/capacitor-secure-storage-plugin"
   CapacitorShare:
     :path: "../../node_modules/@capacitor/share"
   CapacitorSplashScreen:
@@ -90,12 +103,15 @@ SPEC CHECKSUMS:
   CapacitorHaptics: 9ebc9363f0e9b8eb4295088a0b474530acf1859b
   CapacitorKeyboard: deacbd09d8d1029c3681197fb05d206b721d5f73
   CapacitorNativeBiometric: b47637a8cd349bdac014424bb4ddcae9ee5d4919
+  CapacitorPreferences: c9b839a80baa72e4ed4bdb117618e1950d3046b5
+  CapacitorSecureStoragePlugin: ced6025438fbbdbfb9fffec4398e748572fc147b
   CapacitorShare: a771200d3b924a5d7ad9d9fecbac517e4c0aa74f
   CapacitorSplashScreen: 5431ab8d19c1c6e95777d53bfaa7a36a6c3d94c7
   CapacitorStatusBar: 2e4369f99166125435641b1908d05f561eaba6f6
   DerrickoramaCapacitorZip: 13fae3358e9d42a7615004840d0ce7b675c0fcaf
+  SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
   ZIPFoundation: fa9ae5af13b7cf168245f24d1c672a4fb972e37f
 
-PODFILE CHECKSUM: d3345440b9dd1baf70fbe3069252a1e84eb44cb0
+PODFILE CHECKSUM: 1fa01ae5e8c53f95300fafdf49e326de22361077
 
 COCOAPODS: 1.15.2
