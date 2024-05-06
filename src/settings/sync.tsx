@@ -452,19 +452,19 @@ const Shortcuts: React.FC = () => {
                           <DropboxFillIcon className="w-10 h-10"/>
                           <p className="text-2xl pl-2 py-1 font-bold">Dropbox</p>
                         </Link>
-                        <Link className="flex flex-center p-2 border-b-2 border-neutral-200 border-opacity-80" to="/dropbox">
+                        <Link className="flex flex-center p-2 border-b-2 border-neutral-200 border-opacity-80" to="/nextcloud">
                           <ServerLineIcon className="w-10 h-10"/>
                           <p className="text-2xl pl-2 py-1 font-bold">NextCloud</p>
                         </Link>
-                        <Link className="flex flex-center p-2 border-b-2 border-neutral-200 border-opacity-80" to="/dropbox">
+                        <Link className="flex flex-center p-2 border-b-2 border-neutral-200 border-opacity-80" to="/iCloud">
                           <AppleFillIcon className="w-10 h-10"/>
                           <p className="text-2xl pl-2 py-1 font-bold">iCloud</p>
                         </Link>
-                        <Link className="flex flex-center p-2 border-b-2 border-neutral-200 border-opacity-80" to="/dropbox">
+                        <Link className="flex flex-center p-2 border-b-2 border-neutral-200 border-opacity-80" to="/onedrive">
                           <MicrosoftFillIcon className="w-10 h-10"/>
                           <p className="text-2xl pl-2 py-1 font-bold">OneDrive</p>
                         </Link>
-                        <Link className="flex flex-center p-2" to="/dropbox">
+                        <Link className="flex flex-center p-2" to="/webdav">
                           <ServerLineIcon className="w-10 h-10"/>
                           <p className="text-2xl pl-2 py-1 font-bold">Webdav</p>
                         </Link>

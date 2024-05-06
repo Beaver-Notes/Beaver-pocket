@@ -21,6 +21,9 @@ const config: CapacitorConfig = {
       layoutName: "launch_screen",
       useDialog: true,
     },
+    CapacitorHttp: {
+      enabled: true,
+    },
   },
   server: {
     androidScheme: 'https'

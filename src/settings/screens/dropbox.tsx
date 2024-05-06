@@ -14,27 +14,27 @@ import {
 import {
   loadNotes,
   useSaveNote,
-} from "../../store/notes";import getMimeType from "./deps/mimetype";
+} from "../../store/notes";
+import getMimeType from "./deps/mimetype";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 import dayjs from "dayjs";
 
+import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
 
-const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
-const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET;
+const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
+const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 const STORAGE_PATH = "notes/data.json";
-
-
 
 import DropboxFillIcon from "remixicon-react/DropboxFillIcon";
 
-const LoginPage: React.FC = () => {
+const DropboxSync: React.FC = () => {
   const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
-useNotesState();
-const { importUtils } = useHandleImportData();
-const [searchQuery] = useState<string>("");
-const [, setFilteredNotes] =
-useState<Record<string, Note>>(notesState);
+    useNotesState();
+  const { importUtils } = useHandleImportData();
+  const [searchQuery] = useState<string>("");
+  const [, setFilteredNotes] =
+    useState<Record<string, Note>>(notesState);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [authorizationCode, setAuthorizationCode] = useState<string>("");
@@ -111,9 +111,9 @@ useState<Record<string, Note>>(notesState);
           const accessToken = data.access_token;
           const refreshToken = data.refresh_token;
 
-          // Save tokens to local storage
-          localStorage.setItem("dropbox_access_token", accessToken);
-          localStorage.setItem("dropbox_refresh_token", refreshToken);
+          // Save tokens securely
+          await SecureStoragePlugin.set({ key: 'dropbox_access_token', value: accessToken });
+          await SecureStoragePlugin.set({ key: 'dropbox_refresh_token', value: refreshToken });
 
           setAccessToken(accessToken);
           setRefreshToken(refreshToken);
@@ -133,15 +133,24 @@ useState<Record<string, Note>>(notesState);
   };
 
   useEffect(() => {
-    // Retrieve tokens from local storage
-    const storedAccessToken = localStorage.getItem("dropbox_access_token");
-    const storedRefreshToken = localStorage.getItem("dropbox_refresh_token");
-    if (storedAccessToken) {
-      setAccessToken(storedAccessToken);
-    }
-    if (storedRefreshToken) {
-      setRefreshToken(storedRefreshToken);
-    }
+    // Retrieve tokens from secure storage
+    const retrieveTokens = async () => {
+      try {
+        const storedAccessToken = (await SecureStoragePlugin.get({ key: 'dropbox_access_token' })).value;
+        const storedRefreshToken = (await SecureStoragePlugin.get({ key: 'dropbox_refresh_token' })).value;
+        
+        if (storedAccessToken) {
+          setAccessToken(storedAccessToken);
+        }
+        if (storedRefreshToken) {
+          setRefreshToken(storedRefreshToken);
+        }
+      } catch (error) {
+        console.error("Error retrieving tokens:", error);
+      }
+    };
+
+    retrieveTokens();
   }, []);
 
   const refreshAccessToken = async () => {
@@ -167,7 +176,7 @@ useState<Record<string, Note>>(notesState);
           const newAccessToken = data.access_token;
 
           // Save new access token
-          localStorage.setItem("dropbox_access_token", newAccessToken);
+          await SecureStoragePlugin.set({ key: 'dropbox_access_token', value: newAccessToken });
           setAccessToken(newAccessToken);
         } else {
           const errorData = await response.json();
@@ -218,11 +227,19 @@ useState<Record<string, Note>>(notesState);
   const [fileUploadStatus, setFileUploadStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    // Retrieve access token from local storage
-    const storedAccessToken = localStorage.getItem("dropbox_access_token");
-    if (storedAccessToken) {
-      setAccessToken(storedAccessToken);
-    }
+    // Retrieve access token from secure storage
+    const retrieveAccessToken = async () => {
+      try {
+        const storedAccessToken = (await SecureStoragePlugin.get({ key: 'dropbox_access_token' })).value;
+        if (storedAccessToken) {
+          setAccessToken(storedAccessToken);
+        }
+      } catch (error) {
+        console.error("Error retrieving access token:", error);
+      }
+    };
+
+    retrieveAccessToken();
   }, []);
 
   const exportdata = async () => {
@@ -442,8 +459,15 @@ useState<Record<string, Note>>(notesState);
   }
 
   const Logout = async () => {
-    localStorage.removeItem("dropbox_access_token");
-    localStorage.removeItem("dropbox_refresh_token");
+    try {
+      // Remove the access token from storage
+      await SecureStoragePlugin.remove({ key: 'dropbox_access_token' });
+      await SecureStoragePlugin.remove({ key: 'dropbox_refresh_token' });
+  
+      console.log('Logged out successfully');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   const { saveNote } = useSaveNote();
@@ -591,4 +615,4 @@ useState<Record<string, Note>>(notesState);
   );
 };
 
-export default LoginPage;
+export default DropboxSync;
