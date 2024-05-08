@@ -7,6 +7,7 @@ import About from "./settings/about";
 import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
 import Dropbox from "./settings/screens/Dropbox";
+import Onedrive from "./settings/screens/OneDrive";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./settings/screens/deps/auth0-config";
 import Sync from "./settings/sync";
@@ -48,6 +49,17 @@ const App: React.FC = () => {
     }
   }, []);
 
+    // Extract authorization code from URL params and pass it to Onedrive component
+    useEffect(() => {
+      const params = new URLSearchParams(location.search);
+      const code = params.get("code");
+      if (code) {
+        // Redirect to the Onedrive component with the authorization code
+        history(`/onedrive?code=${code}`);
+      }
+    }, [location.search, history]);
+  
+
   return (
     <>
       <Auth0Provider
@@ -63,6 +75,7 @@ const App: React.FC = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />
           <Route path="/dropbox" element={<Dropbox />} />
+          <Route path="/onedrive" element={<Onedrive />} />
           <Route path="/shortcuts" element={<Shortcuts />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/Sync" element={<Sync />} />
