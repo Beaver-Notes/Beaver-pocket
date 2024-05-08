@@ -736,7 +736,7 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
                 <div className="pb-4">
-                <div className="flex gap-2 pt-2">
+                <div className="flex hidden gap-2 pt-2">
                     <Link
                       to="/Sync"
                       className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
