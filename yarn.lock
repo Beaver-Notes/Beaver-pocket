@@ -1299,11 +1299,6 @@
   resolved "https://registry.yarnpkg.com/@csstools/selector-specificity/-/selector-specificity-3.0.3.tgz#208a3929ee614967a1fc8cd6cb758d9fcbf0caae"
   integrity sha512-KEPNw4+WW5AVEIyzC80rTbWEUatTW2lXpN8+8ILC8PiPeWPjwUzrPZDIOZ2wwqDmeqOYTdSGyL3+vE5GC3FB3Q==
 
-"@derrickorama/capacitor-zip@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@derrickorama/capacitor-zip/-/capacitor-zip-0.2.1.tgz#4ded96727c21459097ccd90dfb3f476342957fe2"
-  integrity sha512-e27SdWRVir3l1iUyT2ySs3AmtT8TiswlknYXP7PUR+HADVkwFZV1SXIMd8yEi+HWyBLWHJ1b0Y1y2JxwHaMO9g==
-
 "@emotion/is-prop-valid@^0.8.2":
   version "0.8.8"
   resolved "https://registry.yarnpkg.com/@emotion/is-prop-valid/-/is-prop-valid-0.8.8.tgz#db28b1c4368a259b60a97311d6a952d4fd01ac1a"

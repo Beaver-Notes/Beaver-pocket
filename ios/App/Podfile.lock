@@ -29,11 +29,7 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (6.0.0):
     - Capacitor
-  - DerrickoramaCapacitorZip (0.2.1):
-    - Capacitor
-    - ZIPFoundation (~> 0.9)
   - SwiftKeychainWrapper (4.0.1)
-  - ZIPFoundation (0.9.18)
 
 DEPENDENCIES:
   - "AashuDubeyCapacitorStatusbarSafeArea (from `../../node_modules/@aashu-dubey/capacitor-statusbar-safe-area`)"
@@ -51,12 +47,10 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
-  - "DerrickoramaCapacitorZip (from `../../node_modules/@derrickorama/capacitor-zip`)"
 
 SPEC REPOS:
   trunk:
     - SwiftKeychainWrapper
-    - ZIPFoundation
 
 EXTERNAL SOURCES:
   AashuDubeyCapacitorStatusbarSafeArea:
@@ -89,8 +83,6 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
-  DerrickoramaCapacitorZip:
-    :path: "../../node_modules/@derrickorama/capacitor-zip"
 
 SPEC CHECKSUMS:
   AashuDubeyCapacitorStatusbarSafeArea: 4833bf7ac284b54c6650f0d80634552094fd3229
@@ -108,10 +100,8 @@ SPEC CHECKSUMS:
   CapacitorShare: a771200d3b924a5d7ad9d9fecbac517e4c0aa74f
   CapacitorSplashScreen: 5431ab8d19c1c6e95777d53bfaa7a36a6c3d94c7
   CapacitorStatusBar: 2e4369f99166125435641b1908d05f561eaba6f6
-  DerrickoramaCapacitorZip: 13fae3358e9d42a7615004840d0ce7b675c0fcaf
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
-  ZIPFoundation: fa9ae5af13b7cf168245f24d1c672a4fb972e37f
 
-PODFILE CHECKSUM: 1fa01ae5e8c53f95300fafdf49e326de22361077
+PODFILE CHECKSUM: 6475f4c24f9120b8abddf53c520b20cbbb395141
 
 COCOAPODS: 1.15.2
