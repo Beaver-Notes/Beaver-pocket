@@ -19,7 +19,6 @@ dependencies {
     implementation project(':capacitor-share')
     implementation project(':capacitor-splash-screen')
     implementation project(':capacitor-status-bar')
-    implementation project(':derrickorama-capacitor-zip')
     implementation project(':capacitor-native-biometric')
     implementation project(':capacitor-secure-storage-plugin')
 

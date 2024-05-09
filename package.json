@@ -1,7 +1,7 @@
 {
   "name": "beaver-notes-pocket",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "watch": "vite",
@@ -31,7 +31,6 @@
     "@capacitor/share": "^6.0.0",
     "@capacitor/splash-screen": "^6.0.0",
     "@capacitor/status-bar": "^6.0.0",
-    "@derrickorama/capacitor-zip": "^0.2.1",
     "@ionic/cli": "^7.1.6",
     "@ionic/react": "7.6.2",
     "@nytimes/react-prosemirror": "^0.4.2",
