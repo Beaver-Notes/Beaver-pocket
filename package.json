@@ -73,8 +73,10 @@
     "@types/react-transition-group": "^4.4.10",
     "@types/simple-oauth2": "^5.0.7",
     "@types/uuid": "^9.0.7",
+    "@types/xml2js": "^0.4.14",
     "adm-zip": "^0.5.12",
     "autoprefixer": "^10.4.16",
+    "axios": "^1.6.8",
     "base-64": "^1.0.0",
     "bcryptjs": "^2.4.3",
     "bottom-sheet-react": "^0.1.27",
@@ -88,6 +90,7 @@
     "eslint-config-react-app": "^7.0.1",
     "formidable": "v3",
     "framer-motion": "^11.1.7",
+    "gapi-script": "^1.2.0",
     "highlight.js": "^11.9.0",
     "http-proxy-middleware": "^3.0.0",
     "icloudjs": "^1.5.1-patch1",
@@ -127,7 +130,8 @@
     "tiptap-commands": "^1.17.1",
     "tiptap-extension-resize-image": "^1.0.3",
     "uuid": "^9.0.1",
-    "webdav": "^5.6.0"
+    "webdav": "^5.6.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@types/katex": "^0.16.7",

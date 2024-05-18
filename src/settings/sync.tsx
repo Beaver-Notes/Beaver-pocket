@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import BottomNavBar from "../components/Home/BottomNavBar";
 import { Note } from "../store/types";
 import NoteEditor from "../NoteEditor";
-import Sidebar from "../components/Home/Sidebar";
 import { v4 as uuid } from "uuid";
 import useNoteEditor from "../store/useNoteActions";
 import {
@@ -26,13 +25,13 @@ import MicrosoftFillIcon from "remixicon-react/MicrosoftFillIcon";
 const Shortcuts: React.FC = () => {
   const { saveNote } = useSaveNote();
 
-  const [themeMode, setThemeMode] = useState(() => {
+  const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
   });
 
   // State to manage dark mode
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -46,12 +45,6 @@ const Shortcuts: React.FC = () => {
   }, [darkMode, themeMode]);
 
   // Function to toggle dark mode
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-  };
 
   const STORAGE_PATH = "notes/data.json";
 
@@ -431,14 +424,6 @@ const Shortcuts: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="grid sm:grid-cols-[auto,1fr]">
-        <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
 
         <div className="overflow-y-auto">
           {!activeNoteId && (
@@ -518,7 +503,6 @@ const Shortcuts: React.FC = () => {
               }
             />
           </div>
-        </div>
         <div>
           {activeNote && (
             <NoteEditor

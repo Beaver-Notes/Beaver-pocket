@@ -11,16 +11,13 @@ import {
   FilesystemDirectory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import {
-  loadNotes,
-  useSaveNote,
-} from "../../store/notes";
+import { loadNotes, useSaveNote } from "../../store/notes";
 import getMimeType from "./deps/mimetype";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 import dayjs from "dayjs";
 
-import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
+import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
@@ -33,8 +30,7 @@ const DropboxSync: React.FC = () => {
     useNotesState();
   const { importUtils } = useHandleImportData();
   const [searchQuery] = useState<string>("");
-  const [, setFilteredNotes] =
-    useState<Record<string, Note>>(notesState);
+  const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [authorizationCode, setAuthorizationCode] = useState<string>("");
@@ -112,8 +108,14 @@ const DropboxSync: React.FC = () => {
           const refreshToken = data.refresh_token;
 
           // Save tokens securely
-          await SecureStoragePlugin.set({ key: 'dropbox_access_token', value: accessToken });
-          await SecureStoragePlugin.set({ key: 'dropbox_refresh_token', value: refreshToken });
+          await SecureStoragePlugin.set({
+            key: "dropbox_access_token",
+            value: accessToken,
+          });
+          await SecureStoragePlugin.set({
+            key: "dropbox_refresh_token",
+            value: refreshToken,
+          });
 
           setAccessToken(accessToken);
           setRefreshToken(refreshToken);
@@ -136,9 +138,13 @@ const DropboxSync: React.FC = () => {
     // Retrieve tokens from secure storage
     const retrieveTokens = async () => {
       try {
-        const storedAccessToken = (await SecureStoragePlugin.get({ key: 'dropbox_access_token' })).value;
-        const storedRefreshToken = (await SecureStoragePlugin.get({ key: 'dropbox_refresh_token' })).value;
-        
+        const storedAccessToken = (
+          await SecureStoragePlugin.get({ key: "dropbox_access_token" })
+        ).value;
+        const storedRefreshToken = (
+          await SecureStoragePlugin.get({ key: "dropbox_refresh_token" })
+        ).value;
+
         if (storedAccessToken) {
           setAccessToken(storedAccessToken);
         }
@@ -176,7 +182,10 @@ const DropboxSync: React.FC = () => {
           const newAccessToken = data.access_token;
 
           // Save new access token
-          await SecureStoragePlugin.set({ key: 'dropbox_access_token', value: newAccessToken });
+          await SecureStoragePlugin.set({
+            key: "dropbox_access_token",
+            value: newAccessToken,
+          });
           setAccessToken(newAccessToken);
         } else {
           const errorData = await response.json();
@@ -230,7 +239,9 @@ const DropboxSync: React.FC = () => {
     // Retrieve access token from secure storage
     const retrieveAccessToken = async () => {
       try {
-        const storedAccessToken = (await SecureStoragePlugin.get({ key: 'dropbox_access_token' })).value;
+        const storedAccessToken = (
+          await SecureStoragePlugin.get({ key: "dropbox_access_token" })
+        ).value;
         if (storedAccessToken) {
           setAccessToken(storedAccessToken);
         }
@@ -393,35 +404,47 @@ const DropboxSync: React.FC = () => {
         // Get formatted date
         const currentDate = new Date();
         const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
-  
+
         // Specify the main folder path
         const mainFolderPath = `/Beaver Notes ${formattedDate}`;
-  
+
         await Filesystem.mkdir({
           path: `export/Beaver Notes ${formattedDate}`,
-          directory: FilesystemDirectory.Data
+          directory: FilesystemDirectory.Data,
         });
-  
+
         const dbx = new Dropbox({ accessToken });
         // Define a recursive function to create folders locally
-        const createFoldersRecursively = async (folderPath: string, parentPath = '') => {
+        const createFoldersRecursively = async (
+          folderPath: string,
+          parentPath = ""
+        ) => {
           const response = await dbx.filesListFolder({ path: folderPath });
           for (const entry of response.result.entries) {
-            if (entry['.tag'] === 'folder') {
-              const folderFullPath = `${parentPath}/${entry.name}`.replace(/^\/+/, ''); // Remove leading slash
-  
+            if (entry[".tag"] === "folder") {
+              const folderFullPath = `${parentPath}/${entry.name}`.replace(
+                /^\/+/,
+                ""
+              ); // Remove leading slash
+
               // Create folder locally using Capacitor's Filesystem API
               await Filesystem.mkdir({
                 path: `export/${mainFolderPath}/${folderFullPath}`,
-                directory: FilesystemDirectory.Data
+                directory: FilesystemDirectory.Data,
               });
-              console.log('Folder created:', `export/${mainFolderPath}/${folderFullPath}`);
-  
+              console.log(
+                "Folder created:",
+                `export/${mainFolderPath}/${folderFullPath}`
+              );
+
               const subFolderPath = `${folderPath}/${entry.name}`;
               await createFoldersRecursively(subFolderPath, folderFullPath); // Recursively create sub-folders
-            } else if (entry['.tag'] === 'file') {
-              const fileFullPath = `${parentPath}/${entry.name}`.replace(/^\/+/, ''); // Remove leading slash
-              
+            } else if (entry[".tag"] === "file") {
+              const fileFullPath = `${parentPath}/${entry.name}`.replace(
+                /^\/+/,
+                ""
+              ); // Remove leading slash
+
               // Download file from Dropbox and save it locally
               await Filesystem.downloadFile({
                 url: `https://content.dropboxapi.com/2/files/download`,
@@ -429,10 +452,13 @@ const DropboxSync: React.FC = () => {
                 directory: FilesystemDirectory.Data,
                 headers: {
                   Authorization: `Bearer ${accessToken}`,
-                  'Dropbox-API-Arg': JSON.stringify({ path: entry.path_lower })
-                }
+                  "Dropbox-API-Arg": JSON.stringify({ path: entry.path_lower }),
+                },
               });
-              console.log('File downloaded:', `export/${mainFolderPath}/${fileFullPath}`);
+              console.log(
+                "File downloaded:",
+                `export/${mainFolderPath}/${fileFullPath}`
+              );
             }
           }
         };
@@ -461,12 +487,12 @@ const DropboxSync: React.FC = () => {
   const Logout = async () => {
     try {
       // Remove the access token from storage
-      await SecureStoragePlugin.remove({ key: 'dropbox_access_token' });
-      await SecureStoragePlugin.remove({ key: 'dropbox_refresh_token' });
-  
-      console.log('Logged out successfully');
+      await SecureStoragePlugin.remove({ key: "dropbox_access_token" });
+      await SecureStoragePlugin.remove({ key: "dropbox_refresh_token" });
+
+      console.log("Logged out successfully");
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error("Error logging out:", error);
     }
   };
 
@@ -506,12 +532,12 @@ const DropboxSync: React.FC = () => {
   return (
     <div>
       <div className="mx-2 sm:px-20 mb-2 items-center align-center text-center space-y-4">
-        <p className="ml-2 text-4xl text-left font-bold">
-          Sync with <br /> Dropbox
-        </p>
         <div className="flex justify-center items-center">
-          <div className="bg-neutral-200 bg-opacity-40 rounded-full w-36 h-36 flex justify-center items-center">
-            <DropboxFillIcon className="w-32 h-32 text-blue-700" />
+          <div className="flex flex-col items-center">
+            <p className="text-4xl text-center font-bold p-4">Sync with Dropbox</p>
+            <div className="relative bg-neutral-200 bg-opacity-40 rounded-full w-36 h-36 flex justify-center items-center">
+              <DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
+            </div>
           </div>
         </div>
         <BottomNavBar
@@ -522,34 +548,39 @@ const DropboxSync: React.FC = () => {
         />
         {accessToken ? (
           <section>
-            <div className="ml-9 flex items-center p-1">
-              <span className="bg-green-500 w-4 h-4 inline-block rounded-full"></span>
-              <p className="ml-2">Logged in</p>
+            <div className="flex flex-col">
+              <div className="ml-4 flex items-center p-1">
+                <span className="bg-green-500 w-4 h-4 inline-block rounded-full"></span>
+                <p className="ml-2">Logged in</p>
+              </div>
+              <div className="ml-4 flex items-center p-1">
+                {fileUploadStatus && <p>{fileUploadStatus}</p>}
+              </div>
+              <div className="ml-4 space-y-2">
+                {" "}
+                {/* Adjusted margin */}
+                <button
+                  className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
+                  onClick={downloadFolder}
+                >
+                  Import
+                </button>
+                <button
+                  className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
+                  onClick={exportdata}
+                >
+                  Export
+                </button>
+                <button
+                  className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
+                  onClick={Logout}
+                >
+                  Logout
+                </button>
+              </div>
             </div>
-            <div className="ml-9 flex items-center p-1">
-              {fileUploadStatus && <p>{fileUploadStatus}</p>}
-            </div>
-            <div className="space-y-2">
-              <button
-                className="bg-neutral-200 bg-opacity-40 w-4/5 text-black p-2 text-lg font-bold rounded-xl"
-                onClick={downloadFolder}
-              >
-                Import
-              </button>
-              <button
-                className="bg-neutral-200 bg-opacity-40 w-4/5 text-black p-2 text-lg font-bold rounded-xl"
-                onClick={exportdata}
-              >
-                Export
-              </button>
-              <button
-                className="bg-neutral-200 bg-opacity-40 w-4/5 text-black p-2 text-lg font-bold rounded-xl"
-                onClick={Logout}
-              >
-                Logout
-              </button>
-            </div>
-            <div className="flex items-center ml-8 p-2">
+
+            <div className="flex items-center ml-2 p-2">
               <label className="relative inline-flex cursor-pointer items-center">
                 <input
                   id="switch"
@@ -565,7 +596,7 @@ const DropboxSync: React.FC = () => {
                 </span>
               </label>
             </div>
-            <div className="flex items-center ml-10">
+            <div className="flex items-center ml-2 px-2">
               <label className="relative inline-flex cursor-pointer items-center">
                 <input
                   id="switch"
@@ -582,30 +613,28 @@ const DropboxSync: React.FC = () => {
         ) : (
           <>
             <section>
-              <div className="ml-9 flex items-center p-1">
-                <span className="bg-red-500 w-4 h-4 inline-block rounded-full"></span>
-                <p className="ml-2">Not logged in</p>
-              </div>
-              <div className="space-y-4">
-                <button
-                  className="bg-amber-400 w-4/5 text-white p-2 text-lg font-bold rounded-xl"
-                  onClick={handleLogin}
-                >
-                  Login
-                </button>
-                <input
-                  type="text"
-                  className="bg-neutral-200 bg-opacity-40 w-4/5 text-neutral-800 outline-none p-2 text-lg rounded-xl"
-                  placeholder="Paste authorization code here"
-                  value={authorizationCode}
-                  onChange={(e) => setAuthorizationCode(e.target.value)}
-                />
-                <button
-                  className="bg-neutral-200 bg-opacity-40 w-4/5 text-black p-2 text-lg font-bold rounded-xl"
-                  onClick={handleExchange}
-                >
-                  Submit
-                </button>
+              <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+                <div className="space-y-4">
+                  <button
+                    className="bg-amber-400 w-full text-white p-2 text-lg font-bold rounded-xl"
+                    onClick={handleLogin}
+                  >
+                    Login
+                  </button>
+                  <input
+                    type="text"
+                    className="bg-neutral-200 bg-opacity-40 w-full text-neutral-800 outline-none p-2 text-lg rounded-xl"
+                    placeholder="Paste authorization code here"
+                    value={authorizationCode}
+                    onChange={(e) => setAuthorizationCode(e.target.value)}
+                  />
+                  <button
+                    className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
+                    onClick={handleExchange}
+                  >
+                    Submit
+                  </button>
+                </div>
               </div>
             </section>
           </>
