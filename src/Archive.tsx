@@ -4,7 +4,6 @@ import { Note } from "./store/types";
 import NoteEditor from "./NoteEditor";
 import { JSONContent } from "@tiptap/react";
 import BottomNavBar from "./components/Home/BottomNavBar";
-import Sidebar from "./components/Home/Sidebar";
 import "./css/main.css";
 import "./css/fonts.css";
 import ModularPrompt from "./components/ui/Dialog";
@@ -87,13 +86,13 @@ const Archive: React.FC = () => {
     }
   };
 
-  const [themeMode, setThemeMode] = useState(() => {
+  const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
   });
 
   // State to manage dark mode
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -107,12 +106,6 @@ const Archive: React.FC = () => {
   }, [darkMode, themeMode]);
 
   // Function to toggle dark mode
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-  };
 
   const handleCloseEditor = () => {
     setActiveNoteId(null);
@@ -563,14 +556,6 @@ const Archive: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="grid sm:grid-cols-[auto,1fr]">
-        <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
 
         <div className="overflow-y-hidden">
           {!activeNoteId && (
@@ -706,7 +691,6 @@ const Archive: React.FC = () => {
               />
             </div>
           )}
-        </div>
       </div>
       <div>
         {activeNote && (

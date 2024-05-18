@@ -5,7 +5,6 @@ import ModularPrompt from './components/ui/Dialog';
 import NoteEditor from "./NoteEditor";
 import "./css/NoteEditor.module.css";
 import { JSONContent } from "@tiptap/react";
-import Sidebar from "./components/Home/Sidebar";
 import BottomNavBar from "./components/Home/BottomNavBar";
 import "./css/main.css";
 import "./css/fonts.css";
@@ -645,14 +644,6 @@ const App: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="grid sm:grid-cols-[auto,1fr]">
-        <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
 
         <div className="overflow-y-hidden">
           {!activeNoteId && (
@@ -816,7 +807,6 @@ const App: React.FC = () => {
               />
             </div>
           )}
-        </div>
         <CommandPrompt
           onCreateNewNote={handleCreateNewNote}
           toggleTheme={() => toggleTheme(!darkMode)}

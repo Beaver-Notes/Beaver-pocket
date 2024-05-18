@@ -4,7 +4,6 @@ import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
 import NoteEditor from "./NoteEditor";
 import useNoteEditor from "./store/useNoteActions";
-import Sidebar from "./components/Home/Sidebar";
 import BottomNavBar from "./components/Home/BottomNavBar";
 import ModularPrompt from "./components/ui/Dialog";
 import "./css/main.css";
@@ -550,14 +549,6 @@ const Settings: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="grid sm:grid-cols-[auto,1fr]">
-        <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
 
         <div className="overflow-y-hidden">
           {!activeNoteId && (
@@ -736,7 +727,7 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
                 <div className="pb-4">
-                <div className="flex hidden gap-2 pt-2">
+                <div className="flex gap-2 pt-2">
                     <Link
                       to="/Sync"
                       className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
@@ -779,7 +770,6 @@ const Settings: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
       <div>
         {activeNote && (
           <NoteEditor
