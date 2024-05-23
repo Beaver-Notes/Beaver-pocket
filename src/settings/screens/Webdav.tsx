@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { WebDavService } from "./deps/WebDavApi";
-import {
-  Directory,
-  Filesystem,
-  FilesystemDirectory,
-  FilesystemEncoding,
-} from "@capacitor/filesystem";
-import getMimeType from "./deps/mimetype";
+import { useExportDav, useImportDav } from "./utility/WebdavUtil";
 import ServerLineIcon from "remixicon-react/ServerLineIcon";
+import BottomNavBar from "../../components/Home/BottomNavBar";
+import { v4 as uuid } from "uuid";
+import { useNotesState } from "../../store/Activenote";
+import { useSaveNote } from "../../store/notes";
 
 const ExampleComponent: React.FC = () => {
   const [baseUrl, setBaseUrl] = useState<string>(
@@ -19,14 +17,62 @@ const ExampleComponent: React.FC = () => {
   const [password, setPassword] = useState<string>(
     () => localStorage.getItem("password") || ""
   );
-  const [webDavService] = useState(
+  const [] = useState(
     new WebDavService({
       baseUrl: baseUrl,
       username: username,
       password: password,
     })
   );
-  const STORAGE_PATH = "notes/data.json";
+
+  // Translations
+  const [translations] = useState({
+    about: {
+      title: "about.title",
+      app: "about.app",
+      description: "about.description",
+      version: "about.version",
+      website: "about.website",
+      github: "about.github",
+      donate: "about.donate",
+      copyright: "about.Copyright",
+    },
+    home: {
+      exportSuccess: "home.exportSuccess",
+      exportError: "home.exportError",
+      shareTitle: "home.shareTitle",
+      shareError: "home.shareError",
+      importSuccess: "home.importSuccess",
+      importError: "home.importError",
+      importInvalid: "home.importInvalid",
+      title: "home.title",
+    },
+  });
+
+  const { setNotesState, setActiveNoteId } = useNotesState();
+  const { saveNote } = useSaveNote();
+  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
+
+  const handleCreateNewNote = () => {
+    const newNote = {
+      id: uuid(),
+      title: translations.home.title || "New Note",
+      content: { type: "doc", content: [] },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      labels: [],
+      isBookmarked: false,
+      isArchived: false,
+      isLocked: false,
+      lastCursorPosition: 0,
+    };
+    setNotesState((prevNotes) => ({
+      ...prevNotes,
+      [newNote.id]: newNote,
+    }));
+    setActiveNoteId(newNote.id);
+    saveNote(newNote);
+  };
 
   useEffect(() => {
     localStorage.setItem("baseUrl", baseUrl);
@@ -34,262 +80,47 @@ const ExampleComponent: React.FC = () => {
     localStorage.setItem("password", password);
   }, [baseUrl, username, password]);
 
-  const handleUpload = async () => {
+  const login = async () => {
     try {
-      const dummyFileContent = "This is a dummy file content.";
-      await webDavService.upload("dummy.dm", dummyFileContent);
-      alert("File uploaded successfully!");
+      localStorage.setItem("baseUrl", baseUrl);
+      localStorage.setItem("username", username);
+      localStorage.setItem("password", password);
+      location.reload();
     } catch (error) {
-      console.log("Error uploading file.");
+      console.log("Error logging in");
     }
   };
 
-  const handleCreateFolder = async () => {
-    try {
-      await webDavService.createFolder("new-folder");
-      alert("Folder created successfully!");
-    } catch (error) {
-      console.log("Error creating folder.");
-    }
-  };
+  const { exportdata } = useExportDav();
+  const { HandleImportData } = useImportDav();
 
-  const exportdata = async () => {
-    try {
-      // Get current date for folder name
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().slice(0, 10);
+  const [autoSync, setAutoSync] = useState<boolean>(() => {
+    const storedSync = localStorage.getItem("sync");
+    return storedSync === "webdav";
+  });
 
-      // Check if the "Beaver-Pocket" folder exists
-      const folderExists = await webDavService.folderExists("Beaver-Pocket");
-
-      if (!folderExists) {
-        // If the folder doesn't exist, create it
-        await webDavService.createFolder("Beaver-Pocket");
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const storedSync = localStorage.getItem("sync");
+      if (storedSync === "webdav" && !autoSync) {
+        setAutoSync(true);
+      } else if (storedSync !== "webdav" && autoSync) {
+        setAutoSync(false);
       }
+    };
 
-      // Create the folder for today's notes
-      await webDavService.createFolder(
-        `Beaver-Pocket/Beaver Notes ${formattedDate}`
-      );
+    window.addEventListener("storage", handleStorageChange);
 
-      // read the contents of data.json
-      const datafile = await Filesystem.readFile({
-        path: STORAGE_PATH,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      // upload data.json
-      const UploadData = async () => {
-        try {
-          const DataContent = datafile.data;
-          const folderPath = `Beaver-Pocket/Beaver Notes ${formattedDate}`;
-          const filename = "data.json";
-          await webDavService.upload(`${folderPath}/${filename}`, DataContent);
-          alert("File uploaded successfully!");
-        } catch (error) {
-          console.log("Error uploading file.");
-        }
-      };
-      await UploadData();
-
-      //read the contents of the image folder
-      const noteAssetsPath = "note-assets"; // Adjust the folder path
-      const noteAssetsContents = await Filesystem.readdir({
-        path: noteAssetsPath,
-        directory: Directory.Data,
-      });
-
-      // Create the folder for assets
-      await webDavService.createFolder(
-        `Beaver-Pocket/Beaver Notes ${formattedDate}/assets`
-      );
-
-      // Iterate through each folder in the note-assets directory
-      for (const folderName of noteAssetsContents.files) {
-        // Read files inside the local folder
-        const folderPath = `${noteAssetsPath}/${folderName.name}`;
-        const folderContents = await Filesystem.readdir({
-          path: folderPath,
-          directory: Directory.Data,
-        });
-
-        // Upload each file to the corresponding Dropbox folder
-        for (const file of folderContents.files) {
-          const imagefilePath = `${folderPath}/${file.name}`;
-
-          // Read the file data
-          const imageFileData = await Filesystem.readFile({
-            path: imagefilePath,
-            directory: Directory.Data,
-          });
-
-          // Determine the file format dynamically
-          const fileType = getMimeType(file.name);
-
-          // Create a Blob from the base64 data
-          const blob = base64ToBlob(String(imageFileData.data), fileType);
-
-          // Create a File object from the Blob with content type "application/octet-stream"
-          const uploadedFile = new File([blob], file.name, {
-            type: "application/octet-stream",
-          });
-
-          await webDavService.createFolder(
-            `Beaver-Pocket/Beaver Notes ${formattedDate}/assets/${folderName.name}`
-          );
-
-          await webDavService.upload(
-            `Beaver-Pocket/Beaver Notes ${formattedDate}/assets/${folderName.name}/${file.name}`,
-            uploadedFile
-          );
-
-          // Read file-assets directory contents
-          const filefolderPath = "file-assets"; // Adjust the folder path
-          const filefolderContents = await Filesystem.readdir({
-            path: filefolderPath,
-            directory: Directory.Data,
-          });
-
-          // Create the folder for file-assets
-          await webDavService.createFolder(
-            `Beaver-Pocket/Beaver Notes ${formattedDate}/file-assets`
-          );
-
-          // Iterate through each file in the folder
-          for (const file of filefolderContents.files) {
-            // Read file content
-            const filePath = `${filefolderPath}/${file.name}`;
-            const fileData = await Filesystem.readFile({
-              path: filePath,
-              directory: Directory.Data,
-            });
-
-            // Determine the file format dynamically
-            const fileType = getMimeType(file.name);
-
-            // Create a Blob from the base64 data
-            const blob = base64ToBlob(String(fileData.data), fileType);
-
-            // Create a File object from the Blob with content type "application/octet-stream"
-            const uploadedFile = new File([blob], file.name, {
-              type: "application/octet-stream",
-            });
-
-            await webDavService.upload(
-              `Beaver-Pocket/Beaver Notes ${formattedDate}/file-assets/${file.name}`,
-              uploadedFile
-            );
-
-            // Log successful upload
-            console.log(`File uploaded successfully: ${file}`, Response);
-          }
-
-          // Log successful upload
-          console.log(`File uploaded successfully: ${file.name}`, Response);
-        }
-      }
-    } catch (error) {
-      // Handle error
-      console.error("Error uploading note assets:", error);
-    }
-  };
-
-  // Function to convert base64 string to Blob
-  const base64ToBlob = (base64String: string, type: string): Blob => {
-    const byteCharacters = atob(base64String);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: type });
-  };
-
-  const [autoSync, setAutoSync] = useState<boolean>(false);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [autoSync]);
 
   const handleSyncToggle = () => {
-    const syncValue = autoSync ? "webdav" : "none";
+    const syncValue = autoSync ? "none" : "webdav";
     localStorage.setItem("sync", syncValue);
     setAutoSync(!autoSync);
   };
-
-  const handleDownloadFolder = async (): Promise<void> => {
-    try {
-      // Get current date for folder name
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().slice(0, 10);
-      const directoryContent = await webDavService.getDirectoryContent(`Beaver-Pocket/Beaver Notes ${formattedDate}/assets`);
-  
-      // Parse the XML response
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
-  
-      // Extract file and folder names
-      const responses = xmlDoc.getElementsByTagName("d:response");
-      for (let i = 0; i < responses.length; i++) {
-        const hrefElement = responses[i].getElementsByTagName("d:href")[0];
-        const propStatElement = responses[i].getElementsByTagName("d:propstat")[0];
-        const propElement = propStatElement?.getElementsByTagName("d:prop")[0];
-        const resourceTypeElement = propElement?.getElementsByTagName("d:resourcetype")[0];
-  
-        const href = hrefElement?.textContent;
-        const isCollection = resourceTypeElement?.getElementsByTagName("d:collection").length > 0;
-  
-        if (href) {
-          const name = href.split("/").filter((part) => part !== "").pop();
-          const type = isCollection ? "Folder" : "File";
-          console.log("Name:", name);
-          console.log("Type:", type);
-  
-          const relpathIndex = href.indexOf("Beaver-Pocket/");
-          if (relpathIndex !== -1) {
-            const relpathHref = href.substring(relpathIndex);
-            console.log("relpath:", relpathHref);
-            const fullpath = baseUrl + `/${relpathHref}`;
-            console.log("Full path:", fullpath);
-  
-            if (isCollection) {
-              // Create folder
-              const folderPath = `export/assets/${name}`;
-              console.log("Folder created:", folderPath);
-            } else {
-              // Extract folder name if any
-              const folderNameMatch = href.match(/\/([^/]+)\/[^/]+$/);
-              const folderName = folderNameMatch ? folderNameMatch[1] : '';
-  
-              // Determine path to save file
-              const folderPath = folderName ? `export/assets/${folderName}` : 'export/assets';
-  
-              // Create folder if not exist
-              await Filesystem.mkdir({
-                path: folderPath,
-                directory: FilesystemDirectory.Documents,
-                recursive: true, // Create parent folders if they don't exist
-              });
-  
-              // Download file
-              const authToken = btoa(`${username}:${password}`);
-              const file = await Filesystem.downloadFile({
-                url: fullpath,
-                path: `${folderPath}/${name}`,
-                directory: FilesystemDirectory.Documents, // Choose the appropriate directory
-                headers: {
-                  Authorization: `Basic ${authToken}`,
-                  "Content-Type": "application/xml",
-                },
-              });
-              console.log("File downloaded:", file);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      // Log the error if downloading the folder fails
-      console.error("Error downloading folder:", error);
-    }
-  };
-  
 
   return (
     <div>
@@ -328,15 +159,9 @@ const ExampleComponent: React.FC = () => {
               />
               <button
                 className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
-                onClick={handleUpload}
+                onClick={login}
               >
-                Upload Dummy File
-              </button>
-              <button
-                className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
-                onClick={handleCreateFolder}
-              >
-                Create Folder
+                Log in
               </button>
               <button
                 className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
@@ -346,11 +171,11 @@ const ExampleComponent: React.FC = () => {
               </button>
               <button
                 className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
-                onClick={handleDownloadFolder}
+                onClick={HandleImportData}
               >
-                List Folder Contents
+                Import Data
               </button>
-              <div className="flex items-center ml-2 p-2">
+              <div className="flex items-center">
                 <label className="relative inline-flex cursor-pointer items-center">
                   <input
                     id="switch"
@@ -369,6 +194,12 @@ const ExampleComponent: React.FC = () => {
             </div>
           </div>
         </section>
+        <BottomNavBar
+          onCreateNewNote={handleCreateNewNote}
+          onToggleArchiveVisibility={() =>
+            setIsArchiveVisible(!isArchiveVisible)
+          }
+        />
       </div>
     </div>
   );

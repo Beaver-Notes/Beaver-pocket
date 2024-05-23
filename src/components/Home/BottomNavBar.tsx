@@ -10,26 +10,30 @@ interface BottomNavBarProps {
   onToggleArchiveVisibility: (isVisible: boolean) => void;
 }
 
-const BottomNavBar: React.FC<BottomNavBarProps> = ({ onCreateNewNote }) => {
+const BottomNavBar: React.FC<BottomNavBarProps> = ({ onCreateNewNote, onToggleArchiveVisibility }) => {
   const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
   const [isVisible, setIsVisible] = useState(true);
+  const [isScrollable, setIsScrollable] = useState(false);
 
   const handleScroll = () => {
     const currentScrollPos = window.pageYOffset;
-
-    if (prevScrollPos > currentScrollPos) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
+    if (isScrollable) {
+      setIsVisible(prevScrollPos > currentScrollPos);
     }
-
     setPrevScrollPos(currentScrollPos);
   };
 
   useEffect(() => {
+    const checkScrollable = () => {
+      setIsScrollable(document.body.scrollHeight > window.innerHeight);
+    };
+
+    checkScrollable();
+    window.addEventListener("resize", checkScrollable);
     window.addEventListener("scroll", handleScroll);
 
     return () => {
+      window.removeEventListener("resize", checkScrollable);
       window.removeEventListener("scroll", handleScroll);
     };
   }, [prevScrollPos]);
@@ -42,21 +46,17 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onCreateNewNote }) => {
     >
       <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full sm:w-[calc(40%-1rem)] sm:mx-auto w-[calc(100%-1rem)]">
         <div className="flex justify-between items-center">
-          {" "}
-          {/* Align items to center */}
-          <a href="#" className="p-2" onClick={onCreateNewNote}>
+          <button className="p-2" onClick={onCreateNewNote}>
             <AddFillIcon className="text-white hover:text-amber-400 h-8 w-8" />
-          </a>
+          </button>
           <Link to="/">
             <button className="p-2">
               <HomeLineIcon className="text-white hover:text-amber-400 h-8 w-8" />
             </button>
           </Link>
-          <Link to="/archive">
-            <button className="p-2">
-              <ArchiveDrawerLineIcon className="text-white hover:text-amber-400 h-8 w-8" />
-            </button>
-          </Link>
+          <button className="p-2" onClick={() => onToggleArchiveVisibility(true)}>
+            <ArchiveDrawerLineIcon className="text-white hover:text-amber-400 h-8 w-8" />
+          </button>
           <Link to="/settings">
             <button className="p-2">
               <Settings4LineIcon className="text-white hover:text-amber-400 h-8 w-8" />

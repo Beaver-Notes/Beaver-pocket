@@ -12,6 +12,7 @@ import Webdav from "./settings/screens/Webdav";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./settings/screens/deps/auth0-config";
 import Sync from "./settings/sync";
+import { useExportDav, useImportDav } from "./settings/screens/utility/WebdavUtil"
 
 const App: React.FC = () => {
   const history = useNavigate();
@@ -60,9 +61,11 @@ const App: React.FC = () => {
     }
     if (syncValue === "webdav") {
       const intervalId = setInterval(() => {
-        const eiWendavEvent = new CustomEvent("eiWendavEvent");
-        document.dispatchEvent(eiWendavEvent);
-        console.log("eiWendavEvent dispatched");
+        const { exportdata } = useExportDav();
+        const { HandleImportData } = useImportDav();
+        exportdata();
+        HandleImportData();
+        alert("exporting data");
       }, 10 * 1000);
       return () => clearInterval(intervalId);
     }

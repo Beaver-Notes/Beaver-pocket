@@ -79,7 +79,6 @@ export class WebDavService {
     }
   }
   
-  
   async propFind(path: string, depth: number = 1): Promise<any> {
     try {
       const config = await this.createRequestConfig();
@@ -115,6 +114,19 @@ export class WebDavService {
       throw new Error(`Failed to upload ${filePath}`);
     }
   }  
+
+  async deleteFolder(folderPath: string): Promise<void> {
+    try {
+      const config = await this.createRequestConfig();
+      await axios.request({
+        method: 'DELETE',
+        url: `${this.options.baseUrl}/${folderPath}`,
+        headers: config.headers,
+      });
+    } catch (error) {
+      throw new Error(`Failed to delete folder at ${folderPath}`);
+    }
+  }
 
   async getDirectoryContent(path: string): Promise<any> {
     try {
