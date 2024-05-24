@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "../../store/types";
+import "./css/main.css";
+import "./css/fonts.css";
 import { Browser } from "@capacitor/browser";
 import { v4 as uuid } from "uuid";
+import { useNavigate } from "react-router-dom";
 import { Dropbox } from "dropbox";
 import { useHandleImportData } from "../../utils/importUtils";
 import BottomNavBar from "../../components/Home/BottomNavBar";
@@ -24,11 +27,15 @@ const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 const STORAGE_PATH = "notes/data.json";
 
 import DropboxFillIcon from "remixicon-react/DropboxFillIcon";
+import Sidebar from "../../components/Home/Sidebar";
+import { useSwipeable } from "react-swipeable";
+import { useExportData } from "../../utils/exportUtils";
 
 const DropboxSync: React.FC = () => {
   const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
     useNotesState();
   const { importUtils } = useHandleImportData();
+  const { exportUtils } = useExportData();
   const [searchQuery] = useState<string>("");
   const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -519,8 +526,6 @@ const DropboxSync: React.FC = () => {
     saveNote(newNote);
   };
 
-  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
-
   const [autoSync, setAutoSync] = useState<boolean>(false);
 
   const handleSyncToggle = () => {
@@ -529,50 +534,104 @@ const DropboxSync: React.FC = () => {
     setAutoSync(!autoSync);
   };
 
+  const [themeMode, setThemeMode] = useState(() => {
+    const storedThemeMode = localStorage.getItem("themeMode");
+    return storedThemeMode || "auto";
+  });
+
+  const [darkMode, setDarkMode] = useState(() => {
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("themeMode", themeMode);
+  }, [darkMode, themeMode]);
+
+  const toggleTheme = (
+    newMode: boolean | ((prevState: boolean) => boolean)
+  ) => {
+    setDarkMode(newMode);
+    setThemeMode(newMode ? "dark" : "light");
+  };
+
+  const navigate = useNavigate();
+
+  const handleSwipe = (eventData: any) => {
+    const isRightSwipe = eventData.dir === "Right";
+    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
+
+    if (isRightSwipe && isSmallSwipe) {
+      eventData.event.preventDefault();
+    } else if (isRightSwipe) {
+      navigate(-1); // Navigate back
+    }
+  };
+
+  const handlers = useSwipeable({
+    onSwiped: handleSwipe,
+  });
+
+  const exportData = () => {
+    exportUtils(notesState); // Pass notesState as an argument
+  };
+
+  const handleImportData = () => {
+    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
+  };
+
   return (
-    <div>
-      <div className="mx-2 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+    <div {...handlers}>
+      <div className="safe-area"></div>
+      <Sidebar
+          onCreateNewNote={handleCreateNewNote}
+          isDarkMode={darkMode}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          exportData={exportData}
+          handleImportData={handleImportData}
+        />      
+        <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">
             <p className="text-4xl text-center font-bold p-4">Sync with Dropbox</p>
-            <div className="relative bg-neutral-200 bg-opacity-40 rounded-full w-36 h-36 flex justify-center items-center">
+            <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-36 h-36 flex justify-center items-center">
               <DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
             </div>
           </div>
         </div>
         <BottomNavBar
           onCreateNewNote={handleCreateNewNote}
-          onToggleArchiveVisibility={() =>
-            setIsArchiveVisible(!isArchiveVisible)
-          }
         />
         {accessToken ? (
           <section>
             <div className="flex flex-col">
-              <div className="ml-4 flex items-center p-1">
+              <div className="flex items-center p-1">
                 <span className="bg-green-500 w-4 h-4 inline-block rounded-full"></span>
                 <p className="ml-2">Logged in</p>
               </div>
-              <div className="ml-4 flex items-center p-1">
+              <div className="flex items-center p-1">
                 {fileUploadStatus && <p>{fileUploadStatus}</p>}
               </div>
-              <div className="ml-4 space-y-2">
+              <div className="space-y-2">
                 {" "}
                 {/* Adjusted margin */}
                 <button
-                  className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
+                  className="bg-neutral-200 dark:text-white dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
                   onClick={downloadFolder}
                 >
                   Import
                 </button>
                 <button
-                  className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
+                  className="bg-neutral-200 dark:text-white dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                   onClick={exportdata}
                 >
                   Export
                 </button>
                 <button
-                  className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
+                  className="bg-neutral-200 dark:text-white dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                   onClick={Logout}
                 >
                   Logout
@@ -580,7 +639,7 @@ const DropboxSync: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center ml-2 p-2">
+            <div className="flex items-center py-2">
               <label className="relative inline-flex cursor-pointer items-center">
                 <input
                   id="switch"
@@ -590,23 +649,10 @@ const DropboxSync: React.FC = () => {
                   className="peer sr-only"
                 />
                 <label htmlFor="switch" className="hidden"></label>
-                <div className="peer h-8 w-[3.75rem] rounded-full border bg-slate-200 after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                <span className="inline-block ml-2 align-middle">
+                <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                <span className="inline-block ml-2 align-left">
                   Auto sync
                 </span>
-              </label>
-            </div>
-            <div className="flex items-center ml-2 px-2">
-              <label className="relative inline-flex cursor-pointer items-center">
-                <input
-                  id="switch"
-                  v-model="autoSync"
-                  type="checkbox"
-                  className="peer sr-only"
-                />
-                <label htmlFor="switch" className="hidden"></label>
-                <div className="peer h-8 w-[3.75rem] rounded-full border bg-slate-200 after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                <span className="inline-block ml-2 align-middle">Fallack</span>
               </label>
             </div>
           </section>
@@ -615,24 +661,24 @@ const DropboxSync: React.FC = () => {
             <section>
               <div className="sm:mx-auto sm:w-full sm:max-w-sm">
                 <div className="space-y-4">
-                  <button
-                    className="bg-amber-400 w-full text-white p-2 text-lg font-bold rounded-xl"
-                    onClick={handleLogin}
-                  >
-                    Login
-                  </button>
                   <input
                     type="text"
-                    className="bg-neutral-200 bg-opacity-40 w-full text-neutral-800 outline-none p-2 text-lg rounded-xl"
+                    className="bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 w-full p-3 text-neutral-800 dark:text-neutral-200 outline-none p-2 text-lg rounded-xl"
                     placeholder="Paste authorization code here"
                     value={authorizationCode}
                     onChange={(e) => setAuthorizationCode(e.target.value)}
                   />
                   <button
-                    className="bg-neutral-200 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
+                    className="bg-neutral-200 dark:bg-[#2D2C2C] dark:text-white bg-opacity-40 w-full text-black p-3 text-xl font-bold rounded-xl"
                     onClick={handleExchange}
                   >
                     Submit
+                  </button>
+                  <button
+                    className="bg-amber-400 w-full text-white p-3 text-xl font-bold rounded-xl"
+                    onClick={handleLogin}
+                  >
+                    Login
                   </button>
                 </div>
               </div>

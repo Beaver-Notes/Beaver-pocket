@@ -46,6 +46,7 @@ import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 import ReactDOM from "react-dom";
+import Sidebar from "./components/Home/Sidebar";
 
 const App: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -200,7 +201,6 @@ const App: React.FC = () => {
     saveNote(newNote);
   };
 
-  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
   const [sortingOption, setSortingOption] = useState("updatedAt");
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
@@ -644,6 +644,15 @@ const App: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
+      <div className="grid sm:grid-cols-[auto,1fr]">
+        <Sidebar
+          onCreateNewNote={handleCreateNewNote}
+          isDarkMode={darkMode}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          exportData={exportData}
+          handleImportData={handleImportData}
+        />
+
 
         <div className="overflow-y-hidden">
           {!activeNoteId && (
@@ -708,7 +717,7 @@ const App: React.FC = () => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-                        <div className="h-44 overflow-hidden">
+                        <div className="h-40 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-xl font-bold">
                               {note.title}
@@ -801,12 +810,10 @@ const App: React.FC = () => {
               </div>
               <BottomNavBar
                 onCreateNewNote={handleCreateNewNote}
-                onToggleArchiveVisibility={() =>
-                  setIsArchiveVisible(!isArchiveVisible)
-                }
               />
             </div>
           )}
+        </div>
         <CommandPrompt
           onCreateNewNote={handleCreateNewNote}
           toggleTheme={() => toggleTheme(!darkMode)}

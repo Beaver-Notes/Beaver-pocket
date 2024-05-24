@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { Note } from "../store/types";
 import NoteEditor from "../NoteEditor";
+import "./css/main.css";
+import "./css/fonts.css";
 import useNoteEditor from "../store/useNoteActions";
 import BottomNavBar from "../components/Home/BottomNavBar";
 import "../css/main.css";
@@ -10,29 +12,14 @@ import dayjs from "dayjs";
 import { useSwipeable } from "react-swipeable";
 import { useNavigate } from "react-router-dom";
 import { loadNotes, useSaveNote } from "../store/notes";
+import Sidebar from "../components/Home/Sidebar";
+import { useHandleImportData } from "../utils/importUtils";
+import { useExportData } from "../utils/exportUtils";
 
 const Shortcuts: React.FC = () => {
   const { saveNote } = useSaveNote();
-
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  // State to manage dark mode
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  // Effect to update the classList and localStorage when darkMode or themeMode changes
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
+  const { exportUtils } = useExportData();
+  const { importUtils } = useHandleImportData();
   // Function to toggle dark mode
 
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
@@ -178,8 +165,6 @@ const Shortcuts: React.FC = () => {
     loadTranslations();
   }, []);
 
-  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
-
   const shortcuts = [
     {
       title: translations.shortcuts.General,
@@ -256,10 +241,49 @@ const Shortcuts: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
+  const [themeMode, setThemeMode] = useState(() => {
+    const storedThemeMode = localStorage.getItem("themeMode");
+    return storedThemeMode || "auto";
+  });
+
+  const [darkMode, setDarkMode] = useState(() => {
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("themeMode", themeMode);
+  }, [darkMode, themeMode]);
+
+  const toggleTheme = (
+    newMode: boolean | ((prevState: boolean) => boolean)
+  ) => {
+    setDarkMode(newMode);
+    setThemeMode(newMode ? "dark" : "light");
+  };
+
+  const exportData = () => {
+    exportUtils(notesState); // Pass notesState as an argument
+  };
+
+  const handleImportData = () => {
+    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
+  };
+
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-
+      <Sidebar
+          onCreateNewNote={handleCreateNewNote}
+          isDarkMode={darkMode}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          exportData={exportData}
+          handleImportData={handleImportData}
+        />
+        
       <div className="overflow-y">
         {!activeNoteId && (
           <div className="mx-6 sm:px-20 mb-2">
@@ -293,9 +317,6 @@ const Shortcuts: React.FC = () => {
         <div>
           <BottomNavBar
             onCreateNewNote={handleCreateNewNote}
-            onToggleArchiveVisibility={() =>
-              setIsArchiveVisible(!isArchiveVisible)
-            }
           />
         </div>
         <div>

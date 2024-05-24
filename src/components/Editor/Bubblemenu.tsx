@@ -108,7 +108,7 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({
                 ? "p-1 text-amber-400 cursor-pointer"
                 : "p-1 bg-transparent cursor-pointer"
             }
-            onClick={()=> editor?.chain().focus().toggleItalic().run}
+            onClick={()=> editor?.chain().focus().toggleItalic().run()}
           >
             <ItalicIcon
               className={

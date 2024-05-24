@@ -230,6 +230,7 @@ const Welcome: React.FC = () => {
   return (
     <div className={`view ${currentView}`}>
       <div className="safe-area"></div>
+      
       {currentView === "view1" && (
         <div className="flex items-center justify-center mt-[3em]">
           <div className="sm:w-[32em] mx-10 rounded-3xl">

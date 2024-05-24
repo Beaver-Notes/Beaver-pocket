@@ -28,6 +28,7 @@ import SyncLineIcon from "remixicon-react/RefreshLineIcon";
 import LockLineIcon from "remixicon-react/LockLineIcon";
 import { useSwipeable } from "react-swipeable";
 import ReactDOM from "react-dom";
+import Sidebar from "./components/Home/Sidebar";
 
 const Settings: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -459,8 +460,7 @@ const Settings: React.FC = () => {
     setActiveNoteId(newNote.id);
     saveNote(newNote);
   };
-  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
-
+  
   // Translations
   const [translations, setTranslations] = useState({
     settings: {
@@ -549,6 +549,14 @@ const Settings: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
+      <div className="grid sm:grid-cols-[auto,1fr]">
+        <Sidebar
+          onCreateNewNote={handleCreateNewNote}
+          isDarkMode={darkMode}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          exportData={exportData}
+          handleImportData={handleImportData}
+        />
 
         <div className="overflow-y-hidden">
           {!activeNoteId && (
@@ -763,9 +771,6 @@ const Settings: React.FC = () => {
               </div>
               <BottomNavBar
                 onCreateNewNote={handleCreateNewNote}
-                onToggleArchiveVisibility={() =>
-                  setIsArchiveVisible(!isArchiveVisible)
-                }
               />
             </div>
           )}
@@ -781,6 +786,7 @@ const Settings: React.FC = () => {
             onCloseEditor={handleCloseEditor}
           />
         )}
+        </div>
       </div>
     </div>
   );

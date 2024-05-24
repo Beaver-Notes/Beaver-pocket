@@ -28,6 +28,13 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https'
   }
-};
+,
+    android: {
+       buildOptions: {
+          keystorePath: 'undefined',
+          keystoreAlias: 'undefined',
+       }
+    }
+  };
 
 export default config;

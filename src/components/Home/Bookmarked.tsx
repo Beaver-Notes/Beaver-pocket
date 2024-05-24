@@ -74,7 +74,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
               }
               onClick={() => handleClickNote(note)}
             >
-              <div className="h-44 overflow-hidden">
+              <div className="h-40 overflow-hidden">
                 <div className="flex flex-col h-full overflow-hidden">
                 <div className="text-xl font-bold">{note.title}</div>
                   {note.isLocked ? (
