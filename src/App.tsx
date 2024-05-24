@@ -7,7 +7,7 @@ import About from "./settings/about";
 import { App as CapacitorApp } from "@capacitor/app";
 import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
-import Dropbox from "./settings/screens/Dropbox";
+import Dropbox from "./settings/screens/dropbox";
 import Webdav from "./settings/screens/Webdav";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./settings/screens/deps/auth0-config";

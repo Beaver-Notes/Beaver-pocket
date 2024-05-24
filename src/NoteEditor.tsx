@@ -381,7 +381,7 @@ function NoteEditor({
           </button>
           <div className="flex">
             <button
-              className="p-2  mt-4 rounded-md text-white bg-transparent cursor-pointer"
+              className="p-2 mt-6 rounded-md text-white bg-transparent cursor-pointer"
               onClick={() => {
                 setFocusMode((prevFocusMode) => !prevFocusMode);
                 setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
@@ -394,7 +394,17 @@ function NoteEditor({
               />
             </button>
             <button
-              className="p-2 align-end mt-4 rounded-md text-white bg-transparent cursor-pointer"
+              className="p-2 align-end mt-6 rounded-md text-white bg-transparent cursor-pointer"
+              onClick={toggleHeadingTree}
+            >
+              <Search2LineIcon
+                className={`border-none ${
+                  focusMode ? "hidden" : "block"
+                }  dark:text-white text-neutral-800 text-xl w-7 h-7`}
+              />
+            </button>
+            <button
+              className="p-2 align-end mt-6 rounded-md text-white bg-transparent cursor-pointer"
               onClick={toggleHeadingTree}
             >
               <Search2LineIcon

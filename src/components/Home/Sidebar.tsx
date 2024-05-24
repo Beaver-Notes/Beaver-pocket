@@ -7,14 +7,14 @@ import MoonLineIcon from "remixicon-react/MoonClearLineIcon";
 import SettingsLineIcon from "remixicon-react/SettingsLineIcon";
 import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
 import Download2LineIcon from "remixicon-react/Download2LineIcon";
-import { useEffect } from "react";
+import { ChangeEvent, useEffect } from "react";
 
 interface SidebarProps {
   onCreateNewNote: () => void;
   isDarkMode: boolean;
   toggleTheme: () => void;
   exportData: () => void;
-  handleImportData: () => void;
+  handleImportData: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -36,11 +36,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           toggleTheme();
         } else if (event.shiftKey && event.key === "N") {
           history("/");
-        } else if (event.shiftKey && event.key === "A") {
+        }
+        else if (event.shiftKey && event.key === "A") {
           history("/archive");
-        } else if (event.shiftKey && event.key === "E") {
+        }
+        else if (event.shiftKey && event.key === "E") {
           exportData();
-        } else if (event.shiftKey && event.key === "U") {
+        }
+        else if (event.shiftKey && event.key === "U") {
           const importInput = document.getElementById(
             "importData"
           ) as HTMLInputElement;
@@ -50,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           event.preventDefault();
           history("/settings");
         }
-      }
+      } 
     };
 
     window.addEventListener("keydown", handleKeyPress);
@@ -60,8 +63,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
   }, [onCreateNewNote, toggleTheme, exportData]);
   return (
-    <div className="hidden sm:mr-16 sm:block">
-      <div className="fixed z-50 top-0 left-0 h-screen flex flex-col items-center justify-between p-2.5 bg-[#F8F8F7] dark:bg-[#353333] hidden sm:flex">
+    <div className="hidden sm:mr-16 sm:block z-50">
+      <div className="fixed top-0 left-0 h-screen flex flex-col items-center justify-between p-2.5 bg-[#F8F8F7] dark:bg-[#353333] hidden sm:flex">
         <div className="py-5">
           <button
             className="hidden mb-2 p-2 bg-[#EBEBEA] dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
@@ -99,12 +102,20 @@ const Sidebar: React.FC<SidebarProps> = ({
           >
             <Upload2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
           </button>
-          <button
+
+          <label
+            htmlFor="importData"
             className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
-            onClick={handleImportData}
           >
             <Download2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
-          </button>
+          </label>
+          <input
+            className="hidden"
+            type="file"
+            id="importData"
+            accept=".json"
+            onChange={handleImportData}
+          />
           <Link to="/settings">
             <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex">
               <SettingsLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />

@@ -37,6 +37,7 @@ import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 import dayjs from "dayjs";
 import ReactDOM from "react-dom";
+import Sidebar from "./components/Home/Sidebar";
 
 const Archive: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -85,25 +86,6 @@ const Archive: React.FC = () => {
       }
     }
   };
-
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  // State to manage dark mode
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  // Effect to update the classList and localStorage when darkMode or themeMode changes
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
 
   // Function to toggle dark mode
 
@@ -172,7 +154,6 @@ const Archive: React.FC = () => {
     saveNote(newNote);
   };
 
-  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
   // @ts-ignore
   const [sortingOption, setSortingOption] = useState("updatedAt");
 
@@ -549,6 +530,33 @@ const Archive: React.FC = () => {
     }
   };
 
+  const [themeMode, setThemeMode] = useState(() => {
+    const storedThemeMode = localStorage.getItem("themeMode");
+    return storedThemeMode || "auto";
+  });
+
+  // State to manage dark mode
+  const [darkMode, setDarkMode] = useState(() => {
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
+  });
+
+  // Effect to update the classList and localStorage when darkMode or themeMode changes
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("themeMode", themeMode);
+  }, [darkMode, themeMode]);
+
+  // Function to toggle dark mode
+  const toggleTheme = (
+    newMode: boolean | ((prevState: boolean) => boolean)
+  ) => {
+    setDarkMode(newMode);
+    setThemeMode(newMode ? "dark" : "light");
+  };
+
   const handlers = useSwipeable({
     onSwiped: handleSwipe,
   });
@@ -556,6 +564,15 @@ const Archive: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
+      <div className="grid sm:grid-cols-[auto,1fr]">
+        <Sidebar
+          onCreateNewNote={handleCreateNewNote}
+          isDarkMode={darkMode}
+          toggleTheme={() => toggleTheme(!darkMode)}
+          exportData={exportData}
+          handleImportData={handleImportData}
+        />
+
 
         <div className="overflow-y-hidden">
           {!activeNoteId && (
@@ -602,7 +619,7 @@ const Archive: React.FC = () => {
                         }
                         onClick={() => handleClickNote(note)}
                       >
-                        <div className="h-44 overflow-hidden">
+                        <div className="h-40 overflow-hidden">
                           <div className="flex flex-col h-full overflow-hidden">
                             <div className="text-xl font-bold">
                               {note.title}
@@ -685,12 +702,10 @@ const Archive: React.FC = () => {
               </div>
               <BottomNavBar
                 onCreateNewNote={handleCreateNewNote}
-                onToggleArchiveVisibility={() =>
-                  setIsArchiveVisible(!isArchiveVisible)
-                }
               />
             </div>
           )}
+      </div>
       </div>
       <div>
         {activeNote && (
