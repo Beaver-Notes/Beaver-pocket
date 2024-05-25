@@ -36,7 +36,7 @@
     width: 33.33%; /* Adjusted width */
     padding: 0;
     margin: 0;
-    @apply text-black dark:text-white;
+    @apply text-black dark:text-[color:var(--selected-dark-text)];
     text-align: center;
     cursor: pointer;
     color: var(--switches-label-color);
@@ -72,7 +72,7 @@
     text-align: center;
     opacity: 0;
     display: block;
-    @apply text-black dark:text-white;
+    @apply text-black dark:text-[color:var(--selected-dark-text)];
     transition: opacity .2s cubic-bezier(.77, 0, .175, 1) .125s;
     will-change: opacity;
     position: absolute;

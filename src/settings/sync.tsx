@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import BottomNavBar from "../components/Home/BottomNavBar";
 import { Note } from "../store/types";
-import "./css/main.css";
-import "./css/fonts.css";
+import "../css/main.css";
+import "../css/fonts.css";
 import NoteEditor from "../NoteEditor";
 import { v4 as uuid } from "uuid";
 import useNoteEditor from "../store/useNoteActions";

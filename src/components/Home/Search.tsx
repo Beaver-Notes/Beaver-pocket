@@ -49,12 +49,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <div className="bg-transparent px-6">
       <div className="flex justify-center">
-        <div className="apply relative w-full sm:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2;">
+        <div className="apply relative w-full sm:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2;">
           <div>
-            <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6" />
+            <Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6" />
           </div>
           <input
-            className="text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-white w-full"
+            className="text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
             type="text"
             placeholder={translations.search.searchNotes}
             value={searchQuery}
@@ -66,7 +66,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <select
               id="labelSelect"
               onChange={(e) => handleLabelFilterChange(e.target.value)}
-              className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+              className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
             >
               <option value="">{translations.search.selectlabel}</option>
               {uniqueLabels.map((label) => (
@@ -81,7 +81,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         <div className="sm:block hidden relative inline-flex items-center">
           <select
             onChange={(e) => setSortingOption(e.target.value)}
-            className="rounded-full ml-2 pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+            className="rounded-full ml-2 pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
           >
             <option value="updatedAt">{translations.search.lastUpdated}</option>
             <option value="createdAt">{translations.search.creationDate}</option>
@@ -92,17 +92,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
       </div>
       <div className="items-center">
         <div className="sm:w-[22em] h-12 flex items-center justify-start mx-auto sm:hidden overflow-hidden">
-          <div className="border-r-2 border-gray-300 dark:border-neutral-800 p-3 rounded-l-full bg-[#F8F8F7] text-center dark:bg-[#2D2C2C] flex-grow text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
+          <div className="border-r-2 border-gray-300 dark:border-neutral-800 p-3 rounded-l-full bg-[#F8F8F7] text-center dark:bg-[#2D2C2C] flex-grow text-gray-800 dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none">
             <button
-              className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center"
+              className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center"
               onClick={exportData}
             >
               <Upload2LineIcon />
             </button>
           </div>
-          <div className="border-l-2 border-gray-300 dark:border-neutral-800 p-3 rounded-r-full bg-[#F8F8F7] dark:bg-[#2D2C2C] text-center flex-grow mr-2 text-gray-800 dark:bg-[#2D2C2C] dark:text-white outline-none">
+          <div className="border-l-2 border-gray-300 dark:border-neutral-800 p-3 rounded-r-full bg-[#F8F8F7] dark:bg-[#2D2C2C] text-center flex-grow mr-2 text-gray-800 dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none">
           <button
-              className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-white rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center"
+              className="bg-[#F8F8F7] w-full dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] rounded-full font-semibold text-gray-800 cursor-pointer flex items-center justify-center"
               onClick={handleImportData}
             >
               <Download2LineIcon />
@@ -112,7 +112,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <select
               id="labelSelect"
               onChange={(e) => handleLabelFilterChange(e.target.value)}
-              className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+              className="rounded-full pl-4 pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
             >
               <option value="">{translations.search.selectlabel}</option>
               {uniqueLabels.map((label) => (
@@ -128,7 +128,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <ArrowUpDownLineIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
           <select
             onChange={(e) => setSortingOption(e.target.value)}
-            className="bg-transparent text-lg dark:text-white outline-none appearance-none pl-10"
+            className="bg-transparent text-lg dark:text-[color:var(--selected-dark-text)] outline-none appearance-none pl-10"
           >
             <option value="updatedAt">{translations.search.lastUpdated}</option>
             <option value="createdAt">{translations.search.creationDate}</option>

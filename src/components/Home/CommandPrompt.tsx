@@ -90,12 +90,12 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
       {isOpen && (
         <div className="fixed top-10 left-0 right-0 mx-auto sm:w-1/4 w-3/4 flex flex-col items-center justify-center z-100">
           <div className="bg-[#FDFDFA] dark:bg-[#353333] transform w-full rounded-lg shadow-xl py-2 px-4 relative">
-            <div className="w-full p-2 border-b-2 dark:border-neutral-600 bg-transparent align-middle text-gray-800 cursor-pointer flex items-center justify-start dark:text-white mr-2">
+            <div className="w-full p-2 border-b-2 dark:border-neutral-600 bg-transparent align-middle text-gray-800 cursor-pointer flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2">
               <div>
-                <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6" />
+                <Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6" />
               </div>
               <input
-                className="text-xl text-gray-800 bg-transparent px-2 outline-none dark:text-white w-full"
+                className="text-xl text-gray-800 bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
                 type="text"
                 placeholder="Search file or type '>' to search commands"
                 value={searchTerm}

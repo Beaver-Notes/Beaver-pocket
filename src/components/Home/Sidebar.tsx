@@ -67,47 +67,47 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="fixed top-0 left-0 h-screen flex flex-col items-center justify-between p-2.5 bg-[#F8F8F7] dark:bg-[#353333] hidden sm:flex">
         <div className="py-5">
           <button
-            className="hidden mb-2 p-2 bg-[#EBEBEA] dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
+            className="hidden mb-2 p-2 bg-[#EBEBEA] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
             onClick={onCreateNewNote}
           >
             <AddFillIcon className="text-amber-400 h-8 w-8" />
           </button>
 
           <Link to="/">
-            <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] mb-2 p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex">
-              <BookletLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
+            <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] mb-2 p-2 dark:text-[color:var(--selected-dark-text)] rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex">
+              <BookletLineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-8 w-8" />
             </button>
           </Link>
 
           <Link to="/archive">
-            <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex">
-              <ArchiveLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
+            <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-[color:var(--selected-dark-text)] rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex">
+              <ArchiveLineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-8 w-8" />
             </button>
           </Link>
         </div>
         <div className="fixed bottom-6 gap-y-2">
           <button
             onClick={toggleTheme}
-            className="hidden p-2 hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
+            className="hidden p-2 hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
           >
             {isDarkMode ? (
-              <SunLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
+              <SunLineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-8 w-8" />
             ) : (
-              <MoonLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
+              <MoonLineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-8 w-8" />
             )}
           </button>
           <button
-            className="hidden p-2 hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
+            className="hidden p-2 hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
             onClick={exportData}
           >
-            <Upload2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
+            <Upload2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-8 w-8" />
           </button>
 
           <label
             htmlFor="importData"
-            className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
+            className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-[color:var(--selected-dark-text)] rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"
           >
-            <Download2LineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
+            <Download2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-8 w-8" />
           </label>
           <input
             className="hidden"
@@ -117,8 +117,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             onChange={handleImportData}
           />
           <Link to="/settings">
-            <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-white rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex">
-              <SettingsLineIcon className="text-neutral-800 dark:text-white h-8 w-8" />
+            <button className="hidden hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] p-2 dark:text-[color:var(--selected-dark-text)] rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex">
+              <SettingsLineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-8 w-8" />
             </button>
           </Link>
         </div>

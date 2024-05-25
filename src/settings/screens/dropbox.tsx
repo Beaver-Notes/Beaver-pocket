@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "../../store/types";
-import "./css/main.css";
-import "./css/fonts.css";
+import "../../css/main.css";
+import "../../css/fonts.css";
 import { Browser } from "@capacitor/browser";
 import { v4 as uuid } from "uuid";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +19,6 @@ import getMimeType from "./deps/mimetype";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 import dayjs from "dayjs";
-
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
@@ -619,19 +618,19 @@ const DropboxSync: React.FC = () => {
                 {" "}
                 {/* Adjusted margin */}
                 <button
-                  className="bg-neutral-200 dark:text-white dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
+                  className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
                   onClick={downloadFolder}
                 >
                   Import
                 </button>
                 <button
-                  className="bg-neutral-200 dark:text-white dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+                  className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                   onClick={exportdata}
                 >
                   Export
                 </button>
                 <button
-                  className="bg-neutral-200 dark:text-white dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+                  className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                   onClick={Logout}
                 >
                   Logout
@@ -669,7 +668,7 @@ const DropboxSync: React.FC = () => {
                     onChange={(e) => setAuthorizationCode(e.target.value)}
                   />
                   <button
-                    className="bg-neutral-200 dark:bg-[#2D2C2C] dark:text-white bg-opacity-40 w-full text-black p-3 text-xl font-bold rounded-xl"
+                    className="bg-neutral-200 dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] bg-opacity-40 w-full text-black p-3 text-xl font-bold rounded-xl"
                     onClick={handleExchange}
                   >
                     Submit
