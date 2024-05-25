@@ -52,7 +52,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
               } cursor-pointer`}
               onClick={() => editor?.chain().focus().toggleTaskList().run()}
             >
-              <ListCheck2Icon className="border-none text-neutral-700 dark:text-white text-xl w-8 h-8 cursor-pointer" />
+              <ListCheck2Icon className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
             </button>
           </div>
           <div className="flex py-1 pl-1">
@@ -68,7 +68,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
                 })
               }
             >
-              <Table2Icon className="border-none text-neutral-700 dark:text-white text-xl w-8 h-8 cursor-pointer" />
+              <Table2Icon className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
             </button>
           </div>
           <div className="flex py-1 pl-1">
@@ -78,7 +78,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
               } cursor-pointer`}
               onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
             >
-              <CodeBox className="border-none text-neutral-700 dark:text-white text-xl w-8 h-8 cursor-pointer" />
+              <CodeBox className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
             </button>
           </div>
           <div className="flex py-1 pl-1">

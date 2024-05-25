@@ -57,9 +57,9 @@ const Find: React.FC<FindProps> = ({ editor }) => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <div className="flex items-center sm:mr-2 mb-2 space-x-2">
           <div className="flex px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-gray-800">
-            <Search2LineIcon className="text-gray-800 dark:text-white h-6 w-6 mr-2" />
+            <Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6 mr-2" />
             <input
-              className="text-lg text-gray-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-white w-full"
+              className="text-lg text-gray-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
               ref={searchInputRef}
               type="text"
               value={searchTerm}
@@ -71,7 +71,7 @@ const Find: React.FC<FindProps> = ({ editor }) => {
         <div className="flex items-center mb-2 sm:mr-2 space-x-2">
           <div className="flex px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-gray-800">
             <input
-              className="text-lg text-gray-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-white w-full"
+              className="text-lg text-gray-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
               type="text"
               value={replaceTerm}
               onChange={(e) => setReplaceTerm(e.target.value)}

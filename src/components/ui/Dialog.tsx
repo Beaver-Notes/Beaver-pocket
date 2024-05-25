@@ -70,7 +70,7 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
     <div className={`modal-container ${isVisible ? "show" : "hide"}`}>
       <div className="fixed inset-0 z-40 flex justify-center items-center bg-black bg-opacity-20">
         <div className="bg-white dark:bg-[#2D2C2C] w-[80%] p-4 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-semibold mb-4">{title}</h2>
+          <h2 className="text-2xl font-semibold dark:text-[color:var(--selected-dark-text)] mb-4">{title}</h2>
           <div className="relative">
             <input
               type={showInputContent ? "text" : "password"}
@@ -81,7 +81,7 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
             />
             <button
               onClick={toggleInputContentVisibility}
-              className="absolute right-0 py-1.5 text-sm dark:text-white text-gray-500 focus:outline-none"
+              className="absolute right-0 py-1.5 text-sm dark:text-[color:var(--selected-dark-text)] text-gray-500 focus:outline-none"
             >
               {showInputContent ? (
                 <EyeLineIcon className="w-8 h-8 mr-2" />
@@ -93,7 +93,7 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
           <div className="flex space-x-2 justify-end">
             <button
               onClick={handleCancel}
-              className="p-3 text-xl w-1/2 bg-gray-100 dark:bg-neutral-700 dark:text-white text-gray-700 rounded-lg hover:bg-gray-200"
+              className="p-3 text-xl w-1/2 bg-gray-100 dark:bg-neutral-700 dark:text-[color:var(--selected-dark-text)] text-gray-700 rounded-lg hover:bg-gray-200"
             >
               {translations.home.cancel}
             </button>

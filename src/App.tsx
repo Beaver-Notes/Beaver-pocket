@@ -26,6 +26,15 @@ const App: React.FC = () => {
     }
   });
 
+   useEffect(() => {
+    const selectedDarkText =
+      localStorage.getItem('selected-dark-text') || 'white';
+    document.documentElement.style.setProperty(
+      '--selected-dark-text',
+      selectedDarkText
+    );
+  }, []);
+
   useEffect(() => {
     // Check if it's the first time only when the app starts
     if (!checkedFirstTime) {

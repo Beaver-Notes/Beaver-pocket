@@ -347,7 +347,7 @@ function NoteEditor({
       <div
         className={`sm:ml-16 editor overflow-auto h-full justify-center items-start px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
-        } text-black dark:text-white text-base`}
+        } text-black dark:text-[color:var(--selected-dark-text)] text-base`}
         onDragOver={(e) => e.preventDefault()}
       >
         <div className="hidden sm:block sm:p-12"></div>
@@ -377,7 +377,7 @@ function NoteEditor({
             className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
             onClick={onCloseEditor}
           >
-            <ArrowLeftLineIcon className="border-none dark:text-white text-neutral-800 text-xl w-7 h-7" />
+            <ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
           </button>
           <div className="flex">
             <button
@@ -390,7 +390,7 @@ function NoteEditor({
               <Focus3LineIcon
                 className={`border-none ${
                   focusMode ? "text-amber-400" : "text-neutral-800"
-                }  dark:text-white text-xl w-7 h-7`}
+                }  dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
               />
             </button>
             <button
@@ -400,7 +400,7 @@ function NoteEditor({
               <Search2LineIcon
                 className={`border-none ${
                   focusMode ? "hidden" : "block"
-                }  dark:text-white text-neutral-800 text-xl w-7 h-7`}
+                }  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
               />
             </button>
             <button
@@ -410,7 +410,7 @@ function NoteEditor({
               <Search2LineIcon
                 className={`border-none ${
                   focusMode ? "hidden" : "block"
-                }  dark:text-white text-neutral-800 text-xl w-7 h-7`}
+                }  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
               />
             </button>
           </div>

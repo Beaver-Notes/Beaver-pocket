@@ -90,7 +90,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
       </div>
       <div className="p-[11px] sm:hidden rounded-full cursor-pointer">
         <label htmlFor="file-upload-input">
-          <FileIcon className="border-none text-black dark:text-white text-xl w-8 h-8 cursor-pointer" />
+          <FileIcon className="border-none text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
         </label>
         <input
           type="file"

@@ -69,8 +69,8 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
               tabIndex={0}
               className={
                 note.id === activeNoteId
-                  ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                  : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
+                  ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
+                  : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
               }
               onClick={() => handleClickNote(note)}
             >
@@ -102,7 +102,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
                   {note.isLocked ? (
                     <div className="flex flex-col items-center">
                       <button className="flex items-center justify-center">
-                        <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
+                        <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
                       </button>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">
                         {translations.home.unlocktoedit}
@@ -118,7 +118,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
               <div className="flex items-center justify-between pt-2">
                           <div className="flex items-center">
                             <button
-                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
                               onClick={(e) => handleToggleBookmark(note.id, e)}
                             >
                               {note.isBookmarked ? (
@@ -128,7 +128,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
                               )}
                             </button>
                             <button
-                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
                               onClick={(e) => handleToggleLock(note.id, e)}
                             >
                               {note.isLocked ? (
@@ -138,7 +138,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
                               )}
                             </button>
                             <button
-                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto"
+                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
                               onClick={(e) => handleDeleteNote(note.id, e)}
                             >
                               <DeleteBinLineIcon className="w-8 h-8 mr-2" />

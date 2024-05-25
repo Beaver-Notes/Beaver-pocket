@@ -79,7 +79,7 @@ input[type="checkbox"]:checked::before {
 }
 
 .labelinput {
-  @apply text-lg flex dark:text-white bg-transparent w-auto outline-none content-center;
+  @apply text-lg flex dark:text-[color:var(--selected-dark-text)] bg-transparent w-auto outline-none content-center;
 }
 
 .labelinput:empty::before {

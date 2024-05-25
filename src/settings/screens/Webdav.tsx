@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { WebDavService } from "./deps/WebDavApi";
-import "./css/main.css";
-import "./css/fonts.css";
+import "../../css/main.css";
+import "../../css/fonts.css";
 import { useExportDav, useImportDav } from "./utility/WebdavUtil";
 import ServerLineIcon from "remixicon-react/ServerLineIcon";
 import BottomNavBar from "../../components/Home/BottomNavBar";
@@ -234,7 +234,7 @@ const ExampleComponent: React.FC = () => {
                 />
                 <button
                   onClick={toggleInputContentVisibility}
-                  className="absolute right-0 py-2.5 text-sm dark:text-white text-gray-500 focus:outline-none"
+                  className="absolute right-0 py-2.5 text-sm dark:text-[color:var(--selected-dark-text)] text-gray-500 focus:outline-none"
                 >
                   {showInputContent ? (
                     <EyeLineIcon className="w-8 h-8 mr-2" />
@@ -244,19 +244,19 @@ const ExampleComponent: React.FC = () => {
                 </button>
               </div>
               <button
-                className="bg-neutral-200 dark:text-white dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+                className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                 onClick={login}
               >
                 Log in
               </button>
               <button
-                className="bg-neutral-200 dark:text-white dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+                className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                 onClick={exportdata}
               >
                 Export data
               </button>
               <button
-                className="bg-neutral-200 dark:text-white dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+                className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                 onClick={HandleImportData}
               >
                 Import Data

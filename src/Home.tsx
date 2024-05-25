@@ -33,6 +33,7 @@ import { useNotesState, useActiveNote } from "./store/Activenote";
 import { useExportData } from "./utils/exportUtils";
 import { useHandleImportData } from "./utils/importUtils";
 import { useSwipeable } from "react-swipeable";
+import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { useNavigate } from "react-router-dom";
 
 // Import Remix icons
@@ -329,211 +330,232 @@ const App: React.FC = () => {
   });
   
 
-  const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-  
-    try {
-      // Define a div where the prompt will be rendered
-      const promptRoot = document.createElement('div');
-      document.body.appendChild(promptRoot);
-  
-      // Show the modular prompt
-      const password = await new Promise<string | null>((resolve) => {
-        const handleConfirm = (value: string | null) => {
-          ReactDOM.unmountComponentAtNode(promptRoot);
-          resolve(value);
-        };
-        const handleCancel = () => {
-          ReactDOM.unmountComponentAtNode(promptRoot);
-          resolve(null); // Resolving with null for cancel action
-        };
-        ReactDOM.render(
-          <ModularPrompt
-            title={translations.home.enterpasswd}
-            onConfirm={handleConfirm}
-            onCancel={handleCancel}
-          />,
-          promptRoot
-        );
-      });
-  
-      if (!password) {
-        // If the user cancels or enters nothing, exit the function
-        return;
-      }
-  
-      // Load the notes from storage
-      const result = await Filesystem.readFile({
-        path: STORAGE_PATH,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-  
-      let notes;
-      if (typeof result.data === "string") {
-        notes = JSON.parse(result.data).data.notes;
-      } else {
-        const dataText = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsText(result.data as Blob);
-        });
-        notes = JSON.parse(dataText).data.notes;
-      }
-  
-      const updatedNote = { ...notes[noteId] };
-  
-      // Check if the note is locked
-      if (updatedNote.isLocked) {
-        // Note is locked, try to decrypt it
-        const decryptedContent = CryptoJS.AES.decrypt(
-          updatedNote.content.content[0],
-          password
-        ).toString(CryptoJS.enc.Utf8);
-  
-        if (!decryptedContent) {
-          // If decryption fails (wrong password), show error message and exit
-          alert(translations.home.wrongpasswd);
-          return;
-        }
-  
-        // Update note content with decrypted content and unlock the note
-        updatedNote.content = JSON.parse(decryptedContent);
-        updatedNote.isLocked = false;
-      } else {
-        // Note is unlocked, encrypt the content
-        const encryptedContent = CryptoJS.AES.encrypt(
-          JSON.stringify(updatedNote.content),
-          password
-        ).toString();
-  
-        // Update note content with encrypted content and lock the note
-        updatedNote.content = { type: 'doc', content: [encryptedContent] };
-        updatedNote.isLocked = true;
-      }
-  
-      // Update the notes array with the updated note
-      notes[noteId] = updatedNote;
-  
-      // Save the updated notes array to storage
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-  
-      // Update the state with the updated notes array
-      setNotesState(notes);
-  
-    } catch (error) {
-      alert(translations.home.lockerror);
-    }
-  };
+const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
+  event.stopPropagation();
 
-  const handleToggleUnlock = async (noteId: string) => {
-  
+  try {
+    // Prompt the user for a password
+    const password = await promptForPassword();
+    if (!password) {
+      // If the user cancels or enters nothing, exit the function
+      return;
+    }
+
+    // Check if a password is already stored
+    let storedPassword: string | null = null;
     try {
-      // Define a div where the prompt will be rendered
-      const promptRoot = document.createElement('div');
-      document.body.appendChild(promptRoot);
-  
-      // Show the modular prompt
-      const password = await new Promise<string | null>((resolve) => {
-        const handleConfirm = (value: string | null) => {
-          ReactDOM.unmountComponentAtNode(promptRoot);
-          resolve(value);
-        };
-        const handleCancel = () => {
-          ReactDOM.unmountComponentAtNode(promptRoot);
-          resolve(null); // Resolving with null for cancel action
-        };
-        ReactDOM.render(
-          <ModularPrompt
-            title={translations.home.enterpasswd}
-            onConfirm={handleConfirm}
-            onCancel={handleCancel}
-          />,
-          promptRoot
-        );
+      const result = await SecureStoragePlugin.get({ key: noteId });
+      storedPassword = result.value;
+    } catch (e) {
+      // No stored password found, proceed without error
+    }
+
+    // If a stored password exists, compare it with the entered password
+    if (storedPassword && storedPassword !== password) {
+      alert(translations.home.wrongpasswd);
+      return;
+    }
+
+    // Load the notes from storage
+    const result = await Filesystem.readFile({
+      path: STORAGE_PATH,
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
+    });
+
+    let notes;
+    if (typeof result.data === "string") {
+      notes = JSON.parse(result.data).data.notes;
+    } else {
+      const dataText = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsText(result.data as Blob);
       });
-  
-      if (!password) {
-        // If the user cancels or enters nothing, exit the function
+      notes = JSON.parse(dataText).data.notes;
+    }
+
+    const updatedNote = { ...notes[noteId] };
+
+    // Check if the note is locked
+    if (updatedNote.isLocked) {
+      // Note is locked, try to decrypt it
+      const decryptedContent = CryptoJS.AES.decrypt(
+        updatedNote.content.content[0],
+        password
+      ).toString(CryptoJS.enc.Utf8);
+
+      if (!decryptedContent) {
+        // If decryption fails (wrong password), show error message and exit
+        alert(translations.home.wrongpasswd);
         return;
       }
-  
-      // Load the notes from storage
-      const result = await Filesystem.readFile({
-        path: STORAGE_PATH,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-  
-      let notes;
-      if (typeof result.data === "string") {
-        notes = JSON.parse(result.data).data.notes;
-      } else {
-        const dataText = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsText(result.data as Blob);
-        });
-        notes = JSON.parse(dataText).data.notes;
+
+      // Update note content with decrypted content and unlock the note
+      updatedNote.content = JSON.parse(decryptedContent);
+      updatedNote.isLocked = false;
+    } else {
+      // Note is unlocked, encrypt the content
+      const encryptedContent = CryptoJS.AES.encrypt(
+        JSON.stringify(updatedNote.content),
+        password
+      ).toString();
+
+      // Update note content with encrypted content and lock the note
+      updatedNote.content = { type: 'doc', content: [encryptedContent] };
+      updatedNote.isLocked = true;
+
+      // Store the password securely if it wasn't already stored
+      if (!storedPassword) {
+        await SecureStoragePlugin.set({ key: noteId, value: password });
       }
-  
-      const updatedNote = { ...notes[noteId] };
-  
-      // Check if the note is locked
-      if (updatedNote.isLocked) {
-        // Note is locked, try to decrypt it
-        const decryptedContent = CryptoJS.AES.decrypt(
-          updatedNote.content.content[0],
-          password
-        ).toString(CryptoJS.enc.Utf8);
-  
-        if (!decryptedContent) {
-          // If decryption fails (wrong password), show error message and exit
-          alert(translations.home.wrongpasswd);
-          return;
-        }
-  
-        // Update note content with decrypted content and unlock the note
-        updatedNote.content = JSON.parse(decryptedContent);
-        updatedNote.isLocked = false;
-      } else {
-        // Note is unlocked, encrypt the content
-        const encryptedContent = CryptoJS.AES.encrypt(
-          JSON.stringify(updatedNote.content),
-          password
-        ).toString();
-  
-        // Update note content with encrypted content and lock the note
-        updatedNote.content = { type: 'doc', content: [encryptedContent] };
-        updatedNote.isLocked = true;
-      }
-  
-      // Update the notes array with the updated note
-      notes[noteId] = updatedNote;
-  
-      // Save the updated notes array to storage
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-  
-      // Update the state with the updated notes array
-      setNotesState(notes);
-      setActiveNoteId(noteId);
-  
-    } catch (error) {
-      alert(translations.home.lockerror);
     }
-  };
+
+    // Update the notes array with the updated note
+    notes[noteId] = updatedNote;
+
+    // Save the updated notes array to storage
+    await Filesystem.writeFile({
+      path: STORAGE_PATH,
+      data: JSON.stringify({ data: { notes } }),
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
+    });
+
+    // Update the state with the updated notes array
+    setNotesState(notes);
+
+  } catch (error) {
+    alert(translations.home.lockerror);
+  }
+};
+
+// Helper function to prompt the user for a password
+const promptForPassword = async (): Promise<string | null> => {
+  // Define a div where the prompt will be rendered
+  const promptRoot = document.createElement('div');
+  document.body.appendChild(promptRoot);
+
+  return new Promise<string | null>((resolve) => {
+    const handleConfirm = (value: string | null) => {
+      ReactDOM.unmountComponentAtNode(promptRoot);
+      resolve(value);
+    };
+    const handleCancel = () => {
+      ReactDOM.unmountComponentAtNode(promptRoot);
+      resolve(null); // Resolving with null for cancel action
+    };
+    ReactDOM.render(
+      <ModularPrompt
+        title={translations.home.enterpasswd}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />,
+      promptRoot
+    );
+  });
+};
+
+const handleToggleUnlock = async (noteId: string) => {
+  try {
+    // Prompt the user for a password
+    const password = await promptForPassword();
+    if (!password) {
+      // If the user cancels or enters nothing, exit the function
+      return;
+    }
+
+    // Check if a password is already stored
+    let storedPassword: string | null = null;
+    try {
+      const result = await SecureStoragePlugin.get({ key: noteId });
+      storedPassword = result.value;
+    } catch (e) {
+      // No stored password found, proceed without error
+    }
+
+    // If a stored password exists, compare it with the entered password
+    if (storedPassword && storedPassword !== password) {
+      alert(translations.home.wrongpasswd);
+      return;
+    }
+
+    // Load the notes from storage
+    const result = await Filesystem.readFile({
+      path: STORAGE_PATH,
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
+    });
+
+    let notes;
+    if (typeof result.data === "string") {
+      notes = JSON.parse(result.data).data.notes;
+    } else {
+      const dataText = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsText(result.data as Blob);
+      });
+      notes = JSON.parse(dataText).data.notes;
+    }
+
+    const updatedNote = { ...notes[noteId] };
+
+    // Check if the note is locked
+    if (updatedNote.isLocked) {
+      // Note is locked, try to decrypt it
+      const decryptedContent = CryptoJS.AES.decrypt(
+        updatedNote.content.content[0],
+        password
+      ).toString(CryptoJS.enc.Utf8);
+
+      if (!decryptedContent) {
+        // If decryption fails (wrong password), show error message and exit
+        alert(translations.home.wrongpasswd);
+        return;
+      }
+
+      // Update note content with decrypted content and unlock the note
+      updatedNote.content = JSON.parse(decryptedContent);
+      updatedNote.isLocked = false;
+    } else {
+      // Note is unlocked, encrypt the content
+      const encryptedContent = CryptoJS.AES.encrypt(
+        JSON.stringify(updatedNote.content),
+        password
+      ).toString();
+
+      // Update note content with encrypted content and lock the note
+      updatedNote.content = { type: 'doc', content: [encryptedContent] };
+      updatedNote.isLocked = true;
+
+      // Store the password securely if it wasn't already stored
+      if (!storedPassword) {
+        await SecureStoragePlugin.set({ key: noteId, value: password });
+      }
+    }
+
+    // Update the notes array with the updated note
+    notes[noteId] = updatedNote;
+
+    // Save the updated notes array to storage
+    await Filesystem.writeFile({
+      path: STORAGE_PATH,
+      data: JSON.stringify({ data: { notes } }),
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
+    });
+
+    // Update the state with the updated notes array
+    setNotesState(notes);
+    setActiveNoteId(noteId);
+
+  } catch (error) {
+    alert(translations.home.lockerror);
+  }
+};
   
   const handleClickNote = async (note: Note) => {
     if (note.isLocked) {
@@ -712,8 +734,8 @@ const App: React.FC = () => {
                         tabIndex={0}
                         className={
                           note.id === activeNoteId
-                            ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
-                            : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-white dark:bg-[#2D2C2C]"
+                            ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
+                            : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
                         }
                         onClick={() => handleClickNote(note)}
                       >
@@ -747,7 +769,7 @@ const App: React.FC = () => {
                             {note.isLocked ? (
                               <div className="flex flex-col items-center">
                                 <button className="flex items-center justify-center">
-                                  <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-white" />
+                                  <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
                                 </button>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400">
                                   {translations.home.unlocktoedit || "-"}
@@ -764,7 +786,7 @@ const App: React.FC = () => {
                         <div className="flex items-center justify-between pt-2">
                           <div className="flex items-center">
                             <button
-                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
                               onClick={(e) => handleToggleBookmark(note.id, e)}
                             >
                               {note.isBookmarked ? (
@@ -774,7 +796,7 @@ const App: React.FC = () => {
                               )}
                             </button>
                             <button
-                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
                               onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
                             >
                               {note.isBookmarked ? (
@@ -784,7 +806,7 @@ const App: React.FC = () => {
                               )}
                             </button>
                             <button
-                              className="text-[#52525C] py-2 dark:text-white w-auto"
+                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
                               onClick={(e) => handleToggleLock(note.id, e)}
                             >
                               {note.isLocked ? (
@@ -794,7 +816,7 @@ const App: React.FC = () => {
                               )}
                             </button>
                             <button
-                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-white w-auto"
+                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
                               onClick={(e) => handleDeleteNote(note.id, e)}
                             >
                               <DeleteBinLineIcon className="w-8 h-8 mr-2" />
