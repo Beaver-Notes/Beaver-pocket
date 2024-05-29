@@ -69,7 +69,7 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
   return (
     <div className={`modal-container ${isVisible ? "show" : "hide"}`}>
       <div className="fixed inset-0 z-40 flex justify-center items-center bg-black bg-opacity-20">
-        <div className="bg-white dark:bg-[#2D2C2C] w-[80%] p-4 rounded-lg shadow-lg">
+        <div className="bg-white dark:bg-[#2D2C2C] w-2/3 sm:w-2/5 p-4 rounded-lg shadow-lg">
           <h2 className="text-2xl font-semibold dark:text-[color:var(--selected-dark-text)] mb-4">{title}</h2>
           <div className="relative">
             <input

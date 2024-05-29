@@ -4,6 +4,7 @@ import { lowlight } from "lowlight";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Bubblemenu from "./components/Editor/Bubblemenu";
 import Toolbar from "./components/Editor/Toolbar";
+import "./css/video.scss";
 import Document from "@tiptap/extension-document";
 import { Keyboard } from "@capacitor/keyboard";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -24,6 +25,7 @@ import { LinkNote } from "./lib/tiptap/note-link";
 import NoteLabels from "./components/Editor/NoteLabel";
 import FileEmbed from "./lib/tiptap/FileEmbed";
 import BubleMenutable from "./components/Editor/Bubblemenutable";
+import iframe from "./lib/tiptap/iframe"
 import Mathblock from "./lib/tiptap/math-block/Index";
 import {
   blackCallout,
@@ -93,6 +95,7 @@ const extensions = [
   Document,
   NoteLabel,
   Text,
+  iframe,
   FileEmbed,
   blackCallout,
   blueCallout,

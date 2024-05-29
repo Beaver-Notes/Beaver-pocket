@@ -111,6 +111,7 @@
     "remixicon": "3.7.0",
     "remixicon-react": "^1.0.0",
     "rxjs": "^7.8.1",
+    "sass": "^1.77.2",
     "simple-oauth2": "^5.0.0",
     "slick-bottom-sheet": "^0.1.1",
     "tippy.js": "^6.3.7",
