@@ -8,6 +8,7 @@ import FileUploadComponent from "./FileUpload";
 import CodeBox from "remixicon-react/CodeBoxLineIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import Table2Icon from "remixicon-react/Table2Icon";
+import VideoIcon from "remixicon-react/MovieLineIcon"
 
 interface DrawerProps {
   note: Note;
@@ -27,7 +28,49 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
       editor.chain().setFileEmbed(fileUrl, fileName).run();
     }
   };
-  
+
+  const vidUrlRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAddIframe = () => {
+    // Prompt the user for the URL
+    const videoUrl = prompt("Please enter the URL of the video:");
+
+    // Check if the user canceled or entered an empty URL
+    if (!videoUrl || videoUrl.trim() === '') {
+      // Prevent adding iframe if URL is empty or canceled
+      return;
+    }
+
+    let formattedUrl = videoUrl.trim();
+
+    // Check if the URL is a YouTube video URL in the regular format
+    if (formattedUrl.includes('youtube.com/watch?v=')) {
+      let videoId = formattedUrl.split('v=')[1];
+      const ampersandPosition = videoId.indexOf('&');
+      if (ampersandPosition !== -1) {
+        videoId = videoId.substring(0, ampersandPosition);
+      }
+      // Convert to the embed format
+      formattedUrl = `https://www.youtube.com/embed/${videoId}`;
+    } else if (formattedUrl.includes('youtu.be/')) {
+      let videoId = formattedUrl.split('youtu.be/')[1];
+      const ampersandPosition = videoId.indexOf('?');
+      if (ampersandPosition !== -1) {
+        videoId = videoId.substring(0, ampersandPosition);
+      }
+      // Convert to the embed format
+      formattedUrl = `https://www.youtube.com/embed/${videoId}`;
+    }
+
+    // Use the formatted URL to set the iframe source
+    editor
+      .chain()
+      .focus()
+      .setIframe({
+        src: formattedUrl,
+      })
+      .run();
+  };
 
   return (
     <div
@@ -76,9 +119,9 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
               className={`p-1 ${
                 editor?.isActive("Tasklist") ? "text-amber-400" : ""
               } cursor-pointer`}
-              onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+              onClick={handleAddIframe}
             >
-              <CodeBox className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
+              <VideoIcon className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
             </button>
           </div>
           <div className="flex py-1 pl-1">

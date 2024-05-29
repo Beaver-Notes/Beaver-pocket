@@ -327,7 +327,7 @@ const Settings: React.FC = () => {
           {!activeNoteId && (
             <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
               <div className="mx-6 md:px-24 overflow-y-auto flex-grow">
-                <p className="text-4xl font-bold text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                <p className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
                   {" "}
                   {translations.settings.title || "-"}
                 </p>
