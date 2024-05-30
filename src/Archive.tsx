@@ -31,11 +31,8 @@ import { useExportData } from "./utils/exportUtils";
 import { useHandleImportData } from "./utils/importUtils";
 
 // Import Remix icons
-import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
-import ArchiveDrawerLineIcon from "remixicon-react/ArchiveLineIcon";
-import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
-import LockClosedIcon from "remixicon-react/LockLineIcon";
-import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
+import Icons from './lib/remixicon-react';
+
 import dayjs from "dayjs";
 import ReactDOM from "react-dom";
 import Sidebar from "./components/Home/Sidebar";
@@ -624,7 +621,7 @@ const handleToggleUnlock = async (noteId: string) => {
                     />
                     <p className="py-2 text-lg text-center">
                       {translations.archive.messagePt1 || "-"}
-                      <ArchiveDrawerLineIcon className="inline-block w-5 h-5" />{" "}
+                      <Icons.ArchiveDrawerLineIcon className="inline-block w-5 h-5" />{" "}
                       {translations.archive.messagePt2 || "-"}
                     </p>
                   </div>
@@ -674,7 +671,7 @@ const handleToggleUnlock = async (noteId: string) => {
                             {note.isLocked ? (
                               <div className="flex flex-col items-center">
                                 <button className="flex items-center justify-center">
-                                  <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
+                                  <Icons.LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
                                 </button>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400">
                                   {translations.home.unlocktoedit || "-"}
@@ -695,9 +692,9 @@ const handleToggleUnlock = async (noteId: string) => {
                               onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
                             >
                               {note.isBookmarked ? (
-                                <ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
+                                <Icons.ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
                               ) : (
-                                <ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
+                                <Icons.ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
                               )}
                             </button>
                             <button
@@ -705,16 +702,16 @@ const handleToggleUnlock = async (noteId: string) => {
                               onClick={(e) => handleToggleLock(note.id, e)}
                             >
                               {note.isLocked ? (
-                                <LockClosedIcon className="w-8 h-8 mr-2" />
+                                <Icons.LockClosedIcon className="w-8 h-8 mr-2" />
                               ) : (
-                                <LockOpenIcon className="w-8 h-8 mr-2" />
+                                <Icons.LockOpenIcon className="w-8 h-8 mr-2" />
                               )}
                             </button>
                             <button
                               className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
                               onClick={(e) => handleDeleteNote(note.id, e)}
                             >
-                              <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                              <Icons.DeleteBinLineIcon className="w-8 h-8 mr-2" />
                             </button>
                           </div>
                           <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">

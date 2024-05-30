@@ -1,9 +1,9 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'beaver.notes.pocket',
-  appName: 'Beaver Pocket',
-  webDir: 'dist',
+  appId: "beaver.notes.pocket",
+  appName: "Beaver Pocket",
+  webDir: "dist",
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,
@@ -26,15 +26,14 @@ const config: CapacitorConfig = {
     },
   },
   server: {
-    androidScheme: 'https'
-  }
-,
-    android: {
-       buildOptions: {
-          keystorePath: 'undefined',
-          keystoreAlias: 'undefined',
-       }
-    }
-  };
+    androidScheme: "https",
+  },
+  android: {
+    buildOptions: {
+      keystorePath: "undefined",
+      keystoreAlias: "undefined",
+    },
+  },
+};
 
 export default config;

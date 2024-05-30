@@ -215,9 +215,9 @@ const Shortcuts: React.FC = () => {
               <div className="py-2 mx-2 sm:px-20 mb-2">
                 <div className="space-y-3 w-full">
                   <p className="text-4xl font-bold">Sync</p>
-                  <div className="bg-neutral-200 bg-opacity-40 dark:bg-[#383737] rounded-xl">
+                  <div className="bg-neutral-200 bg-[#F8F8F7] p-2 dark:bg-[#2D2C2C] rounded-xl">
                     <Link
-                      className="flex flex-center p-2 border-b-2 border-neutral-200 dark:border-neutral-800 border-opacity-80"
+                      className="flex flex-center p-2 border-b-2 border-neutral-200 dark:border-neutral-600 border-opacity-80"
                       to="/dropbox"
                     >
                       <DropboxFillIcon className="w-10 h-10" />
