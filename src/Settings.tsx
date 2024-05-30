@@ -5,32 +5,18 @@ import { Note } from "./store/types";
 import NoteEditor from "./NoteEditor";
 import useNoteEditor from "./store/useNoteActions";
 import BottomNavBar from "./components/Home/BottomNavBar";
-import ModularPrompt from "./components/ui/Dialog";
 import "./css/main.css";
 import "./css/fonts.css";
 import "./css/settings.css";
-import {
-  Filesystem,
-  Directory,
-  FilesystemEncoding,
-} from "@capacitor/filesystem";
 import enTranslations from "./assets/locales/en.json";
 import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
-import * as CryptoJS from "crypto-js";
 import { useSaveNote, loadNotes } from "./store/notes";
 import { useSwipeable } from "react-swipeable";
-import ReactDOM from "react-dom";
 import Sidebar from "./components/Home/Sidebar";
 import { useExportData } from "./utils/exportUtils";
 import { useHandleImportData } from "./utils/importUtils";
-
-import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
-import InformationLineIcon from "remixicon-react/InformationLineIcon";
-import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
-import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
-import SyncLineIcon from "remixicon-react/RefreshLineIcon";
-import LockLineIcon from "remixicon-react/LockLineIcon";
+import Icons from "./lib/remixicon-react";
 
 const Settings: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -112,8 +98,6 @@ const Settings: React.FC = () => {
     setThemeMode("auto");
   };
 
-  const STORAGE_PATH = "notes/data.json";
-
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
 
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
@@ -147,8 +131,6 @@ const Settings: React.FC = () => {
   const handleCloseEditor = () => {
     setActiveNoteId(null);
   };
-
-  const [withPassword, setWithPassword] = useState(false);
 
   const exportData = () => {
     exportUtils(notesState); // Pass notesState as an argument
@@ -207,7 +189,7 @@ const Settings: React.FC = () => {
     setActiveNoteId(newNote.id);
     saveNote(newNote);
   };
-  
+
   // Translations
   const [translations, setTranslations] = useState({
     settings: {
@@ -294,19 +276,16 @@ const Settings: React.FC = () => {
   };
 
   const [ClearFontChecked, setClearFontChecked] = useState(
-    localStorage.getItem('selected-dark-text') === '#CCCCCC'
+    localStorage.getItem("selected-dark-text") === "#CCCCCC"
   );
 
   const toggleClearFont = () => {
     const newValue = !ClearFontChecked;
     setClearFontChecked(newValue);
-    localStorage.setItem(
-      'selected-dark-text',
-      newValue ? '#CCCCCC' : 'white'
-    );
+    localStorage.setItem("selected-dark-text", newValue ? "#CCCCCC" : "white");
     document.documentElement.style.setProperty(
-      'selected-dark-text',
-      newValue ? '#CCCCCC' : 'white'
+      "selected-dark-text",
+      newValue ? "#CCCCCC" : "white"
     );
     window.location.reload();
   };
@@ -326,7 +305,7 @@ const Settings: React.FC = () => {
         <div className="overflow-y-hidden">
           {!activeNoteId && (
             <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-              <div className="mx-6 md:px-24 overflow-y-auto flex-grow">
+              <div className="mx-6 md:px-24 pb-8 overflow-y-auto flex-grow">
                 <p className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
                   {" "}
                   {translations.settings.title || "-"}
@@ -447,20 +426,20 @@ const Settings: React.FC = () => {
                     </svg>
                   </div>
                 </div>
-                  <p className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                <p className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                   {translations.settings.selectlanguage || "-"}
                 </p>
                 <section className="py-2 bg-neutral-50 dark:bg-[#2D2C2C] p-2 rounded-xl">
-                <div className="flex items-center py-2 justify-between">
-                  <div>
+                  <div className="flex items-center py-2 justify-between">
+                    <div>
                       <span className="block text-lg align-left">
-                          Expand page
+                        Expand page
                       </span>
                       <span className="block text-sm align-left">
                         Extends the editor size to full screen
                       </span>
                     </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
+                    <label className="relative inline-flex cursor-pointer items-center">
                       <input
                         id="switch"
                         type="checkbox"
@@ -468,19 +447,19 @@ const Settings: React.FC = () => {
                         onChange={toggleBackground}
                         className="peer sr-only"
                       />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                  </label>
-                </div>
-                       <div className="flex items-center py-2 border-t-2 dark:border-neutral-600 justify-between">
-                  <div>
+                      <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                    </label>
+                  </div>
+                  <div className="flex items-center py-2 border-t-2 dark:border-neutral-600 justify-between">
+                    <div>
                       <span className="block text-lg align-left">
-                          Clear Font
+                        Clear Font
                       </span>
                       <span className="block text-sm align-left">
-                       Changes color scheme on OLED devices
+                        Changes color scheme on OLED devices
                       </span>
                     </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
+                    <label className="relative inline-flex cursor-pointer items-center">
                       <input
                         id="switch"
                         type="checkbox"
@@ -488,62 +467,51 @@ const Settings: React.FC = () => {
                         onChange={toggleClearFont}
                         className="peer sr-only"
                       />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                  </label>
-                </div>
+                      <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                    </label>
+                  </div>
                 </section>
                 <div className="pb-4">
-                <div className="flex gap-2 pt-2">
+                  <div className="flex flex-col gap-2 pt-2">
                     <Link
                       to="/Sync"
-                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <SyncLineIcon className="w-6 h-6 mr-2" />
+                      <Icons.SyncLineIcon className="w-6 h-6 mr-2" />
                       Sync
                     </Link>
                     <Link
-                      to="/shortcuts"
-                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    >
-                      <LockLineIcon className="w-6 h-6 mr-2" />
-                      Security
-                    </Link>
-                  </div>
-                  <div className="flex gap-2 py-2">
-                    <Link
                       to="/about"
-                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <InformationLineIcon className="w-6 h-6 mr-2" />
+                      <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
                       {translations.settings.About || "-"}
                     </Link>
                     <Link
                       to="/shortcuts"
-                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <KeyboardLineIcon className="w-6 h-6 mr-2" />
+                      <Icons.KeyboardLineIcon className="w-6 h-6 mr-2" />
                       {translations.settings.Shortcuts || "-"}
                     </Link>
                   </div>
-                  </div>
+                </div>
               </div>
-              <BottomNavBar
-                onCreateNewNote={handleCreateNewNote}
-              />
+              <BottomNavBar onCreateNewNote={handleCreateNewNote} />
             </div>
           )}
         </div>
-      <div>
-        {activeNote && (
-          <NoteEditor
-            notesList={notesList}
-            note={activeNote}
-            title={title}
-            onTitleChange={setTitle}
-            onChange={handleChangeNoteContent}
-            onCloseEditor={handleCloseEditor}
-          />
-        )}
+        <div>
+          {activeNote && (
+            <NoteEditor
+              notesList={notesList}
+              note={activeNote}
+              title={title}
+              onTitleChange={setTitle}
+              onChange={handleChangeNoteContent}
+              onCloseEditor={handleCloseEditor}
+            />
+          )}
         </div>
       </div>
     </div>

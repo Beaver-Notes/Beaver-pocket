@@ -1,146 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Note } from "./store/types";
-import { lowlight } from "lowlight";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Bubblemenu from "./components/Editor/Bubblemenu";
 import Toolbar from "./components/Editor/Toolbar";
 import "./css/video.scss";
-import Document from "@tiptap/extension-document";
 import { Keyboard } from "@capacitor/keyboard";
-import Placeholder from "@tiptap/extension-placeholder";
-import { ReactNodeViewRenderer } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import ImageResize from "tiptap-extension-resize-image";
 import "./css/NoteEditor.module.css";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import Highlight from "@tiptap/extension-highlight";
-import Underline from "@tiptap/extension-underline";
-import OrderedList from "@tiptap/extension-list-item";
-import TaskItem from "@tiptap/extension-task-item";
-import TaskList from "@tiptap/extension-task-list";
-import Link from "@tiptap/extension-link";
-import Text from "@tiptap/extension-text";
-import { NoteLabel } from "./lib/tiptap/NoteLabel";
-import { LinkNote } from "./lib/tiptap/note-link";
 import NoteLabels from "./components/Editor/NoteLabel";
-import FileEmbed from "./lib/tiptap/FileEmbed";
 import BubleMenutable from "./components/Editor/Bubblemenutable";
-import iframe from "./lib/tiptap/iframe"
-import Mathblock from "./lib/tiptap/math-block/Index";
-import {
-  blackCallout,
-  blueCallout,
-  greenCallout,
-  purpleCallout,
-  redCallout,
-  yellowCallout,
-} from "./lib/tiptap/Callouts/Index";
-import CodeBlockComponent from "./lib/tiptap/CodeBlockComponent";
 import HeadingTree from "./lib/HeadingTree";
-import Table from "@tiptap/extension-table";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import TableRow from "@tiptap/extension-table-row";
 import { isPlatform } from "@ionic/react";
-import BulletList from "@tiptap/extension-bullet-list";
 import Drawer from "./components/Editor/Drawer";
-import SearchAndReplace from "./lib/tiptap/search-&-replace";
 import Find from "./components/Editor/Find";
-import Paper from "./lib/tiptap/drawing-paper/Paper"
-
+import extensions from "./lib/tiptap/index";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
-import { useDataPath } from "./store/useDataPath";
 import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
 
 // Icons
-
-import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
-import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
-
-// Programming Languages
-import css from "highlight.js/lib/languages/css";
-import js from "highlight.js/lib/languages/javascript";
-import ts from "highlight.js/lib/languages/typescript";
-import html from "highlight.js/lib/languages/xml";
-
-// Languages
-import enTranslations from './assets/locales/en.json';
-import itTranslations from './assets/locales/it.json';
-import deTranslations from './assets/locales/de.json';
-
-lowlight.registerLanguage("html", html);
-lowlight.registerLanguage("css", css);
-lowlight.registerLanguage("js", js);
-lowlight.registerLanguage("ts", ts);
-
-const selectedLanguage: string | null = localStorage.getItem('selectedLanguage') || 'en';
-
-let translations: any = enTranslations; // Assuming translations have a compatible structure with any language.
-
-if (selectedLanguage === 'it') {
-  translations = itTranslations;
-} else if (selectedLanguage === 'de') {
-  translations = deTranslations;
-}
-
-
-const extensions = [
-  CodeBlockLowlight.extend({
-    addNodeView() {
-      return ReactNodeViewRenderer(CodeBlockComponent);
-    },
-  }).configure({ lowlight }),
-  Document,
-  NoteLabel,
-  Text,
-  iframe,
-  FileEmbed,
-  blackCallout,
-  blueCallout,
-  greenCallout,
-  purpleCallout,
-  redCallout,
-  yellowCallout,
-  StarterKit,
-  Link,
-  Mathblock,
-  Highlight,
-  Table,
-  TableCell,
-  SearchAndReplace,
-  TableHeader,
-  TableRow,
-  LinkNote,
-  Underline,
-  Paper,
-  Placeholder.configure({
-    placeholder: translations.tiptap.placeholder,
-  }),
-  OrderedList,
-  TaskList,
-  BulletList,
-  TaskItem.configure({
-    nested: true,
-  }),
-  ImageResize.extend({
-    addNodeView() {
-      const viewer = this.parent?.() as any;
-      return (props) => {
-        const attrs = props.node.attrs;
-        const node = {
-          ...props.node,
-          attrs: { ...attrs, src: useDataPath().getRemotePath(attrs.src) },
-        };
-        console.log("img", node);
-        const newProps = { ...props, node };
-        console.log(newProps);
-        return viewer(newProps);
-      };
-    },
-  }),
-];
+import Icons from './lib/remixicon-react';
 
 type Props = {
   note: Note;
@@ -380,7 +258,7 @@ function NoteEditor({
             className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
             onClick={onCloseEditor}
           >
-            <ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
+            <Icons.ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
           </button>
           <div className="flex">
             <button
@@ -390,7 +268,7 @@ function NoteEditor({
                 setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
               }}
             >
-              <Focus3LineIcon
+              <Icons.Focus3LineIcon
                 className={`border-none ${
                   focusMode ? "text-amber-400" : "text-neutral-800"
                 }  dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
@@ -400,7 +278,7 @@ function NoteEditor({
               className="p-2 align-end mt-6 rounded-md text-white bg-transparent cursor-pointer"
               onClick={toggleHeadingTree}
             >
-              <Search2LineIcon
+              <Icons.Search2LineIcon
                 className={`border-none ${
                   focusMode ? "hidden" : "block"
                 }  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
@@ -410,7 +288,7 @@ function NoteEditor({
               className="p-2 align-end mt-6 rounded-md text-white bg-transparent cursor-pointer"
               onClick={toggleHeadingTree}
             >
-              <Search2LineIcon
+              <Icons.Search2LineIcon
                 className={`border-none ${
                   focusMode ? "hidden" : "block"
                 }  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}

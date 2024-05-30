@@ -5,7 +5,6 @@ import ImageUploadComponent from "./ImageUpload";
 import FileUploadComponent from "./FileUpload";
 
 // Icons
-import CodeBox from "remixicon-react/CodeBoxLineIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import Table2Icon from "remixicon-react/Table2Icon";
 import VideoIcon from "remixicon-react/MovieLineIcon"
@@ -28,8 +27,6 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
       editor.chain().setFileEmbed(fileUrl, fileName).run();
     }
   };
-
-  const vidUrlRef = React.useRef<HTMLInputElement>(null);
 
   const handleAddIframe = () => {
     // Prompt the user for the URL
@@ -63,8 +60,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
     }
 
     // Use the formatted URL to set the iframe source
-    editor
-      .chain()
+    editor?.chain()
       .focus()
       .setIframe({
         src: formattedUrl,
