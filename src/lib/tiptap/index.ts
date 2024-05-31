@@ -17,18 +17,19 @@ import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import BulletList from "@tiptap/extension-bullet-list";
 import ImageResize from "tiptap-extension-resize-image";
-import { NoteLabel } from "./NoteLabel";
-import { LinkNote } from "./note-link";
-import FileEmbed from "./FileEmbed";
-import SearchAndReplace from "./search-&-replace";
-import Paper from "./drawing-paper/Paper";
-import Mathblock from "./math-block/Index";
-import CodeBlockComponent from "./CodeBlockComponent";
-import iframe from "./iframe";
+import MathInline from "./exts/math-inline";
+import { NoteLabel } from "./exts/NoteLabel";
+import { LinkNote } from "./exts/note-link";
+import FileEmbed from "./exts/FileEmbed";
+import SearchAndReplace from "./exts/search-&-replace";
+import Paper from "./exts/drawing-paper/Paper";
+import Mathblock from "./exts/math-block/Index";
+import CodeBlockComponent from "./exts/CodeBlockComponent";
+import iframe from "./exts/iframe";
 import { useDataPath } from "../../store/useDataPath";
 
 // Callouts
-import { blackCallout, blueCallout, greenCallout, purpleCallout, redCallout, yellowCallout } from "./Callouts/Index";
+import { blackCallout, blueCallout, greenCallout, purpleCallout, redCallout, yellowCallout } from "./exts/Callouts/Index";
 
 // Languages
 import enTranslations from '../../assets/locales/en.json';
@@ -69,6 +70,7 @@ const extensions = [
   TableHeader,
   TableRow,
   BulletList,
+  MathInline,
   ImageResize.extend({
     addNodeView() {
       const viewer = this.parent?.() as any;
