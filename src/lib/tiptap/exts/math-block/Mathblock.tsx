@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { NodeViewWrapperProps, NodeViewWrapper } from "@tiptap/react";
 import Settings4LineIcon from "remixicon-react/Settings4LineIcon";
 import katex from "katex";
-import "../../../css/main.css";
+import "../../../../css/main.css";
 
 interface MathBlockProps extends NodeViewWrapperProps {
   updateAttributes: (attributes: Record<string, any>) => void;
@@ -19,31 +19,23 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
     renderContent();
   }, []);
 
-  const renderContent = () => {
-    let macros = {};
-
+  function renderContent() {
+    let macros: Record<string, string> = {}; // Define the type for macros
+  
     try {
       macros = JSON.parse(props.node.attrs.macros);
     } catch (error) {
       // Do nothing
     }
-
-    const mathContent = props.node.attrs.content || "Empty";
-
-    // Use katex.renderToString with output: 'mathml'
-    const mathML = katex.renderToString(mathContent, {
+  
+    // Use contentRef.current instead of contentRef.value
+    katex.render(props.node.attrs.content || 'Empty', contentRef.current!, {
       macros,
       displayMode: true,
       throwOnError: false,
-      output: "mathml", // Specify MathML output
     });
-
-    // Set the MathML content to the innerHTML of the paragraph element
-    if (contentRef.current) {
-      contentRef.current.innerHTML = mathML;
-    }
-  };
-
+  }
+  
   const updateContent = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
     key: string,
@@ -55,33 +47,18 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
     if (isRenderContent) renderContent();
   };
 
-  const handleKeydown = (event: React.KeyboardEvent) => {
-    const { ctrlKey, shiftKey, metaKey, key } = event;
-
-    const isEnter = key === "Enter";
-    const isMacrosShortcut = (metaKey || ctrlKey) && shiftKey && key === "M";
-    const isNotEdited =
-      props.editor.isActive("mathBlock") &&
-      !isContentChange &&
-      ["ArrowUp", "ArrowDown"].includes(key);
-
-    if (isEnter && !isMacrosShortcut && !isNotEdited) {
-      // Save using Enter
-      props.editor.commands.focus();
-      setIsContentChange(false);
-      setUseKatexMacros(false);
-    } else if (isMacrosShortcut) {
-      // Toggle macros with Ctrl+Shift+M
-      setUseKatexMacros(!useKatexMacros);
-    }
-  };
-
   const handleContentClick = () => {
     setUseKatexMacros(true);
   };
 
   const toggleSecondTextarea = () => {
     setShowSecondTextarea(!showSecondTextarea);
+  };
+
+  const handleCloseButtonClick = () => {
+    props.editor.commands.focus();
+    setIsContentChange(false);
+    setUseKatexMacros(false);
   };
 
   return (
@@ -104,7 +81,6 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                 placeholder="Text here..."
                 className="bg-transparent flex-1 outline-none"
                 onChange={(e) => updateContent(e, "content", true)}
-                onKeyDown={handleKeydown}
               />
             </div>
             {showSecondTextarea && (
@@ -115,7 +91,6 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                   placeholder="KaTeX macros"
                   className="bg-transparent flex-1 outline-none"
                   onChange={(e) => updateContent(e, "macros", true)}
-                  onKeyDown={handleKeydown}
                 />
               </div>
             )}
@@ -161,6 +136,9 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                 <p className="text-sm" style={{ margin: 0 }}>
                   Press <strong>Enter</strong> to exit
                 </p>
+                <button onClick={handleCloseButtonClick}>
+                  Simulate Enter Key
+                </button>
                 <button
                   title="Toggle KaTeX Macros"
                   className={`riSettings3Line cursor-pointer ${

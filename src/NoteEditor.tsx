@@ -284,16 +284,6 @@ function NoteEditor({
                 }  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
               />
             </button>
-            <button
-              className="p-2 align-end mt-6 rounded-md text-white bg-transparent cursor-pointer"
-              onClick={toggleHeadingTree}
-            >
-              <Icons.Search2LineIcon
-                className={`border-none ${
-                  focusMode ? "hidden" : "block"
-                }  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
-              />
-            </button>
           </div>
         </div>
         <Bubblemenu editor={editor} />
