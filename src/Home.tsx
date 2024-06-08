@@ -677,8 +677,6 @@ const handleToggleUnlock = async (noteId: string) => {
                 handleLabelFilterChange={handleLabelFilterChange}
                 setSortingOption={setSortingOption}
                 uniqueLabels={uniqueLabels}
-                exportData={exportData}
-                handleImportData={handleImportData}
               />
               <div className="p-2 mb-10 mx-4 cursor-pointer rounded-md items-center justify-center h-full">
                 {notesList.filter(
