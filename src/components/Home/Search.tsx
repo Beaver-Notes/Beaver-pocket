@@ -1,19 +1,14 @@
 import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
 import ArrowUpDownLineIcon from "remixicon-react/ArrowUpDownLineIcon";
-import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import { useEffect, useState } from "react";
 
 interface SearchBarProps {
   searchQuery: string;
   setSearchQuery: (value: string) => void;
-
   handleLabelFilterChange: (value: string) => void;
   setSortingOption: (value: string) => void;
   uniqueLabels: string[];
-
-  exportData: () => void;
-  handleImportData: () => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -22,8 +17,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
   handleLabelFilterChange,
   setSortingOption,
   uniqueLabels,
-  exportData,
-  handleImportData,
 }) => {
   const [translations, setTranslations] = useState({
     search: {
