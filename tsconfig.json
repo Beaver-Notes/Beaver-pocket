@@ -20,6 +20,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
+  "include": ["src", "src/lib/tiptap/exts/library/react-mermaid2.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

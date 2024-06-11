@@ -18,7 +18,7 @@ import { useSwipeable } from "react-swipeable";
 import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
 
 // Icons
-import Icons from './lib/remixicon-react';
+import Icons from "./lib/remixicon-react";
 
 type Props = {
   note: Note;
@@ -169,16 +169,20 @@ function NoteEditor({
     const keyboardShowListener = Keyboard.addListener("keyboardDidShow", () => {
       setIsKeyboardVisible(true);
     }) as any;
-    
+
     const keyboardHideListener = Keyboard.addListener("keyboardDidHide", () => {
       setIsKeyboardVisible(false);
-    }) as any;    
+    }) as any;
 
     return () => {
       keyboardShowListener.remove();
       keyboardHideListener.remove();
     };
   }, []);
+
+  const handleButtonClick = () => {
+    setShowFind((prevShowFind) => !prevShowFind);
+  };
 
   const [wd, setwd] = useState<boolean>(
     localStorage.getItem("expand-editor") === "true"
@@ -276,13 +280,21 @@ function NoteEditor({
             </button>
             <button
               className="p-2 align-end mt-6 rounded-md text-white bg-transparent cursor-pointer"
-              onClick={toggleHeadingTree}
+              onClick={handleButtonClick}
             >
-              <Icons.Search2LineIcon
-                className={`border-none ${
-                  focusMode ? "hidden" : "block"
-                }  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
-              />
+              {showFind ? (
+                <Icons.CloseLineIcon
+                  className={`border-none ${
+                    focusMode ? "hidden" : "block"
+                  }  text-red-500 text-xl w-7 h-7`}
+                />
+              ) : (
+                <Icons.Search2LineIcon
+                  className={`border-none ${
+                    focusMode ? "hidden" : "block"
+                  }  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
+                />
+              )}
             </button>
           </div>
         </div>
@@ -291,7 +303,7 @@ function NoteEditor({
         <div
           contentEditable
           suppressContentEditableWarning
-          className="text-3xl mt-[2em] font-bold overflow-y-scroll outline-none sm:mt-2"
+          className="text-3xl font-bold overflow-y-scroll outline-none sm:mt-2"
           onBlur={handleTitleChange}
           dangerouslySetInnerHTML={{ __html: localTitle }}
         />
@@ -312,7 +324,7 @@ function NoteEditor({
             />
           </div>
         </div>
-        <div className="sm:ml-16 fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60 bottom-20 sm:bottom-6">
+        <div className={`sm:ml-16 ${showFind ? 'show' : 'hidden'} fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60 top-20 sm:bottom-6`}        >
           {showFind && <Find editor={editor} />}
         </div>
         <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>

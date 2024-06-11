@@ -1,4 +1,3 @@
-import "./css/Codeblock.css";
 import { FC } from 'react';
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react';
 
@@ -24,6 +23,7 @@ const CodeBlockComponent: FC<CodeBlockProps> = ({ node, updateAttributes, extens
   return (
     <NodeViewWrapper className="code-block">
       <select
+        className="absolute text-sm right-0 m-2 rounded bg-opacity-5 bg-black dark:bg-gray-300 dark:bg-opacity-5"
         contentEditable={false}
         defaultValue={defaultLanguage}
         onChange={(event) => updateAttributes({ language: event.target.value })}

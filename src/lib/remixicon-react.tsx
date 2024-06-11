@@ -15,6 +15,7 @@ import LockLineIcon from "remixicon-react/LockLineIcon";
 import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
+import CloseLineIcon from "remixicon-react/CloseLineIcon";
 
 const Icons = {
   AddFillIcon,
@@ -33,6 +34,7 @@ const Icons = {
   Focus3LineIcon,
   Search2LineIcon,
   ArrowLeftLineIcon,
+  CloseLineIcon,
 };
 
 export default Icons;

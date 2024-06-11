@@ -668,7 +668,7 @@ const handleToggleUnlock = async (noteId: string) => {
         />
 
 
-        <div className="overflow-y-hidden">
+        <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
             <div className="md:mt-4 py-2 w-full flex flex-col border-gray-300 overflow-auto">
               <SearchBar

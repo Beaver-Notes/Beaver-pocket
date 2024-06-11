@@ -4,9 +4,10 @@
 
 :root {
   --selected-font: "Arimo", sans-serif;
+  --selected-font-code: "JetBrains Mono", monospace;
   -webkit-tap-highlight-color: transparent;
   --selected-dark-text: white;
-    @apply dark:text-[color:var(--selected-dark-text)];
+  @apply dark:text-[color:var(--selected-dark-text)];
   padding-top: constant(safe-area-inset-top) !important;
   padding-top: env(safe-area-inset-top) !important;
 }
@@ -14,11 +15,11 @@
 .safe-area {
   padding-top: constant(safe-area-inset-top) !important;
   padding-top: env(safe-area-inset-top) !important;
-  @apply bg-white dark:bg-[#232222] z-40;
+  @apply bg-white bg-opacity-95 dark:bg-[#232222] z-40;
   /* background-color: red; */
   position: fixed;
   top: 0;
-  width: 100%
+  width: 100%;
 }
 
 body {
@@ -234,12 +235,13 @@ code {
   }
 
   pre {
-    @apply bg-black bg-opacity-5 rounded-lg dark:bg-gray-600 dark:bg-opacity-30 text-gray-700 dark:text-gray-200 pt-10 !important;
-    font-family: 'Helvetica', 'Arial', sans-serif;
+    @apply bg-[#F2F2F2] dark:bg-[#303033] rounded-lg py-3 px-4 text-gray-700 text-lg dark:text-gray-200 pt-10 !important;
+    font-family: var(--selected-font-code);
     tab-size: 2;
     font-variant-ligatures: normal;
 
     code {
+      font-family: var(--selected-font-code);
       color: inherit;
       padding: 0;
       background: none;
@@ -248,46 +250,59 @@ code {
 
     .hljs-comment,
     .hljs-quote {
-      color: #616161;
+      color: #202020;
+      font-style: italic;
     }
 
-    .hljs-variable,
-    .hljs-template-variable,
-    .hljs-attribute,
-    .hljs-tag,
-    .hljs-name,
-    .hljs-regexp,
-    .hljs-link,
-    .hljs-name,
-    .hljs-selector-id,
-    .hljs-selector-class {
-      color: #f98181;
+    .hljs-doctag,
+    .hljs-keyword,
+    .hljs-formula {
+      color: #c678dd;
     }
 
-    .hljs-number,
-    .hljs-meta,
-    .hljs-built_in,
-    .hljs-builtin-name,
-    .hljs-literal,
-    .hljs-type,
-    .hljs-params {
-      color: #fbbc88;
+    .hljs-section,
+    .hljs-name,
+    .hljs-selector-tag,
+    .hljs-deletion,
+    .hljs-subst {
+      color: #e06c75;
+    }
+
+    .hljs-literal {
+      color: #56b6c2;
     }
 
     .hljs-string,
+    .hljs-regexp,
+    .hljs-addition,
+    .hljs-attribute,
+    .hljs-meta-string {
+      color: #98c379;
+    }
+
+    .hljs-built_in,
+    .hljs-class .hljs-title {
+      color: #e6c07b;
+    }
+
+    .hljs-attr,
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-type,
+    .hljs-selector-class,
+    .hljs-selector-attr,
+    .hljs-selector-pseudo,
+    .hljs-number {
+      color: #d19a66;
+    }
+
     .hljs-symbol,
-    .hljs-bullet {
-      color: #b9f18d;
-    }
-
-    .hljs-title,
-    .hljs-section {
-      color: #faf594;
-    }
-
-    .hljs-keyword,
-    .hljs-selector-tag {
-      color: #70cff8;
+    .hljs-bullet,
+    .hljs-link,
+    .hljs-meta,
+    .hljs-selector-id,
+    .hljs-title {
+      color: #61aeee;
     }
 
     .hljs-emphasis {
@@ -295,7 +310,25 @@ code {
     }
 
     .hljs-strong {
-      font-weight: 700;
+      font-weight: bold;
+    }
+
+    .hljs-link {
+      text-decoration: underline;
     }
   }
+}
+
+.hoverable {
+  @apply hover:bg-gray-800 hover:bg-opacity-5 dark:hover:bg-gray-200 dark:hover:bg-opacity-5;
+}
+.bg-input {
+  @apply bg-black bg-opacity-5 hover:bg-opacity-10 dark:bg-gray-200 dark:bg-opacity-5 dark:hover:bg-opacity-10 focus:ring-2;
+}
+
+kbd {
+  font-family: inherit;
+  display: inline-block;
+  min-width: 28px;
+  @apply p-1 text-center text-sm rounded-md text-gray-600 ml-1 dark:text-[color:var(--selected-dark-text)] bg-gray-100 dark:bg-gray-700 border;
 }
