@@ -8,7 +8,7 @@
 
 @font-face {
   font-family: "Avenir";
-  src: url("../assets/fonts/Avenir/AvenirLTProHeavy.otf") format("opentype");
+  src: url("../assets/fonts/Avenir/AvenirLTProBold.otf") format("opentype");
   font-weight: 700;
   font-style: normal;
 }
@@ -22,55 +22,21 @@
 
 @font-face {
   font-family: "Avenir";
-  src: url("../assets/fonts/Avenir/AvenirLTProHeavyOblique.otf") format("opentype");
+  src: url("../assets/fonts/Avenir/AvenirLTProBoldOblique.otf") format("opentype");
   font-weight: 700;
   font-style: italic;
 }
 /* Arimo */
 @font-face {
   font-family: "Arimo";
-  src: url("../assets/fonts/Arimo/static/Arimo-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Arimo";
-  src: url("../assets/fonts/Arimo/static/Arimo-Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Arimo";
-  src: url("../assets/fonts/Arimo/static/Arimo-Italic.ttf") format("truetype");
-  font-weight: 400;
-  font-style: italic;
+  src: url("../assets/fonts/Arimo/Arimo-VariableFont_wght.ttf") format("truetype");
 }
 
 /* EB Garamond */
 @font-face {
   font-family: "EB Garamond";
-  src: url("../assets/fonts/EB_Garamond/static/EBGaramond-Regular.ttf")
+  src: url("../assets/fonts/EB-Garamond/EBGaramond-VariableFont_wght.ttf")
     format("truetype");
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "EB Garamond";
-  src: url("../assets/fonts/EB_Garamond/static/EBGaramond-Bold.ttf")
-    format("truetype");
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "EB Garamond";
-  src: url("../assets/fonts/EB_Garamond/static/EBGaramond-Italic.ttf")
-    format("truetype");
-  font-weight: 400;
-  font-style: italic;
 }
 
 /* Helvetica Font */
@@ -102,14 +68,6 @@
   font-style: italic;
 }
 
-@font-face {
-  font-family: "Helvetica";
-  src: url("../assets/fonts/Helvetica/helvetica-light-587ebe5a59211.ttf")
-    format("truetype");
-  font-weight: 300; /* Adjust the weight as needed */
-  font-style: normal;
-}
-
 /* Ubuntu */
 @font-face {
   font-family: "Ubuntu";
@@ -135,7 +93,7 @@
 /* OpenDyslexic */
 @font-face {
   font-family: "OpenDyslexic";
-  src: url("../assets/fonts/open_dyslexic/OpenDyslexic-Regular.otf")
+  src: url("../assets/fonts/Open-Dyslexic/OpenDyslexic-Regular.otf")
     format("opentype");
   font-weight: 400;
   font-style: normal;
@@ -143,7 +101,7 @@
 
 @font-face {
   font-family: "OpenDyslexic";
-  src: url("../assets/fonts/open_dyslexic/OpenDyslexic-Bold.otf")
+  src: url("../assets/fonts/Open-Dyslexic/OpenDyslexic-Bold.otf")
     format("opentype");
   font-weight: 700;
   font-style: normal;
@@ -151,8 +109,144 @@
 
 @font-face {
   font-family: "OpenDyslexic";
-  src: url("../assets/fonts/open_dyslexic/OpenDyslexic-Italic.otf")
+  src: url("../assets/fonts/Open-Dyslexic/OpenDyslexic-Italic.otf")
     format("opentype");
   font-weight: 400;
+  font-style: italic;
+}
+
+  /* Roboto Mono */
+
+  @font-face {
+    font-family: "Roboto Mono";
+    src: url("../assets/fonts/Roboto-mono/RobotoMono-VariableFont_wght.ttf")
+      format("truetype");
+  }
+
+/* fira-code-regular - latin */
+/* jetbrains-mono-regular - latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''),
+       url('../assets/fonts/Jetbrains-Mono/jetbrains-mono-v6-latin-regular.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('../assets/fonts/Jetbrains-Mono/jetbrains-mono-v6-latin-regular.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* jetbrains-mono-700 - latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  src: local(''),
+       url('../assets/fonts/Jetbrains-Mono/jetbrains-mono-v6-latin-700.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('../assets/fonts/Jetbrains-Mono/jetbrains-mono-v6-latin-700.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* jetbrains-mono-italic - latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: italic;
+  font-weight: 400;
+  src: local(''),
+       url('../assets/fonts/Jetbrains-Mono/jetbrains-mono-v6-latin-italic.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('../assets/fonts/Jetbrains-Mono/jetbrains-mono-v6-latin-italic.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+/* jetbrains-mono-700italic - latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: italic;
+  font-weight: 700;
+  src: local(''),
+       url('../assets/fonts/Jetbrains-Mono/jetbrains-mono-v6-latin-700italic.woff2') format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url('../assets/fonts/Jetbrains-Mono/jetbrains-mono-v6-latin-700italic.woff') format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+
+/* Hack */
+
+@font-face {
+  font-family: 'Hack';
+  src: url('../assets/fonts/Hack/hack-regular.woff2?sha=3114f1256') format('woff2'), url('fonts/hack-regular.woff?sha=3114f1256') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Hack';
+  src: url('../assets/fonts/Hack/hack-bold.woff2?sha=3114f1256') format('woff2'), url('fonts/hack-bold.woff?sha=3114f1256') format('woff');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Hack';
+  src: url('../assets/fonts/Hack/hack-italic.woff2?sha=3114f1256') format('woff2'), url('fonts/hack-italic.woff?sha=3114f1256') format('woff');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Hack';
+  src: url('../assets/fonts/Hack/hack-bolditalic.woff2?sha=3114f1256') format('woff2'), url('fonts/hack-bolditalic.woff?sha=3114f1256') format('woff');
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* Source Code Pro */
+
+@font-face {
+  font-family: 'Source Code Pro';
+  src: url('../assets/fonts/Source-Code-Pro/SourceCodePro-Regular.ttf.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Source Code Pro';
+  src: url('../assets/fonts/Source-Code-Pro/SourceCodePro-Bold.ttf.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Source Code Pro';
+  src: url('../assets/fonts/Source-Code-Pro/SourceCodeVF-Italic.ttf.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Source Code Pro';
+  src: url('../assets/fonts/Source-Code-Pro/SourceCodePro-Semibold.ttf.woff2') format('woff2');
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* Anonymous Pro */
+
+@font-face {
+  font-family: 'Anonymous Pro';
+  src: url('../assets/fonts/Anonymous-Pro/AnonymousPro-Regular.ttf') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Anonymous Pro';
+  src: url('../assets/fonts/Anonymous-Pro/AnonymousPro-Bold.ttf') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Anonymous Pro';
+  src: url('../assets/fonts/Anonymous-Pro/AnonymousPro-Italic.ttf') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Anonymous Pro';
+  src: url('../assets/fonts/Anonymous-Pro/AnonymousPro-BoldItalic.ttf') format('woff2');
+  font-weight: 700;
   font-style: italic;
 }

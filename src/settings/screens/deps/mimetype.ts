@@ -175,8 +175,6 @@ export const getMimeType = (fileName: string): string => {
             return "application/sql";
         case "yaml":
             return "application/x-yaml";
-        case "ini":
-            return "text/plain";
         case "bat":
             return "application/bat";
         case "cmd":
@@ -211,8 +209,6 @@ export const getMimeType = (fileName: string): string => {
             return "application/octet-stream";
         case "sh":
             return "application/octet-stream";
-        case "bashrc":
-            return "application/octet-stream";
         case "cfg":
             return "text/plain";
         case "ds_store":
@@ -227,8 +223,6 @@ export const getMimeType = (fileName: string): string => {
             return "application/sql";
         case "yaml":
             return "application/x-yaml";
-        case "ini":
-            return "text/plain";
         case "log":
             return "text/plain";
         case "bat":
@@ -238,8 +232,6 @@ export const getMimeType = (fileName: string): string => {
         case "ps1":
             return "application/octet-stream";
         case "sh":
-            return "application/octet-stream";
-        case "bashrc":
             return "application/octet-stream";
         case "md5":
             return "text/plain";

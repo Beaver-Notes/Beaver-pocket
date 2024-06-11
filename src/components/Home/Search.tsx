@@ -112,7 +112,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <select
             id="labelSelect"
             onChange={(e) => handleLabelFilterChange(e.target.value)}
-            className="rounded-full pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none w-full"
+            className="sm:hidden rounded-full pr-10 p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none w-full"
           >
             <option value="">{translations.search.selectlabel}</option>
             {uniqueLabels.map((label) => (

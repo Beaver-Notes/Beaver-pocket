@@ -27,6 +27,12 @@ const Settings: React.FC = () => {
     localStorage.getItem("selected-font") || "Arimo"
   );
 
+  const [selectedCodeFont, setSelectedCodeFont] = useState<string>(
+    localStorage.getItem("selected-font-code") || "JetBrains Mono"
+  );
+
+  const Codefonts = ["JetBrains Mono", "Anonymous Pro", "Source Code Pro", "Hack"];
+
   const fonts = [
     "Arimo",
     "Avenir",
@@ -60,6 +66,18 @@ const Settings: React.FC = () => {
 
   const updateFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedFont(e.target.value);
+  };
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--selected-font-code",
+      selectedCodeFont
+    );
+    localStorage.setItem("selected-font-code", selectedCodeFont);
+  }, [selectedCodeFont]);
+
+  const updatCodeFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCodeFont(e.target.value);
   };
 
   const [themeMode, setThemeMode] = useState(() => {
@@ -302,7 +320,7 @@ const Settings: React.FC = () => {
           handleImportData={handleImportData}
         />
 
-        <div className="overflow-y-hidden">
+        <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
             <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
               <div className="mx-6 md:px-24 pb-8 overflow-y-auto flex-grow">
@@ -378,6 +396,38 @@ const Settings: React.FC = () => {
                     ))}
                   </select>
                   <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
+                    <svg
+                      className="h-4 w-4 text-gray-500 dark:text-[color:var(--selected-dark-text)]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-xl pt-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                  Select Font Code
+                </p>
+                <div className="relative pt-2">
+                <select
+                  value={selectedCodeFont}
+                  onChange={updatCodeFont}
+                  className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                >
+                  {Codefonts.map((Codefonts) => (
+                    <option key={Codefonts} value={Codefonts}>
+                      {Codefonts}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
                     <svg
                       className="h-4 w-4 text-gray-500 dark:text-[color:var(--selected-dark-text)]"
                       fill="none"
