@@ -27,22 +27,31 @@ import Mathblock from "./exts/math-block/Index";
 import CodeBlockComponent from "./exts/CodeBlockComponent";
 import iframe from "./exts/iframe";
 import { useDataPath } from "../../store/useDataPath";
+import MermaidDiagram from "./exts/mermaid-block";
 
 // Callouts
-import { blackCallout, blueCallout, greenCallout, purpleCallout, redCallout, yellowCallout } from "./exts/Callouts/Index";
+import {
+  blackCallout,
+  blueCallout,
+  greenCallout,
+  purpleCallout,
+  redCallout,
+  yellowCallout,
+} from "./exts/Callouts/Index";
 
 // Languages
-import enTranslations from '../../assets/locales/en.json';
-import itTranslations from '../../assets/locales/it.json';
-import deTranslations from '../../assets/locales/de.json';
+import enTranslations from "../../assets/locales/en.json";
+import itTranslations from "../../assets/locales/it.json";
+import deTranslations from "../../assets/locales/de.json";
 
 let translations: any = enTranslations;
 
-const selectedLanguage: string | null = localStorage.getItem('selectedLanguage') || 'en';
+const selectedLanguage: string | null =
+  localStorage.getItem("selectedLanguage") || "en";
 
-if (selectedLanguage === 'it') {
+if (selectedLanguage === "it") {
   translations = itTranslations;
-} else if (selectedLanguage === 'de') {
+} else if (selectedLanguage === "de") {
   translations = deTranslations;
 }
 
@@ -69,6 +78,7 @@ const extensions = [
   TableCell,
   TableHeader,
   TableRow,
+  MermaidDiagram,
   BulletList,
   MathInline,
   ImageResize.extend({
