@@ -15,7 +15,7 @@ import {
   FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { loadNotes, useSaveNote } from "../../store/notes";
-import getMimeType from "./deps/mimetype";
+import getMimeType from "../../utils/mimetype";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 import dayjs from "dayjs";
@@ -586,24 +586,24 @@ const DropboxSync: React.FC = () => {
     <div {...handlers}>
       <div className="safe-area"></div>
       <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />      
-        <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+        onCreateNewNote={handleCreateNewNote}
+        isDarkMode={darkMode}
+        toggleTheme={() => toggleTheme(!darkMode)}
+        exportData={exportData}
+        handleImportData={handleImportData}
+      />
+      <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">
-            <p className="text-4xl text-center font-bold p-4">Sync with Dropbox</p>
+            <p className="text-4xl text-center font-bold p-4">
+              Sync with Dropbox
+            </p>
             <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-36 h-36 flex justify-center items-center">
               <DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
             </div>
           </div>
         </div>
-        <BottomNavBar
-          onCreateNewNote={handleCreateNewNote}
-        />
+        <BottomNavBar onCreateNewNote={handleCreateNewNote} />
         {accessToken ? (
           <section>
             <div className="flex flex-col">
@@ -649,9 +649,7 @@ const DropboxSync: React.FC = () => {
                 />
                 <label htmlFor="switch" className="hidden"></label>
                 <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                <span className="inline-block ml-2 align-left">
-                  Auto sync
-                </span>
+                <span className="inline-block ml-2 align-left">Auto sync</span>
               </label>
             </div>
           </section>

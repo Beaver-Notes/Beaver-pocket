@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import BottomNavBar from "../components/Home/BottomNavBar";
 import { Note } from "../store/types";
-import NoteEditor from "../NoteEditor";
+import NoteEditor from "../Editor";
 import { version } from "../../package.json";
 import GlobalLineIcon from "remixicon-react/GlobalLineIcon";
 import GithubFillIcon from "remixicon-react/GithubFillIcon";
@@ -216,7 +216,7 @@ const Shortcuts: React.FC = () => {
         />
 
 
-        <div className="overflow-y">
+        <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
             <div className="mx-2 sm:px-20 mb-2">
               <div className="general py-2 space-y-8 w-full">

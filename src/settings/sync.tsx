@@ -3,7 +3,7 @@ import BottomNavBar from "../components/Home/BottomNavBar";
 import { Note } from "../store/types";
 import "../css/main.css";
 import "../css/fonts.css";
-import NoteEditor from "../NoteEditor";
+import NoteEditor from "../Editor";
 import { v4 as uuid } from "uuid";
 import useNoteEditor from "../store/useNoteActions";
 import dayjs from "dayjs";
@@ -208,7 +208,7 @@ const Shortcuts: React.FC = () => {
           handleImportData={handleImportData}
         />
         
-      <div className="overflow-y-auto">
+      <div className="overflow-y-hidden mb-12">
         {!activeNoteId && (
           <div className="mx-2 sm:px-20 mb-2">
             <div className=" py-2 space-y-8 w-full">

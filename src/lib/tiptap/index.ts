@@ -37,7 +37,7 @@ import {
   purpleCallout,
   redCallout,
   yellowCallout,
-} from "./exts/Callouts/Index";
+} from "./exts/callouts/Index";
 
 // Languages
 import enTranslations from "../../assets/locales/en.json";

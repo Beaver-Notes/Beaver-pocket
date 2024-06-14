@@ -18,9 +18,6 @@ const MermaidComponent: React.FC<MermaidProps> = ({
   const elRef = useRef<HTMLPreElement>(null);
   const [mermaidString, setMermaidString] = useState<string>("");
 
-  /**
-   * generate svg id
-   */
   function genSvgId(): string {
     const max = 1000000;
     return `mermaid-svg-${genId(max)}${genId(max)}`;
@@ -30,10 +27,6 @@ const MermaidComponent: React.FC<MermaidProps> = ({
     }
   }
 
-  /**
-   * update graph
-   * @param graphDefinition - mermaid graph definition
-   */
   async function updateGraph(graphDefinition: string) {
     const id = genSvgId();
     const res = await mermaid.render(
@@ -44,7 +37,6 @@ const MermaidComponent: React.FC<MermaidProps> = ({
     setMermaidString(res.svg);
   }
 
-  // Initialize mermaid
   useEffect(() => {
     if (!elRef.current) return;
 
@@ -55,7 +47,6 @@ const MermaidComponent: React.FC<MermaidProps> = ({
     }
   }, [config]);
 
-  // Update graph
   useEffect(() => {
     if (!elRef.current) return;
 
@@ -63,6 +54,53 @@ const MermaidComponent: React.FC<MermaidProps> = ({
       updateGraph(content);
     }
   }, [content]);
+
+  useEffect(() => {
+    if (elRef.current) {
+      const svgElement = elRef.current.querySelector("svg");
+      if (svgElement) {
+        const isDarkMode = document.documentElement.classList.contains("dark");
+        const textColor = isDarkMode ? "#FFFFFF" : "#000000";
+        const borderColor = isDarkMode ? "#FFFFFF" : "#333"; // Adjusted border color for dark and light modes
+        const fillColor = isDarkMode ? "#FFFFFF" : "#FFFFFF"; // Adjusted fill color for dark and light modes
+        const arrowStrokeColor = isDarkMode ? "#FFFFFF" : "#000000"; // Adjusted arrow stroke color for dark and light modes
+
+        // Update text color
+        svgElement.querySelectorAll("text").forEach((text) => {
+          text.style.fill = textColor;
+        });
+
+        // Update borders and fills
+        svgElement.querySelectorAll("rect, circle, path").forEach((shape) => {
+          // @ts-expect-error
+          shape.style.stroke = borderColor;
+        });
+
+        // Specific adjustments for arrows in sequence diagrams
+        svgElement.querySelectorAll("path").forEach((path) => {
+          // Handle arrow heads
+          if (path.getAttribute("marker-end") === "url(#arrowhead)") {
+            path.style.stroke = arrowStrokeColor;
+          } else {
+            // Handle other paths (arrows, etc.)
+            path.style.stroke = borderColor;
+          }
+        });
+
+        // Additional specific adjustments for other elements if needed
+        svgElement.querySelectorAll("line").forEach((line) => {
+          line.style.stroke = borderColor;
+        });
+
+        svgElement.querySelectorAll(".actor-man circle").forEach((circle) => {
+           // @ts-expect-error
+          circle.style.stroke = borderColor;
+           // @ts-expect-error
+          circle.style.fill = fillColor;
+        });
+      }
+    }
+  }, [mermaidString]);
 
   return (
     <pre
