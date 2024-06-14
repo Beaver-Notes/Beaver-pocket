@@ -8,11 +8,11 @@ import { App as CapacitorApp } from "@capacitor/app";
 import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
 import Dropbox from "./settings/screens/dropbox";
-import Webdav from "./settings/screens/Webdav";
+import Webdav from "./settings/screens/webdav";
 import { Auth0Provider } from "@auth0/auth0-react";
-import Auth0Config from "./settings/screens/deps/auth0-config";
+import Auth0Config from "./utils/auth0-config";
 import Sync from "./settings/sync";
-import { useExportDav, useImportDav } from "./settings/screens/utility/WebdavUtil"
+import { useExportDav, useImportDav } from "./utils/webDavUtil"
 
 const App: React.FC = () => {
   const history = useNavigate();

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
 import ModularPrompt from './components/ui/Dialog';
-import NoteEditor from "./NoteEditor";
+import NoteEditor from "./Editor";
 import "./css/NoteEditor.module.css";
 import { JSONContent } from "@tiptap/react";
 import BottomNavBar from "./components/Home/BottomNavBar";

@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
-import NoteEditor from "./NoteEditor";
+import NoteEditor from "./Editor";
 import useNoteEditor from "./store/useNoteActions";
 import BottomNavBar from "./components/Home/BottomNavBar";
 import "./css/main.css";

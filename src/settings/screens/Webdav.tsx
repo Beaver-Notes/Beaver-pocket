@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { WebDavService } from "./deps/WebDavApi";
+import { WebDavService } from "../../utils/webDavApi";
 import "../../css/main.css";
 import "../../css/fonts.css";
-import { useExportDav, useImportDav } from "./utility/WebdavUtil";
+import { useExportDav, useImportDav } from "../../utils/webDavUtil";
 import ServerLineIcon from "remixicon-react/ServerLineIcon";
 import BottomNavBar from "../../components/Home/BottomNavBar";
 import { v4 as uuid } from "uuid";

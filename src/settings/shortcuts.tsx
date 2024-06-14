@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { Note } from "../store/types";
-import NoteEditor from "../NoteEditor";
+import NoteEditor from "../Editor";
 import "../css/main.css";
 import "../css/fonts.css";
 import useNoteEditor from "../store/useNoteActions";
@@ -284,7 +284,7 @@ const Shortcuts: React.FC = () => {
           handleImportData={handleImportData}
         />
         
-      <div className="overflow-y">
+      <div className="overflow-y-hidden mb-24">
         {!activeNoteId && (
           <div className="mx-6 sm:px-20 mb-2">
             <div className="general py-2 space-y-8 w-full">
