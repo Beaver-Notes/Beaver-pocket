@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Search2LineIcon from 'remixicon-react/Search2LineIcon';
+import icons from "./remixicon-react"
 import "../css/main.css";
 import dayjs from 'dayjs';
 
@@ -72,7 +72,7 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
     <div className="fixed right-2 sm:right-10 md:right-20 lg:right-60 top-20 p-3 bg-white rounded-xl dark:bg-[#2D2C2C] border-2 dark:border-neutral-800 z-50 w-64">
       <div className="mb-2">
         <div className="flex items-center relative">
-          <Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />
+          <icons.Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />
           <input
             type="text"
             value={searchTerm}

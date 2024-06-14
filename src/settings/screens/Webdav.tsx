@@ -3,13 +3,10 @@ import { WebDavService } from "../../utils/webDavApi";
 import "../../css/main.css";
 import "../../css/fonts.css";
 import { useExportDav, useImportDav } from "../../utils/webDavUtil";
-import ServerLineIcon from "remixicon-react/ServerLineIcon";
 import BottomNavBar from "../../components/Home/BottomNavBar";
 import { v4 as uuid } from "uuid";
 import { useNotesState } from "../../store/Activenote";
 import { useSaveNote } from "../../store/notes";
-import EyeLineIcon from "remixicon-react/EyeLineIcon";
-import EyeCloseLineIcon from "remixicon-react/EyeCloseLineIcon";
 import Sidebar from "../../components/Home/Sidebar";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
@@ -17,6 +14,7 @@ import { useHandleImportData } from "../../utils/importUtils";
 import { useExportData } from "../../utils/exportUtils";
 import { loadNotes } from "../../store/notes";
 import { Note } from "../../store/types";
+import icons from "../../lib/remixicon-react";
 
 
 const ExampleComponent: React.FC = () => {
@@ -207,7 +205,7 @@ const ExampleComponent: React.FC = () => {
               </p>
               <div className="flex justify-center items-center">
                 <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-36 h-36 flex justify-center items-center">
-                  <ServerLineIcon className="w-32 h-32 text-gray-800 dark:text-neutral-200 p-3" />
+                  <icons.ServerLineIcon className="w-32 h-32 text-gray-800 dark:text-neutral-200 p-3" />
                 </div>
               </div>
               <input
@@ -237,9 +235,9 @@ const ExampleComponent: React.FC = () => {
                   className="absolute right-0 py-2.5 text-sm dark:text-[color:var(--selected-dark-text)] text-gray-500 focus:outline-none"
                 >
                   {showInputContent ? (
-                    <EyeLineIcon className="w-8 h-8 mr-2" />
+                    <icons.EyeLineIcon className="w-8 h-8 mr-2" />
                   ) : (
-                    <EyeCloseLineIcon className="w-8 h-8 mr-2" />
+                    <icons.EyeCloseLineIcon className="w-8 h-8 mr-2" />
                   )}
                 </button>
               </div>

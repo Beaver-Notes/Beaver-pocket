@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Note } from "../../store/types";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
+import icons from "../../lib/remixicon-react";
 
 type BubblemenuNoteLinkProps = {
   position: { top: number; left: number };
@@ -22,7 +22,7 @@ const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
   return (
     <div className="z-50 ml-10 fixed bg-white shadow border rounded-lg p-2">
       <div className="flex pb-2 items-center relative">
-        <Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />
+        <icons.Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />
         <input
           type="text"
           placeholder="Search..."

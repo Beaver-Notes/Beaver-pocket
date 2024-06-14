@@ -20,12 +20,11 @@ import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 import dayjs from "dayjs";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-
+import icons from "../../lib/remixicon-react";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 const STORAGE_PATH = "notes/data.json";
 
-import DropboxFillIcon from "remixicon-react/DropboxFillIcon";
 import Sidebar from "../../components/Home/Sidebar";
 import { useSwipeable } from "react-swipeable";
 import { useExportData } from "../../utils/exportUtils";
@@ -599,7 +598,7 @@ const DropboxSync: React.FC = () => {
               Sync with Dropbox
             </p>
             <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-36 h-36 flex justify-center items-center">
-              <DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
+              <icons.DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
             </div>
           </div>
         </div>

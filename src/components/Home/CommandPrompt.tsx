@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "../../store/types";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
+import icons from "../../lib/remixicon-react"
 import { useNavigate } from "react-router-dom";
 
 interface CommandPromptProps {
@@ -92,7 +92,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
           <div className="bg-[#FDFDFA] dark:bg-[#353333] transform w-full rounded-lg shadow-xl py-2 px-4 relative">
             <div className="w-full p-2 border-b-2 dark:border-neutral-600 bg-transparent align-middle text-gray-800 cursor-pointer flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2">
               <div>
-                <Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6" />
+                <icons.Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6" />
               </div>
               <input
                 className="text-xl text-gray-800 bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"

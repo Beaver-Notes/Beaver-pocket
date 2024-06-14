@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Editor, BubbleMenu } from "@tiptap/react";
-import InsertRowTopIcon from "remixicon-react/InsertRowTopIcon";
-import DeleteRow from "remixicon-react/DeleteRowIcon";
-import DeleteColumn from "remixicon-react/DeleteColumnIcon";
-import InsertRowBottomIcon from "remixicon-react/InsertRowBottomIcon";
-import InsertColumnLeftIcon from "remixicon-react/InsertColumnLeftIcon";
-import InsertColumnRightIcon from "remixicon-react/InsertColumnRightIcon";
-import Brush2Fill from "remixicon-react/Brush2FillIcon";
+import icons from "../../lib/remixicon-react"
 
 interface Props {
   editor: Editor | null;
@@ -49,7 +43,7 @@ const BubbleMenuTable: React.FC<Props> = ({ editor }) => {
             }
             onClick={() => editor?.chain().focus().addRowAfter().run()}
           >
-            <InsertRowBottomIcon
+            <icons.InsertRowBottomIcon
               className={
                 editor?.isActive("heading", { level: 1 })
                   ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
@@ -65,7 +59,7 @@ const BubbleMenuTable: React.FC<Props> = ({ editor }) => {
             }
             onClick={() => editor?.chain().focus().addRowBefore().run()}
           >
-            <InsertRowTopIcon
+            <icons.InsertRowTopIcon
               className={
                 editor?.isActive("heading", { level: 1 })
                   ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
@@ -81,7 +75,7 @@ const BubbleMenuTable: React.FC<Props> = ({ editor }) => {
             }
             onClick={() => editor?.chain().focus().deleteRow().run()}
           >
-            <DeleteRow
+            <icons.DeleteRow
               className={
                 editor?.isActive("heading", { level: 1 })
                   ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
@@ -97,7 +91,7 @@ const BubbleMenuTable: React.FC<Props> = ({ editor }) => {
             }
             onClick={() => editor?.chain().focus().addColumnBefore().run()}
           >
-            <InsertColumnLeftIcon
+            <icons.InsertColumnLeftIcon
               className={
                 editor?.isActive("heading", { level: 1 })
                   ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
@@ -113,7 +107,7 @@ const BubbleMenuTable: React.FC<Props> = ({ editor }) => {
             }
             onClick={() => editor?.chain().focus().addColumnAfter().run()}
           >
-            <InsertColumnRightIcon
+            <icons.InsertColumnRightIcon
               className={
                 editor?.isActive("heading", { level: 1 })
                   ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
@@ -129,7 +123,7 @@ const BubbleMenuTable: React.FC<Props> = ({ editor }) => {
             }
             onClick={() => editor?.chain().focus().deleteColumn().run()}
           >
-            <DeleteColumn
+            <icons.DeleteColumn
               className={
                 editor?.isActive("heading", { level: 1 })
                   ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
@@ -145,7 +139,7 @@ const BubbleMenuTable: React.FC<Props> = ({ editor }) => {
             }
             onClick={() => editor?.chain().focus().toggleHeaderCell().run()}
           >
-            <Brush2Fill
+            <icons.Brush2Fill
               className={
                 editor?.isActive("heading", { level: 1 })
                   ? "p-1 border-none text-amber-300 text-xl w-9 h-9"

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import icons from "../../../remixicon-react";
 import { NodeViewWrapperProps, NodeViewWrapper } from "@tiptap/react";
-import Settings4LineIcon from "remixicon-react/Settings4LineIcon";
 import katex from "katex";
 import "../../../../css/main.css";
 
@@ -183,7 +183,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                   }`}
                   onClick={toggleSecondTextarea}
                 >
-                  <Settings4LineIcon className="active:text-amber-500" />
+                  <icons.Settings4LineIcon className="active:text-amber-500" />
                 </button>
               </div>
             </div>

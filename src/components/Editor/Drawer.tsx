@@ -3,11 +3,7 @@ import { Editor } from "@tiptap/react";
 import { Note } from "../../store/types";
 import ImageUploadComponent from "./ImageUpload";
 import FileUploadComponent from "./FileUpload";
-
-// Icons
-import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
-import Table2Icon from "remixicon-react/Table2Icon";
-import VideoIcon from "remixicon-react/MovieLineIcon"
+import icon from "../../lib/remixicon-react"
 
 interface DrawerProps {
   note: Note;
@@ -91,7 +87,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
               } cursor-pointer`}
               onClick={() => editor?.chain().focus().toggleTaskList().run()}
             >
-              <ListCheck2Icon className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
+              <icon.ListCheck2Icon className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
             </button>
           </div>
           <div className="flex py-1 pl-1">
@@ -107,7 +103,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
                 })
               }
             >
-              <Table2Icon className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
+              <icon.Table2Icon className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
             </button>
           </div>
           <div className="flex py-1 pl-1">
@@ -117,7 +113,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId, isVisible }) => {
               } cursor-pointer`}
               onClick={handleAddIframe}
             >
-              <VideoIcon className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
+              <icon.VideoIcon className="border-none text-neutral-700 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
             </button>
           </div>
           <div className="flex py-1 pl-1">

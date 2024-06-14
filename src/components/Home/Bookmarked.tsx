@@ -1,10 +1,6 @@
 import { Note } from "../../store/types";
-import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
-import Bookmark3LineIcon from "remixicon-react/Bookmark3LineIcon";
-import Bookmark3FillIcon from "remixicon-react/Bookmark3FillIcon";
-import LockClosedIcon from "remixicon-react/LockLineIcon";
+import icons from "../../lib/remixicon-react"
 import { JSONContent } from "@tiptap/react";
-import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
@@ -102,7 +98,7 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
                   {note.isLocked ? (
                     <div className="flex flex-col items-center">
                       <button className="flex items-center justify-center">
-                        <LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
+                        <icons.LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
                       </button>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">
                         {translations.home.unlocktoedit}
@@ -122,9 +118,9 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
                               onClick={(e) => handleToggleBookmark(note.id, e)}
                             >
                               {note.isBookmarked ? (
-                                <Bookmark3FillIcon className="w-8 h-8 mr-2" />
+                                <icons.Bookmark3FillIcon className="w-8 h-8 mr-2" />
                               ) : (
-                                <Bookmark3LineIcon className="w-8 h-8 mr-2" />
+                                <icons.Bookmark3LineIcon className="w-8 h-8 mr-2" />
                               )}
                             </button>
                             <button
@@ -132,16 +128,16 @@ const Bookmarked: React.FC<BookmarkedProps> = ({
                               onClick={(e) => handleToggleLock(note.id, e)}
                             >
                               {note.isLocked ? (
-                                <LockClosedIcon className="w-8 h-8 mr-2" />
+                                <icons.LockClosedIcon className="w-8 h-8 mr-2" />
                               ) : (
-                                <LockOpenIcon className="w-8 h-8 mr-2" />
+                                <icons.LockOpenIcon className="w-8 h-8 mr-2" />
                               )}
                             </button>
                             <button
                               className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
                               onClick={(e) => handleDeleteNote(note.id, e)}
                             >
-                              <DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                              <icons.DeleteBinLineIcon className="w-8 h-8 mr-2" />
                             </button>
                           </div>
                           <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">

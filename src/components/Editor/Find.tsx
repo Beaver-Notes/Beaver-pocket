@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
+import icons from "../../lib/remixicon-react";
 
 interface FindProps {
   editor: any; // Adjust the type of editor according to your setup
@@ -57,7 +57,7 @@ const Find: React.FC<FindProps> = ({ editor }) => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <div className="flex items-center sm:mr-2 mb-2 space-x-2">
           <div className="flex sm:w-full px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-gray-800">
-            <Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6 mr-2" />
+            <icons.Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6 mr-2" />
             <input
               className="text-lg text-gray-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
               ref={searchInputRef}
@@ -72,7 +72,7 @@ const Find: React.FC<FindProps> = ({ editor }) => {
             onClick={handleSearch}
           >
             {" "}
-            <Search2LineIcon />
+            <icons.Search2LineIcon />
           </button>
         </div>
         <div className="hidden sm:block flex items-center mb-2 sm:mr-2 space-x-2">

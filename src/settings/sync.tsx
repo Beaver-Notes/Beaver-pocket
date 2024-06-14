@@ -12,11 +12,7 @@ import { useHandleImportData } from "../utils/importUtils";
 import { Link, useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { loadNotes, useSaveNote } from "../store/notes";
-
-import DropboxFillIcon from "remixicon-react/DropboxFillIcon";
-import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
-import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
-import ServerLineIcon from "remixicon-react/ServerLineIcon";
+import icons from "../lib/remixicon-react"
 import Sidebar from "../components/Home/Sidebar";
 
 const Shortcuts: React.FC = () => {
@@ -220,18 +216,18 @@ const Shortcuts: React.FC = () => {
                       className="flex flex-center p-2 border-b-2 border-neutral-200 dark:border-neutral-600 border-opacity-80"
                       to="/dropbox"
                     >
-                      <DropboxFillIcon className="w-10 h-10" />
+                      <icons.DropboxFillIcon className="w-10 h-10" />
                       <p className="text-2xl pl-2 py-1 font-bold">Dropbox</p>
                     </Link>
                     <Link className="flex flex-center p-2" to="/webdav">
-                      <ServerLineIcon className="w-10 h-10" />
+                      <icons.ServerLineIcon className="w-10 h-10" />
                       <p className="text-2xl pl-2 py-1 font-bold">Webdav</p>
                     </Link>
                   </div>
                   <div className="relative pt-2 gap-1 flex flex-col sm:flex-row">
                     <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                       <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                        <FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
+                        <icons.FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
                       </div>
                       <div className="bottom-0">
                         <button
@@ -245,7 +241,7 @@ const Shortcuts: React.FC = () => {
 
                     <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                       <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                        <FileUploadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
+                        <icons.FileUploadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
                       </div>
                       <div className="flex items-center pt-2">
                         <input type="checkbox" />

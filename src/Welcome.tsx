@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./css/fonts.css";
 import "./css/welcome.css";
-import ArrowRightLineIcon from "remixicon-react/ArrowRightLineIcon";
-import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
+import icons from "./lib/remixicon-react";
 import { useNavigate } from "react-router-dom";
 import { Note } from "./store/types";
 import { version } from "../package.json";
-import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
 import { useHandleImportData } from "./utils/importUtils";
 import {
   Directory,
@@ -306,7 +304,7 @@ const Welcome: React.FC = () => {
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view1")}
                 >
-                  <ArrowLeftLineIcon className="inline-block w-5 h-5" />
+                  <icons.ArrowLeftLineIcon className="inline-block w-5 h-5" />
                   {translations.welcome.back || "-"}
                 </button>
                 <button
@@ -314,7 +312,7 @@ const Welcome: React.FC = () => {
                   onClick={() => handleViewChange("view3")}
                 >
                   {translations.welcome.next || "-"}
-                  <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                  <icons.ArrowRightLineIcon className="inline-block w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -401,7 +399,7 @@ const Welcome: React.FC = () => {
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view2")}
                 >
-                  <ArrowLeftLineIcon className="inline-block w-5 h-5" />
+                  <icons.ArrowLeftLineIcon className="inline-block w-5 h-5" />
                   {translations.welcome.back || "-"}
                 </button>
                 <button
@@ -409,7 +407,7 @@ const Welcome: React.FC = () => {
                   onClick={() => handleViewChange("view4")}
                 >
                   {translations.welcome.next || "-"}
-                  <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                  <icons.ArrowRightLineIcon className="inline-block w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -448,7 +446,7 @@ const Welcome: React.FC = () => {
                 className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                 onClick={() => handleViewChange("view3")}
               >
-                <ArrowLeftLineIcon className="inline-block w-5 h-5" />
+                <icons.ArrowLeftLineIcon className="inline-block w-5 h-5" />
                 {translations.welcome.back || "-"}
               </button>
               <button
@@ -456,7 +454,7 @@ const Welcome: React.FC = () => {
                 onClick={() => handleViewChange("view5")}
               >
                 {translations.welcome.next || "-"}
-                <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                <icons.ArrowRightLineIcon className="inline-block w-5 h-5" />
               </button>
             </div>
           </div>
@@ -474,7 +472,7 @@ const Welcome: React.FC = () => {
             </p>
             <div className="mb-2 w-full p-4 text-xl rounded-xl items-center px-10 py-14">
               <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                <FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
+                <icons.FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
               </div>
               <div className="w-auto px-10 mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
                 <label htmlFor="file">
@@ -499,7 +497,7 @@ const Welcome: React.FC = () => {
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view4")}
                 >
-                  <ArrowLeftLineIcon className="inline-block w-5 h-5" />{" "}
+                  <icons.ArrowLeftLineIcon className="inline-block w-5 h-5" />{" "}
                   {translations.welcome.back || "-"}
                 </button>
                 <button
@@ -507,7 +505,7 @@ const Welcome: React.FC = () => {
                   onClick={() => handleViewChange("view6")}
                 >
                   {translations.welcome.skip || "-"}
-                  <ArrowRightLineIcon className="inline-block w-5 h-5" />
+                  <icons.ArrowRightLineIcon className="inline-block w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -527,7 +525,7 @@ const Welcome: React.FC = () => {
                   className="p-4 mr-2 rounded-xl bg-[#2D2C2C] text-white items-center justify-center"
                   onClick={() => handleViewChange("view5")}
                 >
-                  <ArrowLeftLineIcon className="inline-block w-5 h-5" />{" "}
+                  <icons.ArrowLeftLineIcon className="inline-block w-5 h-5" />{" "}
                   {translations.welcome.back || "-"}
                 </button>
                 <button

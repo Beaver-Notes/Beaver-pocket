@@ -1,6 +1,4 @@
-import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
-import ArrowUpDownLineIcon from "remixicon-react/ArrowUpDownLineIcon";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
+import icons from "../../lib/remixicon-react"
 import { useEffect, useState } from "react";
 
 interface SearchBarProps {
@@ -45,7 +43,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       <div className="flex justify-center">
         <div className="apply relative w-full sm:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-gray-800 cursor-pointer flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2;">
           <div>
-            <Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6" />
+            <icons.Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6" />
           </div>
           <input
             className="text-xl text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
@@ -69,7 +67,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 </option>
               ))}
             </select>
-            <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
+            <icons.ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
           </div>
         </div>
         <div className="sm:block hidden relative inline-flex items-center">
@@ -85,13 +83,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
               {translations.search.alphabetical}
             </option>
           </select>
-          <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
+          <icons.ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
         </div>
       </div>
       <div className="items-center flex gap-2 justify-between w-full">
         <div className="sm:w-[22em] h-12 flex items-center justify-start sm:hidden overflow-hidden w-full">
           <div className="block bg-[#F8F8F7] p-3 w-full dark:bg-[#2D2C2C] rounded-full sm:hidden relative inline-flex items-center">
-            <ArrowUpDownLineIcon className="absolute top-1/2 transform -translate-y-1/2 pointer-events-none" />
+            <icons.ArrowUpDownLineIcon className="absolute top-1/2 transform -translate-y-1/2 pointer-events-none" />
             <select
               onChange={(e) => setSortingOption(e.target.value)}
               className="bg-transparent dark:text-[color:var(--selected-dark-text)] outline-none appearance-none pl-8 w-full"
@@ -121,7 +119,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               </option>
             ))}
           </select>
-          <ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+          <icons.ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none" />
         </div>
       </div>
     </div>
