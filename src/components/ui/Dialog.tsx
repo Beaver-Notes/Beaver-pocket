@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import EyeLineIcon from "remixicon-react/EyeLineIcon";
-import EyeCloseLineIcon from "remixicon-react/EyeCloseLineIcon";
-import "./Modal.css"; // Import your CSS file for modal styles
+import icons from "../../lib/remixicon-react"
+import "../../css/Modal.css"; // Import your CSS file for modal styles
 import dayjs from "dayjs";
 
 interface ModularPromptProps {
@@ -84,9 +83,9 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
               className="absolute right-0 py-1.5 text-sm dark:text-[color:var(--selected-dark-text)] text-gray-500 focus:outline-none"
             >
               {showInputContent ? (
-                <EyeLineIcon className="w-8 h-8 mr-2" />
+                <icons.EyeLineIcon className="w-8 h-8 mr-2" />
               ) : (
-                <EyeCloseLineIcon className="w-8 h-8 mr-2" />
+                <icons.EyeCloseLineIcon className="w-8 h-8 mr-2" />
               )}
             </button>
           </div>

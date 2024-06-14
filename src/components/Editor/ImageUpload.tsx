@@ -1,7 +1,7 @@
 import React from "react";
 import { Plugins } from "@capacitor/core";
 import { Directory, FilesystemDirectory } from "@capacitor/filesystem";
-import ImageLineIcon from "remixicon-react/ImageLineIcon";
+import icons from "../../lib/remixicon-react";
 
 const { Filesystem } = Plugins;
 
@@ -90,7 +90,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
     <div>
       <div className="p-[11px] hidden sm:block rounded-full cursor-pointer">
         <label htmlFor="image-upload-input">
-          <ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
+          <icons.ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
         </label>
         <input
           type="file"
@@ -102,7 +102,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
       </div>
       <div className="p-[11px] sm:hidden rounded-full cursor-pointer">
         <label htmlFor="image-upload-input">
-          <ImageLineIcon className="border-none text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
+          <icons.ImageLineIcon className="border-none text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
         </label>
         <input
           type="file"

@@ -2,20 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Note } from "../../store/types";
 import { Editor } from "@tiptap/react";
 import ImageUploadComponent from "./ImageUpload";
-
-// Icons
-import BoldIcon from "remixicon-react/BoldIcon";
-import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
-import Table2Icon from "remixicon-react/Table2Icon";
-import ItalicIcon from "remixicon-react/ItalicIcon";
-import UnderlineIcon from "remixicon-react/UnderlineIcon";
-import StrikethroughIcon from "remixicon-react/StrikethroughIcon";
-import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
-import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
-import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
-import LinkIcon from "remixicon-react/LinkMIcon";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
-import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
+import icons from "../../lib/remixicon-react";
 
 interface ToolbarProps {
   toolbarVisible: boolean;
@@ -89,7 +76,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               className="p-2 hidden sm:block sm:align-start rounded-md text-white bg-transparent cursor-pointer"
               onClick={onCloseEditor}
             >
-              <ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
+              <icons.ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
             <div className="sm:mx-auto flex overflow-y-hidden w-fit">
               <button
@@ -100,7 +87,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onClick={() => editor?.chain().focus().toggleBold().run()}
               >
-                <BoldIcon className="border-none text-white text-xl w-7 h-7" />
+                <icons.BoldIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
               <button
                 className={
@@ -110,7 +97,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onClick={() => editor?.chain().focus().toggleItalic().run()}
               >
-                <ItalicIcon className="border-none text-white text-xl w-7 h-7" />
+                <icons.ItalicIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
               <button
                 className={
@@ -120,7 +107,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onClick={() => editor?.chain().focus().toggleUnderline().run()}
               >
-                <UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
+                <icons.UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
               <button
                 className={
@@ -130,7 +117,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onClick={() => editor?.chain().focus().toggleStrike().run()}
               >
-                <StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
+                <icons.StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
               <button
                 className={
@@ -140,7 +127,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onClick={() => editor?.chain().focus().toggleHighlight().run()}
               >
-                <MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
+                <icons.MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
 
               <button
@@ -157,7 +144,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   })
                 }
               >
-                <Table2Icon className="border-none text-white text-xl w-7 h-7" />
+                <icons.Table2Icon className="border-none text-white text-xl w-7 h-7" />
               </button>
               <button
                 className={
@@ -167,7 +154,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
               >
-                <ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
+                <icons.ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
               <button
                 className={
@@ -177,7 +164,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onClick={() => editor?.chain().focus().toggleTaskList().run()}
               >
-                <ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
+                <icons.ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
               </button>
               <button
                 className={
@@ -187,7 +174,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onClick={() => editor?.chain().focus().toggleBlockquote().run()}
               >
-                <DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
+                <icons.DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
 
               <button
@@ -196,7 +183,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   "p-2 rounded-md text-white bg-transparent cursor-pointer"
                 }
               >
-                <LinkIcon className="border-none text-white text-xl w-7 h-7" />
+                <icons.LinkIcon className="border-none text-white text-xl w-7 h-7" />
               </button>
               <ImageUploadComponent
                 onImageUpload={handleImageUpload}
@@ -207,7 +194,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
               onClick={toggleHeadingTree}
             >
-              <Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
+              <icons.Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
             </button>
           </div>
         </div>

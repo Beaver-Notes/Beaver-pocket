@@ -3,10 +3,7 @@ import BottomNavBar from "../components/Home/BottomNavBar";
 import { Note } from "../store/types";
 import NoteEditor from "../Editor";
 import { version } from "../../package.json";
-import GlobalLineIcon from "remixicon-react/GlobalLineIcon";
-import GithubFillIcon from "remixicon-react/GithubFillIcon";
-import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
-import CupLineIcon from "remixicon-react/CupLineIcon";
+import icons from "../lib/remixicon-react";
 import { useExportData } from "../utils/exportUtils";
 import { useHandleImportData } from "../utils/importUtils";
 import { v4 as uuid } from "uuid";
@@ -231,7 +228,7 @@ const Shortcuts: React.FC = () => {
                           textDecoration: "none",
                         }}
                       >
-                        <ArrowLeftLineIcon className="w-8 h-8 fa fa-fw fa-plus-square" />
+                        <icons.ArrowLeftLineIcon className="w-8 h-8 fa fa-fw fa-plus-square" />
                         <p className="text-4xl font-bold">
                           {translations.about.title}
                         </p>
@@ -260,7 +257,7 @@ const Shortcuts: React.FC = () => {
                         href="https://beavernotes.com"
                         className="flex items-center"
                       >
-                        <GlobalLineIcon className="w-6 h-6 mr-2" />
+                        <icons.GlobalLineIcon className="w-6 h-6 mr-2" />
                         {translations.about.website}
                       </a>
 
@@ -268,7 +265,7 @@ const Shortcuts: React.FC = () => {
                         href="https://github.com/Daniele-rolli/Beaver-notes-pocket"
                         className="flex items-center"
                       >
-                        <GithubFillIcon className="w-6 h-6 mr-2" />
+                        <icons.GithubFillIcon className="w-6 h-6 mr-2" />
                         {translations.about.github}
                       </a>
 
@@ -276,7 +273,7 @@ const Shortcuts: React.FC = () => {
                         href="https://www.buymeacoffee.com/beavernotes"
                         className="flex items-center"
                       >
-                        <CupLineIcon className="w-6 h-6 mr-2" />
+                        <icons.CupLineIcon className="w-6 h-6 mr-2" />
                         {translations.about.donate}
                       </a>
                     </div>
