@@ -93,7 +93,7 @@ code {
 }
 
 .ProseMirror {
-  min-height: 400px;
+  min-height: 100px;
   & > :first-child {
     margin-top: 0;
   }
