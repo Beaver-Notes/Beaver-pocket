@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
-import icons from "../../lib/remixicon-react"
+import icons from "../../lib/remixicon-react";
+import { Keyboard } from "@capacitor/keyboard";
 import { ChangeEvent, useEffect } from "react";
+import "../../css/main.css";
 
 interface SidebarProps {
   onCreateNewNote: () => void;
@@ -18,6 +20,25 @@ const Sidebar: React.FC<SidebarProps> = ({
   handleImportData,
 }) => {
   const history = useNavigate();
+
+  useEffect(() => {
+    const handleKeyboardShow = () => {
+      document.body.classList.add("keyboard-visible");
+    };
+  
+    const handleKeyboardHide = () => {
+      document.body.classList.remove("keyboard-visible");
+    };
+  
+    Keyboard.addListener("keyboardWillShow", handleKeyboardShow);
+    Keyboard.addListener("keyboardWillHide", handleKeyboardHide);
+  
+    // Cleanup listeners on component unmount
+    return () => {
+      Keyboard.removeAllListeners();
+    };
+  }, []);
+  
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey) {
@@ -29,14 +50,11 @@ const Sidebar: React.FC<SidebarProps> = ({
           toggleTheme();
         } else if (event.shiftKey && event.key === "N") {
           history("/");
-        }
-        else if (event.shiftKey && event.key === "A") {
+        } else if (event.shiftKey && event.key === "A") {
           history("/archive");
-        }
-        else if (event.shiftKey && event.key === "E") {
+        } else if (event.shiftKey && event.key === "E") {
           exportData();
-        }
-        else if (event.shiftKey && event.key === "U") {
+        } else if (event.shiftKey && event.key === "U") {
           const importInput = document.getElementById(
             "importData"
           ) as HTMLInputElement;
@@ -46,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           event.preventDefault();
           history("/settings");
         }
-      } 
+      }
     };
 
     window.addEventListener("keydown", handleKeyPress);
@@ -78,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </Link>
         </div>
-        <div className="fixed bottom-6 gap-y-2">
+        <div className="element-to-hide fixed bottom-6 gap-y-2">
           <button
             onClick={toggleTheme}
             className="hidden p-2 hover:bg-[#EBEBEA] hover:dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] rounded-xl font-semibold text-gray-800 cursor-pointer flex sm:flex"

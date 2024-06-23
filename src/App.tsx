@@ -53,42 +53,33 @@ const App: React.FC = () => {
     }
   }, [checkedFirstTime, history]);
 
+  const { exportdata } = useExportDav();
+  const { HandleImportData } = useImportDav();
+
   useEffect(() => {
     // Check if sync is set to 'dropbox'
     const syncValue = localStorage.getItem("sync");
     if (syncValue === "dropbox") {
       // Start the interval only if sync is set to 'dropbox'
       const intervalId = setInterval(() => {
-        const exportAndDownloadEvent = new CustomEvent(
-          "exportAndDownloadEvent"
-        );
+        const exportAndDownloadEvent = new CustomEvent("exportAndDownloadEvent");
         document.dispatchEvent(exportAndDownloadEvent);
-      }, 30 * 60 * 1000); // 30 minutes
+        alert('exporting data to dropbox');
+      }, 30 * 60 * 1000); // 1 minute
+
+      // Clear interval on unmount
+      return () => clearInterval(intervalId);
+    } else if (syncValue === "webdav") {
+      const intervalId = setInterval(() => {
+        exportdata();
+        HandleImportData();
+        alert("exporting data");
+      }, 30 * 60 * 1000); // 1 minute
 
       // Clear interval on unmount
       return () => clearInterval(intervalId);
     }
-    if (syncValue === "webdav") {
-      const intervalId = setInterval(() => {
-        const { exportdata } = useExportDav();
-        const { HandleImportData } = useImportDav();
-        exportdata();
-        HandleImportData();
-        alert("exporting data");
-      }, 10 * 1000);
-      return () => clearInterval(intervalId);
-    }
-  }, []);
-
-  // Extract authorization code from URL params and pass it to Onedrive component
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const code = params.get("code");
-    if (code) {
-      // Redirect to the Onedrive component with the authorization code
-      history(`/onedrive?code=${code}`);
-    }
-  }, [location.search, history]);
+  }, [exportdata, HandleImportData]);
 
   return (
     <>

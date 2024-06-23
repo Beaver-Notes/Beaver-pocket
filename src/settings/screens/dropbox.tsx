@@ -524,10 +524,30 @@ const DropboxSync: React.FC = () => {
     saveNote(newNote);
   };
 
-  const [autoSync, setAutoSync] = useState<boolean>(false);
+  const [autoSync, setAutoSync] = useState<boolean>(() => {
+    const storedSync = localStorage.getItem("sync");
+    return storedSync === "dropbox";
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const storedSync = localStorage.getItem("sync");
+      if (storedSync === "dropbox" && !autoSync) {
+        setAutoSync(true);
+      } else if (storedSync !== "dropbox" && autoSync) {
+        setAutoSync(false);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [autoSync]);
 
   const handleSyncToggle = () => {
-    const syncValue = autoSync ? "dropbox" : "none"; // Change "none" to your desired default value
+    const syncValue = autoSync ? "none" : "dropbox";
     localStorage.setItem("sync", syncValue);
     setAutoSync(!autoSync);
   };
@@ -637,7 +657,7 @@ const DropboxSync: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center py-2">
+            <div className="flex items-center">
               <label className="relative inline-flex cursor-pointer items-center">
                 <input
                   id="switch"
@@ -648,7 +668,9 @@ const DropboxSync: React.FC = () => {
                 />
                 <label htmlFor="switch" className="hidden"></label>
                 <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                <span className="inline-block ml-2 align-left">Auto sync</span>
+                <span className="inline-block ml-2 align-middle">
+                  Auto sync
+                </span>
               </label>
             </div>
           </section>
