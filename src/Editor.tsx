@@ -4,8 +4,6 @@ import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Bubblemenu from "./components/Editor/Bubblemenu";
 import Toolbar from "./components/Editor/Toolbar";
 import "./css/video.scss";
-import { Keyboard } from "@capacitor/keyboard";
-import "./css/NoteEditor.module.css";
 import NoteLabels from "./components/Editor/NoteLabel";
 import BubleMenutable from "./components/Editor/Bubblemenutable";
 import HeadingTree from "./lib/HeadingTree";
@@ -16,6 +14,7 @@ import extensions from "./lib/tiptap/index";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
+import DOMPurify from "dompurify";
 
 // Icons
 import Icons from "./lib/remixicon-react";
@@ -41,11 +40,16 @@ function NoteEditor({
   const [localTitle, setLocalTitle] = useState<string>(note.title);
 
   const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
-    const newTitle = event.currentTarget.innerHTML;
-    console.log("New Title:", newTitle);
+    const newTitle = DOMPurify.sanitize(event.currentTarget.innerHTML);
     setLocalTitle(newTitle);
     onTitleChange(newTitle);
     onChange(editor?.getJSON() || ({} as JSONContent), newTitle);
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const text = event.clipboardData.getData("text/plain");
+    document.execCommand("insertText", false, text);
   };
 
   useEffect(() => {
@@ -160,23 +164,6 @@ function NoteEditor({
     window.addEventListener("keydown", handleKeyPress);
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, []);
-
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-
-  useEffect(() => {
-    const keyboardShowListener = Keyboard.addListener("keyboardDidShow", () => {
-      setIsKeyboardVisible(true);
-    }) as any;
-
-    const keyboardHideListener = Keyboard.addListener("keyboardDidHide", () => {
-      setIsKeyboardVisible(false);
-    }) as any;
-
-    return () => {
-      keyboardShowListener.remove();
-      keyboardHideListener.remove();
     };
   }, []);
 
@@ -302,6 +289,7 @@ function NoteEditor({
         <BubleMenutable editor={editor} />
         <div
           contentEditable
+          onPaste={handlePaste}
           suppressContentEditableWarning
           className="text-3xl font-bold overflow-y-scroll outline-none sm:mt-2"
           onBlur={handleTitleChange}
@@ -324,16 +312,15 @@ function NoteEditor({
             />
           </div>
         </div>
-        <div className={`sm:ml-16 ${showFind ? 'show' : 'hidden'} fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60 top-20 sm:bottom-6`}        >
+        <div
+          className={`sm:ml-16 ${
+            showFind ? "show" : "hidden"
+          } fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60 top-20 sm:bottom-6`}
+        >
           {showFind && <Find editor={editor} />}
         </div>
         <div className={` ${focusMode ? "hidden" : "block"}  sm:hidden`}>
-          <Drawer
-            isVisible={isKeyboardVisible}
-            noteId={note.id}
-            note={note}
-            editor={editor}
-          />
+          <Drawer noteId={note.id} note={note} editor={editor} />
         </div>
       </div>
     </div>

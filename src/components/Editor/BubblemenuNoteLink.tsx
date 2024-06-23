@@ -20,7 +20,7 @@ const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
   );
 
   return (
-    <div className="z-50 ml-10 fixed bg-white shadow border rounded-lg p-2">
+    <div className="z-50 ml-10 fixed bg-white dark:bg-[#232222] shadow border-2 shadow dark:border-neutral-600 rounded-lg p-2">
       <div className="flex pb-2 items-center relative">
         <icons.Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />
         <input
@@ -32,7 +32,7 @@ const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
         />
       </div>
       {filteredNotes.map((note) => (
-        <div key={note.id} className='p-2 hover:bg-neutral-100 rounded-lg' onClick={() => onClickNote(note)}>
+        <div key={note.id} className='p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg' onClick={() => onClickNote(note)}>
           {note.title}
         </div>
       ))}

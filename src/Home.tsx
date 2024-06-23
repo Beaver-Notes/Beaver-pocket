@@ -3,7 +3,6 @@ import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
 import ModularPrompt from './components/ui/Dialog';
 import NoteEditor from "./Editor";
-import "./css/NoteEditor.module.css";
 import { JSONContent } from "@tiptap/react";
 import BottomNavBar from "./components/Home/BottomNavBar";
 import "./css/main.css";
@@ -658,7 +657,7 @@ const handleToggleUnlock = async (noteId: string) => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="grid sm:grid-cols-[auto,1fr]">
+      <div className="sm:grid sm:grid-cols-[auto,1fr]">
         <Sidebar
           onCreateNewNote={handleCreateNewNote}
           isDarkMode={darkMode}
