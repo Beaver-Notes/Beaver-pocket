@@ -31,7 +31,12 @@ const Settings: React.FC = () => {
     localStorage.getItem("selected-font-code") || "JetBrains Mono"
   );
 
-  const Codefonts = ["JetBrains Mono", "Anonymous Pro", "Source Code Pro", "Hack"];
+  const Codefonts = [
+    "JetBrains Mono",
+    "Anonymous Pro",
+    "Source Code Pro",
+    "Hack",
+  ];
 
   const fonts = [
     "Arimo",
@@ -105,6 +110,7 @@ const Settings: React.FC = () => {
   ) => {
     setDarkMode(newMode);
     setThemeMode(newMode ? "dark" : "light");
+    setSelectedOption(newMode ? "Dark" : "Light");
   };
 
   // Function to set theme mode to auto based on device preference
@@ -114,6 +120,7 @@ const Settings: React.FC = () => {
     ).matches;
     setDarkMode(prefersDarkMode);
     setThemeMode("auto");
+    setSelectedOption("System");
   };
 
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
@@ -289,10 +296,6 @@ const Settings: React.FC = () => {
 
   const [selectedOption, setSelectedOption] = useState("System");
 
-  const handleOptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedOption(event.target.value);
-  };
-
   const [ClearFontChecked, setClearFontChecked] = useState(
     localStorage.getItem("selected-dark-text") === "#CCCCCC"
   );
@@ -322,7 +325,7 @@ const Settings: React.FC = () => {
 
         <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
-            <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
+            <div className="py-2 py-2 w-full flex flex-col border-gray-300 overflow-auto">
               <div className="mx-6 md:px-24 pb-8 overflow-y-auto flex-grow">
                 <p className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
                   {" "}
@@ -332,55 +335,77 @@ const Settings: React.FC = () => {
                   <p className="text-xl pt-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                     {translations.settings.apptheme || "-"}
                   </p>
-                  <div className="w-auto p-4 mx-auto">
-                    <div className="switches-container">
-                      <input
-                        type="radio"
-                        id="switchMonthly"
-                        name="switchPlan"
-                        value="Light"
-                        checked={selectedOption === "Light"}
-                        onChange={(e) => {
-                          toggleTheme(false);
-                          handleOptionChange(e);
-                        }}
-                      />
-                      <input
-                        type="radio"
-                        id="switchYearly"
-                        name="switchPlan"
-                        value="Dark"
-                        checked={selectedOption === "Dark"}
-                        onChange={(e) => {
-                          toggleTheme(true);
-                          handleOptionChange(e);
-                        }}
-                      />
-                      <input
-                        type="radio"
-                        id="switchDay"
-                        name="switchPlan"
-                        value="System"
-                        checked={selectedOption === "System"}
-                        onChange={(e) => {
-                          setAutoMode();
-                          handleOptionChange(e);
-                        }}
-                      />
-                      <label htmlFor="switchMonthly">Light</label>
-                      <label htmlFor="switchYearly">Dark</label>
-                      <label htmlFor="switchDay">System</label>
-                      <div className="switch-wrapper">
-                        <div className="switch">
-                          <div>Light</div>
-                          <div>Dark</div>
-                          <div>System</div>
+                  <div className="py-2">
+                    <div className="p-3 rounded-lg bg-[#F8F8F7] dark:bg-[#2D2C2C]">
+                      <div className="flex items-center">
+                        <div
+                          className="flex flex-col items-center mr-4"
+                          onClick={() => toggleTheme(false)}
+                        >
+                          <picture>
+                            <source
+                              srcSet="./imgs/light-tablet.png"
+                              media="(min-width: 640px)"
+                            />
+                            <img
+                              src="./imgs/light-phone.png"
+                              alt="Light Theme"
+                              className={`block h-52 w-auto border-2 rounded-lg cursor-pointer pointer-events-none ${
+                                selectedOption === "Light"
+                                  ? "border-2 border-amber-400"
+                                  : "border-2 border-neutral-200 dark:border-neutral-600"
+                              }`}
+                            />
+                          </picture>
+                          <label className="mt-2">Light</label>
+                        </div>
+                        <div
+                          className="flex flex-col items-center mr-4"
+                          onClick={() => toggleTheme(true)}
+                        >
+                          <picture>
+                            <source
+                              srcSet="./imgs/dark-tablet.png"
+                              media="(min-width: 640px)"
+                            />
+                            <img
+                              src="./imgs/dark-phone.png"
+                              alt="Tree 2"
+                              className={`block h-52 w-auto rounded-lg cursor-pointer pointer-events-none ${
+                                selectedOption === "Dark"
+                                  ? "border-2 border-amber-400"
+                                  : "border-2 border-neutral-200 dark:border-neutral-600"
+                              }`}
+                            />
+                          </picture>
+                          <label className="mt-2">Dark</label>
+                        </div>
+                        <div
+                          className="flex flex-col items-center"
+                          onClick={setAutoMode}
+                        >
+                          <picture>
+                            <source
+                              srcSet="./imgs/system-tablet.png"
+                              media="(min-width: 640px)"
+                            />
+                            <img
+                              src="./imgs/system-phone.png"
+                              alt="Tree 3"
+                              className={`block h-52 w-auto rounded-lg pointer-events-none cursor-pointer ${
+                                selectedOption === "System"
+                                  ? "border-2 border-amber-400"
+                                  : "border-2 border-neutral-200 dark:border-neutral-600"
+                              }`}
+                            />
+                          </picture>
+                          <label className="mt-2">System</label>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <p className="text-xl pt-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                <p className="text-xl pt-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                   {translations.settings.selectfont || "-"}
                 </p>
                 <div className="relative pt-2">
@@ -416,18 +441,18 @@ const Settings: React.FC = () => {
                   Select Font Code
                 </p>
                 <div className="relative pt-2">
-                <select
-                  value={selectedCodeFont}
-                  onChange={updatCodeFont}
-                  className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                >
-                  {Codefonts.map((Codefonts) => (
-                    <option key={Codefonts} value={Codefonts}>
-                      {Codefonts}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
+                  <select
+                    value={selectedCodeFont}
+                    onChange={updatCodeFont}
+                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                  >
+                    {Codefonts.map((Codefonts) => (
+                      <option key={Codefonts} value={Codefonts}>
+                        {Codefonts}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
                     <svg
                       className="h-4 w-4 text-gray-500 dark:text-[color:var(--selected-dark-text)]"
                       fill="none"
