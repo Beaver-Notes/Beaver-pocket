@@ -214,6 +214,33 @@ function NoteEditor({
     }
   };
 
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<number | null>(null);
+
+  const handleTyping = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    // Clear the previous timeout if any
+    if (typingTimeoutRef.current !== null) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Update the typing state to true
+    setIsTyping(true);
+
+    // Set a new timeout to reset the typing state
+    typingTimeoutRef.current = window.setTimeout(() => {
+      setIsTyping(false);
+    }, 1000); // Adjust the timeout period as needed
+  };
+
+  useEffect(() => {
+    // Cleanup timeout on component unmount
+    return () => {
+      if (typingTimeoutRef.current !== null) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div {...handlers}>
       <div
@@ -286,7 +313,7 @@ function NoteEditor({
           </div>
         </div>
         <Bubblemenu editor={editor} />
-        <BubleMenutable editor={editor} />
+        <BubleMenutable editor={editor} isTyping={isTyping} />
         <div
           contentEditable
           onPaste={handlePaste}
@@ -308,6 +335,7 @@ function NoteEditor({
             <EditorContent
               onKeyUp={handleEditorTyping}
               editor={editor}
+              onKeyDown={handleTyping}
               className="overflow-hidden w-full mb-[6em] min-h-[25em] editor-content"
             />
           </div>
