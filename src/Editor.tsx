@@ -217,7 +217,7 @@ function NoteEditor({
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef<number | null>(null);
 
-  const handleTyping = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleTyping = () => {
     // Clear the previous timeout if any
     if (typingTimeoutRef.current !== null) {
       clearTimeout(typingTimeoutRef.current);
@@ -249,7 +249,7 @@ function NoteEditor({
         } text-black dark:text-[color:var(--selected-dark-text)] text-base`}
         onDragOver={(e) => e.preventDefault()}
       >
-        <div className="hidden sm:block sm:p-12"></div>
+        <div className="hidden sm:block sm:p-6"></div>
         <Toolbar
           toolbarVisible={toolbarVisible}
           isFullScreen={isFullScreen}
