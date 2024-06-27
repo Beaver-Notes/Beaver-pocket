@@ -9,7 +9,7 @@ import { useHandleImportData } from "../utils/importUtils";
 import { v4 as uuid } from "uuid";
 import useNoteEditor from "../store/useNoteActions";
 import dayjs from "dayjs";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import "../css/main.css";
 import "../css/fonts.css";
@@ -219,22 +219,6 @@ const Shortcuts: React.FC = () => {
               <div className="general py-2 space-y-8 w-full">
                 <div className="py-2 mx-2 sm:px-20 mb-2">
                   <div className="general space-y-3 w-full">
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <Link
-                        to="/"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          textDecoration: "none",
-                        }}
-                      >
-                        <icons.ArrowLeftLineIcon className="w-8 h-8 fa fa-fw fa-plus-square" />
-                        <p className="text-4xl font-bold">
-                          {translations.about.title}
-                        </p>
-                      </Link>
-                    </div>
-
                     <img
                       src="./imgs/icon.png"
                       alt="Beaver Notes Icon"
