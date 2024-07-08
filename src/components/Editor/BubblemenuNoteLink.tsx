@@ -1,18 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Note } from "../../store/types";
-import icons from "../../lib/remixicon-react";
 
 type BubblemenuNoteLinkProps = {
-  position: { top: number; left: number };
+  position: any;
   notes: Note[];
   onClickNote: (note: Note) => void;
+  textAfterAt: string | null;
 };
 
 const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
+  position,
   notes,
   onClickNote,
+  textAfterAt,
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  useEffect(() => {
+    if (textAfterAt !== null) {
+      setSearchQuery(textAfterAt); // Initialize search query if textAfterAt is provided
+    }
+  }, [textAfterAt]);
 
   // Function to filter notes based on search query
   const filteredNotes = notes.filter((note) =>
@@ -20,22 +28,23 @@ const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
   );
 
   return (
-    <div className="z-50 ml-10 fixed bg-white dark:bg-[#232222] shadow border-2 shadow dark:border-neutral-600 rounded-lg p-2">
-      <div className="flex pb-2 items-center relative">
-        <icons.Search2LineIcon className="ml-2 dark:text-gray-200 text-gray-600 absolute left-0" />
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="p-2 outline-none rounded-xl w-full bg-input bg-transparent transition ring-neutral-200 ring-2 dark:ring-neutral-600 focus:ring-2 focus:ring-amber-300 pl-10"
-        />
-      </div>
-      {filteredNotes.map((note) => (
-        <div key={note.id} className='p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg' onClick={() => onClickNote(note)}>
-          {note.title}
-        </div>
-      ))}
+    <div
+      className="z-50 mt-6 fixed bg-white dark:bg-[#232222] shadow border-2 shadow dark:border-neutral-600 rounded-lg min-w-24 min-h-14 p-2"
+      style={{ left: position.left, top: position.top }}
+    >
+      {filteredNotes.length === 0 ? (
+        <div className="p-2 text-sm text-gray-500">No notes found.</div>
+      ) : (
+        filteredNotes.map((note) => (
+          <div
+            key={note.id}
+            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg cursor-pointer"
+            onClick={() => onClickNote(note)}
+          >
+            {note.title}
+          </div>
+        ))
+      )}
     </div>
   );
 };

@@ -58,6 +58,7 @@ import CupLineIcon from "remixicon-react/CupLineIcon";
 import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
 import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
 import ArrowRightLineIcon from "remixicon-react/ArrowRightLineIcon";
+import Edit2LineIcon from "remixicon-react/Edit2LineIcon";
 
 const Icons = {
   AddFillIcon,
@@ -119,6 +120,7 @@ const Icons = {
   DoubleQuotesLIcon,
   DropboxFillIcon,
   ServerLineIcon,
+  Edit2LineIcon,
 };
 
 export default Icons;

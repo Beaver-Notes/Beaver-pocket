@@ -341,3 +341,10 @@ kbd {
 .keyboard-visible .element-to-hide {
   display: none;
 }
+
+.label {
+  background-color: #e0f7fa;
+  color: #00796b;
+  padding: 0 4px;
+  border-radius: 3px;
+}

@@ -279,9 +279,17 @@ const App: React.FC = () => {
     );
   };
 
+    // catching editNote's emits
+
+    document.addEventListener("editNote", (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const noteId = customEvent.detail.editedNote;
+      setActiveNoteId(noteId);
+    });
+
   // catching note-link's emits
 
-  document.addEventListener("lognoteid", (event: Event) => {
+  document.addEventListener("notelink", (event: Event) => {
     const customEvent = event as CustomEvent;
     const noteId = customEvent.detail.noteId;
     setActiveNoteId(noteId);

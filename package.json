@@ -1,5 +1,5 @@
 {
-  "name": "beaver-notes-pocket",
+  "name": "beaver-pocket",
   "private": true,
   "version": "1.2.0",
   "type": "module",
@@ -69,6 +69,8 @@
     "@types/crypto-js": "^4.2.1",
     "@types/d3": "^7.4.3",
     "@types/dompurify": "^3.0.5",
+    "@types/fabric": "^5.3.7",
+    "@types/react-canvas-draw": "^1.2.3",
     "@types/react-transition-group": "^4.4.10",
     "@types/simple-oauth2": "^5.0.7",
     "@types/uuid": "^9.0.7",
@@ -87,6 +89,7 @@
     "dompurify": "^3.1.5",
     "dropbox": "^10.34.0",
     "eslint-config-react-app": "^7.0.1",
+    "fabric": "^5.3.0",
     "formidable": "v3",
     "framer-motion": "^11.1.7",
     "gapi-script": "^1.2.0",

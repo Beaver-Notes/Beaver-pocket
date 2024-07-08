@@ -1,0 +1,22 @@
+.btn-clear,
+.btn-save,
+.btn-toggle {
+  @apply bg-blue-500 text-white px-3 py-2 rounded-md cursor-pointer flex items-center;
+}
+
+.btn-clear:hover,
+.btn-save:hover,
+.btn-toggle:hover {
+  @apply bg-blue-600;
+}
+
+.btn-clear:focus,
+.btn-save:focus,
+.btn-toggle:focus {
+  @apply ring-2 ring-blue-500;
+}
+
+input[type="color"],
+input[type="range"] {
+  @apply appearance-none bg-gray-200 border border-gray-400 rounded-md py-1 px-2 leading-tight focus:outline-none focus:bg-white focus:border-blue-500;
+}
