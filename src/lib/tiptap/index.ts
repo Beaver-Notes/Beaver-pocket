@@ -22,12 +22,12 @@ import { NoteLabel } from "./exts/NoteLabel";
 import { LinkNote } from "./exts/note-link";
 import FileEmbed from "./exts/FileEmbed";
 import SearchAndReplace from "./exts/search-&-replace";
-import Paper from "./exts/drawing-paper/Paper";
 import Mathblock from "./exts/math-block/Index";
 import CodeBlockComponent from "./exts/CodeBlockComponent";
 import iframe from "./exts/iframe";
 import { useDataPath } from "../../store/useDataPath";
 import MermaidDiagram from "./exts/mermaid-block";
+import labels from "./exts/labels";
 
 // Callouts
 import {
@@ -99,11 +99,11 @@ const extensions = [
   LinkNote,
   FileEmbed,
   SearchAndReplace,
-  Paper,
   Mathblock,
   iframe,
   blackCallout,
   blueCallout,
+  labels,
   greenCallout,
   purpleCallout,
   redCallout,

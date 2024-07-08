@@ -58,7 +58,7 @@ export const LinkNote = Node.create({
       const href = link.getAttribute('href');
       if (href) {
         const noteId = href.replace('note://', '');
-        const event = new CustomEvent('lognoteid', { detail: { noteId } });
+        const event = new CustomEvent('notelink', { detail: { noteId } });
         document.dispatchEvent(event);
       }
     });

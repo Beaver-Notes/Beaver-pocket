@@ -24,6 +24,7 @@ const useActiveNote = (activeNoteId: string | null, notesState: Record<string, N
   useEffect(() => {
     if (activeNoteId && notesState[activeNoteId]) {
       setActiveNote(notesState[activeNoteId]);
+      localStorage.setItem('lastNoteEdit', activeNoteId);
     } else {
       setActiveNote(null);
     }
