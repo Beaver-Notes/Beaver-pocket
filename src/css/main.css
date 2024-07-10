@@ -71,7 +71,7 @@ code {
   @apply dark:text-[color:var(--selected-dark-text)];
 }
 .ProseMirror blockquote {
-  @apply dark:border-gray-700 dark:text-gray-100;
+  @apply p-2 border-l-4 border-neutral-200 dark:border-neutral-600 !important;
 }
 .ProseMirror h1,
 .ProseMirror h2,
@@ -331,7 +331,7 @@ kbd {
   font-family: inherit;
   display: inline-block;
   min-width: 28px;
-  @apply p-1 text-center text-sm rounded-md text-gray-600 ml-1 dark:text-[color:var(--selected-dark-text)] bg-gray-100 dark:bg-gray-700 border;
+  @apply p-1 text-center text-sm rounded-md text-neutral-600 ml-1 dark:text-[color:var(--selected-dark-text)] bg-neutral-100 dark:bg-neutral-700 border;
 }
 
 .element-to-hide {

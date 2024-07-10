@@ -27,23 +27,17 @@ import {
 } from "./store/notes";
 import { useNotesState, useActiveNote } from "./store/Activenote";
 import useNoteEditor from "./store/useNoteActions";
-import { useExportData } from "./utils/exportUtils";
-import { useHandleImportData } from "./utils/importUtils";
-
 // Import Remix icons
 import Icons from "./lib/remixicon-react";
 
 import dayjs from "dayjs";
 import ReactDOM from "react-dom";
-import Sidebar from "./components/Home/Sidebar";
 
 const Archive: React.FC = () => {
   const { saveNote } = useSaveNote();
   const STORAGE_PATH = "notes/data.json";
   const { deleteNote } = useDeleteNote();
   const { toggleArchive } = useToggleArchive();
-  const { exportUtils } = useExportData();
-  const { importUtils } = useHandleImportData();
   const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
     useNotesState();
   const activeNote = useActiveNote(activeNoteId, notesState);
@@ -115,14 +109,6 @@ const Archive: React.FC = () => {
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
   }, [searchQuery, notesState]);
-
-  const exportData = () => {
-    exportUtils(notesState); // Pass notesState as an argument
-  };
-
-  const handleImportData = () => {
-    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
-  };
 
   const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
@@ -550,13 +536,13 @@ const Archive: React.FC = () => {
     }
   };
 
-  const [themeMode, setThemeMode] = useState(() => {
+  const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
   });
 
   // State to manage dark mode
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -569,14 +555,6 @@ const Archive: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  // Function to toggle dark mode
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-  };
-
   const handlers = useSwipeable({
     onSwiped: handleSwipe,
   });
@@ -584,15 +562,7 @@ const Archive: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="grid sm:grid-cols-[auto,1fr]">
-        <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
-
+      <div className="grid sm:grid-cols-[autoß]">
         <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
             <div className="w-full md:pt-4 py-2 flex flex-col border-gray-300 overflow-auto">

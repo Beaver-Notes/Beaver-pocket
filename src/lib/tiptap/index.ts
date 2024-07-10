@@ -20,7 +20,7 @@ import ImageResize from "tiptap-extension-resize-image";
 import MathInline from "./exts/math-inline";
 import { NoteLabel } from "./exts/NoteLabel";
 import { LinkNote } from "./exts/note-link";
-import FileEmbed from "./exts/FileEmbed";
+import FileEmbed from "./exts/file-block";
 import SearchAndReplace from "./exts/search-&-replace";
 import Mathblock from "./exts/math-block/Index";
 import CodeBlockComponent from "./exts/CodeBlockComponent";

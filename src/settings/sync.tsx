@@ -13,19 +13,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { loadNotes, useSaveNote } from "../store/notes";
 import icons from "../lib/remixicon-react"
-import Sidebar from "../components/Home/Sidebar";
 
 const Shortcuts: React.FC = () => {
   const { saveNote } = useSaveNote();
   const { exportUtils } = useExportData();
   const { importUtils } = useHandleImportData();
 
-  const [themeMode, setThemeMode] = useState(() => {
+  const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
   });
 
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -37,12 +36,6 @@ const Shortcuts: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-  };
 
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
 
@@ -196,13 +189,6 @@ const Shortcuts: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
         
       <div className="overflow-y-hidden mb-12">
         {!activeNoteId && (

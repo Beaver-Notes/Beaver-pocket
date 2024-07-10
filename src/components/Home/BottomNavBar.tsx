@@ -25,25 +25,29 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onCreateNewNote }) => {
     };
   }, []);
 
-  const handleEditNote = (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+  const handleEditNote = (
+    event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
+  ) => {
     event.preventDefault();
-    const editedNote = localStorage.getItem("lastNoteEdit")
+    const editedNote = localStorage.getItem("lastNoteEdit");
     if (editedNote) {
-      const customEvent = new CustomEvent('editNote', { detail: { editedNote } });
+      const customEvent = new CustomEvent("editNote", {
+        detail: { editedNote },
+      });
       document.dispatchEvent(customEvent);
     }
   };
 
   return (
-    <div className={` element-to-hide spacingdiv`}>
-      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full sm:hidden w-[calc(100%-1rem)]">
+    <div className={`element-to-hide spacingdiv`}>
+      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto">
         <div className="flex justify-between">
-        <Link to="/">
+          <Link to="/">
             <button className="p-2">
               <icons.HomeLineIcon className="text-white hover:text-amber-400 h-8 w-8" />
             </button>
           </Link>
-        <a href="#" onClick={handleEditNote} className="p-2">
+          <a href="#" onClick={handleEditNote} className="p-2">
             <icons.Edit2LineIcon className="text-white hover:text-amber-400 h-8 w-8" />
           </a>
           <a href="#" className="p-2" onClick={onCreateNewNote}>

@@ -188,35 +188,43 @@ function NoteEditor({
   const handleEditorTyping = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const { key } = event;
     const text = event.currentTarget.innerText.trim(); // Trimmed the text to avoid unnecessary whitespace
-  
+
     // Return early if there's no text
     if (!text) {
       return;
     }
-  
+
     const atIndex = text.lastIndexOf("@@");
     const hashIndex = text.lastIndexOf("#");
-  
+
     // Handle the @@ trigger
-    if (key === "@" && atIndex !== -1 && text[atIndex] === "@" && text[atIndex + 1] === "@") {
+    if (
+      key === "@" &&
+      atIndex !== -1 &&
+      text[atIndex] === "@" &&
+      text[atIndex + 1] === "@"
+    ) {
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
         const editorContent = document.querySelector(".editor-content");
-  
+
         if (editorContent) {
-          const editorRect = editorContent.getBoundingClientRect();
           const top = rect.bottom + window.scrollY; // Adjusted top position relative to the viewport
           const left = rect.left + window.scrollX; // Adjusted left position relative to the viewport
-  
+
           setPopupPosition({ top, left });
           setAtPosition(atIndex); // Set the position of '@@'
           setTextAfterAt(""); // Initialize textAfterAt to an empty string
         }
       }
     } else if (atPosition !== null) {
-      if (key === " " || key === "Enter" || (key === "Backspace" && atIndex === atPosition - 2)) {
+      if (
+        key === " " ||
+        key === "Enter" ||
+        (key === "Backspace" && atIndex === atPosition - 2)
+      ) {
         setPopupPosition(null); // Close popup
         setAtPosition(null); // Reset position
         setTextAfterAt(""); // Clear textAfterAt
@@ -231,7 +239,7 @@ function NoteEditor({
     } else if (key === "Backspace" && text[atIndex] === "@") {
       setPopupPosition(null);
     }
-  
+
     // Handle the # trigger
     if (key === "#" && text[hashIndex] === "#" && text[hashIndex + 1] !== " ") {
       const selection = window.getSelection();
@@ -239,12 +247,11 @@ function NoteEditor({
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
         const editorContent = document.querySelector(".editor-content");
-  
+
         if (editorContent) {
-          const editorRect = editorContent.getBoundingClientRect();
           const top = rect.bottom + window.scrollY; // Adjusted top position relative to the viewport
           const left = rect.left + window.scrollX; // Adjusted left position relative to the viewport
-  
+
           setHashPopupPosition({ top, left });
           setHashPosition(hashIndex); // Set the position of '#'
           setTextAfterHash(""); // Initialize textAfterHash to an empty string
@@ -271,7 +278,7 @@ function NoteEditor({
       setHashPopupPosition(null);
     }
   };
-  
+
   const handleTyping = () => {
     if (typingTimeoutRef.current !== null) {
       clearTimeout(typingTimeoutRef.current);
@@ -287,13 +294,9 @@ function NoteEditor({
   return (
     <div {...handlers}>
       <div
-        className={`sm:ml-16 editor overflow-auto h-full justify-center items-start px-4 ${
+        className={`editor overflow-auto h-full justify-center items-start px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
-        } text-black dark:text-[color:var(--selected-dark-text)] ${
-          isFullScreen
-            ? "fixed inset-0 bg-white dark:bg-black z-50 pt-6"
-            : "bg-transparent"
-        }`}
+        } text-black dark:text-[color:var(--selected-dark-text)]`}
       >
         <Toolbar
           toolbarVisible={toolbarVisible}
@@ -365,15 +368,15 @@ function NoteEditor({
           contentEditable
           onPaste={handlePaste}
           suppressContentEditableWarning
-          className={`text-3xl font-bold overflow-y-scroll outline-none sm:mt-2 ${
-            isPlatform("android") ? "pt-6 sm:pt-1" : "md:pt-10"
+          className={`text-3xl font-bold overflow-y-scroll outline-none sm:mt-6 ${
+            isPlatform("android") ? "pt-6 sm:pt-1" : "md:pt-10s"
           }`}
           onBlur={handleTitleChange}
           dangerouslySetInnerHTML={{ __html: localTitle }}
         />
         <div>
           <div className="py-2 h-full w-full" id="container">
-          {HashPopupPosition && (
+            {HashPopupPosition && (
               <BubblemenuLabel
                 position={hashPosition}
                 note={note}

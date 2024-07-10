@@ -1,5 +1,6 @@
 // icons.ts
 import AddFillIcon from "remixicon-react/AddFillIcon";
+import CodeBoxLineIcon from "remixicon-react/CodeBoxLineIcon";
 import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
 import Bookmark3LineIcon from "remixicon-react/Bookmark2LineIcon";
 import Bookmark3FillIcon from "remixicon-react/Bookmark3FillIcon";
@@ -37,6 +38,7 @@ import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import Table2Icon from "remixicon-react/Table2Icon";
 import VideoIcon from "remixicon-react/MovieLineIcon"
 import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
+import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import Settings4LineIcon from "remixicon-react/SettingsLineIcon";
@@ -59,6 +61,7 @@ import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
 import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
 import ArrowRightLineIcon from "remixicon-react/ArrowRightLineIcon";
 import Edit2LineIcon from "remixicon-react/Edit2LineIcon";
+import CodeLineIcon from "remixicon-react/CodeLineIcon";
 
 const Icons = {
   AddFillIcon,
@@ -66,6 +69,7 @@ const Icons = {
   FileUploadLineIcon,
   FileDownloadLineIcon,
   CupLineIcon,
+  CodeLineIcon,
   GlobalLineIcon,
   GithubFillIcon,
   EyeLineIcon,
@@ -109,6 +113,8 @@ const Icons = {
   InsertRowBottomIcon,
   InsertColumnLeftIcon,
   InsertColumnRightIcon,
+  CodeBoxLineIcon,
+  ListOrderedIcon,
   Brush2Fill,
   ListCheck2Icon,
   Table2Icon,
