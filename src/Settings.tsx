@@ -13,15 +13,10 @@ import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
 import { useSaveNote, loadNotes } from "./store/notes";
 import { useSwipeable } from "react-swipeable";
-import Sidebar from "./components/Home/Sidebar";
-import { useExportData } from "./utils/exportUtils";
-import { useHandleImportData } from "./utils/importUtils";
 import Icons from "./lib/remixicon-react";
 
 const Settings: React.FC = () => {
   const { saveNote } = useSaveNote();
-  const { exportUtils } = useExportData();
-  const { importUtils } = useHandleImportData();
 
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
@@ -155,14 +150,6 @@ const Settings: React.FC = () => {
 
   const handleCloseEditor = () => {
     setActiveNoteId(null);
-  };
-
-  const exportData = () => {
-    exportUtils(notesState); // Pass notesState as an argument
-  };
-
-  const handleImportData = () => {
-    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
   };
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
@@ -314,14 +301,7 @@ const Settings: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="grid sm:grid-cols-[auto,1fr]">
-        <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
+      <div className="grid sm:grid-cols-[autoß]">
 
         <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (

@@ -6,9 +6,7 @@ interface BubblemenuProps {
   editor: Editor | null;
 }
 
-const Bubblemenu: React.FC<BubblemenuProps> = ({
-  editor
-}) => {
+const Bubblemenu: React.FC<BubblemenuProps> = ({ editor }) => {
   const setLink = useCallback(() => {
     const previousUrl = editor?.getAttributes("link").href;
     const url = window.prompt("URL", previousUrl);
@@ -39,7 +37,7 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({
       {editor && (
         <BubbleMenu
           editor={editor}
-          className="bg-[#2D2C2C] p-1 rounded-xl"
+          className="bg-[#2D2C2C] rounded-xl flex" // Added flex and space-x-2
           tippyOptions={{ duration: 100 }}
         >
           <button
@@ -84,7 +82,7 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({
                 ? "p-1 text-amber-400 cursor-pointer"
                 : "p-1 bg-transparent cursor-pointer"
             }
-            onClick={()=> editor?.chain().focus().toggleBold().run()}
+            onClick={() => editor?.chain().focus().toggleBold().run()}
           >
             <icons.BoldIcon
               className={
@@ -100,7 +98,7 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({
                 ? "p-1 text-amber-400 cursor-pointer"
                 : "p-1 bg-transparent cursor-pointer"
             }
-            onClick={()=> editor?.chain().focus().toggleItalic().run()}
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
           >
             <icons.ItalicIcon
               className={
@@ -132,7 +130,7 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({
                 ? "p-1 text-amber-400 cursor-pointer"
                 : "p-1 bg-transparent cursor-pointer"
             }
-            onClick={()=> editor?.chain().focus().toggleStrike().run()}
+            onClick={() => editor?.chain().focus().toggleStrike().run()}
           >
             <icons.StrikethroughIcon
               className={
@@ -148,7 +146,7 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({
                 ? "p-1 text-amber-400 cursor-pointer"
                 : "p-1 bg-transparent cursor-pointer"
             }
-            onClick={()=> editor?.chain().focus().toggleHighlight().run()}
+            onClick={() => editor?.chain().focus().toggleHighlight().run()}
           >
             <icons.MarkPenLineIcon
               className={
@@ -166,6 +164,13 @@ const Bubblemenu: React.FC<BubblemenuProps> = ({
             }
             onClick={setLink}
           >
+            <icons.LinkIcon
+              className={
+                editor?.isActive("link")
+                  ? "p-1 border-none text-amber-300 text-xl w-9 h-9"
+                  : "p-1 border-none text-white text-xl w-9 h-9"
+              }
+            />
           </button>
         </BubbleMenu>
       )}

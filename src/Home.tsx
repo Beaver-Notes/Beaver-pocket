@@ -29,7 +29,6 @@ import {
 } from "./store/notes";
 import useNoteEditor from "./store/useNoteActions";
 import { useNotesState, useActiveNote } from "./store/Activenote";
-import { useExportData } from "./utils/exportUtils";
 import { useHandleImportData } from "./utils/importUtils";
 import { useSwipeable } from "react-swipeable";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
@@ -38,14 +37,12 @@ import Icons from './lib/remixicon-react';
 
 // Import Remix icons
 import ReactDOM from "react-dom";
-import Sidebar from "./components/Home/Sidebar";
 
 const App: React.FC = () => {
   const { saveNote } = useSaveNote();
   const { deleteNote } = useDeleteNote();
   const { toggleArchive } = useToggleArchive();
   const { toggleBookmark } = useToggleBookmark();
-  const { exportUtils } = useExportData();
   const { importUtils } = useHandleImportData();
   
   const handleToggleBookmark = async (
@@ -127,10 +124,6 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
-
-    const exportData = () => {
-      exportUtils(notesState); // Pass notesState as an argument
-    };
 
     const handleImportData = () => {
       importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
@@ -283,16 +276,24 @@ const App: React.FC = () => {
 
     document.addEventListener("editNote", (event: Event) => {
       const customEvent = event as CustomEvent;
-      const noteId = customEvent.detail.editedNote;
-      setActiveNoteId(noteId);
-    });
+      const noteId = customEvent.detail.editedNote;    
+      if (notesState[noteId]) {
+        setActiveNoteId(noteId);
+      } else {
+        console.warn(`Note with ID ${noteId} does not exist.`);
+      }
+    });    
 
   // catching note-link's emits
 
   document.addEventListener("notelink", (event: Event) => {
     const customEvent = event as CustomEvent;
     const noteId = customEvent.detail.noteId;
+    if (notesState[noteId]) {
     setActiveNoteId(noteId);
+    } else {
+      console.warn(`Note with ID ${noteId} does not exist.`);
+    }
   });
 
   // catching import signal's emits
@@ -665,14 +666,7 @@ const handleToggleUnlock = async (noteId: string) => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="sm:grid sm:grid-cols-[auto,1fr]">
-        <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
+      <div className="sm:grid sm:grid-cols-[auto]">
 
 
         <div className="overflow-y-hidden mb-12">

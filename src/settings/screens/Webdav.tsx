@@ -7,13 +7,8 @@ import BottomNavBar from "../../components/Home/BottomNavBar";
 import { v4 as uuid } from "uuid";
 import { useNotesState } from "../../store/Activenote";
 import { useSaveNote } from "../../store/notes";
-import Sidebar from "../../components/Home/Sidebar";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
-import { useHandleImportData } from "../../utils/importUtils";
-import { useExportData } from "../../utils/exportUtils";
-import { loadNotes } from "../../store/notes";
-import { Note } from "../../store/types";
 import icons from "../../lib/remixicon-react";
 
 
@@ -58,12 +53,8 @@ const ExampleComponent: React.FC = () => {
     },
   });
   const [showInputContent, setShowInputContent] = useState(false);
-  const { notesState, setNotesState ,setActiveNoteId } = useNotesState();
+  const { setNotesState ,setActiveNoteId } = useNotesState();
   const { saveNote } = useSaveNote();
-  const { importUtils } = useHandleImportData();
-  const { exportUtils } = useExportData();
-  const [searchQuery] = useState<string>("");
-  const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -138,12 +129,12 @@ const ExampleComponent: React.FC = () => {
     setShowInputContent(!showInputContent);
   };
 
-  const [themeMode, setThemeMode] = useState(() => {
+  const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
   });
 
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -154,13 +145,6 @@ const ExampleComponent: React.FC = () => {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
-
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-  };
 
   const navigate = useNavigate();
 
@@ -179,24 +163,10 @@ const ExampleComponent: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
-  const exportData = () => {
-    exportUtils(notesState); // Pass notesState as an argument
-  };
-
-  const handleImportData = () => {
-    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
-  };
-
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />           <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+        <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <section className="">
           <div className="flex flex-col">
             <div className="space-y-2">

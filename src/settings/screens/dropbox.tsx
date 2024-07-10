@@ -25,15 +25,12 @@ const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 const STORAGE_PATH = "notes/data.json";
 
-import Sidebar from "../../components/Home/Sidebar";
 import { useSwipeable } from "react-swipeable";
-import { useExportData } from "../../utils/exportUtils";
 
 const DropboxSync: React.FC = () => {
   const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
     useNotesState();
   const { importUtils } = useHandleImportData();
-  const { exportUtils } = useExportData();
   const [searchQuery] = useState<string>("");
   const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -552,12 +549,12 @@ const DropboxSync: React.FC = () => {
     setAutoSync(!autoSync);
   };
 
-  const [themeMode, setThemeMode] = useState(() => {
+  const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
   });
 
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -568,13 +565,6 @@ const DropboxSync: React.FC = () => {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
-
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-  };
 
   const navigate = useNavigate();
 
@@ -593,24 +583,9 @@ const DropboxSync: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
-  const exportData = () => {
-    exportUtils(notesState); // Pass notesState as an argument
-  };
-
-  const handleImportData = () => {
-    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
-  };
-
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <Sidebar
-        onCreateNewNote={handleCreateNewNote}
-        isDarkMode={darkMode}
-        toggleTheme={() => toggleTheme(!darkMode)}
-        exportData={exportData}
-        handleImportData={handleImportData}
-      />
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">

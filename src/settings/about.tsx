@@ -4,8 +4,6 @@ import { Note } from "../store/types";
 import NoteEditor from "../Editor";
 import { version } from "../../package.json";
 import icons from "../lib/remixicon-react";
-import { useExportData } from "../utils/exportUtils";
-import { useHandleImportData } from "../utils/importUtils";
 import { v4 as uuid } from "uuid";
 import useNoteEditor from "../store/useNoteActions";
 import dayjs from "dayjs";
@@ -14,12 +12,9 @@ import { useSwipeable } from "react-swipeable";
 import "../css/main.css";
 import "../css/fonts.css";
 import { loadNotes, useSaveNote } from "../store/notes";
-import Sidebar from "../components/Home/Sidebar";
 
 const Shortcuts: React.FC = () => {
   const { saveNote } = useSaveNote();
-  const { exportUtils } = useExportData();
-  const { importUtils } = useHandleImportData();
 
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
 
@@ -168,12 +163,12 @@ const Shortcuts: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
-  const [themeMode, setThemeMode] = useState(() => {
+  const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
   });
 
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -185,33 +180,9 @@ const Shortcuts: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-  };
-
-  const exportData = () => {
-    exportUtils(notesState); // Pass notesState as an argument
-  };
-
-  const handleImportData = () => {
-    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
-  };
-
-
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
-
 
         <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (

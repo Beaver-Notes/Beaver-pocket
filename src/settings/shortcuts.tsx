@@ -12,14 +12,9 @@ import dayjs from "dayjs";
 import { useSwipeable } from "react-swipeable";
 import { useNavigate } from "react-router-dom";
 import { loadNotes, useSaveNote } from "../store/notes";
-import Sidebar from "../components/Home/Sidebar";
-import { useHandleImportData } from "../utils/importUtils";
-import { useExportData } from "../utils/exportUtils";
 
 const Shortcuts: React.FC = () => {
   const { saveNote } = useSaveNote();
-  const { exportUtils } = useExportData();
-  const { importUtils } = useHandleImportData();
   // Function to toggle dark mode
 
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
@@ -241,12 +236,12 @@ const Shortcuts: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
-  const [themeMode, setThemeMode] = useState(() => {
+  const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
   });
 
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
@@ -258,32 +253,9 @@ const Shortcuts: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-  };
-
-  const exportData = () => {
-    exportUtils(notesState); // Pass notesState as an argument
-  };
-
-  const handleImportData = () => {
-    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
-  };
-
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
-        
       <div className="overflow-y-hidden mb-24">
         {!activeNoteId && (
           <div className="mx-6 sm:px-20 mb-2">

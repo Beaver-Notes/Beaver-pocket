@@ -126,7 +126,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <div className="flex py-1 pl-1">
             <button
               className={`p-1 ${
-                editor?.isActive("Tasklist") ? "text-amber-400" : ""
+                editor?.isActive("Video") ? "text-amber-400" : ""
               } cursor-pointer`}
               onClick={handleAddIframe}
             >
