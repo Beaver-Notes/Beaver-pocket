@@ -15,7 +15,7 @@
 .safe-area {
   padding-top: constant(safe-area-inset-top) !important;
   padding-top: env(safe-area-inset-top) !important;
-  @apply bg-white bg-opacity-95 dark:bg-[#232222] z-40;
+  @apply bg-white bg-opacity-95 dark:bg-opacity-95 dark:bg-[#232222] z-40;
   /* background-color: red; */
   position: fixed;
   top: 0;

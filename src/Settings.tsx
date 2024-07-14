@@ -281,8 +281,6 @@ const Settings: React.FC = () => {
     window.location.reload(); // Reload the page
   };
 
-  const [selectedOption, setSelectedOption] = useState("System");
-
   const [ClearFontChecked, setClearFontChecked] = useState(
     localStorage.getItem("selected-dark-text") === "#CCCCCC"
   );
@@ -298,201 +296,133 @@ const Settings: React.FC = () => {
     window.location.reload();
   };
 
+  const [selectedOption, setSelectedOption] = useState(
+    themeMode === "auto" ? "System" : darkMode ? "Dark" : "Light"
+  );
+  const modes = ["Light", "Dark", "System"];
+
+  // Handle theme mode change
+  const handleChangeMode = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedOption(event.target.value);
+    switch (event.target.value) {
+      case "Light":
+        toggleTheme(false);
+        break;
+      case "Dark":
+        toggleTheme(true);
+        break;
+      case "System":
+        setAutoMode();
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
       <div className="grid sm:grid-cols-[autoß]">
-
         <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
-            <div className="py-2 py-2 w-full flex flex-col border-gray-300 overflow-auto">
+            <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
               <div className="mx-6 md:px-24 pb-8 overflow-y-auto flex-grow">
-                <p className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
-                  {" "}
-                  {translations.settings.title || "-"}
-                </p>
-                <div className="w-full sm:order-2 order-1">
-                  <p className="text-xl pt-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                <section>
+                  <p className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
+                    {" "}
+                    {translations.settings.title || "-"}
+                  </p>
+                </section>
+                {/* App Theme */}
+                <section>
+                  <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                     {translations.settings.apptheme || "-"}
                   </p>
-                  <div className="py-2">
-                    <div className="p-3 rounded-lg bg-[#F8F8F7] dark:bg-[#2D2C2C]">
-                      <div className="flex items-center">
-                        <div
-                          className="flex flex-col items-center mr-4"
-                          onClick={() => toggleTheme(false)}
-                        >
-                          <picture>
-                            <source
-                              srcSet="./imgs/light-tablet.png"
-                              media="(min-width: 640px)"
-                            />
-                            <img
-                              src="./imgs/light-phone.png"
-                              alt="Light Theme"
-                              className={`block h-52 w-auto border-2 rounded-lg cursor-pointer pointer-events-none ${
-                                selectedOption === "Light"
-                                  ? "border-2 border-amber-400"
-                                  : "border-2 border-neutral-200 dark:border-neutral-600"
-                              }`}
-                            />
-                          </picture>
-                          <label className="mt-2">Light</label>
-                        </div>
-                        <div
-                          className="flex flex-col items-center mr-4"
-                          onClick={() => toggleTheme(true)}
-                        >
-                          <picture>
-                            <source
-                              srcSet="./imgs/dark-tablet.png"
-                              media="(min-width: 640px)"
-                            />
-                            <img
-                              src="./imgs/dark-phone.png"
-                              alt="Tree 2"
-                              className={`block h-52 w-auto rounded-lg cursor-pointer pointer-events-none ${
-                                selectedOption === "Dark"
-                                  ? "border-2 border-amber-400"
-                                  : "border-2 border-neutral-200 dark:border-neutral-600"
-                              }`}
-                            />
-                          </picture>
-                          <label className="mt-2">Dark</label>
-                        </div>
-                        <div
-                          className="flex flex-col items-center"
-                          onClick={setAutoMode}
-                        >
-                          <picture>
-                            <source
-                              srcSet="./imgs/system-tablet.png"
-                              media="(min-width: 640px)"
-                            />
-                            <img
-                              src="./imgs/system-phone.png"
-                              alt="Tree 3"
-                              className={`block h-52 w-auto rounded-lg pointer-events-none cursor-pointer ${
-                                selectedOption === "System"
-                                  ? "border-2 border-amber-400"
-                                  : "border-2 border-neutral-200 dark:border-neutral-600"
-                              }`}
-                            />
-                          </picture>
-                          <label className="mt-2">System</label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-xl pt-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                  {translations.settings.selectfont || "-"}
-                </p>
-                <div className="relative pt-2">
-                  <select
-                    value={selectedFont}
-                    onChange={updateFont}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                  >
-                    {fonts.map((font) => (
-                      <option key={font} value={font}>
-                        {font}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
-                    <svg
-                      className="h-4 w-4 text-gray-500 dark:text-[color:var(--selected-dark-text)]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
+                  <div className="relative">
+                    <select
+                      value={selectedOption}
+                      onChange={handleChangeMode}
+                      className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                      {modes.map((mode) => (
+                        <option key={mode} value={mode}>
+                          {mode}
+                        </option>
+                      ))}
+                    </select>
+                    <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
                   </div>
-                </div>
-                <p className="text-xl pt-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                  Select Font Code
-                </p>
-                <div className="relative pt-2">
-                  <select
-                    value={selectedCodeFont}
-                    onChange={updatCodeFont}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                  >
-                    {Codefonts.map((Codefonts) => (
-                      <option key={Codefonts} value={Codefonts}>
-                        {Codefonts}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
-                    <svg
-                      className="h-4 w-4 text-gray-500 dark:text-[color:var(--selected-dark-text)]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
+                </section>
+                {/* Select Font */}
+                <section>
+                  <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                    {translations.settings.selectfont || "-"}
+                  </p>
+                  <div className="relative">
+                    <select
+                      value={selectedFont}
+                      onChange={updateFont}
+                      className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                      {fonts.map((font) => (
+                        <option key={font} value={font}>
+                          {font}
+                        </option>
+                      ))}
+                    </select>
+                    <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
                   </div>
-                </div>
-                <p className="text-xl pt-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                  {translations.settings.selectlanguage || "-"}
-                </p>
-                <div className="relative pt-2">
-                  <select
-                    value={selectedLanguage}
-                    onChange={updateLanguage}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                  >
-                    {languages.map((language) => (
-                      <option key={language.code} value={language.code}>
-                        {language.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
-                    <svg
-                      className="h-4 w-4 text-gray-500 dark:text-[color:var(--selected-dark-text)]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
+                </section>
+                {/* Code Font */}
+                <section>
+                  <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                    Select Font Code
+                  </p>
+                  <div className="relative">
+                    <select
+                      value={selectedCodeFont}
+                      onChange={updatCodeFont}
+                      className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                      {Codefonts.map((Codefonts) => (
+                        <option key={Codefonts} value={Codefonts}>
+                          {Codefonts}
+                        </option>
+                      ))}
+                    </select>
+                    <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
                   </div>
-                </div>
+                </section>
+                {/* Select Language */}
+                <section>
+                  <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                    {translations.settings.selectlanguage || "-"}
+                  </p>
+                  <div className="relative">
+                    <select
+                      value={selectedLanguage}
+                      onChange={updateLanguage}
+                      className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                    >
+                      {languages.map((language) => (
+                        <option key={language.code} value={language.code}>
+                          {language.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                  </div>
+                </section>
+                <section className="py-2">
+                {/* Interface Options */}
                 <p className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                  {translations.settings.selectlanguage || "-"}
+                  Interface options
                 </p>
-                <section className="py-2 bg-neutral-50 dark:bg-[#2D2C2C] p-2 rounded-xl">
                   <div className="flex items-center py-2 justify-between">
                     <div>
-                      <span className="block text-lg align-left">
+                      <p className="block text-lg align-left">
                         Expand page
-                      </span>
-                      <span className="block text-sm align-left">
-                        Extends the editor size to full screen
-                      </span>
+                      </p>
                     </div>
                     <label className="relative inline-flex cursor-pointer items-center">
                       <input
@@ -505,14 +435,11 @@ const Settings: React.FC = () => {
                       <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                     </label>
                   </div>
-                  <div className="flex items-center py-2 border-t-2 dark:border-neutral-600 justify-between">
+                  <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
                     <div>
-                      <span className="block text-lg align-left">
+                      <p className="block text-lg align-left">
                         Clear Font
-                      </span>
-                      <span className="block text-sm align-left">
-                        Changes color scheme on OLED devices
-                      </span>
+                      </p>
                     </div>
                     <label className="relative inline-flex cursor-pointer items-center">
                       <input

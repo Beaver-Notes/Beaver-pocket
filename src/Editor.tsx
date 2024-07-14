@@ -188,15 +188,21 @@ function NoteEditor({
   const handleEditorTyping = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const { key } = event;
     const text = event.currentTarget.innerText.trim(); // Trimmed the text to avoid unnecessary whitespace
-
+  
     // Return early if there's no text
     if (!text) {
+      setPopupPosition(null);
+      setAtPosition(null);
+      setTextAfterAt("");
+      setHashPopupPosition(null);
+      setHashPosition(null);
+      setTextAfterHash("");
       return;
     }
-
+  
     const atIndex = text.lastIndexOf("@@");
     const hashIndex = text.lastIndexOf("#");
-
+  
     // Handle the @@ trigger
     if (
       key === "@" &&
@@ -209,11 +215,11 @@ function NoteEditor({
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
         const editorContent = document.querySelector(".editor-content");
-
+  
         if (editorContent) {
           const top = rect.bottom + window.scrollY; // Adjusted top position relative to the viewport
           const left = rect.left + window.scrollX; // Adjusted left position relative to the viewport
-
+  
           setPopupPosition({ top, left });
           setAtPosition(atIndex); // Set the position of '@@'
           setTextAfterAt(""); // Initialize textAfterAt to an empty string
@@ -223,23 +229,21 @@ function NoteEditor({
       if (
         key === " " ||
         key === "Enter" ||
-        (key === "Backspace" && atIndex === atPosition - 2)
+        (key === "Backspace" && atIndex === -1)
       ) {
         setPopupPosition(null); // Close popup
         setAtPosition(null); // Reset position
         setTextAfterAt(""); // Clear textAfterAt
       } else {
         // Ensure there's no space or newline between @@ and the text
-        const textAfterAt = text.substring(atIndex + 2).split(/\s/)[0];
+        const textAfterAt = text.substring(atPosition + 2).split(/\s/)[0];
         if (textAfterAt) {
           setTextAfterAt(textAfterAt); // Set textAfterAt
           console.log("Text after @@:", textAfterAt);
         }
       }
-    } else if (key === "Backspace" && text[atIndex] === "@") {
-      setPopupPosition(null);
     }
-
+  
     // Handle the # trigger
     if (key === "#" && text[hashIndex] === "#" && text[hashIndex + 1] !== " ") {
       const selection = window.getSelection();
@@ -247,11 +251,11 @@ function NoteEditor({
         const range = selection.getRangeAt(0);
         const rect = range.getBoundingClientRect();
         const editorContent = document.querySelector(".editor-content");
-
+  
         if (editorContent) {
           const top = rect.bottom + window.scrollY; // Adjusted top position relative to the viewport
           const left = rect.left + window.scrollX; // Adjusted left position relative to the viewport
-
+  
           setHashPopupPosition({ top, left });
           setHashPosition(hashIndex); // Set the position of '#'
           setTextAfterHash(""); // Initialize textAfterHash to an empty string
@@ -261,23 +265,36 @@ function NoteEditor({
       if (
         key === " " ||
         key === "Enter" ||
-        (key === "Backspace" && hashIndex === hashPosition - 1)
+        (key === "Backspace" && hashIndex === -1)
       ) {
         setHashPopupPosition(null); // Close popup when '#' is deleted or space is added
         setHashPosition(null); // Reset position
         setTextAfterHash(""); // Clear textAfterHash
       } else {
         // Ensure there's no space or newline between # and the text
-        const textAfterHash = text.substring(hashIndex + 1).split(/\s/)[0];
+        const textAfterHash = text.substring(hashPosition + 1).split(/\s/)[0];
         if (textAfterHash) {
           setTextAfterHash(textAfterHash); // Set textAfterHash
           console.log("Text after #:", textAfterHash);
         }
       }
-    } else if (key === "Backspace" && text[hashIndex] === "#") {
-      setHashPopupPosition(null);
     }
-  };
+  
+    // Close popups if @@ or # are deleted
+    if (key === "Backspace") {
+      if (text.indexOf("@@") === -1) {
+        setPopupPosition(null);
+        setAtPosition(null); // Reset position if '@@' is deleted
+        setTextAfterAt(""); // Clear textAfterAt
+      }
+  
+      if (text.indexOf("#") === -1) {
+        setHashPopupPosition(null);
+        setHashPosition(null); // Reset position if '#' is deleted
+        setTextAfterHash(""); // Clear textAfterHash
+      }
+    }
+  };  
 
   const handleTyping = () => {
     if (typingTimeoutRef.current !== null) {

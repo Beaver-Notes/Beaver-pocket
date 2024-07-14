@@ -3,7 +3,7 @@ import { Editor } from "@tiptap/react";
 import { Note } from "../../store/types";
 import ImageUploadComponent from "./ImageUpload";
 import FileUploadComponent from "./FileUpload";
-import icon from "../../lib/remixicon-react"
+import icon from "../../lib/remixicon-react";
 import { Keyboard } from "@capacitor/keyboard";
 
 interface DrawerProps {
@@ -29,7 +29,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
     const videoUrl = prompt("Please enter the URL of the video:");
 
     // Check if the user canceled or entered an empty URL
-    if (!videoUrl || videoUrl.trim() === '') {
+    if (!videoUrl || videoUrl.trim() === "") {
       // Prevent adding iframe if URL is empty or canceled
       return;
     }
@@ -37,17 +37,17 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
     let formattedUrl = videoUrl.trim();
 
     // Check if the URL is a YouTube video URL in the regular format
-    if (formattedUrl.includes('youtube.com/watch?v=')) {
-      let videoId = formattedUrl.split('v=')[1];
-      const ampersandPosition = videoId.indexOf('&');
+    if (formattedUrl.includes("youtube.com/watch?v=")) {
+      let videoId = formattedUrl.split("v=")[1];
+      const ampersandPosition = videoId.indexOf("&");
       if (ampersandPosition !== -1) {
         videoId = videoId.substring(0, ampersandPosition);
       }
       // Convert to the embed format
       formattedUrl = `https://www.youtube.com/embed/${videoId}`;
-    } else if (formattedUrl.includes('youtu.be/')) {
-      let videoId = formattedUrl.split('youtu.be/')[1];
-      const ampersandPosition = videoId.indexOf('?');
+    } else if (formattedUrl.includes("youtu.be/")) {
+      let videoId = formattedUrl.split("youtu.be/")[1];
+      const ampersandPosition = videoId.indexOf("?");
       if (ampersandPosition !== -1) {
         videoId = videoId.substring(0, ampersandPosition);
       }
@@ -56,13 +56,19 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
     }
 
     // Use the formatted URL to set the iframe source
-    editor?.chain()
+    editor
+      ?.chain()
       .focus()
       .setIframe({
         src: formattedUrl,
       })
       .run();
   };
+
+  const isTableCellActive = editor?.isActive("tableCell");
+  const isTableHeaderActive = editor?.isActive("tableHeader");
+
+  const isTableActive = isTableCellActive || isTableHeaderActive;
 
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
@@ -90,7 +96,11 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       } cursor-grab overflow-hidden transition-height duration-200 ease-in-out`}
     >
       <div className="overflow-hidden bottom-2 max-auto flex justify-center">
-        <div className="flex justify-between w-full px-2">
+        <div
+          className={`flex justify-between w-full px-2 ${
+            isTableActive ? "hidden" : "block"
+          }`}
+        >
           <div className="flex py-1">
             <ImageUploadComponent
               onImageUpload={handleImageUpload}
