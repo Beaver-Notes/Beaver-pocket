@@ -36,7 +36,7 @@ import InsertColumnRightIcon from "remixicon-react/InsertColumnRightIcon";
 import Brush2Fill from "remixicon-react/Brush2FillIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
 import Table2Icon from "remixicon-react/Table2Icon";
-import VideoIcon from "remixicon-react/MovieLineIcon"
+import VideoIcon from "remixicon-react/MovieLineIcon";
 import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
 import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
 import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
@@ -62,11 +62,15 @@ import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
 import ArrowRightLineIcon from "remixicon-react/ArrowRightLineIcon";
 import Edit2LineIcon from "remixicon-react/Edit2LineIcon";
 import CodeLineIcon from "remixicon-react/CodeLineIcon";
+import ArrowDownSLineIcon from "remixicon-react/ArrowDownSLineIcon";
+import FontSizeIcon from "remixicon-react/FontSizeIcon";
 
 const Icons = {
   AddFillIcon,
+  FontSizeIcon,
   ArrowRightLineIcon,
   FileUploadLineIcon,
+  ArrowDownSLineIcon,
   FileDownloadLineIcon,
   CupLineIcon,
   CodeLineIcon,

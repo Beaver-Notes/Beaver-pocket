@@ -562,7 +562,7 @@ const Archive: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="grid sm:grid-cols-[autoß]">
+      <div className="grid sm:grid-cols-[auto]">
         <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
             <div className="w-full md:pt-4 py-2 flex flex-col border-gray-300 overflow-auto">
