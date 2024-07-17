@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Note } from "./store/types";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
-import Bubblemenu from "./components/Editor/Bubblemenu";
 import Toolbar from "./components/Editor/Toolbar";
 import "./css/video.scss";
 import BubleMenutable from "./components/Editor/Bubblemenutable";
@@ -379,7 +378,6 @@ function NoteEditor({
             </button>
           </div>
         </div>
-        <Bubblemenu editor={editor} />
         <BubleMenutable editor={editor} isTyping={isTyping} />
         <div
           contentEditable

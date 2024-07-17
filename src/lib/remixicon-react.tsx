@@ -11,6 +11,7 @@ import Download2LineIcon from "remixicon-react/Download2LineIcon";
 import LockClosedIcon from "remixicon-react/LockLineIcon";
 import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
 import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
+import ParagraphIcon from "remixicon-react/ParagraphIcon";
 import InformationLineIcon from "remixicon-react/InformationLineIcon";
 import SyncLineIcon from "remixicon-react/RefreshLineIcon";
 import LockLineIcon from "remixicon-react/LockLineIcon";
@@ -35,11 +36,11 @@ import InsertColumnLeftIcon from "remixicon-react/InsertColumnLeftIcon";
 import InsertColumnRightIcon from "remixicon-react/InsertColumnRightIcon";
 import Brush2Fill from "remixicon-react/Brush2FillIcon";
 import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
-import Table2Icon from "remixicon-react/Table2Icon";
+import Table2Icon from "remixicon-react/TableLineIcon";
 import VideoIcon from "remixicon-react/MovieLineIcon";
 import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
 import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
-import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesLIcon";
+import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesRIcon";
 import LinkIcon from "remixicon-react/LinkMIcon";
 import Settings4LineIcon from "remixicon-react/SettingsLineIcon";
 import HomeLineIcon from "remixicon-react/HomeLineIcon";
@@ -102,6 +103,7 @@ const Icons = {
   LockLineIcon,
   Focus3LineIcon,
   Search2LineIcon,
+  ListUnorderedIcon,
   ArrowLeftLineIcon,
   CloseLineIcon,
   BoldIcon,
@@ -114,6 +116,7 @@ const Icons = {
   InsertRowTopIcon,
   DeleteRow,
   DeleteColumn,
+  ParagraphIcon,
   InsertRowBottomIcon,
   InsertColumnLeftIcon,
   InsertColumnRightIcon,
@@ -126,7 +129,6 @@ const Icons = {
   FileIcon,
   ImageLineIcon,
   LinkIcon,
-  ListUnorderedIcon,
   DoubleQuotesLIcon,
   DropboxFillIcon,
   ServerLineIcon,
