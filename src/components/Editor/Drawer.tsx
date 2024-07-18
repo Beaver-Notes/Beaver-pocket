@@ -368,7 +368,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           </button>
         </div>
         <div
-          className={`flex py-1 w-full space-x-2 ${
+          className={`flex p-[11px] w-full space-x-2 ${
             isTextSelected ? "block" : "hidden"
           }`}
         >
@@ -378,7 +378,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               editor?.isActive("paragraph")
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
-            } cursor-pointer flex-1 pl-3`}
+            } cursor-pointer flex-1`}
             onClick={() => editor?.chain().focus().setParagraph().run()}
           >
             <icons.ParagraphIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
