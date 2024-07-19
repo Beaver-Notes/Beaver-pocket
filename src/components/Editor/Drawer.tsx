@@ -49,7 +49,6 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       .run();
   }, [editor]);
 
-
   const handleAddIframe = () => {
     const videoUrl = prompt("Please enter the URL of the video:");
     if (!videoUrl || videoUrl.trim() === "") {
@@ -188,12 +187,10 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           </button>
 
           {/* Media and File Upload Options */}
-          <div className="flex-1">
-            <ImageUploadComponent
-              onImageUpload={handleImageUpload}
-              noteId={noteId}
-            />
-          </div>
+          <ImageUploadComponent
+            onImageUpload={handleImageUpload}
+            noteId={noteId}
+          />
           <button
             className={`p-1 ${
               editor?.isActive("Video")
@@ -204,17 +201,14 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           >
             <icons.VideoIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
-          <div className="flex-1">
-            <FileUploadComponent
-              onFileUpload={handlefileUpload}
-              noteId={noteId}
-            />
-          </div>
-
+          <FileUploadComponent
+            onFileUpload={handlefileUpload}
+            noteId={noteId}
+          />
           {/* List and Table Options */}
           <button
             className={`p-1 ${
-              editor?.isActive("Tasklist")
+              editor?.isActive("table")
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
@@ -334,12 +328,10 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             <icons.Brush2Fill className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           {/* Media and File Upload Options */}
-          <div className="flex-1">
-            <ImageUploadComponent
-              onImageUpload={handleImageUpload}
-              noteId={noteId}
-            />
-          </div>
+          <ImageUploadComponent
+            onImageUpload={handleImageUpload}
+            noteId={noteId}
+          />
           <button
             className={`p-1 ${
               editor?.isActive("Video")
@@ -350,12 +342,10 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           >
             <icons.VideoIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
-          <div className="flex-1">
-            <FileUploadComponent
-              onFileUpload={handlefileUpload}
-              noteId={noteId}
-            />
-          </div>
+          <FileUploadComponent
+            onFileUpload={handlefileUpload}
+            noteId={noteId}
+          />
           <button
             className={`p-1 ${
               editor?.isActive("Tasklist")
@@ -413,8 +403,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
-            onClick={() => editor?.chain().focus().toggleBold().run()
-            }
+            onClick={() => editor?.chain().focus().toggleBold().run()}
           >
             <icons.BoldIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
@@ -424,8 +413,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
-            onClick={() => editor?.chain().focus().toggleItalic().run()
-            }
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
           >
             <icons.ItalicIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
@@ -435,8 +423,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
-            onClick={() => editor?.chain().focus().toggleUnderline().run()
-            }
+            onClick={() => editor?.chain().focus().toggleUnderline().run()}
           >
             <icons.UnderlineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
@@ -446,8 +433,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
-            onClick={() => editor?.chain().focus().toggleStrike().run()
-            }
+            onClick={() => editor?.chain().focus().toggleStrike().run()}
           >
             <icons.StrikethroughIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
@@ -457,8 +443,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
-            onClick={() => editor?.chain().focus().toggleHighlight().run()
-            }
+            onClick={() => editor?.chain().focus().toggleHighlight().run()}
           >
             <icons.MarkPenLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>

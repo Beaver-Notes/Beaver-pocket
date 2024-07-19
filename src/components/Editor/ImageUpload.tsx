@@ -76,7 +76,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
         path: filePath,
       });
 
-      console.log('upload', uri);
+      console.log("upload", uri);
 
       // const imageUrl = Capacitor.convertFileSrc(uri); // Convert file URI to displayable URL
       return { imageUrl: filePath, fileUri: uri };
@@ -87,10 +87,10 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
   };
 
   return (
-    <div>
-      <div className="p-[11px] hidden sm:block rounded-full cursor-pointer">
+    <>
+      <div className="flex items-center justify-between sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
         <label htmlFor="image-upload-input">
-          <icons.ImageLineIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
+          <icons.ImageLineIcon className="sm:text-white text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
         </label>
         <input
           type="file"
@@ -100,19 +100,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
           className="hidden"
         />
       </div>
-      <div className="p-[11px] sm:hidden rounded-full cursor-pointer">
-        <label htmlFor="image-upload-input">
-          <icons.ImageLineIcon className="border-none text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
-        </label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          id="image-upload-input"
-          className="hidden"
-        />
-      </div>
-    </div>
+    </>
   );
 };
 

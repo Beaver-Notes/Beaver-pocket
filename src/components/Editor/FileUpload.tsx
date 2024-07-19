@@ -77,20 +77,9 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
   
   return (
     <div>
-      <div className="p-[11px] hidden sm:block rounded-full cursor-pointer">
-        <label htmlFor="file-upload-input">
-          <icons.FileIcon className="border-none text-white text-xl w-7 h-7 cursor-pointer" />
-        </label>
-        <input
-          type="file"
-          onChange={handleFileChange}
-          id="file-upload-input"
-          className="hidden"
-        />
-      </div>
-      <div className="p-[11px] sm:hidden rounded-full cursor-pointer">
-        <label htmlFor="file-upload-input">
-          <icons.FileIcon className="border-none text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
+      <div className="flex items-center justify-between sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+      <label htmlFor="file-upload-input">
+          <icons.FileIcon className="sm:text-white text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
         </label>
         <input
           type="file"
