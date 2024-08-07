@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import icons from "../../lib/remixicon-react"; // Adjust the import path as needed
 
 type Props = {
-  position: any;
+  hashPopupPosition: { top: number; left: number } | any;
   note: Note;
   onChange: (content: JSONContent, title?: string) => void;
   editor: any;
@@ -13,9 +13,20 @@ type Props = {
   setHashPosition: any;
   setHashPopupPosition: any;
   setTextAfterHash: any;
+  uniqueLabels: string[];
 };
 
-function NoteLabels({ onChange, note, setHashPosition, setHashPopupPosition, setTextAfterHash, editor, position, textAfterHash }: Props) {
+function NoteLabels({
+  onChange,
+  note,
+  setHashPosition,
+  setHashPopupPosition,
+  setTextAfterHash,
+  editor,
+  hashPopupPosition,
+  textAfterHash,
+  uniqueLabels,
+}: Props) {
   const [newLabel, setNewLabel] = useState("");
   const [globalLabels, setGlobalLabels] = useState<string[]>([]);
   const [translations, setTranslations] = useState({
@@ -24,9 +35,7 @@ function NoteLabels({ onChange, note, setHashPosition, setHashPopupPosition, set
     },
   });
 
-  const extractLabelsFromNote = (note: Note): string[] => {
-    return note.labels || [];
-  };
+  const extractLabelsFromNote = (note: Note): string[] => note.labels || [];
 
   useEffect(() => {
     const loadTranslations = async () => {
@@ -36,7 +45,10 @@ function NoteLabels({ onChange, note, setHashPosition, setHashPopupPosition, set
           `../../assets/locales/${selectedLanguage}.json`
         );
 
-        setTranslations({ ...translations, ...translationModule.default });
+        setTranslations((prevTranslations) => ({
+          ...prevTranslations,
+          ...translationModule.default,
+        }));
         dayjs.locale(selectedLanguage);
       } catch (error) {
         console.error("Error loading translations:", error);
@@ -79,102 +91,98 @@ function NoteLabels({ onChange, note, setHashPosition, setHashPopupPosition, set
   const updateLabelsInNote = (labelToUpdate: string, newLabel: string) => {
     const updatedNote = { ...note };
 
-    if (
-      typeof updatedNote.content === "object" &&
-      updatedNote.content !== null
-    ) {
-      const contentArray =
-        "content" in updatedNote.content &&
-        Array.isArray(updatedNote.content.content)
-          ? updatedNote.content.content
-          : [];
+    if (typeof updatedNote.content === "object" && updatedNote.content !== null) {
+      const contentArray = Array.isArray(updatedNote.content)
+        ? updatedNote.content
+        : updatedNote.content.content;
 
-      const labelIndex = updatedNote.labels?.indexOf(labelToUpdate);
+      if (contentArray) {
+        const labelIndex = updatedNote.labels?.indexOf(labelToUpdate);
 
-      if (labelIndex !== -1) {
-        if (newLabel.trim() === "") {
-          updatedNote.labels.splice(labelIndex, 1);
+        if (labelIndex !== -1) {
+          if (newLabel.trim() === "") {
+            updatedNote.labels.splice(labelIndex, 1);
 
-          const existingNoteLabelIndex = contentArray.findIndex(
-            (node: any) =>
-              node.type === "noteLabel" &&
-              node.attrs &&
-              node.attrs.id === labelToUpdate
-          );
+            const existingNoteLabelIndex = contentArray.findIndex(
+              (node: any) =>
+                node.type === "noteLabel" &&
+                node.attrs &&
+                node.attrs.id === labelToUpdate
+            );
 
-          if (existingNoteLabelIndex !== -1) {
-            contentArray.splice(existingNoteLabelIndex, 1);
+            if (existingNoteLabelIndex !== -1) {
+              contentArray.splice(existingNoteLabelIndex, 1);
+            }
+          } else {
+            updatedNote.labels[labelIndex] = newLabel;
+
+            const existingNoteLabelIndex = contentArray.findIndex(
+              (node: any) =>
+                node.type === "noteLabel" &&
+                node.attrs &&
+                node.attrs.id === labelToUpdate
+            );
+
+            if (
+              existingNoteLabelIndex !== -1 &&
+              contentArray[existingNoteLabelIndex]?.attrs
+            ) {
+              contentArray[existingNoteLabelIndex] = {
+                type: "noteLabel",
+                attrs: {
+                  id: newLabel,
+                  label: newLabel,
+                },
+              };
+            }
           }
-        } else {
-          updatedNote.labels[labelIndex] = newLabel;
 
-          const existingNoteLabelIndex = contentArray.findIndex(
-            (node: any) =>
-              node.type === "noteLabel" &&
-              node.attrs &&
-              node.attrs.id === labelToUpdate
-          );
-
-          if (
-            existingNoteLabelIndex !== -1 &&
-            contentArray[existingNoteLabelIndex]?.attrs
-          ) {
-            contentArray[existingNoteLabelIndex] = {
-              type: "noteLabel",
-              attrs: {
-                id: newLabel,
-                label: newLabel,
-              },
-            };
-          }
+          onChange(updatedNote.content);
         }
-
-        onChange(updatedNote.content);
       }
     }
   };
 
   const addLabelToNote = (labelToAdd: string) => {
     const updatedNote = { ...note };
-  
+
     // Find the position of the hash and the text after it
     const content = editor.getText();
     const hashIndex = content.lastIndexOf("#");
-    const range = editor.state.tr.selection;
-  
+
     if (hashIndex !== -1) {
+      const textAfterHashMatch = content.slice(hashIndex).match(/^#[\w-]*/);
+      const endIndex = textAfterHashMatch
+        ? hashIndex + textAfterHashMatch[0].length
+        : hashIndex + 1; // Ensure the hash is deleted
+
       editor
         .chain()
         .focus()
         .deleteRange({
           from: hashIndex,
-          to: range.to,
+          to: endIndex,
         })
         .insertContent({
-          type: "paragraph",
-          content: [
-            {
-              type: "noteLabel",
-              attrs: { id: labelToAdd, label: labelToAdd },
-            },
-          ],
+          type: "noteLabel",
+          attrs: { id: labelToAdd, label: labelToAdd },
         })
         .run();
-        
+
       // Close the hash popup after replacing the text
       setHashPopupPosition(null);
       setHashPosition(null);
       setTextAfterHash("");
     }
-  
+
     if (!updatedNote.labels) {
       updatedNote.labels = [labelToAdd];
     } else {
       updatedNote.labels.push(labelToAdd);
     }
-  
+
     setGlobalLabels(extractLabelsFromNote(updatedNote));
-  };  
+  };
 
   const handleAddLabel = () => {
     if (newLabel.trim() !== "") {
@@ -185,8 +193,8 @@ function NoteLabels({ onChange, note, setHashPosition, setHashPopupPosition, set
 
   return (
     <div
-      className="z-50 mt-6 fixed bg-white dark:bg-[#232222] shadow border-2 shadow dark:border-neutral-600 rounded-lg min-w-12 min-h-14 p-2"
-      style={{ left: position.left, top: position.top }}
+      className="z-50 fixed bg-white dark:bg-[#232222] shadow border-2 shadow dark:border-neutral-600 rounded-lg min-w-12 min-h-14 p-2"
+      style={{ top: hashPopupPosition.top, left: hashPopupPosition.left }}
     >
       <div className="flex items-center p-2">
         <icons.AddFillIcon />
@@ -198,6 +206,17 @@ function NoteLabels({ onChange, note, setHashPosition, setHashPopupPosition, set
           placeholder={translations.editor.addLabel || "-"}
           className="flex-1 bg-transparent"
         />
+      </div>
+      <div className="p-2">
+        {uniqueLabels.slice(0, 5).map((label) => (
+          <div
+            key={label}
+            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg cursor-pointer"
+            onClick={() => addLabelToNote(label)}
+          >
+            {label.length > 20 ? label.substring(0, 17) + "..." : label}
+          </div>
+        ))}
       </div>
     </div>
   );

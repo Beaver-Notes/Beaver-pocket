@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
 import BubblemenuLabel from "./components/Editor/BubblemenuLabel";
+import { hasNotch } from "./utils/detectNotch";
 import DOMPurify from "dompurify";
 
 // Icons
@@ -25,6 +26,7 @@ type Props = {
   onChange: (content: JSONContent, title?: string) => void;
   isFullScreen?: boolean;
   title: string;
+  uniqueLabels: string[];
   onTitleChange: (newTitle: string) => void;
 };
 
@@ -32,6 +34,7 @@ function NoteEditor({
   note,
   notesList,
   onChange,
+  uniqueLabels,
   onTitleChange,
   onCloseEditor,
   isFullScreen = false,
@@ -48,7 +51,7 @@ function NoteEditor({
     top: number;
     left: number;
   } | null>(null);
-  const [HashPopupPosition, setHashPopupPosition] = useState<{
+  const [hashPopupPosition, setHashPopupPosition] = useState<{
     top: number;
     left: number;
   } | null>(null);
@@ -59,6 +62,15 @@ function NoteEditor({
   const [textAfterAt, setTextAfterAt] = useState<string | null>(null);
   const headingTreeRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<number | null>(null);
+  const [notchPadding, setNotchPadding] = useState(false);
+
+  useEffect(() => {
+    const checkNotch = async () => {
+      const hasNotchFlag = await hasNotch();
+      setNotchPadding(hasNotchFlag);
+    };
+    checkNotch();
+  }, []);
 
   const navigate = useNavigate();
 
@@ -187,7 +199,7 @@ function NoteEditor({
   const handleEditorTyping = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const { key } = event;
     const text = event.currentTarget.innerText.trim(); // Trimmed the text to avoid unnecessary whitespace
-  
+
     // Return early if there's no text
     if (!text) {
       setPopupPosition(null);
@@ -198,10 +210,37 @@ function NoteEditor({
       setTextAfterHash("");
       return;
     }
-  
+
     const atIndex = text.lastIndexOf("@@");
     const hashIndex = text.lastIndexOf("#");
-  
+
+    // Function to calculate and set popup position
+    const setPosition = (trigger: string, index: number) => {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0).cloneRange();
+        const rect = range.getBoundingClientRect();
+        const editorContent = document.querySelector(".editor-content");
+
+        if (editorContent) {
+          const top = rect.bottom + window.scrollY; // Adjusted top position relative to the viewport
+          const left = rect.left + window.scrollX; // Adjusted left position relative to the viewport
+
+          console.log(`Popup position for ${trigger}:`, { top, left });
+
+          if (trigger === "@@") {
+            setPopupPosition({ top, left });
+            setAtPosition(index); // Set the position of '@@'
+            setTextAfterAt(""); // Initialize textAfterAt to an empty string
+          } else if (trigger === "#") {
+            setHashPopupPosition({ top, left });
+            setHashPosition(index); // Set the position of '#'
+            setTextAfterHash(""); // Initialize textAfterHash to an empty string
+          }
+        }
+      }
+    };
+
     // Handle the @@ trigger
     if (
       key === "@" &&
@@ -209,21 +248,7 @@ function NoteEditor({
       text[atIndex] === "@" &&
       text[atIndex + 1] === "@"
     ) {
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        const editorContent = document.querySelector(".editor-content");
-  
-        if (editorContent) {
-          const top = rect.bottom + window.scrollY; // Adjusted top position relative to the viewport
-          const left = rect.left + window.scrollX; // Adjusted left position relative to the viewport
-  
-          setPopupPosition({ top, left });
-          setAtPosition(atIndex); // Set the position of '@@'
-          setTextAfterAt(""); // Initialize textAfterAt to an empty string
-        }
-      }
+      setPosition("@@", atIndex);
     } else if (atPosition !== null) {
       if (
         key === " " ||
@@ -242,24 +267,10 @@ function NoteEditor({
         }
       }
     }
-  
+
     // Handle the # trigger
     if (key === "#" && text[hashIndex] === "#" && text[hashIndex + 1] !== " ") {
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        const editorContent = document.querySelector(".editor-content");
-  
-        if (editorContent) {
-          const top = rect.bottom + window.scrollY; // Adjusted top position relative to the viewport
-          const left = rect.left + window.scrollX; // Adjusted left position relative to the viewport
-  
-          setHashPopupPosition({ top, left });
-          setHashPosition(hashIndex); // Set the position of '#'
-          setTextAfterHash(""); // Initialize textAfterHash to an empty string
-        }
-      }
+      setPosition("#", hashIndex);
     } else if (hashPosition !== null) {
       if (
         key === " " ||
@@ -278,7 +289,7 @@ function NoteEditor({
         }
       }
     }
-  
+
     // Close popups if @@ or # are deleted
     if (key === "Backspace") {
       if (text.indexOf("@@") === -1) {
@@ -286,14 +297,14 @@ function NoteEditor({
         setAtPosition(null); // Reset position if '@@' is deleted
         setTextAfterAt(""); // Clear textAfterAt
       }
-  
+
       if (text.indexOf("#") === -1) {
         setHashPopupPosition(null);
         setHashPosition(null); // Reset position if '#' is deleted
         setTextAfterHash(""); // Clear textAfterHash
       }
     }
-  };  
+  };
 
   const handleTyping = () => {
     if (typingTimeoutRef.current !== null) {
@@ -335,7 +346,7 @@ function NoteEditor({
         )}
         <div
           className={`sm:hidden bg-white dark:bg-[#232222] px-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between ${
-            isPlatform("ios") ? "pt-6 sm:pt-1" : ""
+            notchPadding ? "pt-6" : "sm:pt-1"
           }`}
         >
           <button
@@ -391,13 +402,14 @@ function NoteEditor({
         />
         <div>
           <div className="py-2 h-full w-full" id="container">
-            {HashPopupPosition && (
+            {hashPopupPosition && (
               <BubblemenuLabel
-                position={hashPosition}
+                hashPopupPosition={hashPopupPosition}
                 note={note}
                 onChange={onChange}
                 editor={editor}
                 textAfterHash={TextAfterHash}
+                uniqueLabels={uniqueLabels}
                 setHashPopupPosition={setHashPopupPosition}
                 setHashPosition={setHashPosition}
                 setTextAfterHash={setTextAfterHash}
@@ -405,7 +417,7 @@ function NoteEditor({
             )}
             {popupPosition && (
               <BubblemenuNoteLink
-                position={atPosition}
+                popupPosition={popupPosition}
                 notes={notesList}
                 onClickNote={handleClickNote}
                 textAfterAt={textAfterAt}

@@ -32,6 +32,7 @@ import Icons from "./lib/remixicon-react";
 
 import dayjs from "dayjs";
 import ReactDOM from "react-dom";
+import { useExportDav } from "./utils/webDavUtil";
 
 const Archive: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -78,11 +79,17 @@ const Archive: React.FC = () => {
       }
     }
   };
-
-  // Function to toggle dark mode
-
+  
   const handleCloseEditor = () => {
     setActiveNoteId(null);
+    const syncValue = localStorage.getItem("sync");
+    if (syncValue === "dropbox") {
+      const dropboxExport = new CustomEvent("dropboxExport");
+      document.dispatchEvent(dropboxExport);
+    } else if (syncValue === "webdav") {
+      const { exportdata } = useExportDav();
+      exportdata();
+    }
   };
 
   useEffect(() => {
@@ -701,6 +708,7 @@ const Archive: React.FC = () => {
             onTitleChange={setTitle}
             onChange={handleChangeNoteContent}
             onCloseEditor={handleCloseEditor}
+            uniqueLabels={uniqueLabels}
           />
         )}
       </div>

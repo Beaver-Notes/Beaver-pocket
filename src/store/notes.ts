@@ -47,7 +47,7 @@ async function createNotesDirectory() {
 
 // Load
 
-export const loadNotes = async () => {
+export const loadNotes = async (): Promise<Record<string, Note>> => {
   try {
     const { uri } = await Filesystem.getUri({
       directory: FilesystemDirectory.Data,
@@ -56,35 +56,46 @@ export const loadNotes = async () => {
     setStoreRemotePath(Capacitor.convertFileSrc(uri));
     await createNotesDirectory(); // Create the directory before reading/writing
 
-    const fileExists = await Filesystem.stat({
-      path: STORAGE_PATH,
-      directory: Directory.Data,
-    });
-
-    if (fileExists) {
-      const data = await Filesystem.readFile({
+    try {
+      await Filesystem.stat({
         path: STORAGE_PATH,
         directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
       });
+    } catch {
+      console.log("The file doesn't exist. Returning an empty object.");
+      return {};
+    }
 
-      if (data.data) {
-        const parsedData = JSON.parse(data.data as string);
+    const data = await Filesystem.readFile({
+      path: STORAGE_PATH,
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
+    });
 
-        if (parsedData?.data?.notes) {
-          return parsedData.data.notes;
-        } else {
-          console.log(
-            "The file is missing the 'notes' data. Returning an empty object."
-          );
-          return {};
-        }
+    if (data.data) {
+      const parsedData = JSON.parse(data.data as string);
+
+      if (parsedData?.data?.notes) {
+        const notes = parsedData.data.notes;
+        const filteredNotes = Object.keys(notes).reduce((acc, noteId) => {
+          const note = notes[noteId];
+          if (note.title) {
+            acc[noteId] = note;
+          } else {
+            console.warn(`Note with ID ${noteId} is missing a title. Skipping.`);
+          }
+          return acc;
+        }, {} as Record<string, Note>);
+
+        return filteredNotes;
       } else {
-        console.log("The file is empty. Returning an empty object.");
+        console.log(
+          "The file is missing the 'notes' data. Returning an empty object."
+        );
         return {};
       }
     } else {
-      console.log("The file doesn't exist. Returning an empty object.");
+      console.log("The file is empty. Returning an empty object.");
       return {};
     }
   } catch (error) {

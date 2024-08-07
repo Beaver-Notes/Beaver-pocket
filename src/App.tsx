@@ -8,11 +8,11 @@ import { App as CapacitorApp } from "@capacitor/app";
 import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
 import Dropbox from "./settings/screens/dropbox";
-import Webdav from "./settings/screens/Webdav";
+import Webdav from "./settings/screens/webdav";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
 import Sync from "./settings/sync";
-import { useExportDav, useImportDav } from "./utils/webDavUtil"
+import { useImportDav } from "./utils/webDavUtil";
 
 const App: React.FC = () => {
   const history = useNavigate();
@@ -26,11 +26,11 @@ const App: React.FC = () => {
     }
   });
 
-   useEffect(() => {
+  useEffect(() => {
     const selectedDarkText =
-      localStorage.getItem('selected-dark-text') || 'white';
+      localStorage.getItem("selected-dark-text") || "white";
     document.documentElement.style.setProperty(
-      '--selected-dark-text',
+      "--selected-dark-text",
       selectedDarkText
     );
   }, []);
@@ -53,33 +53,16 @@ const App: React.FC = () => {
     }
   }, [checkedFirstTime, history]);
 
-  const { exportdata } = useExportDav();
-  const { HandleImportData } = useImportDav();
-
   useEffect(() => {
-    // Check if sync is set to 'dropbox'
     const syncValue = localStorage.getItem("sync");
     if (syncValue === "dropbox") {
-      // Start the interval only if sync is set to 'dropbox'
-      const intervalId = setInterval(() => {
-        const exportAndDownloadEvent = new CustomEvent("exportAndDownloadEvent");
-        document.dispatchEvent(exportAndDownloadEvent);
-        alert('exporting data to dropbox');
-      }, 30 * 60 * 1000); // 1 minute
-
-      // Clear interval on unmount
-      return () => clearInterval(intervalId);
+      const dropboxImport = new CustomEvent("dropboxImport");
+      document.dispatchEvent(dropboxImport);
     } else if (syncValue === "webdav") {
-      const intervalId = setInterval(() => {
-        exportdata();
-        HandleImportData();
-        alert("exporting data");
-      }, 30 * 60 * 1000); // 1 minute
-
-      // Clear interval on unmount
-      return () => clearInterval(intervalId);
+      const { HandleImportData } = useImportDav();
+      HandleImportData();
     }
-  }, [exportdata, HandleImportData]);
+  });
 
   return (
     <>

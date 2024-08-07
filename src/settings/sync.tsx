@@ -13,6 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { loadNotes, useSaveNote } from "../store/notes";
 import icons from "../lib/remixicon-react"
+import { useExportDav } from "../utils/webDavUtil";
 
 const Shortcuts: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -69,8 +70,16 @@ const Shortcuts: React.FC = () => {
 
   const handleCloseEditor = () => {
     setActiveNoteId(null);
+    const syncValue = localStorage.getItem("sync");
+    if (syncValue === "dropbox") {
+      const dropboxExport = new CustomEvent("dropboxExport");
+      document.dispatchEvent(dropboxExport);
+    } else if (syncValue === "webdav") {
+      const { exportdata } = useExportDav();
+      exportdata();
+    }
   };
-
+  
   const exportData = () => {
     exportUtils(notesState); // Pass notesState as an argument
   };
@@ -184,7 +193,10 @@ const Shortcuts: React.FC = () => {
   const handlers = useSwipeable({
     onSwiped: handleSwipe,
   });
-  
+
+  const uniqueLabels = Array.from(
+    new Set(Object.values(notesState).flatMap((note) => note.labels))
+  );
 
   return (
     <div {...handlers}>
@@ -263,6 +275,7 @@ const Shortcuts: React.FC = () => {
               onTitleChange={setTitle}
               onChange={handleChangeNoteContent}
               onCloseEditor={handleCloseEditor}
+              uniqueLabels={uniqueLabels}
             />
           )}
         </div>

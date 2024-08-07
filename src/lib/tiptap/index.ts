@@ -2,6 +2,10 @@
 import { lowlight } from "lowlight";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Audio from "./exts/audio-block";
+import Document from '@tiptap/extension-document'
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
 import Placeholder from "@tiptap/extension-placeholder";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Highlight from "@tiptap/extension-highlight";
@@ -24,7 +28,7 @@ import FileEmbed from "./exts/file-block";
 import SearchAndReplace from "./exts/search-&-replace";
 import Mathblock from "./exts/math-block/Index";
 import CodeBlockComponent from "./exts/CodeBlockComponent";
-import iframe from "./exts/iframe";
+import iframe from "./exts/embed-block/iframe";
 import { useDataPath } from "../../store/useDataPath";
 import MermaidDiagram from "./exts/mermaid-block";
 import labels from "./exts/labels";
@@ -43,6 +47,9 @@ import {
 import enTranslations from "../../assets/locales/en.json";
 import itTranslations from "../../assets/locales/it.json";
 import deTranslations from "../../assets/locales/de.json";
+import Footnote from "./exts/footnote-block/footnote";
+import Footnotes from "./exts/footnote-block/footnotes";
+import FootnoteReference from "./exts/footnote-block/reference";
 
 let translations: any = enTranslations;
 
@@ -108,6 +115,15 @@ const extensions = [
   purpleCallout,
   redCallout,
   yellowCallout,
+  Audio,
+  Subscript,
+  Superscript,
+  Footnote,
+  Footnotes,
+  FootnoteReference,
+  Document.extend({
+    content: 'block+ footnotes?',
+  }),
 ];
 
 export default extensions;

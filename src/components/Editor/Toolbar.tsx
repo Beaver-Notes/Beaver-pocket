@@ -454,6 +454,26 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <icons.MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
           </button>
           <button
+            className={
+              editor?.isActive("highlight")
+                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+            }
+            onClick={() => editor?.commands.toggleSubscript()}
+          >
+            <icons.SubscriptIcon className="border-none text-white text-xl w-7 h-7" />
+          </button>
+          <button
+            className={
+              editor?.isActive("subscript")
+                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                : "p-2 rounded-md text-white bg-transparent cursor-pointer"
+            }
+            onClick={() => editor?.commands.toggleSuperscript()            }
+          >
+            <icons.SuperscriptIcon className="border-none text-white text-xl w-7 h-7" />
+          </button>
+          <button
             className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
             onClick={setLink}
           >
