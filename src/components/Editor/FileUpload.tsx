@@ -25,7 +25,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
   };
 
   async function createDirectory() {
-    const directoryPath = `note-assets/${noteId}`;
+    const directoryPath = `file-assets/${noteId}`;
 
     try {
       await Filesystem.mkdir({
@@ -54,7 +54,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
           const fileDataUrl = fileReader.result as string;
   
           // Write file to filesystem under "note-assets/noteId" directory
-          const filePath = `file-assets/${fileName}`;
+          const filePath = `file-assets/${noteId}/${fileName}`;
           await Filesystem.writeFile({
             path: filePath,
             data: fileDataUrl, // Write the data URL instead of the file object

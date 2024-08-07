@@ -210,11 +210,6 @@ const Welcome: React.FC = () => {
               />
             </div>
             <div className="flex flex-col items-center justify-center flex-grow">
-              <img
-                src="./imgs/Phone.png"
-                alt="Beaver Notes Icon"
-                className="mx-auto"
-              />
               <h3 className="text-center">
                 {translations.welcome.welcomeTitle || "-"}
               </h3>

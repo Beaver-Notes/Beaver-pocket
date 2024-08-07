@@ -3,6 +3,8 @@ import { Editor } from "@tiptap/react";
 import { Note } from "../../store/types";
 import ImageUploadComponent from "./ImageUpload";
 import FileUploadComponent from "./FileUpload";
+import AudioUploadComponent from "./AudioUpload";
+import VideoUploadComponent from "./VideoUpload";
 import icons from "../../lib/remixicon-react";
 import { Keyboard } from "@capacitor/keyboard";
 
@@ -21,6 +23,20 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
     if (editor) {
       //@ts-expect-error
       editor.chain().setFileEmbed(fileUrl, fileName).run();
+    }
+  };
+
+  const handlevideoUpload = (fileUrl: string) => {
+    if (editor) {
+      //@ts-expect-error
+      editor.chain().setVideo(fileUrl).run();
+    }
+  };
+
+  const handleaudioUpload = (fileUrl: string) => {
+    if (editor) {
+      //@ts-expect-error
+      editor.chain().setAudio(fileUrl).run();
     }
   };
 
@@ -50,7 +66,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
   }, [editor]);
 
   const handleAddIframe = () => {
-    const videoUrl = prompt("Please enter the URL of the video:");
+    const videoUrl = prompt("Please enter the URL of the Embed:");
     if (!videoUrl || videoUrl.trim() === "") {
       return;
     }
@@ -125,7 +141,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
     >
       <div className="align-center items-center max-auto flex justify-center">
         <div
-          className={`flex py-1 w-full space-x-2 ${
+          className={`flex p-2 w-full space-x-2 ${
             isTableActive ? "hidden" : "block"
           } ${isTextSelected ? "hidden" : "block"}`}
         >
@@ -193,16 +209,24 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           />
           <button
             className={`p-1 ${
-              editor?.isActive("Video")
+              editor?.isActive("Embed")
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onClick={handleAddIframe}
           >
-            <icons.VideoIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
+            noteId={noteId}
+          />
+          <VideoUploadComponent
+            onVideoUpload={handlevideoUpload}
+            noteId={noteId}
+          />
+          <AudioUploadComponent
+            onAudioUpload={handleaudioUpload}
             noteId={noteId}
           />
           {/* List and Table Options */}
@@ -254,7 +278,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           </button>
         </div>
         <div
-          className={`flex py-1 w-full space-x-2 ${
+          className={`flex p-2 w-full space-x-2 ${
             isTableActive ? "block" : "hidden"
           } ${isTextSelected ? "hidden" : "block"}`}
         >
@@ -308,7 +332,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           </button>
           <button
             className={`p-1 ${
-              editor?.isActive("Video")
+              editor?.isActive("Embed")
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
@@ -334,16 +358,20 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           />
           <button
             className={`p-1 ${
-              editor?.isActive("Video")
+              editor?.isActive("Embed")
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onClick={handleAddIframe}
           >
-            <icons.VideoIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
+            noteId={noteId}
+          />
+          <VideoUploadComponent
+            onVideoUpload={handlevideoUpload}
             noteId={noteId}
           />
           <button
@@ -358,7 +386,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           </button>
         </div>
         <div
-          className={`flex p-[11px] w-full space-x-2 ${
+          className={`flex p-2 w-full space-x-2 ${
             isTextSelected ? "block" : "hidden"
           }`}
         >
@@ -446,6 +474,26 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().toggleHighlight().run()}
           >
             <icons.MarkPenLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+          </button>
+          <button
+            className={`p-1 ${
+              editor?.isActive("subscript")
+                ? "text-amber-400"
+                : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+            } cursor-pointer flex-1`}
+            onClick={() => editor?.commands.toggleSubscript()}
+          >
+            <icons.SubscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+          </button>
+          <button
+            className={`p-1 ${
+              editor?.isActive("superscript")
+                ? "text-amber-400"
+                : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+            } cursor-pointer flex-1`}
+            onClick={() => editor?.commands.toggleSuperscript()}
+          >
+            <icons.SuperscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${

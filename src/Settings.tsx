@@ -14,6 +14,7 @@ import deTranslations from "./assets/locales/de.json";
 import { useSaveNote, loadNotes } from "./store/notes";
 import { useSwipeable } from "react-swipeable";
 import Icons from "./lib/remixicon-react";
+import { useExportDav } from "./utils/webDavUtil";
 
 const Settings: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -150,6 +151,14 @@ const Settings: React.FC = () => {
 
   const handleCloseEditor = () => {
     setActiveNoteId(null);
+    const syncValue = localStorage.getItem("sync");
+    if (syncValue === "dropbox") {
+      const dropboxExport = new CustomEvent("dropboxExport");
+      document.dispatchEvent(dropboxExport);
+    } else if (syncValue === "webdav") {
+      const { exportdata } = useExportDav();
+      exportdata();
+    }
   };
 
   const activeNote = activeNoteId ? notesState[activeNoteId] : null;
@@ -319,6 +328,10 @@ const Settings: React.FC = () => {
     }
   };
 
+  const uniqueLabels = Array.from(
+    new Set(Object.values(notesState).flatMap((note) => note.labels))
+  );
+
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
@@ -418,7 +431,7 @@ const Settings: React.FC = () => {
                 <p className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                   Interface options
                 </p>
-                  <div className="flex items-center py-2 justify-between">
+                  <div className="flex items-center py-2 justify-between hidden sm:block">
                     <div>
                       <p className="block text-lg align-left">
                         Expand page
@@ -492,6 +505,7 @@ const Settings: React.FC = () => {
               onTitleChange={setTitle}
               onChange={handleChangeNoteContent}
               onCloseEditor={handleCloseEditor}
+              uniqueLabels={uniqueLabels}
             />
           )}
         </div>

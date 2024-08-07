@@ -12,6 +12,7 @@ import dayjs from "dayjs";
 import { useSwipeable } from "react-swipeable";
 import { useNavigate } from "react-router-dom";
 import { loadNotes, useSaveNote } from "../store/notes";
+import { useExportDav } from "../utils/webDavUtil";
 
 const Shortcuts: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -49,7 +50,19 @@ const Shortcuts: React.FC = () => {
 
   const handleCloseEditor = () => {
     setActiveNoteId(null);
+    const syncValue = localStorage.getItem("sync");
+    if (syncValue === "dropbox") {
+      const dropboxExport = new CustomEvent("dropboxExport");
+      document.dispatchEvent(dropboxExport);
+    } else if (syncValue === "webdav") {
+      const { exportdata } = useExportDav();
+      exportdata();
+    }
   };
+
+  const uniqueLabels = Array.from(
+    new Set(Object.values(notesState).flatMap((note) => note.labels))
+  );
 
   // @ts-ignore
   const [sortingOption, setSortingOption] = useState("updatedAt");
@@ -300,6 +313,7 @@ const Shortcuts: React.FC = () => {
               onTitleChange={setTitle}
               onChange={handleChangeNoteContent}
               onCloseEditor={handleCloseEditor}
+              uniqueLabels={uniqueLabels}
             />
           )}
         </div>

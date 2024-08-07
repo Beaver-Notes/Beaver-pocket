@@ -14,7 +14,6 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
-		714097B5046E4AD78F10C2D8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = ADCBBF9773C74FA8A5980D6E /* PrivacyInfo.xcprivacy */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 /* End PBXBuildFile section */
 
@@ -28,8 +27,6 @@
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
-		ABD760DF2B6EFB8100E63B72 /* App.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = App.profdata; sourceTree = "<group>"; };
-		ADCBBF9773C74FA8A5980D6E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
@@ -62,11 +59,8 @@
 				504EC3051FED79650016851F /* Products */,
 				7F8756D8B27F46E3366F6CEA /* Pods */,
 				27E2DDA53C4D2A4D1A88CE4A /* Frameworks */,
-				ABD760DE2B6EFB8100E63B72 /* OptimizationProfiles */,
-				ADCBBF9773C74FA8A5980D6E /* PrivacyInfo.xcprivacy */,
 			);
 			sourceTree = "<group>";
-			wrapsLines = 1;
 		};
 		504EC3051FED79650016851F /* Products */ = {
 			isa = PBXGroup;
@@ -100,14 +94,6 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
-		ABD760DE2B6EFB8100E63B72 /* OptimizationProfiles */ = {
-			isa = PBXGroup;
-			children = (
-				ABD760DF2B6EFB8100E63B72 /* App.profdata */,
-			);
-			path = OptimizationProfiles;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -136,12 +122,12 @@
 		504EC2FC1FED79650016851F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 920;
-				LastUpgradeCheck = 920;
+				LastSwiftUpdateCheck = 0920;
+				LastUpgradeCheck = 0920;
 				TargetAttributes = {
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
-						LastSwiftMigration = 1530;
+						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -155,6 +141,8 @@
 				Base,
 			);
 			mainGroup = 504EC2FB1FED79650016851F;
+			packageReferences = (
+			);
 			productRefGroup = 504EC3051FED79650016851F /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -175,7 +163,6 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
-				714097B5046E4AD78F10C2D8 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -360,97 +347,16 @@
 			baseConfigurationReference = FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_USE_OPTIMIZATION_PROFILE = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = F8U6VTU2DJ;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/AashuDubeyCapacitorStatusbarSafeArea\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/Capacitor\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorApp\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorBrowser\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorCordova\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorDevice\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorFilesystem\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorHaptics\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorKeyboard\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorNativeBiometric\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorPreferences\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorSecureStoragePlugin\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorShare\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorSplashScreen\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorStatusBar\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/SwiftKeychainWrapper\"",
-				);
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/AashuDubeyCapacitorStatusbarSafeArea/AashuDubeyCapacitorStatusbarSafeArea.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/Capacitor/Capacitor.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorApp/CapacitorApp.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorBrowser/CapacitorBrowser.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorCordova/Cordova.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorDevice/CapacitorDevice.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorFilesystem/CapacitorFilesystem.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorHaptics/CapacitorHaptics.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorKeyboard/CapacitorKeyboard.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorNativeBiometric/CapacitorNativeBiometric.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorPreferences/CapacitorPreferences.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorSecureStoragePlugin/CapacitorSecureStoragePlugin.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorShare/CapacitorShare.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorSplashScreen/CapacitorSplashScreen.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorStatusBar/CapacitorStatusBar.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/SwiftKeychainWrapper/SwiftKeychainWrapper.framework/Headers\"",
-				);
 				INFOPLIST_FILE = App/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Beaver Pocket";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.2.0;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-framework",
-					"\"AashuDubeyCapacitorStatusbarSafeArea\"",
-					"-framework",
-					"\"Capacitor\"",
-					"-framework",
-					"\"CapacitorApp\"",
-					"-framework",
-					"\"CapacitorBrowser\"",
-					"-framework",
-					"\"CapacitorDevice\"",
-					"-framework",
-					"\"CapacitorFilesystem\"",
-					"-framework",
-					"\"CapacitorHaptics\"",
-					"-framework",
-					"\"CapacitorKeyboard\"",
-					"-framework",
-					"\"CapacitorNativeBiometric\"",
-					"-framework",
-					"\"CapacitorPreferences\"",
-					"-framework",
-					"\"CapacitorSecureStoragePlugin\"",
-					"-framework",
-					"\"CapacitorShare\"",
-					"-framework",
-					"\"CapacitorSplashScreen\"",
-					"-framework",
-					"\"CapacitorStatusBar\"",
-					"-framework",
-					"\"Cordova\"",
-					"-framework",
-					"\"SwiftKeychainWrapper\"",
-					"-framework",
-					"\"WebKit\"",
-				);
+				MARKETING_VERSION = 1.0;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = beaver.notes.pocket;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -461,92 +367,12 @@
 			baseConfigurationReference = AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_USE_OPTIMIZATION_PROFILE = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = F8U6VTU2DJ;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/AashuDubeyCapacitorStatusbarSafeArea\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/Capacitor\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorApp\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorBrowser\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorCordova\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorDevice\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorFilesystem\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorHaptics\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorKeyboard\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorNativeBiometric\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorPreferences\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorSecureStoragePlugin\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorShare\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorSplashScreen\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorStatusBar\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/SwiftKeychainWrapper\"",
-				);
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/AashuDubeyCapacitorStatusbarSafeArea/AashuDubeyCapacitorStatusbarSafeArea.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/Capacitor/Capacitor.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorApp/CapacitorApp.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorBrowser/CapacitorBrowser.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorCordova/Cordova.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorDevice/CapacitorDevice.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorFilesystem/CapacitorFilesystem.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorHaptics/CapacitorHaptics.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorKeyboard/CapacitorKeyboard.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorNativeBiometric/CapacitorNativeBiometric.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorPreferences/CapacitorPreferences.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorSecureStoragePlugin/CapacitorSecureStoragePlugin.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorShare/CapacitorShare.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorSplashScreen/CapacitorSplashScreen.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/CapacitorStatusBar/CapacitorStatusBar.framework/Headers\"",
-					"\"${PODS_CONFIGURATION_BUILD_DIR}/SwiftKeychainWrapper/SwiftKeychainWrapper.framework/Headers\"",
-				);
 				INFOPLIST_FILE = App/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Beaver Pocket";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.2.0;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-framework",
-					"\"AashuDubeyCapacitorStatusbarSafeArea\"",
-					"-framework",
-					"\"Capacitor\"",
-					"-framework",
-					"\"CapacitorApp\"",
-					"-framework",
-					"\"CapacitorBrowser\"",
-					"-framework",
-					"\"CapacitorDevice\"",
-					"-framework",
-					"\"CapacitorFilesystem\"",
-					"-framework",
-					"\"CapacitorHaptics\"",
-					"-framework",
-					"\"CapacitorKeyboard\"",
-					"-framework",
-					"\"CapacitorNativeBiometric\"",
-					"-framework",
-					"\"CapacitorPreferences\"",
-					"-framework",
-					"\"CapacitorSecureStoragePlugin\"",
-					"-framework",
-					"\"CapacitorShare\"",
-					"-framework",
-					"\"CapacitorSplashScreen\"",
-					"-framework",
-					"\"CapacitorStatusBar\"",
-					"-framework",
-					"\"Cordova\"",
-					"-framework",
-					"\"SwiftKeychainWrapper\"",
-					"-framework",
-					"\"WebKit\"",
-				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = beaver.notes.pocket;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";

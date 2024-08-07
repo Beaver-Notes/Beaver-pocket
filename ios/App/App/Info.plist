@@ -39,6 +39,8 @@
         </dict>
         <key>NSFaceIDUsageDescription</key>
         <string>To secure notes</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>To record audio notes</string>
         <key>UIFileSharingEnabled</key>
         <true />
         <key>UILaunchStoryboardName</key>

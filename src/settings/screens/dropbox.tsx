@@ -400,7 +400,7 @@ const DropboxSync: React.FC = () => {
     return new Blob([byteArray], { type: type });
   };
 
-  const downloadFolder = async () => {
+  const importData = async () => {
     if (accessToken) {
       try {
         // Get formatted date
@@ -475,15 +475,15 @@ const DropboxSync: React.FC = () => {
     }
   };
 
-  document.addEventListener("exportAndDownloadEvent", handleExportAndDownload);
+  document.addEventListener("dropboxExport", handleDropboxExport);
 
-  async function handleExportAndDownload() {
-    try {
-      await exportdata();
-      await downloadFolder();
-    } catch (error) {
-      console.error("Error exporting and downloading:", error);
-    }
+  document.addEventListener("dropboxImport", handleDropboxImport);
+
+  async function handleDropboxExport() {
+    await exportdata();
+  }
+  async function handleDropboxImport() {
+    await importData();
   }
 
   const Logout = async () => {
@@ -613,7 +613,7 @@ const DropboxSync: React.FC = () => {
                 {/* Adjusted margin */}
                 <button
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
-                  onClick={downloadFolder}
+                  onClick={importData}
                 >
                   Import
                 </button>

@@ -37,6 +37,7 @@ import Icons from "./lib/remixicon-react";
 
 // Import Remix icons
 import ReactDOM from "react-dom";
+import { useExportDav } from "./utils/webDavUtil";
 
 const App: React.FC = () => {
   const { saveNote } = useSaveNote();
@@ -156,6 +157,14 @@ const App: React.FC = () => {
 
   const handleCloseEditor = () => {
     setActiveNoteId(null);
+    const syncValue = localStorage.getItem("sync");
+    if (syncValue === "dropbox") {
+      const dropboxExport = new CustomEvent("dropboxExport");
+      document.dispatchEvent(dropboxExport);
+    } else if (syncValue === "webdav") {
+      const { exportdata } = useExportDav();
+      exportdata();
+    }
   };
 
   const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
@@ -711,7 +720,7 @@ const App: React.FC = () => {
                   </div>
                 )}
                 <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
-                {notesList
+                  {notesList
                     .filter((note) => !note.isBookmarked && !note.isArchived)
                     .map((note) => (
                       <div
@@ -838,6 +847,7 @@ const App: React.FC = () => {
             onTitleChange={setTitle}
             onChange={handleChangeNoteContent}
             onCloseEditor={handleCloseEditor}
+            uniqueLabels={uniqueLabels}
           />
         )}
       </div>

@@ -90,7 +90,7 @@ export const useExportData = () => {
           // Check if note.content.content is defined
           if (note.content.content) {
             // Replace src attribute in each note's content
-            const updatedContent = note.content.content.map((node) => {
+            const updatedImageContent = note.content.content.map((node) => {
               if (node.type === "image" && node.attrs && node.attrs.src) {
                 node.attrs.src = node.attrs.src.replace(
                   "note-assets/",
@@ -100,8 +100,20 @@ export const useExportData = () => {
               return node;
             });
 
+            const updatedFileContent = note.content.content.map((node) => {
+              if (node.type === "image" && node.attrs && node.attrs.src) {
+                node.attrs.src = node.attrs.src.replace(
+                  "file-assets/",
+                  "file-assets://"
+                );
+              }
+              return node;
+            });
+
             // Update note's content with modified content
-            note.content.content = updatedContent;
+            note.content.content = updatedImageContent;
+
+            note.content.content = updatedFileContent;
 
             // Add the modified note to exportedData
             exportedData.data.notes[note.id] = note;

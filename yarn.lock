@@ -2265,6 +2265,13 @@
     core-js-pure "^3.30.2"
     regenerator-runtime "^0.14.0"
 
+"@babel/runtime@7.11.2":
+  version "7.11.2"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.11.2.tgz#f549c13c754cc40b87644b9fa9f09a6a95fe0736"
+  integrity sha512-TeWkU52so0mPtDcaCTxNBI/IHiz0pZgr8VEFqXFtZWpYD08ZB6FaSwVAS8MKRQAP3bYKiVjwysOJgMFY28o6Tw==
+  dependencies:
+    regenerator-runtime "^0.13.4"
+
 "@babel/runtime@7.9.0":
   version "7.9.0"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.9.0.tgz#337eda67401f5b066a6f205a3113d4ac18ba495b"
@@ -2437,7 +2444,7 @@
   resolved "https://registry.yarnpkg.com/@capacitor/haptics/-/haptics-6.0.0.tgz#4ff29ca16173c28d50ab6a227bc4cb8091df6e1d"
   integrity sha512-z2TmB+pTbd98Il2I1xpZGClCFwORxxP2m9f1a0rh70c2ubj2atVyZctgxrx1fuoExZTNGSxHaylWfrmjmtelVg==
 
-"@capacitor/ios@^6.0.0":
+"@capacitor/ios@6.0.0":
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/@capacitor/ios/-/ios-6.0.0.tgz#b04ce2967d732c73ebf29ec38b4b585255930e43"
   integrity sha512-7mAs3gjWiE5DPM4AGPduqFSDGXCPwwqQRMzbohVway7/cTWnHomHV8mIojMZE4GILeWO2fILbyu3C8q9pHg2vg==
@@ -3855,15 +3862,25 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-gapcursor/-/extension-gapcursor-2.3.0.tgz#f7fae7086b5e49c3754ee48833e27c66686fb0cd"
   integrity sha512-OxcXcfD0uzNcXdXu2ZpXFAtXIsgK2MBHvFUs0t0gxtcL/t43pTOQBLy+29Ei30BxpwLghtX8jQ6IDzMiybq/sA==
 
+"@tiptap/extension-gapcursor@^2.5.7":
+  version "2.5.7"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-gapcursor/-/extension-gapcursor-2.5.7.tgz#97299e9ae426d5c5ee7f80bed9665e4a297f25d5"
+  integrity sha512-vpVeQM2KRbfPmZjiEK+Kh7GvuiZSiECezG5Y3pWb0ZG4ExSCgkmEokWXD3jGpAIprlpbbAP92/D+2inBD4e5Kg==
+
 "@tiptap/extension-hard-break@^2.3.0":
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-hard-break/-/extension-hard-break-2.3.0.tgz#01bd200b3a5f23644e796f061ef7e331b579357f"
   integrity sha512-9pXi69SzLabbjY5KZ54UKzu7HAHTla9aYZKH56VatOAiJOPKJppFbU2/NfJwGzDrEtfOiDqr3dYbUDF3RuCFoQ==
 
-"@tiptap/extension-heading@^2.1.13", "@tiptap/extension-heading@^2.3.0":
+"@tiptap/extension-heading@^2.3.0":
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-heading/-/extension-heading-2.3.0.tgz#4daf92c94797fdd504e798935efd6ca2fbbd73a8"
   integrity sha512-YcZoUYfqb0nohoPgem4f8mjn5OqDomFrbJiC9VRHUOCIuEu+aJEYwp8mmdkLnS3f+LRCZ6G76cJJ50lkzSAZRw==
+
+"@tiptap/extension-heading@^2.5.4":
+  version "2.5.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-heading/-/extension-heading-2.5.4.tgz#b901d08a2c268bda54eef345836efa2a0b5f388a"
+  integrity sha512-DuAB58/e7eho1rkyad0Z/SjW+EB+H2hRqHlswEeZZYhBTjzey5UmBwkMWTGC/SQiRisx1xYQYTd8T0fiABi5hw==
 
 "@tiptap/extension-highlight@^2.1.13":
   version "2.3.0"
@@ -3927,6 +3944,16 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-strike/-/extension-strike-2.3.0.tgz#0d5afbda45c1c1ad15487fa48ef41a93b39388f2"
   integrity sha512-gOW4ALeH8gkJiUGGXVy/AOd5lAPTX0bzoOW1+sCLcTA7t8dluBW7M2ngNYxTEtlKqyv7aLfrgsYSiqucmmfSLw==
 
+"@tiptap/extension-subscript@^2.5.4":
+  version "2.5.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-subscript/-/extension-subscript-2.5.4.tgz#0638632faf245701bbf0e02db42fbfe3caf73bc0"
+  integrity sha512-w4jXU6mSktk8x+c2Jfcmb+CD5gGqA7YRtgdEDdlDiwn8HVVhzSTJIEvfyxWkvVBMIybs+36lgdLz0Sr9EhIxUw==
+
+"@tiptap/extension-superscript@^2.5.4":
+  version "2.5.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-superscript/-/extension-superscript-2.5.4.tgz#96e3aa0bd4fca7c01851723663189249cbc0fb8a"
+  integrity sha512-e2xwXV4rBdR4kkc08t2oxEEUDloHoN8ujti2hvwZo+/reaVMnLNOhNUnhXXsHfjqmDki15edJrFesc47tALiHw==
+
 "@tiptap/extension-table-cell@^2.2.1":
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-table-cell/-/extension-table-cell-2.3.0.tgz#efbf708a01f55147562354746d3fba6b32243c67"
@@ -3962,10 +3989,10 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-text/-/extension-text-2.3.0.tgz#2ebd13dcb4f54b9f72af25fc1015eec474afe89d"
   integrity sha512-zkudl0TyKRy/8vHtyo5dMzjBRD0HEUnsS8YOsjR4xwQq5EYUXleRgM1s6lb6Yms2sLUAZRWdDddoQ686iq4zQg==
 
-"@tiptap/extension-typography@2.1.13":
-  version "2.1.13"
-  resolved "https://registry.yarnpkg.com/@tiptap/extension-typography/-/extension-typography-2.1.13.tgz#eadf8c7423290f717547e21342470cc2333a5dd8"
-  integrity sha512-//90Gzkci4/77CCmdWYyRGTcMUvsQ64jv3mqlL+JqWgLCffMHvWPGKhPMgSzoyHRlAIIACMhxniRtB7HixhTHQ==
+"@tiptap/extension-typography@^2.5.7":
+  version "2.5.7"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-typography/-/extension-typography-2.5.7.tgz#ee10f3adf6419bdceb75769451b9c6efa20fbc8b"
+  integrity sha512-590S9EWTRaQQN7yrWfGcg5+8lOYU3kFRWVm2h/t728ZQViwK42dMsIitOrIXan3ai5mdhiqDx0To9wJK5IQiww==
 
 "@tiptap/extension-underline@^2.1.13":
   version "2.3.0"
@@ -4516,6 +4543,11 @@
     "@types/prop-types" "*"
     "@types/scheduler" "^0.16"
     csstype "^3.0.2"
+
+"@types/recordrtc@^5.6.14":
+  version "5.6.14"
+  resolved "https://registry.yarnpkg.com/@types/recordrtc/-/recordrtc-5.6.14.tgz#532399bf35043f7956c46bb51016188863f8d60b"
+  integrity sha512-Reiy1sl11xP0r6w8DW3iQjc1BgXFyNC7aDuutysIjpFoqyftbQps9xPA2FoBkfVXpJM61betgYPNt+v65zvMhA==
 
 "@types/scheduler@*":
   version "0.23.0"
@@ -6398,6 +6430,13 @@ capacitor-secure-storage-plugin@^0.10.0:
   version "0.10.0"
   resolved "https://registry.yarnpkg.com/capacitor-secure-storage-plugin/-/capacitor-secure-storage-plugin-0.10.0.tgz#dbe96fe86c070a7c2ac7f43564d956f76cd683af"
   integrity sha512-dV4E+HTZAJWC3gef7sBXaAkkb6wvcZHyXjJIHXNb3yz9gRQ/5VMLqCxa0khqpwgWh5oIbo4XFxg3g5tEkfaNMg==
+
+capacitor-voice-recorder@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/capacitor-voice-recorder/-/capacitor-voice-recorder-5.0.0.tgz#ec8e421283de19063461838fd340d91f352c8875"
+  integrity sha512-rCZgbmdmj9eXlotziRnIXWoo+7/aGKM1dSeSrgaEmayu9aTs8xkwhpx9eeVe24VDC6sfMHTnwMl5311Ryr/yFA==
+  dependencies:
+    get-blob-duration "^1.2.0"
 
 capture-exit@^2.0.0:
   version "2.0.0"
@@ -10010,6 +10049,13 @@ gensync@^1.0.0-beta.1, gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
   resolved "https://registry.yarnpkg.com/gensync/-/gensync-1.0.0-beta.2.tgz#32a6ee76c3d7f52d46b2b1ae5d93fea8580a25e0"
   integrity sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==
+
+get-blob-duration@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/get-blob-duration/-/get-blob-duration-1.2.0.tgz#73cf7dac2fbaa219a5a03d5e5093e06e43814d49"
+  integrity sha512-2xNJa+oKznR21eC2ThMzw4a1931a3ogA8aHoY92xruZufc/02G7pl/P793GJZytkyI8xMJ2DepEQ7MWvg/tn/Q==
+  dependencies:
+    "@babel/runtime" "7.11.2"
 
 get-caller-file@^1.0.1:
   version "1.0.3"
@@ -15814,6 +15860,11 @@ realpath-native@^1.1.0:
   integrity sha512-wlgPA6cCIIg9gKz0fgAPjnzh4yR/LnXovwuo9hvyGvx3h8nX4+/iLZplfUWasXpqD8BdnGnP5njOFjkUwPzvjA==
   dependencies:
     util.promisify "^1.0.0"
+
+recordrtc@^5.6.2:
+  version "5.6.2"
+  resolved "https://registry.yarnpkg.com/recordrtc/-/recordrtc-5.6.2.tgz#48fc214b35084973ccce82c6251198b5742bc327"
+  integrity sha512-1QNKKNtl7+KcwD1lyOgP3ZlbiJ1d0HtXnypUy7yq49xEERxk31PHvE9RCciDrulPCY7WJ+oz0R9hpNxgsIurGQ==
 
 recursive-readdir@2.2.2:
   version "2.2.2"

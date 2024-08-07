@@ -27,14 +27,14 @@ const FileEmbedComponent: React.FC<FileEmbedComponentProps> = ({ node }) => {
     <NodeViewWrapper>
       <div className="mt-2 mb-2 file-embed bg-neutral-100 dark:bg-[#353333] p-3 rounded-lg flex items-center justify-between">
         <div className="flex items-center cursor-pointer">
-          <icons.FileIcon className="ri-file-line w-6 h-6 mr-2" />
+          <icons.FileIcon className="w-6 h-6 mr-2" />
           <span>{fileName}</span>
         </div>
         <button
           className="download-button bg-input p-1 px-3 rounded-lg outline-none"
           onClick={openDocument}
         >
-          <icons.EyeLineIcon className="ri-download-line w-6 h-6" />
+          <icons.EyeLineIcon className="w-6 h-6" />
         </button>
       </div>
     </NodeViewWrapper>
