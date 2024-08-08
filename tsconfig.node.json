@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
     "composite": true,
     "skipLibCheck": true,
     "module": "ESNext",
