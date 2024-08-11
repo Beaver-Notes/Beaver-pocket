@@ -9,8 +9,6 @@ import useNoteEditor from "../store/useNoteActions";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
-import "../css/main.css";
-import "../css/fonts.css";
 import { loadNotes, useSaveNote } from "../store/notes";
 import { useExportDav } from "../utils/webDavUtil";
 

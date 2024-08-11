@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { WebDavService } from "../../utils/webDavApi";
-import "../../css/main.css";
-import "../../css/fonts.css";
 import { useExportDav, useImportDav } from "../../utils/webDavUtil";
 import BottomNavBar from "../../components/Home/BottomNavBar";
 import { v4 as uuid } from "uuid";
@@ -10,7 +8,7 @@ import { useSaveNote } from "../../store/notes";
 import { useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import icons from "../../lib/remixicon-react";
-
+import CircularProgress from "../../components/ui/ProgressBar";
 
 const ExampleComponent: React.FC = () => {
   const [baseUrl, setBaseUrl] = useState<string>(
@@ -22,6 +20,7 @@ const ExampleComponent: React.FC = () => {
   const [password, setPassword] = useState<string>(
     () => localStorage.getItem("password") || ""
   );
+  const [progressColor, setProgressColor] = useState("#e6e6e6");
   const [] = useState(
     new WebDavService({
       baseUrl: baseUrl,
@@ -53,7 +52,7 @@ const ExampleComponent: React.FC = () => {
     },
   });
   const [showInputContent, setShowInputContent] = useState(false);
-  const { setNotesState ,setActiveNoteId } = useNotesState();
+  const { setNotesState, setActiveNoteId } = useNotesState();
   const { saveNote } = useSaveNote();
 
   const handleCreateNewNote = () => {
@@ -94,8 +93,9 @@ const ExampleComponent: React.FC = () => {
     }
   };
 
-  const { exportdata } = useExportDav();
-  const { HandleImportData } = useImportDav();
+const { exportdata, progress: exportProgress, progressColor: exportProgressColor } = useExportDav();
+const { HandleImportData, progress: importProgress, progressColor: importProgressColor } = useImportDav();
+
 
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
@@ -163,38 +163,60 @@ const ExampleComponent: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
+  useEffect(() => {
+    // Update the document class based on dark mode
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("themeMode", themeMode);
+
+    // Set the progress color based on dark mode
+    setProgressColor(darkMode ? "#444444" : "#e6e6e6");
+  }, [darkMode, themeMode]);
+
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-        <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+      <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <section className="">
           <div className="flex flex-col">
             <div className="space-y-2">
-              <p className="ml-2 text-4xl text-left font-bold">
+            <p className="text-4xl text-center font-bold p-4">
                 Sync with <br /> WebDAV
               </p>
               <div className="flex justify-center items-center">
-                <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-36 h-36 flex justify-center items-center">
-                  <icons.ServerLineIcon className="w-32 h-32 text-gray-800 dark:text-neutral-200 p-3" />
-                </div>
+                <CircularProgress
+                  progress={importProgress || exportProgress}
+                  color={progressColor || importProgressColor || exportProgressColor}
+                  size={144}
+                  strokeWidth={8}
+                >
+                  {importProgress || exportProgress ? (
+                    <span className="text-amber-400 text-xl font-semibold">
+                      {importProgress || exportProgress}%
+                    </span>
+                  ) : (
+                    <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
+                      <icons.ServerLineIcon className="w-32 h-32 text-gray-800 dark:text-neutral-200 p-3" />
+                    </div>
+                  )}
+                </CircularProgress>
               </div>
               <input
                 type="text"
-                className="w-full p-3 dark:bg-neutral-800 border-amber-300 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
+                className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-amber-400 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
                 value={baseUrl}
                 placeholder="https://server.example"
                 onChange={(e) => setBaseUrl(e.target.value)}
               />
               <input
                 type="text"
-                className="w-full p-3 dark:bg-neutral-800 border-amber-300 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
+                className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-amber-400 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
               <div className="relative">
                 <input
-                  className="w-full p-3 dark:bg-neutral-800 border-amber-300 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
+                  className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-amber-400 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
                   type={showInputContent ? "text" : "password"}
                   placeholder="Password"
                   value={password}
@@ -229,22 +251,21 @@ const ExampleComponent: React.FC = () => {
               >
                 Import Data
               </button>
-              <div className="flex items-center">
-                <label className="relative inline-flex cursor-pointer items-center">
-                  <input
-                    id="switch"
-                    type="checkbox"
-                    checked={autoSync}
-                    onChange={handleSyncToggle}
-                    className="peer sr-only"
-                  />
-                  <label htmlFor="switch" className="hidden"></label>
-                  <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                  <span className="inline-block ml-2 align-middle">
-                    Auto sync
-                  </span>
-                </label>
+              <div className="flex items-center py-2 justify-between">
+              <div>
+                <p className="block text-lg align-left">Auto Sync</p>
               </div>
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  id="switch"
+                  type="checkbox"
+                  checked={autoSync}
+                  onChange={handleSyncToggle}
+                  className="peer sr-only"
+                />
+                <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+              </label>
+            </div>
             </div>
           </div>
         </section>

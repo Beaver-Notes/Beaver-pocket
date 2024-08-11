@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Plugins } from "@capacitor/core";
 import { FilesystemDirectory } from "@capacitor/filesystem";
 import { VoiceRecorder } from "capacitor-voice-recorder";
@@ -19,21 +19,21 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
-  // Pre-request audio recording permission on component mount
-  useEffect(() => {
-    const checkPermission = async () => {
+  const startRecording = async () => {
+    if (hasPermission === null) {
       const permission = await VoiceRecorder.requestAudioRecordingPermission();
       setHasPermission(permission.value);
-    };
-    checkPermission();
-  }, []);
+      if (!permission.value) {
+        console.error("Recording permission not granted");
+        return;
+      }
+    }
 
-
-  const startRecording = async () => {
     if (!hasPermission) {
       console.error("Recording permission not granted");
       return;
     }
+
     setIsProcessing(true);
     try {
       await VoiceRecorder.startRecording();

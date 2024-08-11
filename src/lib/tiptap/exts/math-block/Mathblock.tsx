@@ -3,7 +3,6 @@ import { NodeViewWrapperProps, NodeViewWrapper } from "@tiptap/react";
 import Settings4LineIcon from "remixicon-react/Settings4LineIcon";
 import katex from "katex";
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Transition } from '@headlessui/react';
-import "../../../../css/main.css";
 
 interface MathBlockProps extends NodeViewWrapperProps {
   updateAttributes: (attributes: Record<string, any>) => void;

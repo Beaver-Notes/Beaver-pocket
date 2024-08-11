@@ -215,7 +215,7 @@ export const useHandleImportData = () => {
         await Filesystem.writeFile({
           path: STORAGE_PATH,
           data: JSON.stringify({ data: { notes: mergedNotes } }),
-          directory: Directory.Documents,
+          directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
 
@@ -224,8 +224,6 @@ export const useHandleImportData = () => {
         setFilteredNotes(
           Object.fromEntries(filtered.map((note) => [note.id, note]))
         );
-
-        alert(translations.home.importSuccess);
       } else {
         alert(translations.home.importInvalid);
       }

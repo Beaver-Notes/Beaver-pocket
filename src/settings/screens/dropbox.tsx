@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "../../store/types";
-import "../../css/main.css";
-import "../../css/fonts.css";
 import { Browser } from "@capacitor/browser";
 import { v4 as uuid } from "uuid";
 import CircularProgress from "../../components/ui/ProgressBar";
@@ -38,7 +36,7 @@ const DropboxSync: React.FC = () => {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [authorizationCode, setAuthorizationCode] = useState<string>("");
   const [progress, setProgress] = useState(0);
-  const [ progressColor, setProgressColor] = useState('#e6e6e6');
+  const [progressColor, setProgressColor] = useState("#e6e6e6");
 
   // Translations
   const [translations, setTranslations] = useState({
@@ -192,6 +190,7 @@ const DropboxSync: React.FC = () => {
             value: newAccessToken,
           });
           setAccessToken(newAccessToken);
+          alert(newAccessToken);
         } else {
           const errorData = await response.json();
           console.error("Failed to refresh access token:", errorData);
@@ -219,7 +218,7 @@ const DropboxSync: React.FC = () => {
         );
 
         if (!response.ok) {
-          console.log("Access token expired, refreshing...");
+          alert("Access token expired, refreshing...");
           await refreshAccessToken();
         }
       } catch (error) {
@@ -233,12 +232,10 @@ const DropboxSync: React.FC = () => {
   useEffect(() => {
     const tokenExpirationCheckInterval = setInterval(() => {
       checkTokenExpiration();
-    }, 60000); // Check every minute
+    }, 600000); // Check every minute
 
     return () => clearInterval(tokenExpirationCheckInterval);
   }, [accessToken]);
-
-  const [fileUploadStatus, setFileUploadStatus] = useState<string | null>(null);
 
   useEffect(() => {
     // Retrieve access token from secure storage
@@ -260,190 +257,191 @@ const DropboxSync: React.FC = () => {
 
   const exportdata = async () => {
     if (accessToken) {
-        try {
-            setProgress(0); // Initialize progress
-            setProgressColor('#e6e6e6');
+      try {
+        setProgress(0); // Initialize progress
+        setProgressColor(darkMode ? "#444444" : "#e6e6e6");
 
-            // Helper function to count files recursively
-            const countFilesInDirectory = async (path:any) => {
-                let count = 0;
-                const contents = await Filesystem.readdir({
-                    path,
-                    directory: Directory.Data,
-                });
-                for (const item of contents.files) {
-                    if (item.type === "file") {
-                        count++;
-                    } else if (item.type === "directory") {
-                        count += await countFilesInDirectory(`${path}/${item.name}`);
-                    }
-                }
-                return count;
-            };
-
-            // Count files in note-assets directory
-            const noteAssetsPath = "note-assets";
-            const noteAssetsContents = await Filesystem.readdir({
-                path: noteAssetsPath,
-                directory: Directory.Data,
-            });
-            let noteFilesCount = 0;
-            for (const folderName of noteAssetsContents.files) {
-                noteFilesCount += await countFilesInDirectory(`${noteAssetsPath}/${folderName.name}`);
+        // Helper function to count files recursively
+        const countFilesInDirectory = async (path: any) => {
+          let count = 0;
+          const contents = await Filesystem.readdir({
+            path,
+            directory: Directory.Data,
+          });
+          for (const item of contents.files) {
+            if (item.type === "file") {
+              count++;
+            } else if (item.type === "directory") {
+              count += await countFilesInDirectory(`${path}/${item.name}`);
             }
+          }
+          return count;
+        };
 
-            // Count files in file-assets directory
-            const fileAssetsPath = "file-assets";
-            const filefolderContents = await Filesystem.readdir({
-                path: fileAssetsPath,
-                directory: Directory.Data,
+        // Count files in note-assets directory
+        const noteAssetsPath = "note-assets";
+        const noteAssetsContents = await Filesystem.readdir({
+          path: noteAssetsPath,
+          directory: Directory.Data,
+        });
+        let noteFilesCount = 0;
+        for (const folderName of noteAssetsContents.files) {
+          noteFilesCount += await countFilesInDirectory(
+            `${noteAssetsPath}/${folderName.name}`
+          );
+        }
+
+        // Count files in file-assets directory
+        const fileAssetsPath = "file-assets";
+        const filefolderContents = await Filesystem.readdir({
+          path: fileAssetsPath,
+          directory: Directory.Data,
+        });
+        let fileFilesCount = 0;
+        for (const item of filefolderContents.files) {
+          if (item.type === "file") {
+            fileFilesCount++;
+          } else if (item.type === "directory") {
+            fileFilesCount += await countFilesInDirectory(
+              `${fileAssetsPath}/${item.name}`
+            );
+          }
+        }
+
+        // Calculate total files to upload
+        const totalFiles = noteFilesCount + fileFilesCount + 1; // +1 for data.json
+
+        let processedFiles = 0;
+
+        const updateProgress = () => {
+          processedFiles++;
+          setProgress(Math.round((processedFiles / totalFiles) * 100));
+        };
+
+        // Read the data.json
+        const datafile = await Filesystem.readFile({
+          path: STORAGE_PATH,
+          directory: Directory.Data,
+          encoding: FilesystemEncoding.UTF8,
+        });
+
+        // Get current date for folder name
+        const currentDate = new Date();
+        const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
+
+        // Initialize Dropbox client
+        const dbx = new Dropbox({ accessToken });
+
+        // Create folders if they don't exist
+        await dbx.filesCreateFolderV2({
+          path: `/Beaver Notes ${formattedDate}`,
+          autorename: false,
+        });
+        await dbx.filesCreateFolderV2({
+          path: `/Beaver Notes ${formattedDate}/assets`,
+          autorename: false,
+        });
+
+        // Upload the data.json
+        await dbx.filesUpload({
+          path: `/Beaver Notes ${formattedDate}/data.json`,
+          contents: datafile.data,
+        });
+
+        updateProgress();
+
+        // Upload files in file-assets directory
+        for (const item of filefolderContents.files) {
+          if (item.type === "file") {
+            const filePath = `${fileAssetsPath}/${item.name}`;
+            const fileData = await Filesystem.readFile({
+              path: filePath,
+              directory: Directory.Data,
             });
-            let fileFilesCount = 0;
-            for (const item of filefolderContents.files) {
-                if (item.type === "file") {
-                    fileFilesCount++;
-                } else if (item.type === "directory") {
-                    fileFilesCount += await countFilesInDirectory(`${fileAssetsPath}/${item.name}`);
-                }
-            }
 
-            // Calculate total files to upload
-            const totalFiles = noteFilesCount + fileFilesCount + 1; // +1 for data.json
-
-            let processedFiles = 0;
-
-            const updateProgress = () => {
-                processedFiles++;
-                setProgress(Math.round((processedFiles / totalFiles) * 100));
-            };
-
-            // Read the data.json
-            const datafile = await Filesystem.readFile({
-                path: STORAGE_PATH,
-                directory: Directory.Data,
-                encoding: FilesystemEncoding.UTF8,
+            const fileType = getMimeType(item.name);
+            const blob = base64ToBlob(String(fileData.data), fileType);
+            const uploadedFile = new File([blob], item.name, {
+              type: "application/octet-stream",
             });
 
-            // Get current date for folder name
-            const currentDate = new Date();
-            const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
-
-            // Initialize Dropbox client
-            const dbx = new Dropbox({ accessToken });
-
-            // Create folders if they don't exist
-            await dbx.filesCreateFolderV2({
-                path: `/Beaver Notes ${formattedDate}`,
-                autorename: false,
-            });
-            await dbx.filesCreateFolderV2({
-                path: `/Beaver Notes ${formattedDate}/assets`,
-                autorename: false,
-            });
-
-            // Upload the data.json
             await dbx.filesUpload({
-                path: `/Beaver Notes ${formattedDate}/data.json`,
-                contents: datafile.data,
+              path: `/Beaver Notes ${formattedDate}/file-assets/${item.name}`,
+              contents: uploadedFile,
             });
 
             updateProgress();
+          } else if (item.type === "directory") {
+            const folderPath = `${fileAssetsPath}/${item.name}`;
+            const folderContents = await Filesystem.readdir({
+              path: folderPath,
+              directory: Directory.Data,
+            });
 
-            // Upload files in file-assets directory
-            for (const item of filefolderContents.files) {
-                if (item.type === "file") {
-                    const filePath = `${fileAssetsPath}/${item.name}`;
-                    const fileData = await Filesystem.readFile({
-                        path: filePath,
-                        directory: Directory.Data,
-                    });
+            for (const file of folderContents.files) {
+              const imagefilePath = `${folderPath}/${file.name}`;
+              const imageFileData = await Filesystem.readFile({
+                path: imagefilePath,
+                directory: Directory.Data,
+              });
 
-                    const fileType = getMimeType(item.name);
-                    const blob = base64ToBlob(String(fileData.data), fileType);
-                    const uploadedFile = new File([blob], item.name, {
-                        type: "application/octet-stream",
-                    });
+              const fileType = getMimeType(file.name);
+              const blob = base64ToBlob(String(imageFileData.data), fileType);
+              const uploadedFile = new File([blob], file.name, {
+                type: "application/octet-stream",
+              });
 
-                    await dbx.filesUpload({
-                        path: `/Beaver Notes ${formattedDate}/file-assets/${item.name}`,
-                        contents: uploadedFile,
-                    });
+              await dbx.filesUpload({
+                path: `/Beaver Notes ${formattedDate}/file-assets/${item.name}/${file.name}`,
+                contents: uploadedFile,
+              });
 
-                    updateProgress();
-                } else if (item.type === "directory") {
-                    const folderPath = `${fileAssetsPath}/${item.name}`;
-                    const folderContents = await Filesystem.readdir({
-                        path: folderPath,
-                        directory: Directory.Data,
-                    });
-
-                    for (const file of folderContents.files) {
-                        const imagefilePath = `${folderPath}/${file.name}`;
-                        const imageFileData = await Filesystem.readFile({
-                            path: imagefilePath,
-                            directory: Directory.Data,
-                        });
-
-                        const fileType = getMimeType(file.name);
-                        const blob = base64ToBlob(String(imageFileData.data), fileType);
-                        const uploadedFile = new File([blob], file.name, {
-                            type: "application/octet-stream",
-                        });
-
-                        await dbx.filesUpload({
-                            path: `/Beaver Notes ${formattedDate}/file-assets/${item.name}/${file.name}`,
-                            contents: uploadedFile,
-                        });
-
-                        updateProgress();
-                    }
-                }
+              updateProgress();
             }
-
-            // Upload files in note-assets directory
-            for (const folderName of noteAssetsContents.files) {
-                const folderPath = `${noteAssetsPath}/${folderName.name}`;
-                const folderContents = await Filesystem.readdir({
-                    path: folderPath,
-                    directory: Directory.Data,
-                });
-
-                for (const file of folderContents.files) {
-                    const imagefilePath = `${folderPath}/${file.name}`;
-                    const imageFileData = await Filesystem.readFile({
-                        path: imagefilePath,
-                        directory: Directory.Data,
-                    });
-
-                    const fileType = getMimeType(file.name);
-                    const blob = base64ToBlob(String(imageFileData.data), fileType);
-                    const uploadedFile = new File([blob], file.name, {
-                        type: "application/octet-stream",
-                    });
-
-                    await dbx.filesUpload({
-                        path: `/Beaver Notes ${formattedDate}/assets/${folderName.name}/${file.name}`,
-                        contents: uploadedFile,
-                    });
-
-                    updateProgress();
-                }
-            }
-
-            setProgress(100); // Ensure progress is set to 100% when done
-            setFileUploadStatus("Note exported successfully!");
-        } catch (error) {
-            console.error("Error uploading note assets:", error);
-            setFileUploadStatus("An error occurred while exporting");
-            setProgressColor('#ff3333')
-            setProgress(0);
-            alert(error);
+          }
         }
-    } else {
-        console.error("Access token not found!");
-    }
-};
 
+        // Upload files in note-assets directory
+        for (const folderName of noteAssetsContents.files) {
+          const folderPath = `${noteAssetsPath}/${folderName.name}`;
+          const folderContents = await Filesystem.readdir({
+            path: folderPath,
+            directory: Directory.Data,
+          });
+
+          for (const file of folderContents.files) {
+            const imagefilePath = `${folderPath}/${file.name}`;
+            const imageFileData = await Filesystem.readFile({
+              path: imagefilePath,
+              directory: Directory.Data,
+            });
+
+            const fileType = getMimeType(file.name);
+            const blob = base64ToBlob(String(imageFileData.data), fileType);
+            const uploadedFile = new File([blob], file.name, {
+              type: "application/octet-stream",
+            });
+
+            await dbx.filesUpload({
+              path: `/Beaver Notes ${formattedDate}/assets/${folderName.name}/${file.name}`,
+              contents: uploadedFile,
+            });
+
+            updateProgress();
+          }
+        }
+
+        setProgress(100); // Ensure progress is set to 100% when done
+      } catch (error) {
+        console.error("Error uploading note assets:", error);
+        setProgressColor("#ff3333");
+        setProgress(0);
+        alert(error);
+      }
+    } else {
+      console.error("Access token not found!");
+    }
+  };
 
   // Function to convert base64 string to Blob
   const base64ToBlob = (base64String: string, type: string): Blob => {
@@ -460,7 +458,7 @@ const DropboxSync: React.FC = () => {
     if (accessToken) {
       try {
         // Get formatted date
-        setProgressColor('#e6e6e6');
+        setProgressColor(darkMode ? "#444444" : "#e6e6e6");
         const currentDate = new Date();
         const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
 
@@ -526,11 +524,11 @@ const DropboxSync: React.FC = () => {
 
         await createFoldersRecursively(mainFolderPath);
         importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes);
-        setProgress(100); // Ensure progress is set to 100% when done
+        setProgress(100);
       } catch (error) {
         console.error("Error creating local folders:", error);
         setProgress(0); // Reset progress on error
-        setProgressColor('#ff3333');
+        setProgressColor("#ff3333");
       }
     } else {
       console.error("Access token not found!");
@@ -554,6 +552,7 @@ const DropboxSync: React.FC = () => {
       await SecureStoragePlugin.remove({ key: "dropbox_access_token" });
       await SecureStoragePlugin.remove({ key: "dropbox_refresh_token" });
 
+      window.location.reload();
       console.log("Logged out successfully");
     } catch (error) {
       console.error("Error logging out:", error);
@@ -645,6 +644,15 @@ const DropboxSync: React.FC = () => {
     onSwiped: handleSwipe,
   });
 
+  useEffect(() => {
+    // Update the document class based on dark mode
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("themeMode", themeMode);
+
+    // Set the progress color based on dark mode
+    setProgressColor(darkMode ? "#444444" : "#e6e6e6");
+  }, [darkMode, themeMode]);
+
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
@@ -655,7 +663,12 @@ const DropboxSync: React.FC = () => {
               Sync with Dropbox
             </p>
             <div className="flex justify-center items-center">
-              <CircularProgress progress={progress} color={progressColor} size={144} strokeWidth={8}>
+              <CircularProgress
+                progress={progress}
+                color={progressColor}
+                size={144}
+                strokeWidth={8}
+              >
                 {progress ? (
                   <span className="text-amber-400 text-xl font-semibold">
                     {progress}%
@@ -676,9 +689,6 @@ const DropboxSync: React.FC = () => {
               <div className="flex items-center p-1">
                 <span className="bg-green-500 w-4 h-4 inline-block rounded-full"></span>
                 <p className="ml-2">Logged in</p>
-              </div>
-              <div className="flex items-center p-1">
-                {fileUploadStatus && <p>{fileUploadStatus}</p>}
               </div>
               <div className="space-y-2">
                 {" "}
@@ -703,8 +713,10 @@ const DropboxSync: React.FC = () => {
                 </button>
               </div>
             </div>
-
-            <div className="flex items-center">
+            <div className="flex items-center py-2 justify-between">
+              <div>
+                <p className="block text-lg align-left">Auto Sync</p>
+              </div>
               <label className="relative inline-flex cursor-pointer items-center">
                 <input
                   id="switch"
@@ -713,11 +725,7 @@ const DropboxSync: React.FC = () => {
                   onChange={handleSyncToggle}
                   className="peer sr-only"
                 />
-                <label htmlFor="switch" className="hidden"></label>
                 <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                <span className="inline-block ml-2 align-middle">
-                  Auto sync
-                </span>
               </label>
             </div>
           </section>

@@ -5,8 +5,6 @@ import ModularPrompt from "./components/ui/Dialog";
 import NoteEditor from "./Editor";
 import { JSONContent } from "@tiptap/react";
 import BottomNavBar from "./components/Home/BottomNavBar";
-import "./css/main.css";
-import "./css/fonts.css";
 import Bookmarked from "./components/Home/Bookmarked";
 import {
   Filesystem,
@@ -672,8 +670,7 @@ const App: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="sm:grid sm:grid-cols-[auto]">
-        <div className="overflow-y-hidden mb-12">
+        <div className="overflow-y mb-12">
           {!activeNoteId && (
             <div className="w-full md:pt-4 py-2 flex flex-col border-gray-300 overflow-auto">
               <SearchBar
@@ -837,7 +834,6 @@ const App: React.FC = () => {
           notes={notesList}
           onClickNote={handleClickNote}
         />
-      </div>
       <div>
         {activeNote && (
           <NoteEditor

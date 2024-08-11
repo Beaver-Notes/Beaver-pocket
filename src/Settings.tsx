@@ -5,9 +5,6 @@ import { Note } from "./store/types";
 import NoteEditor from "./Editor";
 import useNoteEditor from "./store/useNoteActions";
 import BottomNavBar from "./components/Home/BottomNavBar";
-import "./css/main.css";
-import "./css/fonts.css";
-import "./css/settings.css";
 import enTranslations from "./assets/locales/en.json";
 import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
@@ -28,18 +25,19 @@ const Settings: React.FC = () => {
   );
 
   const Codefonts = [
-    "JetBrains Mono",
     "Anonymous Pro",
-    "Source Code Pro",
     "Hack",
+    "JetBrains Mono",
+    "Source Code Pro",
   ];
 
   const fonts = [
     "Arimo",
     "Avenir",
-    "Helvetica",
     "EB Garamond",
+    "Helvetica",
     "OpenDyslexic",
+    "Roboto Mono",
     "Ubuntu",
   ];
 
@@ -335,7 +333,7 @@ const Settings: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-      <div className="grid sm:grid-cols-[autoß]">
+      <div className="grid sm:grid-cols-[auto]">
         <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
             <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
