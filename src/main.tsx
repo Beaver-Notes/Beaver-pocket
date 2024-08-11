@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import "./css/main.css";
-import { BrowserRouter } from "react-router-dom";  // Import BrowserRouter
-import { SplashScreen } from '@capacitor/splash-screen';
+import "./assets/css/main.css";
+import { BrowserRouter } from "react-router-dom"; // Import BrowserRouter
+import { SplashScreen } from "@capacitor/splash-screen";
 
 SplashScreen.hide();
 

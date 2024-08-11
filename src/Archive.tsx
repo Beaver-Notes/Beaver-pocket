@@ -4,8 +4,6 @@ import { Note } from "./store/types";
 import NoteEditor from "./Editor";
 import { JSONContent } from "@tiptap/react";
 import BottomNavBar from "./components/Home/BottomNavBar";
-import "./css/main.css";
-import "./css/fonts.css";
 import ModularPrompt from "./components/ui/Dialog";
 import SearchBar from "./components/Home/Search";
 import {

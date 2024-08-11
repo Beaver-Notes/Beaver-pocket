@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import BottomNavBar from "../components/Home/BottomNavBar";
 import { Note } from "../store/types";
-import "../css/main.css";
-import "../css/fonts.css";
 import NoteEditor from "../Editor";
 import { v4 as uuid } from "uuid";
 import useNoteEditor from "../store/useNoteActions";
@@ -12,7 +10,7 @@ import { useHandleImportData } from "../utils/importUtils";
 import { Link, useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { loadNotes, useSaveNote } from "../store/notes";
-import icons from "../lib/remixicon-react"
+import icons from "../lib/remixicon-react";
 import { useExportDav } from "../utils/webDavUtil";
 
 const Shortcuts: React.FC = () => {
@@ -36,7 +34,6 @@ const Shortcuts: React.FC = () => {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
-
 
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
 
@@ -79,7 +76,7 @@ const Shortcuts: React.FC = () => {
       exportdata();
     }
   };
-  
+
   const exportData = () => {
     exportUtils(notesState); // Pass notesState as an argument
   };
@@ -144,7 +141,7 @@ const Shortcuts: React.FC = () => {
     settings: {
       importdata: "settings.importdata",
       exportdata: "settings.exportdata",
-      encryptwpasswd: "settings.encryptwpasswd"
+      encryptwpasswd: "settings.encryptwpasswd",
     },
     home: {
       exportSuccess: "home.exportSuccess",
@@ -201,7 +198,7 @@ const Shortcuts: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-        
+
       <div className="overflow-y-hidden mb-12">
         {!activeNoteId && (
           <div className="mx-2 sm:px-20 mb-2">
@@ -209,15 +206,18 @@ const Shortcuts: React.FC = () => {
               <div className="py-2 mx-2 sm:px-20 mb-2">
                 <div className="space-y-3 w-full">
                   <p className="text-4xl font-bold">Sync</p>
-                  <div className="bg-neutral-50 dark:bg-[#2D2C2C] p-2 rounded-xl">
+                  <div className="flex flex-col gap-2 pt-2">
                     <Link
-                      className="flex flex-center p-2 border-b-2 border-neutral-200 dark:border-neutral-600 border-opacity-80"
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                       to="/dropbox"
                     >
                       <icons.DropboxFillIcon className="w-10 h-10" />
                       <p className="text-2xl pl-2 py-1 font-bold">Dropbox</p>
                     </Link>
-                    <Link className="flex flex-center p-2" to="/webdav">
+                    <Link
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      to="/webdav"
+                    >
                       <icons.ServerLineIcon className="w-10 h-10" />
                       <p className="text-2xl pl-2 py-1 font-bold">Webdav</p>
                     </Link>
@@ -262,9 +262,7 @@ const Shortcuts: React.FC = () => {
           </div>
         )}
         <div>
-          <BottomNavBar
-            onCreateNewNote={handleCreateNewNote}
-          />
+          <BottomNavBar onCreateNewNote={handleCreateNewNote} />
         </div>
         <div>
           {activeNote && (

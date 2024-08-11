@@ -2,8 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Note } from "./store/types";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./components/Editor/Toolbar";
-import "./css/video.scss";
-import BubleMenutable from "./components/Editor/Bubblemenutable";
 import HeadingTree from "./lib/HeadingTree";
 import { isPlatform } from "@ionic/react";
 import Drawer from "./components/Editor/Drawer";
@@ -55,7 +53,6 @@ function NoteEditor({
     top: number;
     left: number;
   } | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
   const [hashPosition, setHashPosition] = useState<number | null>(null);
   const [TextAfterHash, setTextAfterHash] = useState<string | null>(null);
   const [atPosition, setAtPosition] = useState<number | null>(null);
@@ -80,7 +77,7 @@ function NoteEditor({
       content: note.content,
       editorProps: {
         attributes: {
-          class: "overflow-auto outline-none",
+          class: "overflow-y-hidden outline-none",
         },
       },
       onUpdate: ({ editor }) => {
@@ -306,18 +303,6 @@ function NoteEditor({
     }
   };
 
-  const handleTyping = () => {
-    if (typingTimeoutRef.current !== null) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    setIsTyping(true);
-
-    typingTimeoutRef.current = window.setTimeout(() => {
-      setIsTyping(false);
-    }, 1000);
-  };
-
   return (
     <div {...handlers}>
       <div
@@ -389,7 +374,6 @@ function NoteEditor({
             </button>
           </div>
         </div>
-        <BubleMenutable editor={editor} isTyping={isTyping} />
         <div
           contentEditable
           onPaste={handlePaste}
@@ -426,7 +410,6 @@ function NoteEditor({
             <EditorContent
               onKeyUp={handleEditorTyping}
               editor={editor}
-              onKeyDown={handleTyping}
               className="overflow-hidden w-full mb-[6em] min-h-[25em] editor-content"
             />
           </div>

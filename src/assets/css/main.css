@@ -1,0 +1,396 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --selected-font: "Arimo", sans-serif;
+  --selected-font-code: "JetBrains Mono", monospace;
+  -webkit-tap-highlight-color: transparent;
+  --selected-dark-text: white;
+  @apply dark:text-[color:var(--selected-dark-text)];
+  padding-top: constant(safe-area-inset-top) !important;
+  padding-top: env(safe-area-inset-top) !important;
+}
+
+.safe-area {
+  padding-top: constant(safe-area-inset-top) !important;
+  padding-top: env(safe-area-inset-top) !important;
+  @apply bg-white bg-opacity-95 dark:bg-opacity-95 dark:bg-[#232222] z-40;
+  /* background-color: red; */
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+body {
+  @apply dark:text-[color:var(--selected-dark-text)] bg-white dark:bg-[#232222];
+  font-family: var(--selected-font);
+  transition: background-color 0.3s ease;
+}
+
+h1 {
+  @apply text-3xl font-bold leading-relaxed;
+}
+
+h2 {
+  @apply text-3xl font-bold leading-relaxed;
+}
+
+h3 {
+  @apply text-2xl font-bold leading-relaxed;
+}
+
+h4 {
+  @apply text-xl font-bold leading-relaxed;
+}
+
+h5 {
+  @apply text-lg font-bold leading-relaxed;
+}
+
+h6 {
+  @apply text-base font-bold leading-relaxed;
+}
+
+ol {
+  @apply px-6 list-decimal;
+}
+
+ul {
+  @apply px-6 list-disc;
+}
+
+code {
+  @apply bg-neutral-100 dark:bg-neutral-700 rounded-xl p-1 px-1;
+}
+
+.ProseMirror a {
+  @apply text-amber-400 dark:text-amber-400 !important;
+}
+.ProseMirror strong {
+  @apply dark:text-[color:var(--selected-dark-text)];
+}
+.ProseMirror blockquote {
+  @apply p-2 border-l-4 border-neutral-200 dark:border-neutral-600 !important;
+}
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  @apply dark:text-[color:var(--selected-dark-text)];
+}
+.ProseMirror .mention {
+  @apply py-0.5 px-1 rounded-md bg-amber-400 text-amber-400 bg-opacity-10 dark:text-amber-400 hover:underline;
+  cursor: pointer;
+}
+.ProseMirror .math-block {
+  @apply dark:bg-gray-800;
+}
+.math-node .math-src {
+  @apply dark:text-purple-400 text-purple-500 !important;
+}
+
+.ProseMirror {
+  min-height: 100px;
+  & > :first-child {
+    margin-top: 0;
+  }
+  &:focus {
+    outline: none;
+  }
+  li[data-checked="true"] {
+    @apply text-neutral-500 line-through;
+  }
+  ul li {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    @apply pr-[1.25em] rtl:pr-[1.25em] !important;
+    &::before {
+      top: 0.45em !important;
+    }
+  }
+  ol li {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    @apply pr-[1.25em] rtl:pr-[1.25em] !important;
+  }
+  li ul {
+    margin-top: 0 !important;
+  }
+  ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+    li {
+      &::before {
+        height: 0 !important;
+        width: 0 !important;
+      }
+      > label {
+        flex: 0 0 auto;
+        margin-right: 0.5rem;
+        user-select: none;
+      }
+      p {
+        margin: 0;
+      }
+      input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #ccc;
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.3s;
+      }
+
+      input[type="checkbox"]:checked {
+        border-color: #fbbf24;
+        background-color: #fbbf24;
+      }
+
+      /* Optional: You can add a custom background or other styles for the checked state */
+      input[type="checkbox"]:checked::before {
+        content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(255, 255, 255, 0.8)'%3E%3C/path%3E%3C/svg%3E");
+        display: block;
+        width: 100%;
+        height: 100%;
+        font-size: 16px;
+        line-height: 20px;
+        text-align: center;
+        color: #fbbf24;
+      }
+
+      display: flex;
+      align-items: flex-start;
+      padding-left: 0 !important;
+    }
+  }
+  .find {
+    @apply bg-yellow-400;
+  }
+  .inline-code {
+    @apply p-0.5 px-1 !important;
+  }
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    @apply text-gray-400 dark:text-[#A1A1AA];
+    pointer-events: none;
+    height: 0;
+  }
+  mark {
+    @apply bg-yellow-200 dark:bg-yellow-100;
+  }
+}
+
+.labelinput {
+  @apply text-lg flex dark:text-[color:var(--selected-dark-text)] bg-transparent w-auto outline-none content-center;
+}
+
+.labelinput:empty::before {
+  content: attr(data-placeholder);
+  @apply bg-transparent text-neutral-600 dark:text-[#A1A1AA] !important;
+}
+
+/* Basic editor styles */
+.tiptap {
+  > * + * {
+    margin-top: 0.75em;
+  }
+
+  table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    td,
+    th {
+      min-width: 1em;
+      @apply border-2 border-neutral-300 dark:border-neutral-500;
+      padding: 3px 5px;
+      vertical-align: top;
+      box-sizing: border-box;
+      position: relative;
+      > * {
+        margin-bottom: 0;
+      }
+    }
+    th {
+      font-weight: bold;
+      text-align: left;
+      @apply bg-neutral-100 dark:bg-black dark:bg-opacity-30;
+    }
+    .selectedCell:after {
+      z-index: 2;
+      position: absolute;
+      content: "";
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      background: rgba(200, 200, 255, 0.4);
+      pointer-events: none;
+    }
+    .column-resize-handle {
+      position: absolute;
+      right: -2px;
+      top: 0;
+      bottom: -2px;
+      width: 4px;
+      background-color: #adf;
+      pointer-events: none;
+    }
+  }
+
+  img {
+    @apply rounded-xl;
+
+    &.ProseMirror-selectednode {
+      @apply border-2 border-amber-400;
+    }
+  }
+
+  pre {
+    @apply bg-[#F2F2F2] dark:bg-[#303033] rounded-lg py-3 px-4 text-gray-700 text-lg dark:text-gray-200 pt-10 !important;
+    font-family: var(--selected-font-code);
+    tab-size: 2;
+    font-variant-ligatures: normal;
+
+    code {
+      font-family: var(--selected-font-code);
+      color: inherit;
+      padding: 0;
+      background: none;
+      font-size: 0.8rem;
+    }
+
+    .hljs-comment,
+    .hljs-quote {
+      color: #202020;
+      font-style: italic;
+    }
+
+    .hljs-doctag,
+    .hljs-keyword,
+    .hljs-formula {
+      color: #c678dd;
+    }
+
+    .hljs-section,
+    .hljs-name,
+    .hljs-selector-tag,
+    .hljs-deletion,
+    .hljs-subst {
+      color: #e06c75;
+    }
+
+    .hljs-literal {
+      color: #56b6c2;
+    }
+
+    .hljs-string,
+    .hljs-regexp,
+    .hljs-addition,
+    .hljs-attribute,
+    .hljs-meta-string {
+      color: #98c379;
+    }
+
+    .hljs-built_in,
+    .hljs-class .hljs-title {
+      color: #e6c07b;
+    }
+
+    .hljs-attr,
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-type,
+    .hljs-selector-class,
+    .hljs-selector-attr,
+    .hljs-selector-pseudo,
+    .hljs-number {
+      color: #d19a66;
+    }
+
+    .hljs-symbol,
+    .hljs-bullet,
+    .hljs-link,
+    .hljs-meta,
+    .hljs-selector-id,
+    .hljs-title {
+      color: #61aeee;
+    }
+
+    .hljs-emphasis {
+      font-style: italic;
+    }
+
+    .hljs-strong {
+      font-weight: bold;
+    }
+
+    .hljs-link {
+      text-decoration: underline;
+    }
+  }
+}
+
+.hoverable {
+  @apply hover:bg-gray-800 hover:bg-opacity-5 dark:hover:bg-gray-200 dark:hover:bg-opacity-5;
+}
+.bg-input {
+  @apply bg-black bg-opacity-5 hover:bg-opacity-10 dark:bg-gray-200 dark:bg-opacity-5 dark:hover:bg-opacity-10 focus:ring-2;
+}
+
+kbd {
+  font-family: inherit;
+  display: inline-block;
+  min-width: 28px;
+  @apply p-1 text-center text-sm rounded-md text-neutral-600 ml-1 dark:text-[color:var(--selected-dark-text)] bg-neutral-100 dark:bg-neutral-700 border;
+}
+
+.element-to-hide {
+  padding: 10px;
+}
+
+.keyboard-visible .element-to-hide {
+  display: none;
+}
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+input[type="checkbox"]:checked {
+  border-color: #fbbf24;
+  background-color: #fbbf24;
+}
+
+/* Optional: You can add a custom background or other styles for the checked state */
+input[type="checkbox"]:checked::before {
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(255, 255, 255, 0.8)'%3E%3C/path%3E%3C/svg%3E");
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  line-height: 20px;
+  text-align: center;
+  color: #fbbf24;
+}
+
+.view {
+  height: 80vh;
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import icons from "../../lib/remixicon-react"
-import "../../css/Modal.css"; // Import your CSS file for modal styles
+import "../../assets/css/Modal.css"; // Import your CSS file for modal styles
 import dayjs from "dayjs";
 
 interface ModularPromptProps {

@@ -1,4 +1,5 @@
 import { Node } from '@tiptap/core';
+import './iframe.scss';
 
 export interface IframeOptions {
   allowFullscreen: boolean;

@@ -30,8 +30,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     editor?.chain().setImage({ src: imageUrl }).run();
   };
 
-  if (!toolbarVisible) return null;
-
   const handleAddIframe = () => {
     // Prompt the user for the URL
     const videoUrl = prompt("Please enter the URL of the video:");
@@ -126,6 +124,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
       .setLink({ href: url })
       .run();
   }, [editor]);
+
+  if (!toolbarVisible) return null;
 
   return (
     <div

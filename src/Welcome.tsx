@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Import useHistory for redirection
-import "./css/fonts.css";
-import "./css/welcome.css";
+import { Link, useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
 import enTranslations from "./assets/locales/en.json";
 import itTranslations from "./assets/locales/it.json";
@@ -196,13 +194,13 @@ const Welcome: React.FC = () => {
   }, [currentView, history]);
 
   return (
-    <div className={`view ${currentView}`}>
+    <div className={`view ${currentView} overflow-y-hide`}>
       <div className="safe-area"></div>
 
       {currentView === "view1" && (
-        <div className="flex h-screen items-center justify-center">
+        <div className="view flex items-center justify-center">
           <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between h-full">
-            <div className="mt-10 flex justify-center">
+            <div className="mt-5 flex justify-center">
               <img
                 src="./imgs/icon.png"
                 alt="Beaver Notes Icon"
@@ -217,7 +215,7 @@ const Welcome: React.FC = () => {
                 Build your knowledge one log at the time
               </p>
             </div>
-            <div className="flex flex-col w-full items-center mb-6 gap-2">
+            <div className="flex flex-col w-full items-center mb-5 gap-2">
               <div className="relative w-full">
                 <select
                   value={selectedLanguage}
@@ -244,9 +242,9 @@ const Welcome: React.FC = () => {
       )}
 
       {currentView === "view2" && (
-        <div className="flex h-screen items-center justify-center">
+        <div className="flex view items-center justify-center">
           <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between h-full">
-            <div className="mt-10 flex justify-center">
+            <div className="mt-5 flex justify-center">
               <Icons.FontSizeIcon className="w-12 h-12 mx-auto rounded-xl" />
             </div>
             <div className="flex flex-col w-full items-center justify-center flex-grow">
@@ -309,7 +307,7 @@ const Welcome: React.FC = () => {
                 </div>
               </section>
             </div>
-            <div className="flex flex-col w-full items-center mb-6 gap-2">
+            <div className="flex flex-col w-full items-center mb-5 gap-2">
               <button
                 className="w-full p-3 rounded-full bg-[#2D2C2C] hover:bg-[#3a3939] text-white"
                 onClick={() => handleViewChange("view1")}
@@ -328,15 +326,15 @@ const Welcome: React.FC = () => {
       )}
 
       {currentView === "view3" && (
-        <div className="flex h-screen items-center justify-center">
+        <div className="flex view items-center justify-center">
           <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between h-full">
             <div className="flex flex-col w-full items-center justify-center flex-grow">
               <h3 className="text-center">🎉 Ready, Set, Go!</h3>
             </div>
-            <div className="flex flex-col w-full items-center mb-6 gap-2">
+            <div className="flex flex-col w-full items-center mb-5 gap-2">
               <button
                 className="w-full p-3 rounded-full bg-[#2D2C2C] hover:bg-[#3a3939] text-white"
-                onClick={() => handleViewChange("view1")}
+                onClick={() => handleViewChange("view2")}
               >
                 {translations.welcome.back || "-"}
               </button>
@@ -351,6 +349,24 @@ const Welcome: React.FC = () => {
           </div>
         </div>
       )}
+
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+        <span
+          className={`transition-all w-3 h-3 rounded-full ${
+            currentView === "view1" ? "w-6 bg-amber-400" : "bg-neutral-100 dark:bg-neutral-500"
+          }`}
+        ></span>
+        <span
+          className={`transition-all w-3 h-3 rounded-full ${
+            currentView === "view2" ? "w-6 bg-amber-400" : "bg-neutral-100 dark:bg-neutral-500"
+          }`}
+        ></span>
+        <span
+          className={`transition-all w-3 h-3 rounded-full ${
+            currentView === "view3" ? "w-6 bg-amber-400" : "bg-neutral-100 dark:bg-neutral-500"
+          }`}
+        ></span>
+      </div>
     </div>
   );
 };

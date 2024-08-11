@@ -132,7 +132,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
 
   return (
     <div
-      className={`sm:hidden shadow-t-sm block bottom-0 fixed left-0 right-0 ${
+      className={`sm:hidden shadow-t-md block bottom-0 fixed left-0 right-0 ${
         isKeyboardVisible
           ? "bg-[#F8F8F7] dark:bg-[#2D2C2C]"
           : "bg-white dark:bg-[#232222] p-1 pb-2"
@@ -474,6 +474,36 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().toggleHighlight().run()}
           >
             <icons.MarkPenLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+          </button>
+          <button
+            className={`p-1 ${
+              editor?.isActive("bulletList")
+                ? "text-amber-400"
+                : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+            } cursor-pointer flex-1`}
+            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+          >
+            <icons.ListUnorderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+          </button>
+          <button
+            className={`p-1 ${
+              editor?.isActive("orderedList")
+                ? "text-amber-400"
+                : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+            } cursor-pointer flex-1`}
+            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+          >
+            <icons.ListOrderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+          </button>
+          <button
+            className={`p-1 ${
+              editor?.isActive("Tasklist")
+                ? "text-amber-400"
+                : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+            } cursor-pointer flex-1`}
+            onClick={() => editor?.chain().focus().toggleTaskList().run()}
+          >
+            <icons.ListCheck2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${

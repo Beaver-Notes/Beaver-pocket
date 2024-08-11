@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import icons from "./remixicon-react"
-import "../css/main.css";
 import dayjs from 'dayjs';
 
 type HeadingTreeProps = {

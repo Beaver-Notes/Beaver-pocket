@@ -13,6 +13,8 @@ import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
 import Sync from "./settings/sync";
 import { useImportDav } from "./utils/webDavUtil";
+import "./assets/css/main.css";
+import "./assets/css/fonts.css";
 
 const App: React.FC = () => {
   const history = useNavigate();
