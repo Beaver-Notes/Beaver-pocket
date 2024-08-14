@@ -106,7 +106,7 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
 
 // Save
 
-export const useSaveNote = () => {
+export const useSaveNote = (setNotesState: React.Dispatch<React.SetStateAction<Record<string, Note>>>) => {
   const saveNote = React.useCallback(
     async (note: unknown) => {
       try {
@@ -115,7 +115,7 @@ export const useSaveNote = () => {
         if (typeof note === "object" && note !== null) {
           const typedNote = note as Note;
 
-          // Check if createdAt and updatedAt are Dates
+          // Ensure createdAt and updatedAt are timestamps
           const createdAtTimestamp =
             typeof typedNote.createdAt === "number"
               ? typedNote.createdAt
@@ -126,11 +126,13 @@ export const useSaveNote = () => {
               ? typedNote.updatedAt
               : Date.now();
 
-          notes[typedNote.id] = {
+          const updatedNote = {
             ...typedNote,
             createdAt: createdAtTimestamp,
             updatedAt: updatedAtTimestamp,
           };
+
+          notes[typedNote.id] = updatedNote;
 
           const data = {
             data: {
@@ -138,12 +140,19 @@ export const useSaveNote = () => {
             },
           };
 
+          // Write updated notes to file
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify(data),
             directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
+
+          // Update the state immediately
+          setNotesState((prevNotes) => ({
+            ...prevNotes,
+            [typedNote.id]: updatedNote,
+          }));
         } else {
           console.error("Invalid note object:", note);
         }
@@ -151,12 +160,11 @@ export const useSaveNote = () => {
         console.error("Error saving note:", error);
       }
     },
-    [loadNotes]
+    [setNotesState]
   );
 
   return { saveNote };
 };
-
 
 
 // Delete

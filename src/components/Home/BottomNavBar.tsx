@@ -1,14 +1,18 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import icons from "../../lib/remixicon-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
 import { useExportDav } from "../../utils/webDavUtil";
+import { useSaveNote } from "../../store/notes";
+import { useNotesState } from "../../store/Activenote";
 
-interface BottomNavBarProps {
-  onCreateNewNote: () => void;
-}
 
-const BottomNavBar: React.FC<BottomNavBarProps> = ({ onCreateNewNote }) => {
+const BottomNavBar = ({}) => {
+  const { setNotesState } = useNotesState();
+  const { saveNote } = useSaveNote(setNotesState);
+  const navigate = useNavigate();
+  useNotesState();
   useEffect(() => {
     const handleKeyboardShow = () => {
       document.body.classList.add("keyboard-visible");
@@ -44,21 +48,51 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onCreateNewNote }) => {
     buttonClicked;
     const editedNote = localStorage.getItem("lastNoteEdit");
     if (editedNote) {
-      const customEvent = new CustomEvent("editNote", {
-        detail: { editedNote },
-      });
-      document.dispatchEvent(customEvent);
+      navigate(`/editor/${editedNote}`);
     }
   };
 
-  const handleCreateNewNote = (
-    event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
-  ) => {
-    event.preventDefault();
-    buttonClicked;
-    onCreateNewNote();
-  };
+  const [translations, setTranslations] = useState({
+    home: {
+      title: "home.title",
+    },
+  });
 
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+
+  const handleCreateNewNote = async () => {
+    const newNote = {
+      id: uuid(),
+      title: "New Note",
+      content: { type: "doc", content: [] },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      labels: [],
+      isBookmarked: false,
+      isArchived: false,
+      isLocked: false,
+      lastCursorPosition: 0,
+    };
+
+    await saveNote(newNote);
+    navigate(`/editor/${newNote.id}`);
+  };
+  
   return (
     <div className={`element-to-hide spacingdiv`}>
       <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto">
@@ -68,10 +102,10 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onCreateNewNote }) => {
               <icons.HomeLineIcon className="text-white hover:text-amber-400 h-8 w-8" />
             </button>
           </Link>
-          <a href="#" onClick={handleEditNote} className="p-2">
+          <a onClick={handleEditNote} className="p-2">
             <icons.Edit2LineIcon className="text-white hover:text-amber-400 h-8 w-8" />
           </a>
-          <a href="#" className="p-2" onClick={handleCreateNewNote}>
+          <a className="p-2" onClick={handleCreateNewNote}>
             <icons.AddFillIcon className="text-white hover:text-amber-400 h-8 w-8" />
           </a>
           <Link to="/archive">

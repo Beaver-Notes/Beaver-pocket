@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
-import NoteEditor from "./Editor";
 import { JSONContent } from "@tiptap/react";
-import BottomNavBar from "./components/Home/BottomNavBar";
 import ModularPrompt from "./components/ui/Dialog";
 import SearchBar from "./components/Home/Search";
 import {
@@ -19,27 +16,21 @@ import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { useNavigate } from "react-router-dom";
 import {
   loadNotes,
-  useSaveNote,
   useDeleteNote,
   useToggleArchive,
 } from "./store/notes";
-import { useNotesState, useActiveNote } from "./store/Activenote";
-import useNoteEditor from "./store/useNoteActions";
-// Import Remix icons
+import { useNotesState } from "./store/Activenote";
 import Icons from "./lib/remixicon-react";
 
 import dayjs from "dayjs";
 import ReactDOM from "react-dom";
-import { useExportDav } from "./utils/webDavUtil";
 
 const Archive: React.FC = () => {
-  const { saveNote } = useSaveNote();
   const STORAGE_PATH = "notes/data.json";
   const { deleteNote } = useDeleteNote();
   const { toggleArchive } = useToggleArchive();
   const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
     useNotesState();
-  const activeNote = useActiveNote(activeNoteId, notesState);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
@@ -78,17 +69,6 @@ const Archive: React.FC = () => {
     }
   };
   
-  const handleCloseEditor = () => {
-    setActiveNoteId(null);
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
-    } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
-    }
-  };
 
   useEffect(() => {
     const loadNotesFromStorage = async () => {
@@ -114,34 +94,6 @@ const Archive: React.FC = () => {
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
   }, [searchQuery, notesState]);
-
-  const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
-    activeNoteId,
-    notesState,
-    setNotesState,
-    saveNote
-  );
-
-  const handleCreateNewNote = () => {
-    const newNote = {
-      id: uuid(),
-      title: translations.archive.title || "New Note",
-      content: { type: "doc", content: [] },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
-    setNotesState((prevNotes) => ({
-      ...prevNotes,
-      [newNote.id]: newNote,
-    }));
-    setActiveNoteId(newNote.id);
-    saveNote(newNote);
-  };
 
   // @ts-ignore
   const [sortingOption, setSortingOption] = useState("updatedAt");
@@ -692,23 +644,9 @@ const Archive: React.FC = () => {
                     ))}
                 </div>
               </div>
-              <BottomNavBar onCreateNewNote={handleCreateNewNote} />
             </div>
           )}
         </div>
-      </div>
-      <div>
-        {activeNote && (
-          <NoteEditor
-            notesList={notesList}
-            note={activeNote}
-            title={title}
-            onTitleChange={setTitle}
-            onChange={handleChangeNoteContent}
-            onCloseEditor={handleCloseEditor}
-            uniqueLabels={uniqueLabels}
-          />
-        )}
       </div>
     </div>
   );

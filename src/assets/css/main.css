@@ -394,3 +394,30 @@ input[type="checkbox"]:checked::before {
 .view {
   height: 80vh;
 }
+.card-enter {
+  transform: scale(0.9);
+  opacity: 0;
+  z-index: 1;
+}
+
+.card-enter-active {
+  transform: scale(1);
+  opacity: 1;
+  transition: transform 300ms ease, opacity 300ms ease;
+}
+
+.card-exit {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.card-exit-active {
+  transform: scale(0.9);
+  opacity: 0;
+  transition: transform 300ms ease, opacity 300ms ease;
+}
+
+.card {
+  transition: transform 300ms ease, opacity 300ms ease;
+  z-index: 1;
+}

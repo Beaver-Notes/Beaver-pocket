@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
 import ModularPrompt from "./components/ui/Dialog";
-import NoteEditor from "./Editor";
 import { JSONContent } from "@tiptap/react";
-import BottomNavBar from "./components/Home/BottomNavBar";
 import Bookmarked from "./components/Home/Bookmarked";
 import {
   Filesystem,
@@ -26,7 +24,7 @@ import {
   useToggleArchive,
 } from "./store/notes";
 import useNoteEditor from "./store/useNoteActions";
-import { useNotesState, useActiveNote } from "./store/Activenote";
+import { useNotesState } from "./store/Activenote";
 import { useHandleImportData } from "./utils/importUtils";
 import { useSwipeable } from "react-swipeable";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
@@ -35,10 +33,8 @@ import Icons from "./lib/remixicon-react";
 
 // Import Remix icons
 import ReactDOM from "react-dom";
-import { useExportDav } from "./utils/webDavUtil";
 
 const App: React.FC = () => {
-  const { saveNote } = useSaveNote();
   const { deleteNote } = useDeleteNote();
   const { toggleArchive } = useToggleArchive();
   const { toggleBookmark } = useToggleBookmark();
@@ -119,7 +115,6 @@ const App: React.FC = () => {
   const STORAGE_PATH = "notes/data.json";
   const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
     useNotesState();
-  const activeNote = useActiveNote(activeNoteId, notesState);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
@@ -127,6 +122,7 @@ const App: React.FC = () => {
   const handleImportData = () => {
     importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
   };
+  const { saveNote } = useSaveNote(setNotesState);
 
   useEffect(() => {
     const loadNotesFromStorage = async () => {
@@ -153,24 +149,7 @@ const App: React.FC = () => {
     );
   }, [searchQuery, notesState]);
 
-  const handleCloseEditor = () => {
-    setActiveNoteId(null);
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
-    } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
-    }
-  };
-
-  const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
-    activeNoteId,
-    notesState,
-    setNotesState,
-    saveNote
-  );
+  useNoteEditor(activeNoteId, notesState, setNotesState, saveNote);
 
   const handleCreateNewNote = () => {
     const newNote = {
@@ -563,11 +542,12 @@ const App: React.FC = () => {
 
   const handleClickNote = async (note: Note) => {
     if (note.isLocked) {
-      // Handle locked note using handleToggleLock
       handleToggleUnlock(note.id);
+      navigate(`/editor/${note.id}`);
     } else {
       // Set active note directly
       setActiveNoteId(note.id);
+      navigate(`/editor/${note.id}`);
     }
   };
 
@@ -670,183 +650,166 @@ const App: React.FC = () => {
   return (
     <div {...handlers}>
       <div className="safe-area"></div>
-        <div className="overflow-y mb-12">
-          {!activeNoteId && (
-            <div className="w-full md:pt-4 py-2 flex flex-col border-gray-300 overflow-auto">
-              <SearchBar
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                handleLabelFilterChange={handleLabelFilterChange}
-                setSortingOption={setSortingOption}
-                uniqueLabels={uniqueLabels}
-              />
-              <div className="py-2 p-2 mx-4 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
-                {notesList.filter(
-                  (note) => note.isBookmarked && !note.isArchived
-                ).length > 0 && (
-                  <h2 className="text-3xl font-bold">
-                    {translations.home.bookmarked || "-"}
-                  </h2>
-                )}
-                <Bookmarked
-                  notesList={notesList}
-                  activeNoteId={activeNoteId}
-                  handleToggleBookmark={handleToggleBookmark}
-                  handleToggleLock={handleToggleLock}
-                  handleDeleteNote={handleDeleteNote}
-                  handleClickNote={handleClickNote}
-                  truncateContentPreview={truncateContentPreview}
-                />
+      <div className="overflow-y mb-12">
+        {!activeNoteId && (
+          <div className="w-full md:pt-4 py-2 flex flex-col border-gray-300 overflow-auto">
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              handleLabelFilterChange={handleLabelFilterChange}
+              setSortingOption={setSortingOption}
+              uniqueLabels={uniqueLabels}
+            />
+            <div className="py-2 p-2 mx-4 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
+              {notesList.filter((note) => note.isBookmarked && !note.isArchived)
+                .length > 0 && (
                 <h2 className="text-3xl font-bold">
-                  {translations.home.all || "-"}
+                  {translations.home.bookmarked || "-"}
                 </h2>
-                {notesList.length === 0 && (
-                  <div className="mx-auto">
-                    <img
-                      src="./imgs/Beaver.png"
-                      className="max-w-auto sm:w-1/3 mx-auto flex justify-center items-center"
-                      alt="No content"
-                    />
-                    <p className="py-2 text-lg text-center">
-                      {translations.home.messagePt1 || "-"}
-                      <Icons.AddFillIcon className="inline-block w-5 h-5" />{" "}
-                      {translations.home.messagePt2 || "-"}
-                      <Icons.Download2LineIcon className="inline-block w-5 h-5" />{" "}
-                      {translations.home.messagePt3 || "-"}
-                    </p>
-                  </div>
-                )}
-                <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
-                  {notesList
-                    .filter((note) => !note.isBookmarked && !note.isArchived)
-                    .map((note) => (
-                      <div
-                        key={note.id}
-                        role="button"
-                        tabIndex={0}
-                        className={
-                          note.id === activeNoteId
-                            ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
-                            : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
-                        }
-                        onClick={() => handleClickNote(note)}
-                      >
-                        <div className="h-40 overflow-hidden">
-                          <div className="flex flex-col h-full overflow-hidden">
-                            <div className="text-xl font-bold">
-                              {note.title}
+              )}
+              <Bookmarked
+                notesList={notesList}
+                activeNoteId={activeNoteId}
+                handleToggleBookmark={handleToggleBookmark}
+                handleToggleLock={handleToggleLock}
+                handleDeleteNote={handleDeleteNote}
+                handleClickNote={handleClickNote}
+                truncateContentPreview={truncateContentPreview}
+              />
+              <h2 className="text-3xl font-bold">
+                {translations.home.all || "-"}
+              </h2>
+              {notesList.length === 0 && (
+                <div className="mx-auto">
+                  <img
+                    src="./imgs/Beaver.png"
+                    className="max-w-auto sm:w-1/3 mx-auto flex justify-center items-center"
+                    alt="No content"
+                  />
+                  <p className="py-2 text-lg text-center">
+                    {translations.home.messagePt1 || "-"}
+                    <Icons.AddFillIcon className="inline-block w-5 h-5" />{" "}
+                    {translations.home.messagePt2 || "-"}
+                    <Icons.Download2LineIcon className="inline-block w-5 h-5" />{" "}
+                    {translations.home.messagePt3 || "-"}
+                  </p>
+                </div>
+              )}
+              <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                {notesList
+                  .filter((note) => !note.isBookmarked && !note.isArchived)
+                  .map((note) => (
+                    <div
+                      key={note.id}
+                      role="button"
+                      tabIndex={0}
+                      className={
+                        note.id === activeNoteId
+                          ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
+                          : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
+                      }
+                      onClick={() => handleClickNote(note)}
+                    >
+                      <div className="h-40 overflow-hidden">
+                        <div className="flex flex-col h-full overflow-hidden">
+                          <div className="text-xl font-bold">{note.title}</div>
+                          {note.isLocked ? (
+                            <div>
+                              <p></p>
                             </div>
-                            {note.isLocked ? (
-                              <div>
-                                <p></p>
-                              </div>
-                            ) : (
-                              <div>
-                                {note.labels.length > 0 && (
-                                  <div className="flex flex-col gap-1 overflow-hidden">
-                                    <div className="flex flex-wrap gap-1">
-                                      {note.labels.map((label) => (
-                                        <span
-                                          key={label}
-                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                        >
-                                          #{label}
-                                        </span>
-                                      ))}
-                                    </div>
+                          ) : (
+                            <div>
+                              {note.labels.length > 0 && (
+                                <div className="flex flex-col gap-1 overflow-hidden">
+                                  <div className="flex flex-wrap gap-1">
+                                    {note.labels.map((label) => (
+                                      <span
+                                        key={label}
+                                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                                      >
+                                        #{label}
+                                      </span>
+                                    ))}
                                   </div>
-                                )}
-                              </div>
-                            )}
-                            {note.isLocked ? (
-                              <div className="flex flex-col items-center">
-                                <button className="flex items-center justify-center">
-                                  <Icons.LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
-                                </button>
-                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                  {translations.home.unlocktoedit || "-"}
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="text-lg">
-                                {note.content &&
-                                  truncateContentPreview(note.content)}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between pt-2">
-                          <div className="flex items-center">
-                            <button
-                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-                              onClick={(e) => handleToggleBookmark(note.id, e)}
-                            >
-                              {note.isBookmarked ? (
-                                <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                              ) : (
-                                <Icons.Bookmark3LineIcon className="w-8 h-8 mr-2" />
+                                </div>
                               )}
-                            </button>
-                            <button
-                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-                              onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
-                            >
-                              {note.isBookmarked ? (
-                                <Icons.ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
-                              ) : (
-                                <Icons.ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
-                              )}
-                            </button>
-                            <button
-                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-                              onClick={(e) => handleToggleLock(note.id, e)}
-                            >
-                              {note.isLocked ? (
-                                <Icons.LockClosedIcon className="w-8 h-8 mr-2" />
-                              ) : (
-                                <Icons.LockOpenIcon className="w-8 h-8 mr-2" />
-                              )}
-                            </button>
-                            <button
-                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
-                              onClick={(e) => handleDeleteNote(note.id, e)}
-                            >
-                              <Icons.DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                            </button>
-                          </div>
-                          <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
-                            {dayjs(note.createdAt).fromNow()}
-                          </div>
+                            </div>
+                          )}
+                          {note.isLocked ? (
+                            <div className="flex flex-col items-center">
+                              <button className="flex items-center justify-center">
+                                <Icons.LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
+                              </button>
+                              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                {translations.home.unlocktoedit || "-"}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="text-lg">
+                              {note.content &&
+                                truncateContentPreview(note.content)}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    ))}
-                </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center">
+                          <button
+                            className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
+                            onClick={(e) => handleToggleBookmark(note.id, e)}
+                          >
+                            {note.isBookmarked ? (
+                              <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2" />
+                            ) : (
+                              <Icons.Bookmark3LineIcon className="w-8 h-8 mr-2" />
+                            )}
+                          </button>
+                          <button
+                            className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
+                            onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
+                          >
+                            {note.isBookmarked ? (
+                              <Icons.ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
+                            ) : (
+                              <Icons.ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
+                            )}
+                          </button>
+                          <button
+                            className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
+                            onClick={(e) => handleToggleLock(note.id, e)}
+                          >
+                            {note.isLocked ? (
+                              <Icons.LockClosedIcon className="w-8 h-8 mr-2" />
+                            ) : (
+                              <Icons.LockOpenIcon className="w-8 h-8 mr-2" />
+                            )}
+                          </button>
+                          <button
+                            className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
+                            onClick={(e) => handleDeleteNote(note.id, e)}
+                          >
+                            <Icons.DeleteBinLineIcon className="w-8 h-8 mr-2" />
+                          </button>
+                        </div>
+                        <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
+                          {dayjs(note.createdAt).fromNow()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
-              <BottomNavBar onCreateNewNote={handleCreateNewNote} />
             </div>
-          )}
-        </div>
-        <CommandPrompt
-          onCreateNewNote={handleCreateNewNote}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          setIsCommandPromptOpen={setIsCommandPromptOpen}
-          isOpen={isCommandPromptOpen}
-          notes={notesList}
-          onClickNote={handleClickNote}
-        />
-      <div>
-        {activeNote && (
-          <NoteEditor
-            notesList={notesList}
-            note={activeNote}
-            title={title}
-            onTitleChange={setTitle}
-            onChange={handleChangeNoteContent}
-            onCloseEditor={handleCloseEditor}
-            uniqueLabels={uniqueLabels}
-          />
+          </div>
         )}
       </div>
+      <CommandPrompt
+        onCreateNewNote={handleCreateNewNote}
+        toggleTheme={() => toggleTheme(!darkMode)}
+        setIsCommandPromptOpen={setIsCommandPromptOpen}
+        isOpen={isCommandPromptOpen}
+        notes={notesList}
+        onClickNote={handleClickNote}
+      />
     </div>
   );
 };

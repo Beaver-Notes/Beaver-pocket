@@ -1,112 +1,12 @@
 import React, { useState, useEffect } from "react";
-import BottomNavBar from "../components/Home/BottomNavBar";
-import { Note } from "../store/types";
-import NoteEditor from "../Editor";
 import { version } from "../../package.json";
 import icons from "../lib/remixicon-react";
-import { v4 as uuid } from "uuid";
-import useNoteEditor from "../store/useNoteActions";
 import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
-import { useSwipeable } from "react-swipeable";
-import { loadNotes, useSaveNote } from "../store/notes";
-import { useExportDav } from "../utils/webDavUtil";
 
 const Shortcuts: React.FC = () => {
-  const { saveNote } = useSaveNote();
-
-  const [notesState, setNotesState] = useState<Record<string, Note>>({});
-
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
-  const [searchQuery] = useState<string>("");
-
-  useEffect(() => {
-    const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
-      setNotesState(notes);
-    };
-
-    loadNotesFromStorage();
-  }, []);
-
-  useEffect(() => {
-    const filtered = Object.values(notesState).filter((note) => {
-      const titleMatch = note.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const contentMatch = JSON.stringify(note.content)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch || contentMatch;
-    });
-
-    setFilteredNotes(
-      Object.fromEntries(filtered.map((note) => [note.id, note]))
-    );
-  }, [searchQuery, notesState]);
-
-  const handleCloseEditor = () => {
-    setActiveNoteId(null);
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
-    } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
-    }
-  };
 
   // @ts-ignore
   const [sortingOption, setSortingOption] = useState("updatedAt");
-  const [filteredNotes, setFilteredNotes] =
-    useState<Record<string, Note>>(notesState);
-
-  const notesList = Object.values(filteredNotes).sort((a, b) => {
-    switch (sortingOption) {
-      case "alphabetical":
-        return a.title.localeCompare(b.title);
-      case "createdAt":
-        const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
-        const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
-        return createdAtA - createdAtB;
-      case "updatedAt":
-      default:
-        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
-        const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
-        return updatedAtA - updatedAtB;
-    }
-  });
-
-  const activeNote = activeNoteId ? notesState[activeNoteId] : null;
-
-  const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
-    activeNoteId,
-    notesState,
-    setNotesState,
-    saveNote
-  );
-
-  const handleCreateNewNote = () => {
-    const newNote = {
-      id: uuid(),
-      title: translations.home.title || "New Note",
-      content: { type: "doc", content: [] },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
-    setNotesState((prevNotes) => ({
-      ...prevNotes,
-      [newNote.id]: newNote,
-    }));
-    setActiveNoteId(newNote.id);
-    saveNote(newNote);
-  };
 
   // Translations
   const [translations, setTranslations] = useState({
@@ -151,23 +51,6 @@ const Shortcuts: React.FC = () => {
     loadTranslations();
   }, []);
 
-  const navigate = useNavigate();
-
-  const handleSwipe = (eventData: any) => {
-    const isRightSwipe = eventData.dir === "Right";
-    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
-
-    if (isRightSwipe && isSmallSwipe) {
-      eventData.event.preventDefault();
-    } else if (isRightSwipe) {
-      navigate(-1); // Navigate back
-    }
-  };
-
-  const handlers = useSwipeable({
-    onSwiped: handleSwipe,
-  });
-
   const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
@@ -185,16 +68,11 @@ const Shortcuts: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  const uniqueLabels = Array.from(
-    new Set(Object.values(notesState).flatMap((note) => note.labels))
-  );
-
   return (
-    <div {...handlers}>
+    <div>
       <div className="safe-area"></div>
 
         <div className="overflow-y-hidden mb-12">
-          {!activeNoteId && (
             <div className="mx-2 sm:px-20 mb-2">
               <div className="general py-2 space-y-8 w-full">
                 <div className="py-2 mx-2 sm:px-20 mb-2">
@@ -245,25 +123,6 @@ const Shortcuts: React.FC = () => {
                 </div>
               </div>
             </div>
-          )}
-          <div>
-            <BottomNavBar
-              onCreateNewNote={handleCreateNewNote}
-            />
-          </div>
-        <div>
-          {activeNote && (
-            <NoteEditor
-              notesList={notesList}
-              note={activeNote}
-              title={title}
-              onTitleChange={setTitle}
-              onChange={handleChangeNoteContent}
-              onCloseEditor={handleCloseEditor}
-              uniqueLabels={uniqueLabels}
-            />
-          )}
-        </div>
       </div>
     </div>
   );
