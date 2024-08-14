@@ -1,21 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import React, { useState, useEffect } from "react";
-import { v4 as uuid } from "uuid";
-import { Note } from "./store/types";
-import NoteEditor from "./Editor";
-import useNoteEditor from "./store/useNoteActions";
-import BottomNavBar from "./components/Home/BottomNavBar";
 import enTranslations from "./assets/locales/en.json";
 import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
-import { useSaveNote, loadNotes } from "./store/notes";
-import { useSwipeable } from "react-swipeable";
 import Icons from "./lib/remixicon-react";
-import { useExportDav } from "./utils/webDavUtil";
 
 const Settings: React.FC = () => {
-  const { saveNote } = useSaveNote();
-
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
   );
@@ -41,22 +31,6 @@ const Settings: React.FC = () => {
     "Ubuntu",
   ];
 
-  const navigate = useNavigate();
-
-  const handleSwipe = (eventData: any) => {
-    const isRightSwipe = eventData.dir === "Right";
-    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
-
-    if (isRightSwipe && isSmallSwipe) {
-      eventData.event.preventDefault();
-    } else if (isRightSwipe) {
-      navigate(-1); // Navigate back
-    }
-  };
-
-  const handlers = useSwipeable({
-    onSwiped: handleSwipe,
-  });
 
   useEffect(() => {
     document.documentElement.style.setProperty("--selected-font", selectedFont);
@@ -115,98 +89,6 @@ const Settings: React.FC = () => {
     setDarkMode(prefersDarkMode);
     setThemeMode("auto");
     setSelectedOption("System");
-  };
-
-  const [notesState, setNotesState] = useState<Record<string, Note>>({});
-
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
-  const [searchQuery] = useState<string>("");
-
-  useEffect(() => {
-    const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
-      setNotesState(notes);
-    };
-
-    loadNotesFromStorage();
-  }, []);
-
-  useEffect(() => {
-    const filtered = Object.values(notesState).filter((note) => {
-      const titleMatch = note.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const contentMatch = JSON.stringify(note.content)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch || contentMatch;
-    });
-
-    setFilteredNotes(
-      Object.fromEntries(filtered.map((note) => [note.id, note]))
-    );
-  }, [searchQuery, notesState]);
-
-  const handleCloseEditor = () => {
-    setActiveNoteId(null);
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
-    } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
-    }
-  };
-
-  const activeNote = activeNoteId ? notesState[activeNoteId] : null;
-
-  const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
-    activeNoteId,
-    notesState,
-    setNotesState,
-    saveNote
-  );
-
-  // @ts-ignore
-  const [sortingOption, setSortingOption] = useState("updatedAt");
-  const [filteredNotes, setFilteredNotes] =
-    useState<Record<string, Note>>(notesState);
-
-  const notesList = Object.values(filteredNotes).sort((a, b) => {
-    switch (sortingOption) {
-      case "alphabetical":
-        return a.title.localeCompare(b.title);
-      case "createdAt":
-        const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
-        const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
-        return createdAtA - createdAtB;
-      case "updatedAt":
-      default:
-        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
-        const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
-        return updatedAtA - updatedAtB;
-    }
-  });
-  const handleCreateNewNote = () => {
-    const newNote = {
-      id: uuid(),
-      title: translations.home.title || "New Note",
-      content: { type: "doc", content: [] },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
-    setNotesState((prevNotes) => ({
-      ...prevNotes,
-      [newNote.id]: newNote,
-    }));
-    setActiveNoteId(newNote.id);
-    saveNote(newNote);
   };
 
   // Translations
@@ -326,186 +208,162 @@ const Settings: React.FC = () => {
     }
   };
 
-  const uniqueLabels = Array.from(
-    new Set(Object.values(notesState).flatMap((note) => note.labels))
-  );
-
   return (
-    <div {...handlers}>
+    <div>
       <div className="safe-area"></div>
       <div className="grid sm:grid-cols-[auto]">
         <div className="overflow-y-hidden mb-12">
-          {!activeNoteId && (
-            <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-              <div className="mx-6 md:px-24 pb-8 overflow-y-auto flex-grow">
-                <section>
-                  <p className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
-                    {" "}
-                    {translations.settings.title || "-"}
-                  </p>
-                </section>
-                {/* App Theme */}
-                <section>
-                  <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                    {translations.settings.apptheme || "-"}
-                  </p>
-                  <div className="relative">
-                    <select
-                      value={selectedOption}
-                      onChange={handleChangeMode}
-                      className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                    >
-                      {modes.map((mode) => (
-                        <option key={mode} value={mode}>
-                          {mode}
-                        </option>
-                      ))}
-                    </select>
-                    <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
-                  </div>
-                </section>
-                {/* Select Font */}
-                <section>
-                  <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                    {translations.settings.selectfont || "-"}
-                  </p>
-                  <div className="relative">
-                    <select
-                      value={selectedFont}
-                      onChange={updateFont}
-                      className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                    >
-                      {fonts.map((font) => (
-                        <option key={font} value={font}>
-                          {font}
-                        </option>
-                      ))}
-                    </select>
-                    <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
-                  </div>
-                </section>
-                {/* Code Font */}
-                <section>
-                  <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                    Select Font Code
-                  </p>
-                  <div className="relative">
-                    <select
-                      value={selectedCodeFont}
-                      onChange={updatCodeFont}
-                      className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                    >
-                      {Codefonts.map((Codefonts) => (
-                        <option key={Codefonts} value={Codefonts}>
-                          {Codefonts}
-                        </option>
-                      ))}
-                    </select>
-                    <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
-                  </div>
-                </section>
-                {/* Select Language */}
-                <section>
-                  <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                    {translations.settings.selectlanguage || "-"}
-                  </p>
-                  <div className="relative">
-                    <select
-                      value={selectedLanguage}
-                      onChange={updateLanguage}
-                      className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                    >
-                      {languages.map((language) => (
-                        <option key={language.code} value={language.code}>
-                          {language.name}
-                        </option>
-                      ))}
-                    </select>
-                    <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
-                  </div>
-                </section>
-                <section className="py-2">
+          <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
+            <div className="mx-6 md:px-24 pb-8 overflow-y-auto flex-grow">
+              <section>
+                <p className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
+                  {" "}
+                  {translations.settings.title || "-"}
+                </p>
+              </section>
+              {/* App Theme */}
+              <section>
+                <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                  {translations.settings.apptheme || "-"}
+                </p>
+                <div className="relative">
+                  <select
+                    value={selectedOption}
+                    onChange={handleChangeMode}
+                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                  >
+                    {modes.map((mode) => (
+                      <option key={mode} value={mode}>
+                        {mode}
+                      </option>
+                    ))}
+                  </select>
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                </div>
+              </section>
+              {/* Select Font */}
+              <section>
+                <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                  {translations.settings.selectfont || "-"}
+                </p>
+                <div className="relative">
+                  <select
+                    value={selectedFont}
+                    onChange={updateFont}
+                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                  >
+                    {fonts.map((font) => (
+                      <option key={font} value={font}>
+                        {font}
+                      </option>
+                    ))}
+                  </select>
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                </div>
+              </section>
+              {/* Code Font */}
+              <section>
+                <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                  Select Font Code
+                </p>
+                <div className="relative">
+                  <select
+                    value={selectedCodeFont}
+                    onChange={updatCodeFont}
+                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                  >
+                    {Codefonts.map((Codefonts) => (
+                      <option key={Codefonts} value={Codefonts}>
+                        {Codefonts}
+                      </option>
+                    ))}
+                  </select>
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                </div>
+              </section>
+              {/* Select Language */}
+              <section>
+                <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+                  {translations.settings.selectlanguage || "-"}
+                </p>
+                <div className="relative">
+                  <select
+                    value={selectedLanguage}
+                    onChange={updateLanguage}
+                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                  >
+                    {languages.map((language) => (
+                      <option key={language.code} value={language.code}>
+                        {language.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                </div>
+              </section>
+              <section className="py-2">
                 {/* Interface Options */}
                 <p className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                   Interface options
                 </p>
-                  <div className="flex items-center py-2 justify-between hidden sm:block">
-                    <div>
-                      <p className="block text-lg align-left">
-                        Expand page
-                      </p>
-                    </div>
-                    <label className="relative inline-flex cursor-pointer items-center">
-                      <input
-                        id="switch"
-                        type="checkbox"
-                        checked={wd}
-                        onChange={toggleBackground}
-                        className="peer sr-only"
-                      />
-                      <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                    </label>
+                <div className="flex items-center py-2 justify-between hidden sm:block">
+                  <div>
+                    <p className="block text-lg align-left">Expand page</p>
                   </div>
-                  <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
-                    <div>
-                      <p className="block text-lg align-left">
-                        Clear Font
-                      </p>
-                    </div>
-                    <label className="relative inline-flex cursor-pointer items-center">
-                      <input
-                        id="switch"
-                        type="checkbox"
-                        checked={ClearFontChecked}
-                        onChange={toggleClearFont}
-                        className="peer sr-only"
-                      />
-                      <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                    </label>
+                  <label className="relative inline-flex cursor-pointer items-center">
+                    <input
+                      id="switch"
+                      type="checkbox"
+                      checked={wd}
+                      onChange={toggleBackground}
+                      className="peer sr-only"
+                    />
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  </label>
+                </div>
+                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                  <div>
+                    <p className="block text-lg align-left">Clear Font</p>
                   </div>
-                </section>
-                <div className="pb-4">
-                  <div className="flex flex-col gap-2 pt-2">
-                    <Link
-                      to="/Sync"
-                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    >
-                      <Icons.SyncLineIcon className="w-6 h-6 mr-2" />
-                      Sync
-                    </Link>
-                    <Link
-                      to="/about"
-                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    >
-                      <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
-                      {translations.settings.About || "-"}
-                    </Link>
-                    <Link
-                      to="/shortcuts"
-                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    >
-                      <Icons.KeyboardLineIcon className="w-6 h-6 mr-2" />
-                      {translations.settings.Shortcuts || "-"}
-                    </Link>
-                  </div>
+                  <label className="relative inline-flex cursor-pointer items-center">
+                    <input
+                      id="switch"
+                      type="checkbox"
+                      checked={ClearFontChecked}
+                      onChange={toggleClearFont}
+                      className="peer sr-only"
+                    />
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  </label>
+                </div>
+              </section>
+              <div className="pb-4">
+                <div className="flex flex-col gap-2 pt-2">
+                  <Link
+                    to="/Sync"
+                    className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                  >
+                    <Icons.SyncLineIcon className="w-6 h-6 mr-2" />
+                    Sync
+                  </Link>
+                  <Link
+                    to="/about"
+                    className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                  >
+                    <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
+                    {translations.settings.About || "-"}
+                  </Link>
+                  <Link
+                    to="/shortcuts"
+                    className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                  >
+                    <Icons.KeyboardLineIcon className="w-6 h-6 mr-2" />
+                    {translations.settings.Shortcuts || "-"}
+                  </Link>
                 </div>
               </div>
-              <BottomNavBar onCreateNewNote={handleCreateNewNote} />
             </div>
-          )}
-        </div>
-        <div>
-          {activeNote && (
-            <NoteEditor
-              notesList={notesList}
-              note={activeNote}
-              title={title}
-              onTitleChange={setTitle}
-              onChange={handleChangeNoteContent}
-              onCloseEditor={handleCloseEditor}
-              uniqueLabels={uniqueLabels}
-            />
-          )}
+          </div>
         </div>
       </div>
     </div>

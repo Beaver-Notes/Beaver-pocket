@@ -8,9 +8,7 @@ import FileUploadComponent from "./FileUpload";
 interface ToolbarProps {
   toolbarVisible: boolean;
   note: Note;
-  isFullScreen: boolean;
   noteId: string;
-  onCloseEditor: () => void;
   editor: Editor | null;
   toggleHeadingTree: () => void;
 }
@@ -18,7 +16,6 @@ interface ToolbarProps {
 const Toolbar: React.FC<ToolbarProps> = ({
   editor,
   toolbarVisible,
-  onCloseEditor,
   noteId,
   toggleHeadingTree,
 }) => {
@@ -140,7 +137,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
       >
         <button
           className="p-2 hidden sm:block sm:align-start text-white rounded-md bg-transparent cursor-pointer"
-          onClick={onCloseEditor}
         >
           <icons.ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
         </button>
@@ -280,7 +276,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
       >
         <button
           className="p-2 hidden sm:block sm:align-start text-white rounded-md bg-transparent cursor-pointer"
-          onClick={onCloseEditor}
         >
           <icons.ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
         </button>
@@ -364,7 +359,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
       >
         <button
           className="p-2 hidden sm:block sm:align-start text-white rounded-md bg-transparent cursor-pointer"
-          onClick={onCloseEditor}
         >
           <icons.ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
         </button>

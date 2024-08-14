@@ -7,7 +7,11 @@ import icons from "../../lib/remixicon-react"; // Adjust the import path as need
 type Props = {
   hashPopupPosition: { top: number; left: number } | any;
   note: Note;
-  onChange: (content: JSONContent, title?: string) => void;
+  handleChangeNoteContent: (
+    content: JSONContent,
+    title?: string,
+    labels?: string[]
+  ) => void;
   editor: any;
   textAfterHash: string | null;
   setHashPosition: any;
@@ -17,7 +21,7 @@ type Props = {
 };
 
 function NoteLabels({
-  onChange,
+  handleChangeNoteContent,
   note,
   setHashPosition,
   setHashPopupPosition,
@@ -91,7 +95,10 @@ function NoteLabels({
   const updateLabelsInNote = (labelToUpdate: string, newLabel: string) => {
     const updatedNote = { ...note };
 
-    if (typeof updatedNote.content === "object" && updatedNote.content !== null) {
+    if (
+      typeof updatedNote.content === "object" &&
+      updatedNote.content !== null
+    ) {
       const contentArray = Array.isArray(updatedNote.content)
         ? updatedNote.content
         : updatedNote.content.content;
@@ -137,7 +144,7 @@ function NoteLabels({
             }
           }
 
-          onChange(updatedNote.content);
+          handleChangeNoteContent(updatedNote.content);
         }
       }
     }
@@ -145,17 +152,17 @@ function NoteLabels({
 
   const addLabelToNote = (labelToAdd: string) => {
     const updatedNote = { ...note };
-
+  
     // Find the position of the hash and the text after it
     const content = editor.getText();
     const hashIndex = content.lastIndexOf("#");
-
+  
     if (hashIndex !== -1) {
       const textAfterHashMatch = content.slice(hashIndex).match(/^#[\w-]*/);
       const endIndex = textAfterHashMatch
         ? hashIndex + textAfterHashMatch[0].length
         : hashIndex + 1; // Ensure the hash is deleted
-
+  
       editor
         .chain()
         .focus()
@@ -168,21 +175,27 @@ function NoteLabels({
           attrs: { id: labelToAdd, label: labelToAdd },
         })
         .run();
-
+  
       // Close the hash popup after replacing the text
       setHashPopupPosition(null);
       setHashPosition(null);
       setTextAfterHash("");
     }
-
-    if (!updatedNote.labels) {
-      updatedNote.labels = [labelToAdd];
-    } else {
-      updatedNote.labels.push(labelToAdd);
-    }
-
+  
+    // Update the labels array
+    const updatedLabels = updatedNote.labels
+      ? [...updatedNote.labels, labelToAdd]
+      : [labelToAdd];
+  
+    // Get the editor content as JSON
+    const jsonContent = editor.getJSON();
+  
+    handleChangeNoteContent(jsonContent, note.title, updatedLabels);
+  
+    // Update global labels
     setGlobalLabels(extractLabelsFromNote(updatedNote));
   };
+  
 
   const handleAddLabel = () => {
     if (newLabel.trim() !== "") {

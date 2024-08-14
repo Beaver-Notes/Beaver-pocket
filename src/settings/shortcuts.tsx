@@ -1,116 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { v4 as uuid } from "uuid";
-import { Note } from "../store/types";
-import NoteEditor from "../Editor";
-import useNoteEditor from "../store/useNoteActions";
-import BottomNavBar from "../components/Home/BottomNavBar";
 import dayjs from "dayjs";
-import { useSwipeable } from "react-swipeable";
-import { useNavigate } from "react-router-dom";
-import { loadNotes, useSaveNote } from "../store/notes";
-import { useExportDav } from "../utils/webDavUtil";
 
 const Shortcuts: React.FC = () => {
-  const { saveNote } = useSaveNote();
-  // Function to toggle dark mode
-
-  const [notesState, setNotesState] = useState<Record<string, Note>>({});
-
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
-  const [searchQuery] = useState<string>("");
-
-  useEffect(() => {
-    const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
-      setNotesState(notes);
-    };
-
-    loadNotesFromStorage();
-  }, []);
-
-  useEffect(() => {
-    const filtered = Object.values(notesState).filter((note) => {
-      const titleMatch = note.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const contentMatch = JSON.stringify(note.content)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch || contentMatch;
-    });
-
-    setFilteredNotes(
-      Object.fromEntries(filtered.map((note) => [note.id, note]))
-    );
-  }, [searchQuery, notesState]);
-
-  const handleCloseEditor = () => {
-    setActiveNoteId(null);
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
-    } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
-    }
-  };
-
-  const uniqueLabels = Array.from(
-    new Set(Object.values(notesState).flatMap((note) => note.labels))
-  );
-
-  // @ts-ignore
-  const [sortingOption, setSortingOption] = useState("updatedAt");
-  const [filteredNotes, setFilteredNotes] =
-    useState<Record<string, Note>>(notesState);
-
-  const notesList = Object.values(filteredNotes).sort((a, b) => {
-    switch (sortingOption) {
-      case "alphabetical":
-        return a.title.localeCompare(b.title);
-      case "createdAt":
-        const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
-        const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
-        return createdAtA - createdAtB;
-      case "updatedAt":
-      default:
-        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
-        const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
-        return updatedAtA - updatedAtB;
-    }
-  });
-
-  const activeNote = activeNoteId ? notesState[activeNoteId] : null;
-
-  const { title, setTitle, handleChangeNoteContent } = useNoteEditor(
-    activeNoteId,
-    notesState,
-    setNotesState,
-    saveNote
-  );
-
-  const handleCreateNewNote = () => {
-    const newNote = {
-      id: uuid(),
-      title: translations.home.title || "New Note",
-      content: { type: "doc", content: [] },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
-    setNotesState((prevNotes) => ({
-      ...prevNotes,
-      [newNote.id]: newNote,
-    }));
-    setActiveNoteId(newNote.id);
-    saveNote(newNote);
-  };
-
   // Translations
   const [translations, setTranslations] = useState({
     settings: {
@@ -228,23 +119,6 @@ const Shortcuts: React.FC = () => {
     },
   ];
 
-  const navigate = useNavigate();
-
-  const handleSwipe = (eventData: any) => {
-    const isRightSwipe = eventData.dir === "Right";
-    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
-
-    if (isRightSwipe && isSmallSwipe) {
-      eventData.event.preventDefault();
-    } else if (isRightSwipe) {
-      navigate(-1); // Navigate back
-    }
-  };
-
-  const handlers = useSwipeable({
-    onSwiped: handleSwipe,
-  });
-
   const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
@@ -263,56 +137,35 @@ const Shortcuts: React.FC = () => {
   }, [darkMode, themeMode]);
 
   return (
-    <div {...handlers}>
+    <div>
       <div className="safe-area"></div>
       <div className="overflow-y-hidden mb-24">
-        {!activeNoteId && (
-          <div className="mx-6 sm:px-20 mb-2">
-            <div className="general py-2 space-y-8 w-full">
-              <p className="text-4xl font-bold">
-                {translations.settings.title}
-              </p>
-              {shortcuts.map((shortcut) => (
-                <section key={shortcut.title}>
-                  <p className="mb-2">{shortcut.title}</p>
-                  <div className="rounded-lg bg-gray-800 bg-opacity-5 dark:bg-gray-200 dark:bg-opacity-5">
-                    {shortcut.items.map((item) => (
-                      <div key={item.name} className="flex items-center p-3">
-                        <p className="flex-1">{item.name}</p>
-                        {item.keys.map((key) => (
-                          <kbd
-                            key={key}
-                            className="mr-1 border-2 dark:border-neutral-700 rounded-lg p-1 px-2"
-                          >
-                            {key}
-                          </kbd>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
+        <div className="mx-6 sm:px-20 mb-2">
+          <div className="general py-2 space-y-8 w-full">
+            <p className="text-4xl font-bold">{translations.settings.title}</p>
+            {shortcuts.map((shortcut) => (
+              <section key={shortcut.title}>
+                <p className="mb-2">{shortcut.title}</p>
+                <div className="rounded-lg bg-gray-800 bg-opacity-5 dark:bg-gray-200 dark:bg-opacity-5">
+                  {shortcut.items.map((item) => (
+                    <div key={item.name} className="flex items-center p-3">
+                      <p className="flex-1">{item.name}</p>
+                      {item.keys.map((key) => (
+                        <kbd
+                          key={key}
+                          className="mr-1 border-2 dark:border-neutral-700 rounded-lg p-1 px-2"
+                        >
+                          {key}
+                        </kbd>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
-        )}
-        <div>
-          <BottomNavBar
-            onCreateNewNote={handleCreateNewNote}
-          />
         </div>
-        <div>
-          {activeNote && (
-            <NoteEditor
-              notesList={notesList}
-              note={activeNote}
-              title={title}
-              onTitleChange={setTitle}
-              onChange={handleChangeNoteContent}
-              onCloseEditor={handleCloseEditor}
-              uniqueLabels={uniqueLabels}
-            />
-          )}
-        </div>
+        <div></div>
       </div>
     </div>
   );

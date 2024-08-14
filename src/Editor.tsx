@@ -7,37 +7,70 @@ import { isPlatform } from "@ionic/react";
 import Drawer from "./components/Editor/Drawer";
 import Find from "./components/Editor/Find";
 import extensions from "./lib/tiptap/index";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
 import BubblemenuLabel from "./components/Editor/BubblemenuLabel";
 import { hasNotch } from "./utils/detectNotch";
 import DOMPurify from "dompurify";
+import useNoteEditor from "./store/useNoteActions";
+import { useNotesState } from "./store/Activenote";
+import { useSaveNote } from "./store/notes";
 
 // Icons
 import Icons from "./lib/remixicon-react";
 
 type Props = {
   note: Note;
-  notesList: Note[];
-  onCloseEditor: () => void;
-  onChange: (content: JSONContent, title?: string) => void;
-  isFullScreen?: boolean;
-  title: string;
-  uniqueLabels: string[];
-  onTitleChange: (newTitle: string) => void;
 };
 
-function NoteEditor({
-  note,
-  notesList,
-  onChange,
-  uniqueLabels,
-  onTitleChange,
-  onCloseEditor,
-  isFullScreen = false,
-}: Props) {
-  const [localTitle, setLocalTitle] = useState<string>(note.title);
+function Editor({ note }: Props) {
+  const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
+    useNotesState();
+  const { saveNote } = useSaveNote(setNotesState);
+  const { title, handleChangeNoteContent } = useNoteEditor(
+    activeNoteId,
+    notesState,
+    setNotesState,
+    saveNote
+  );
+  const uniqueLabels = Array.from(
+    new Set(Object.values(notesState).flatMap((note) => note.labels))
+  );
+  const [searchQuery] = useState<string>("");
+  useEffect(() => {
+    const filtered = Object.values(notesState).filter((note) => {
+      const titleMatch = note.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const contentMatch = JSON.stringify(note.content)
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return titleMatch || contentMatch;
+    });
+
+    setFilteredNotes(
+      Object.fromEntries(filtered.map((note) => [note.id, note]))
+    );
+  }, [notesState]);
+  const [filteredNotes, setFilteredNotes] =
+    useState<Record<string, Note>>(notesState);
+  const [sortingOption] = useState("updatedAt");
+  const notesList = Object.values(filteredNotes).sort((a, b) => {
+    switch (sortingOption) {
+      case "alphabetical":
+        return a.title.localeCompare(b.title);
+      case "createdAt":
+        const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
+        const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
+        return createdAtA - createdAtB;
+      case "updatedAt":
+      default:
+        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
+        const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
+        return updatedAtA - updatedAtB;
+    }
+  });
   const [focusMode, setFocusMode] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(true);
   const [headingTreeVisible, setHeadingTreeVisible] = useState(false);
@@ -58,7 +91,6 @@ function NoteEditor({
   const [atPosition, setAtPosition] = useState<number | null>(null);
   const [textAfterAt, setTextAfterAt] = useState<string | null>(null);
   const headingTreeRef = useRef<HTMLDivElement | null>(null);
-  const typingTimeoutRef = useRef<number | null>(null);
   const [notchPadding, setNotchPadding] = useState(false);
 
   useEffect(() => {
@@ -67,10 +99,10 @@ function NoteEditor({
       setNotchPadding(hasNotchFlag);
     };
     checkNotch();
+    setActiveNoteId(note.id);
   }, []);
 
   const navigate = useNavigate();
-
   const editor = useEditor(
     {
       extensions,
@@ -82,15 +114,11 @@ function NoteEditor({
       },
       onUpdate: ({ editor }) => {
         const editorContent = editor.getJSON();
-        onChange(editorContent);
+        handleChangeNoteContent(editorContent, title);
       },
     },
     [note.id]
   );
-
-  useEffect(() => {
-    setLocalTitle(note.title);
-  }, [note.title]);
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -110,19 +138,9 @@ function NoteEditor({
     setWd(localStorage.getItem("expand-editor") === "true");
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current !== null) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, []);
-
   const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
     const newTitle = DOMPurify.sanitize(event.currentTarget.innerHTML);
-    setLocalTitle(newTitle);
-    onTitleChange(newTitle);
-    onChange(editor?.getJSON() || ({} as JSONContent), newTitle);
+    handleChangeNoteContent(editor?.getJSON() || ({} as JSONContent), newTitle);
   };
 
   const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
@@ -312,9 +330,7 @@ function NoteEditor({
       >
         <Toolbar
           toolbarVisible={toolbarVisible}
-          isFullScreen={isFullScreen}
           note={note}
-          onCloseEditor={onCloseEditor}
           noteId={note.id}
           editor={editor}
           toggleHeadingTree={toggleHeadingTree}
@@ -334,12 +350,12 @@ function NoteEditor({
             notchPadding ? "pt-6" : "sm:pt-1"
           }`}
         >
-          <button
+          <Link
+            to="/"
             className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
-            onClick={onCloseEditor}
           >
             <Icons.ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
-          </button>
+          </Link>
           <div className="flex">
             <button
               className="p-2 mt-6 rounded-md text-white bg-transparent cursor-pointer"
@@ -351,7 +367,7 @@ function NoteEditor({
               <Icons.Focus3LineIcon
                 className={`border-none ${
                   focusMode ? "text-amber-400" : "text-neutral-800"
-                }  dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
+                } dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
               />
             </button>
             <button
@@ -362,13 +378,13 @@ function NoteEditor({
                 <Icons.CloseLineIcon
                   className={`border-none ${
                     focusMode ? "hidden" : "block"
-                  }  text-red-500 text-xl w-7 h-7`}
+                  } text-red-500 text-xl w-7 h-7`}
                 />
               ) : (
                 <Icons.Search2LineIcon
                   className={`border-none ${
                     focusMode ? "hidden" : "block"
-                  }  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
+                  } dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
                 />
               )}
             </button>
@@ -378,11 +394,11 @@ function NoteEditor({
           contentEditable
           onPaste={handlePaste}
           suppressContentEditableWarning
-          className={`text-3xl font-bold overflow-y-scroll outline-none sm:mt-6 ${
+          className={`text-3xl font-bold overflow-y-scroll outline-none mt-10 ${
             isPlatform("android") ? "pt-6 sm:pt-1" : "md:pt-10s"
           }`}
-          onBlur={handleTitleChange}
-          dangerouslySetInnerHTML={{ __html: localTitle }}
+          onInput={handleTitleChange}
+          dangerouslySetInnerHTML={{ __html: note.title }}
         />
         <div>
           <div className="py-2 h-full w-full" id="container">
@@ -390,7 +406,7 @@ function NoteEditor({
               <BubblemenuLabel
                 hashPopupPosition={hashPopupPosition}
                 note={note}
-                onChange={onChange}
+                handleChangeNoteContent={handleChangeNoteContent}
                 editor={editor}
                 textAfterHash={TextAfterHash}
                 uniqueLabels={uniqueLabels}
@@ -429,4 +445,4 @@ function NoteEditor({
   );
 }
 
-export default NoteEditor;
+export default Editor;

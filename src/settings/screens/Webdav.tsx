@@ -10,7 +10,7 @@ import { useSwipeable } from "react-swipeable";
 import icons from "../../lib/remixicon-react";
 import CircularProgress from "../../components/ui/ProgressBar";
 
-const ExampleComponent: React.FC = () => {
+const Webdav: React.FC = () => {
   const [baseUrl, setBaseUrl] = useState<string>(
     () => localStorage.getItem("baseUrl") || ""
   );
@@ -275,4 +275,4 @@ const { HandleImportData, progress: importProgress, progressColor: importProgres
   );
 };
 
-export default ExampleComponent;
+export default Webdav;
