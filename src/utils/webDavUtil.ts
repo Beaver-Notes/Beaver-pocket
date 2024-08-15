@@ -292,26 +292,46 @@ export const useImportDav = () => {
     return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
   });
 
-const HandleImportData = async (): Promise<void> => {
+  const HandleImportData = async (): Promise<void> => {
+    try {
+      setProgress(0);
+      setProgressColor(darkMode ? "#444444" : "#e6e6e6");
+  
+      await downloadAssets();
+      setProgress(50);
+  
+      await downloadFileAssets();
+      setProgress(75);
+  
+      await downloadData();
+      setProgress(100);
+  
+      // If everything went well, delete the export folder
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().slice(0, 10);
+      const folderPath = `export/Beaver Notes ${formattedDate}`;
+  
+      await deleteFolder(folderPath);
+  
+    } catch (error) {
+      alert(error);
+      setProgressColor("#ff3333"); // Set the progress color to red to indicate an error
+      setProgress(0); // Reset progress to 0 on failure or stop it at the last successful point
+    }
+  };  
+
+  const deleteFolder = async (path: string) => {
   try {
-    setProgress(0);
-    setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-
-    await downloadAssets();
-    setProgress(50);
-
-    await downloadFileAssets();
-    setProgress(75);
-
-    await downloadData();
-    setProgress(100);
+    await Filesystem.rmdir({
+      path: path,
+      directory: FilesystemDirectory.Data,
+      recursive: true, // Delete all contents of the directory
+    });
+    console.log("Folder deleted:", path);
   } catch (error) {
-    alert(error);
-    setProgressColor("#ff3333"); // Set the progress color to red to indicate an error
-    setProgress(0); // Reset progress to 0 on failure or stop it at the last successful point
+    console.error("Error deleting folder:", path, error);
   }
 };
-  
 
   const downloadFileAssets = async (): Promise<void> => {
     try {

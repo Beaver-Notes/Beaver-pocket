@@ -421,3 +421,14 @@ input[type="checkbox"]:checked::before {
   transition: transform 300ms ease, opacity 300ms ease;
   z-index: 1;
 }
+
+.collapse-indicator {
+  transform: rotate(90deg);
+}
+.collapse-indicator {
+  @apply absolute -left-6 top-2 cursor-pointer h-5 w-6;
+}
+.collapse-indicator[data-hide] {
+  transform: none;
+  @apply opacity-100;
+}
