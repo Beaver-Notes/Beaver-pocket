@@ -1,24 +1,18 @@
 /* animations.css */
+.slide-enter {
+  transform: translateX(100%);
+}
 
-.fade-enter {
-    opacity: 0;
-    transform: translateX(-100%);
-  }
-  
-  .fade-enter-active {
-    opacity: 1;
-    transform: translateX(0);
-    transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
-  }
-  
-  .fade-exit {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  
-  .fade-exit-active {
-    opacity: 0;
-    transform: translateX(100%);
-    transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
-  }
-  
+.slide-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms ease-in-out;
+}
+
+.slide-exit {
+  transform: translateX(0);
+}
+
+.slide-exit-active {
+  transform: translateX(-100%);
+  transition: transform 300ms ease-in-out;
+}

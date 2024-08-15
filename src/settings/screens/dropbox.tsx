@@ -476,22 +476,19 @@ const DropboxSync: React.FC = () => {
   const importData = async () => {
     if (accessToken) {
       try {
-        // Get formatted date
         setProgressColor(darkMode ? "#444444" : "#e6e6e6");
         const currentDate = new Date();
         const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
-
-        // Specify the main folder path
+  
         const mainFolderPath = `/Beaver Notes ${formattedDate}`;
-
+  
         await Filesystem.mkdir({
           path: `export/Beaver Notes ${formattedDate}`,
           directory: FilesystemDirectory.Data,
         });
-
+  
         const dbx = new Dropbox({ accessToken });
-
-        // Define a recursive function to create folders locally
+  
         const createFoldersRecursively = async (
           folderPath: string,
           parentPath = ""
@@ -499,32 +496,30 @@ const DropboxSync: React.FC = () => {
           const response = await dbx.filesListFolder({ path: folderPath });
           const totalEntries = response.result.entries.length;
           let processedEntries = 0;
-
+  
           for (const entry of response.result.entries) {
             if (entry[".tag"] === "folder") {
               const folderFullPath = `${parentPath}/${entry.name}`.replace(
                 /^\/+/,
                 ""
               ); // Remove leading slash
-
-              // Create folder locally using Capacitor's Filesystem API
+  
               await Filesystem.mkdir({
                 path: `export/${mainFolderPath}/${folderFullPath}`,
                 directory: FilesystemDirectory.Data,
               });
-
+  
               processedEntries++;
               setProgress(Math.round((processedEntries / totalEntries) * 100));
-
+  
               const subFolderPath = `${folderPath}/${entry.name}`;
-              await createFoldersRecursively(subFolderPath, folderFullPath); // Recursively create sub-folders
+              await createFoldersRecursively(subFolderPath, folderFullPath);
             } else if (entry[".tag"] === "file") {
               const fileFullPath = `${parentPath}/${entry.name}`.replace(
                 /^\/+/,
                 ""
               ); // Remove leading slash
-
-              // Download file from Dropbox and save it locally
+  
               await Filesystem.downloadFile({
                 url: `https://content.dropboxapi.com/2/files/download`,
                 path: `export/${mainFolderPath}/${fileFullPath}`,
@@ -534,18 +529,26 @@ const DropboxSync: React.FC = () => {
                   "Dropbox-API-Arg": JSON.stringify({ path: entry.path_lower }),
                 },
               });
-
+  
               processedEntries++;
               setProgress(Math.round((processedEntries / totalEntries) * 100));
             }
           }
         };
-
+  
         await createFoldersRecursively(mainFolderPath);
-        importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes);
+        await importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes);
+        await Filesystem.rmdir({
+          path: `export/Beaver Notes ${formattedDate}`,
+          directory: FilesystemDirectory.Data,
+          recursive: true, // This ensures the folder and its contents are deleted
+        });
         setProgress(100);
+  
+        console.log("Folder deleted successfully!");
+  
       } catch (error) {
-        console.error("Error creating local folders:", error);
+        console.error("Error during import or folder deletion:", error);
         setProgress(0); // Reset progress on error
         setProgressColor("#ff3333");
       }
