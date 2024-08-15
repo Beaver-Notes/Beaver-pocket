@@ -292,19 +292,25 @@ export const useImportDav = () => {
     return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
   });
 
-  const HandleImportData = async (): Promise<void> => {
-    downloadAssets();
-    downloadFileAssets();
-    downloadData();
+const HandleImportData = async (): Promise<void> => {
+  try {
     setProgress(0);
     setProgressColor(darkMode ? "#444444" : "#e6e6e6");
+
     await downloadAssets();
     setProgress(50);
+
     await downloadFileAssets();
     setProgress(75);
+
     await downloadData();
     setProgress(100);
-  };
+  } catch (error) {
+    alert(error);
+    setProgressColor("#ff3333"); // Set the progress color to red to indicate an error
+    setProgress(0); // Reset progress to 0 on failure or stop it at the last successful point
+  }
+};
   
 
   const downloadFileAssets = async (): Promise<void> => {
@@ -318,51 +324,51 @@ export const useImportDav = () => {
       const baseLocalPath = `export/Beaver Notes ${formattedDate}/file-assets`;
   
       // Function to recursively download files and directories
-      const downloadDirectory = async (webDavPath: string, baseLocalPath: string) => {
+      const downloadDirectory = async (webDavPath: string, localPath: string) => {
         // Fetch directory content from WebDAV
         const directoryContent = await webDavService.getDirectoryContent(webDavPath);
-  
+      
         // Parse the XML response
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
-  
+      
         // Extract file and folder names from the XML
         const responses = xmlDoc.getElementsByTagName("d:response");
-  
+      
         for (let i = 0; i < responses.length; i++) {
           const hrefElement = responses[i].getElementsByTagName("d:href")[0];
           const propStatElement = responses[i].getElementsByTagName("d:propstat")[0];
           const propElement = propStatElement?.getElementsByTagName("d:prop")[0];
           const resourceTypeElement = propElement?.getElementsByTagName("d:resourcetype")[0];
-  
+      
           const href = hrefElement?.textContent;
           const isCollection = resourceTypeElement?.getElementsByTagName("d:collection").length > 0;
-  
+      
           if (href) {
             // Decode URL to handle spaces and special characters
             const decodedHref = decodeURIComponent(href);
             const name = decodedHref.split("/").filter((part) => part !== "").pop();
-  
+      
             if (name === webDavPath.split("/").pop()) {
               continue; // Skip the base directory itself
             }
-  
-            const fullWebDavPath = `${baseWebDavPath}/${name}`;
-            const fullLocalPath = `${baseLocalPath}/${name}`;
-  
+      
+            const fullWebDavPath = `${webDavPath}/${name}`;
+            const fullLocalPath = `${localPath}/${name}`;
+      
             console.log(`Processing: ${decodedHref}`);
             console.log(`Full WebDAV Path: ${fullWebDavPath}`);
             console.log(`Full Local Path: ${fullLocalPath}`);
-  
+      
             if (isCollection) {
               // Create the folder locally
               await Filesystem.mkdir({
                 path: fullLocalPath,
-                directory: FilesystemDirectory.Documents,
+                directory: FilesystemDirectory.Data,
                 recursive: true, // Ensure parent folders are created
               });
               console.log("Folder created:", fullLocalPath);
-  
+      
               // Recursively download the contents of the folder
               await downloadDirectory(fullWebDavPath, fullLocalPath);
             } else {
@@ -372,7 +378,7 @@ export const useImportDav = () => {
                 const file = await Filesystem.downloadFile({
                   url: `${baseUrl}/${fullWebDavPath}`,
                   path: fullLocalPath,
-                  directory: FilesystemDirectory.Documents, // Choose the appropriate directory
+                  directory: FilesystemDirectory.Data, // Choose the appropriate directory
                   headers: {
                     Authorization: `Basic ${authToken}`,
                     "Content-Type": "application/octet-stream", // Set appropriate content type
@@ -386,6 +392,7 @@ export const useImportDav = () => {
           }
         }
       };
+      
   
       // Start downloading from the base directory
       await downloadDirectory(baseWebDavPath, baseLocalPath);
@@ -393,8 +400,7 @@ export const useImportDav = () => {
       // Import data into the app after all files are downloaded
       importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes);
     } catch (error) {
-      // Log the error if downloading the folder fails
-      alert(error);
+      throw error;
     }
   };
   
@@ -456,7 +462,7 @@ export const useImportDav = () => {
               const file = await Filesystem.downloadFile({
                 url: fullpath,
                 path: `${folderPath}/${name}`,
-                directory: FilesystemDirectory.Documents, // Choose the appropriate directory
+                directory: FilesystemDirectory.Data, // Choose the appropriate directory
                 headers: {
                   Authorization: `Basic ${authToken}`,
                   "Content-Type": "application/xml",
@@ -471,8 +477,7 @@ export const useImportDav = () => {
         }
       }
     } catch (error) {
-      // Log the error if downloading the folder fails
-      console.error("Error downloading folder:", error);
+      throw error;
     }
   };
 
@@ -541,7 +546,7 @@ export const useImportDav = () => {
               // Create folder if it does not exist
               await Filesystem.mkdir({
                 path: folderPath,
-                directory: FilesystemDirectory.Documents,
+                directory: FilesystemDirectory.Data,
                 recursive: true, // Create parent folders if they don't exist
               });
 
@@ -550,7 +555,7 @@ export const useImportDav = () => {
               const file = await Filesystem.downloadFile({
                 url: fullpath,
                 path: `${folderPath}/${name}`,
-                directory: FilesystemDirectory.Documents, // Choose the appropriate directory
+                directory: FilesystemDirectory.Data, // Choose the appropriate directory
                 headers: {
                   Authorization: `Basic ${authToken}`,
                   "Content-Type": "application/xml",
@@ -562,9 +567,7 @@ export const useImportDav = () => {
         }
       }
     } catch (error) {
-      // Log the error if downloading the folder fails
-      console.error("Error downloading folder:", error);
-      setProgressColor("#ff3333");
+      throw error;
     }
   };
   return { HandleImportData, progress, progressColor };

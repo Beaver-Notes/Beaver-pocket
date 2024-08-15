@@ -102,7 +102,6 @@ const Sync: React.FC = () => {
 
   return (
     <div>
-      <div className="safe-area"></div>
       <div className="grid sm:grid-cols-[auto]">
         <div className="overflow-y-hidden mb-12">
           <div className="mx-2 sm:px-20 mb-2">

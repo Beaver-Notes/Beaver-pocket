@@ -70,8 +70,6 @@ const Shortcuts: React.FC = () => {
 
   return (
     <div>
-      <div className="safe-area"></div>
-
         <div className="overflow-y-hidden mb-12">
             <div className="mx-2 sm:px-20 mb-2">
               <div className="general py-2 space-y-8 w-full">

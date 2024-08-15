@@ -7,8 +7,8 @@ import { isPlatform } from "@ionic/react";
 import Drawer from "./components/Editor/Drawer";
 import Find from "./components/Editor/Find";
 import extensions from "./lib/tiptap/index";
-import { useNavigate, Link } from "react-router-dom";
-import { useSwipeable } from "react-swipeable";
+import { Link } from "react-router-dom";
+import { handleEditorTyping } from "./utils/bubble-menu-util";
 import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
 import BubblemenuLabel from "./components/Editor/BubblemenuLabel";
 import { hasNotch } from "./utils/detectNotch";
@@ -34,10 +34,18 @@ function Editor({ note }: Props) {
     setNotesState,
     saveNote
   );
+
+  const [previousContent, setPreviousContent] = useState<JSONContent | null>(
+    null
+  );
+
   const uniqueLabels = Array.from(
     new Set(Object.values(notesState).flatMap((note) => note.labels))
   );
   const [searchQuery] = useState<string>("");
+  const [filteredNotes, setFilteredNotes] =
+    useState<Record<string, Note>>(notesState);
+  const [sortingOption] = useState("updatedAt");
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
       const titleMatch = note.title
@@ -52,10 +60,7 @@ function Editor({ note }: Props) {
     setFilteredNotes(
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
-  }, [notesState]);
-  const [filteredNotes, setFilteredNotes] =
-    useState<Record<string, Note>>(notesState);
-  const [sortingOption] = useState("updatedAt");
+  }, [searchQuery, notesState]);
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     switch (sortingOption) {
       case "alphabetical":
@@ -87,7 +92,7 @@ function Editor({ note }: Props) {
     left: number;
   } | null>(null);
   const [hashPosition, setHashPosition] = useState<number | null>(null);
-  const [TextAfterHash, setTextAfterHash] = useState<string | null>(null);
+  const [textAfterHash, setTextAfterHash] = useState<string | null>(null);
   const [atPosition, setAtPosition] = useState<number | null>(null);
   const [textAfterAt, setTextAfterAt] = useState<string | null>(null);
   const headingTreeRef = useRef<HTMLDivElement | null>(null);
@@ -102,19 +107,42 @@ function Editor({ note }: Props) {
     setActiveNoteId(note.id);
   }, []);
 
-  const navigate = useNavigate();
   const editor = useEditor(
     {
       extensions,
       content: note.content,
-      editorProps: {
-        attributes: {
-          class: "overflow-y-hidden outline-none",
-        },
-      },
       onUpdate: ({ editor }) => {
         const editorContent = editor.getJSON();
+
+        // Handle note content change
         handleChangeNoteContent(editorContent, title);
+
+        // Compare previous and current content
+        if (previousContent) {
+          const previousLabels = findNoteLabels(previousContent);
+          const currentLabels = findNoteLabels(editorContent);
+
+          previousLabels.forEach((label) => {
+            if (
+              !currentLabels.some(
+                (currentLabel) => currentLabel.attrs.id === label.attrs.id
+              )
+            ) {
+              console.log(`Label deleted: ${label.attrs.label}`);
+
+              // Remove the deleted label from the labels array
+              const updatedLabels = note.labels.filter(
+                (noteLabel) => noteLabel !== label.attrs.label
+              );
+
+              // Update the note content with the new labels
+              handleChangeNoteContent(editorContent, note.title, updatedLabels);
+            }
+          });
+        }
+
+        // Update previous content
+        setPreviousContent(editorContent);
       },
     },
     [note.id]
@@ -149,10 +177,6 @@ function Editor({ note }: Props) {
     document.execCommand("insertText", false, text);
   };
 
-  const handleHeadingClick = (heading: string) => {
-    console.log("Heading clicked:", heading);
-  };
-
   const toggleHeadingTree = () => {
     setHeadingTreeVisible(!headingTreeVisible);
   };
@@ -171,19 +195,6 @@ function Editor({ note }: Props) {
     [headingTreeVisible]
   );
 
-  const handleSwipe = (eventData: any) => {
-    const isRightSwipe = eventData.dir === "Right";
-    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
-
-    if (isRightSwipe && isSmallSwipe) {
-      eventData.event.preventDefault();
-    } else if (isRightSwipe) {
-      navigate(-1); // Navigate back
-    }
-  };
-
-  const handlers = useSwipeable({ onSwiped: handleSwipe });
-
   useEffect(() => {
     document.addEventListener("mousedown", handleOutsideClick);
     return () => {
@@ -196,133 +207,85 @@ function Editor({ note }: Props) {
     const atIndex = editorContent.lastIndexOf("@@");
 
     if (atIndex !== -1) {
+      // Find the first whitespace or end of the string after @@ to determine the end of the text to be replaced
+      const endOfReplacementIndex = editorContent.indexOf(" ", atIndex + 2);
+      const endOfReplacement =
+        endOfReplacementIndex !== -1
+          ? endOfReplacementIndex
+          : editorContent.length;
+
       const link = `<linkNote id="${note.id}" label="${note.title}"><a href="note://${note.id}" target="_blank" rel="noopener noreferrer nofollow">${note.title}</a></linkNote>`;
+
       const newContent =
         editorContent.substring(0, atIndex) +
         link +
-        editorContent.substring(atIndex + 2);
+        editorContent.substring(endOfReplacement);
 
       editor?.commands.setContent(newContent, true);
       setPopupPosition(null);
     }
   };
 
-  const handleButtonClick = () => {
+  const handleAddLabel = (labelToAdd: string) => {
+    const editorContent = editor?.getHTML() || "";
+    const atIndex = editorContent.lastIndexOf("#");
+
+    if (atIndex !== -1) {
+      // Find the end of the text following the hash
+      const endOfReplacementIndex = editorContent.indexOf(" ", atIndex + 1);
+      const endOfReplacement =
+        endOfReplacementIndex !== -1
+          ? endOfReplacementIndex
+          : editorContent.length;
+
+      // Construct new content with the label replacement
+      const newContent =
+        editorContent.substring(0, atIndex) +
+        `<noteLabel id="${labelToAdd}" label="${labelToAdd}"></noteLabel>` +
+        editorContent.substring(endOfReplacement);
+
+      // Update the editor content
+      editor?.commands.setContent(newContent, true);
+      setPopupPosition(null);
+
+      // Retrieve the existing labels from the note
+      const existingLabels = note.labels || [];
+
+      // Ensure the new label is added without duplicating
+      const updatedLabels = Array.from(
+        new Set([...existingLabels, labelToAdd])
+      ); // Use Set to avoid duplicates
+
+      // Update the note content and labels
+      const jsonContent = editor?.getJSON();
+
+      console.log("JSON Content:", jsonContent);
+
+      handleChangeNoteContent(jsonContent, note.title, updatedLabels);
+    }
+  };
+
+  // Utility function to find all noteLabel objects in the JSON content
+  const findNoteLabels = (content: JSONContent) => {
+    const labels: any[] = [];
+    const traverse = (node: any) => {
+      if (node.type === "noteLabel") {
+        labels.push(node);
+      }
+      if (node.content) {
+        node.content.forEach(traverse);
+      }
+    };
+    traverse(content);
+    return labels;
+  };
+
+  const handleSearch = () => {
     setShowFind((prevShowFind) => !prevShowFind);
   };
 
-  const handleEditorTyping = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const { key } = event;
-    const text = event.currentTarget.innerText.trim(); // Trimmed the text to avoid unnecessary whitespace
-
-    // Return early if there's no text
-    if (!text) {
-      setPopupPosition(null);
-      setAtPosition(null);
-      setTextAfterAt("");
-      setHashPopupPosition(null);
-      setHashPosition(null);
-      setTextAfterHash("");
-      return;
-    }
-
-    const atIndex = text.lastIndexOf("@@");
-    const hashIndex = text.lastIndexOf("#");
-
-    // Function to calculate and set popup position
-    const setPosition = (trigger: string, index: number) => {
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0).cloneRange();
-        const rect = range.getBoundingClientRect();
-        const editorContent = document.querySelector(".editor-content");
-
-        if (editorContent) {
-          const top = rect.bottom + window.scrollY; // Adjusted top position relative to the viewport
-          const left = rect.left + window.scrollX; // Adjusted left position relative to the viewport
-
-          console.log(`Popup position for ${trigger}:`, { top, left });
-
-          if (trigger === "@@") {
-            setPopupPosition({ top, left });
-            setAtPosition(index); // Set the position of '@@'
-            setTextAfterAt(""); // Initialize textAfterAt to an empty string
-          } else if (trigger === "#") {
-            setHashPopupPosition({ top, left });
-            setHashPosition(index); // Set the position of '#'
-            setTextAfterHash(""); // Initialize textAfterHash to an empty string
-          }
-        }
-      }
-    };
-
-    // Handle the @@ trigger
-    if (
-      key === "@" &&
-      atIndex !== -1 &&
-      text[atIndex] === "@" &&
-      text[atIndex + 1] === "@"
-    ) {
-      setPosition("@@", atIndex);
-    } else if (atPosition !== null) {
-      if (
-        key === " " ||
-        key === "Enter" ||
-        (key === "Backspace" && atIndex === -1)
-      ) {
-        setPopupPosition(null); // Close popup
-        setAtPosition(null); // Reset position
-        setTextAfterAt(""); // Clear textAfterAt
-      } else {
-        // Ensure there's no space or newline between @@ and the text
-        const textAfterAt = text.substring(atPosition + 2).split(/\s/)[0];
-        if (textAfterAt) {
-          setTextAfterAt(textAfterAt); // Set textAfterAt
-          console.log("Text after @@:", textAfterAt);
-        }
-      }
-    }
-
-    // Handle the # trigger
-    if (key === "#" && text[hashIndex] === "#" && text[hashIndex + 1] !== " ") {
-      setPosition("#", hashIndex);
-    } else if (hashPosition !== null) {
-      if (
-        key === " " ||
-        key === "Enter" ||
-        (key === "Backspace" && hashIndex === -1)
-      ) {
-        setHashPopupPosition(null); // Close popup when '#' is deleted or space is added
-        setHashPosition(null); // Reset position
-        setTextAfterHash(""); // Clear textAfterHash
-      } else {
-        // Ensure there's no space or newline between # and the text
-        const textAfterHash = text.substring(hashPosition + 1).split(/\s/)[0];
-        if (textAfterHash) {
-          setTextAfterHash(textAfterHash); // Set textAfterHash
-          console.log("Text after #:", textAfterHash);
-        }
-      }
-    }
-
-    // Close popups if @@ or # are deleted
-    if (key === "Backspace") {
-      if (text.indexOf("@@") === -1) {
-        setPopupPosition(null);
-        setAtPosition(null); // Reset position if '@@' is deleted
-        setTextAfterAt(""); // Clear textAfterAt
-      }
-
-      if (text.indexOf("#") === -1) {
-        setHashPopupPosition(null);
-        setHashPosition(null); // Reset position if '#' is deleted
-        setTextAfterHash(""); // Clear textAfterHash
-      }
-    }
-  };
-
   return (
-    <div {...handlers}>
+    <div>
       <div
         className={`editor overflow-auto h-full justify-center items-start px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
@@ -342,7 +305,7 @@ function Editor({ note }: Props) {
               headingTreeVisible ? "opacity-100" : "opacity-0"
             }`}
           >
-            <HeadingTree onHeadingClick={handleHeadingClick} />
+            <HeadingTree />
           </div>
         )}
         <div
@@ -372,7 +335,7 @@ function Editor({ note }: Props) {
             </button>
             <button
               className="p-2 align-end mt-6 rounded-md text-white bg-transparent cursor-pointer"
-              onClick={handleButtonClick}
+              onClick={handleSearch}
             >
               {showFind ? (
                 <Icons.CloseLineIcon
@@ -408,11 +371,12 @@ function Editor({ note }: Props) {
                 note={note}
                 handleChangeNoteContent={handleChangeNoteContent}
                 editor={editor}
-                textAfterHash={TextAfterHash}
+                textAfterHash={textAfterHash}
                 uniqueLabels={uniqueLabels}
                 setHashPopupPosition={setHashPopupPosition}
                 setHashPosition={setHashPosition}
                 setTextAfterHash={setTextAfterHash}
+                onClickLabel={handleAddLabel}
               />
             )}
             {popupPosition && (
@@ -424,7 +388,21 @@ function Editor({ note }: Props) {
               />
             )}
             <EditorContent
-              onKeyUp={handleEditorTyping}
+              onKeyUp={(event) =>
+                handleEditorTyping(
+                  event,
+                  textAfterAt,
+                  textAfterHash,
+                  atPosition,
+                  hashPosition,
+                  setPopupPosition,
+                  setAtPosition,
+                  setTextAfterAt,
+                  setHashPopupPosition,
+                  setHashPosition,
+                  setTextAfterHash
+                )
+              }
               editor={editor}
               className="overflow-hidden w-full mb-[6em] min-h-[25em] editor-content"
             />

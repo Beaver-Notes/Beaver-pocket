@@ -26,7 +26,6 @@ import {
 import useNoteEditor from "./store/useNoteActions";
 import { useNotesState } from "./store/Activenote";
 import { useHandleImportData } from "./utils/importUtils";
-import { useSwipeable } from "react-swipeable";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
@@ -611,21 +610,6 @@ const App: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const handleSwipe = (eventData: any) => {
-    const isRightSwipe = eventData.dir === "Right";
-    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
-
-    if (isRightSwipe && isSmallSwipe) {
-      eventData.event.preventDefault();
-    } else if (isRightSwipe) {
-      navigate(-1); // Navigate back
-    }
-  };
-
-  const handlers = useSwipeable({
-    onSwiped: handleSwipe,
-  });
-
   const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
 
   useEffect(() => {
@@ -648,8 +632,7 @@ const App: React.FC = () => {
   });
 
   return (
-    <div {...handlers}>
-      <div className="safe-area"></div>
+    <div>
       <div className="overflow-y mb-12">
         {!activeNoteId && (
           <div className="w-full md:pt-4 py-2 flex flex-col border-gray-300 overflow-auto">

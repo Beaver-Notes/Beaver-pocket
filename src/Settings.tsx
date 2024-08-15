@@ -210,7 +210,6 @@ const Settings: React.FC = () => {
 
   return (
     <div>
-      <div className="safe-area"></div>
       <div className="grid sm:grid-cols-[auto]">
         <div className="overflow-y-hidden mb-12">
           <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">

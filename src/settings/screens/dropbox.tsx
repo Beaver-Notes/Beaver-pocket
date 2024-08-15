@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "../../store/types";
 import { Browser } from "@capacitor/browser";
-import { v4 as uuid } from "uuid";
 import CircularProgress from "../../components/ui/ProgressBar";
-import { useNavigate } from "react-router-dom";
 import { Dropbox } from "dropbox";
 import { useHandleImportData } from "../../utils/importUtils";
-import BottomNavBar from "../../components/Home/BottomNavBar";
 import {
   Directory,
   Filesystem,
@@ -24,10 +21,8 @@ const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 const STORAGE_PATH = "notes/data.json";
 
-import { useSwipeable } from "react-swipeable";
-
 const DropboxSync: React.FC = () => {
-  const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
+  const { notesState, setNotesState, activeNoteId } =
     useNotesState();
   const { importUtils } = useHandleImportData();
   const [searchQuery] = useState<string>("");
@@ -260,7 +255,7 @@ const DropboxSync: React.FC = () => {
       try {
         setProgress(0); // Initialize progress
         setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-
+  
         // Helper function to count files recursively
         const countFilesInDirectory = async (path: any) => {
           let count = 0;
@@ -277,7 +272,7 @@ const DropboxSync: React.FC = () => {
           }
           return count;
         };
-
+  
         // Count files in note-assets directory
         const noteAssetsPath = "note-assets";
         const noteAssetsContents = await Filesystem.readdir({
@@ -290,7 +285,7 @@ const DropboxSync: React.FC = () => {
             `${noteAssetsPath}/${folderName.name}`
           );
         }
-
+  
         // Count files in file-assets directory
         const fileAssetsPath = "file-assets";
         const filefolderContents = await Filesystem.readdir({
@@ -307,49 +302,72 @@ const DropboxSync: React.FC = () => {
             );
           }
         }
-
+  
         // Calculate total files to upload
         const totalFiles = noteFilesCount + fileFilesCount + 1; // +1 for data.json
-
+  
         let processedFiles = 0;
-
+  
         const updateProgress = () => {
           processedFiles++;
           setProgress(Math.round((processedFiles / totalFiles) * 100));
         };
-
+  
         // Read the data.json
         const datafile = await Filesystem.readFile({
           path: STORAGE_PATH,
           directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
-
+  
         // Get current date for folder name
         const currentDate = new Date();
         const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
-
+        const folderPath = `/Beaver Notes ${formattedDate}`;
+        const assetsPath = `${folderPath}/assets`;
+  
         // Initialize Dropbox client
         const dbx = new Dropbox({ accessToken });
-
-        // Create folders if they don't exist
-        await dbx.filesCreateFolderV2({
-          path: `/Beaver Notes ${formattedDate}`,
-          autorename: false,
-        });
-        await dbx.filesCreateFolderV2({
-          path: `/Beaver Notes ${formattedDate}/assets`,
-          autorename: false,
-        });
-
+  
+        // Check if the folder already exists
+        try {
+          await dbx.filesGetMetadata({ path: folderPath });
+  
+          // If autoSync is set to dropbox, delete the folder without asking
+          const autoSync = localStorage.getItem("autoSync");
+          if (autoSync === "dropbox") {
+            await dbx.filesDeleteV2({ path: folderPath });
+          } else {
+            // Ask the user if they want to delete the existing folder
+            const userConfirmed = window.confirm(
+              `The folder ${folderPath} already exists. Do you want to delete it and create a new one?`
+            );
+            if (userConfirmed) {
+              await dbx.filesDeleteV2({ path: folderPath });
+            } else {
+              console.log("Folder exists and user chose not to delete it.");
+              return; // Exit the function as the folder already exists and the user didn't want to delete it.
+            }
+          }
+        } catch (error: any) {
+          // If the error is that the folder doesn't exist, proceed normally
+          if (error.status !== 409) {
+            throw error;
+          }
+        }
+  
+        // Create folders
+        await dbx.filesCreateFolderV2({ path: folderPath, autorename: false });
+        await dbx.filesCreateFolderV2({ path: assetsPath, autorename: false });
+  
         // Upload the data.json
         await dbx.filesUpload({
-          path: `/Beaver Notes ${formattedDate}/data.json`,
+          path: `${folderPath}/data.json`,
           contents: datafile.data,
         });
-
+  
         updateProgress();
-
+  
         // Upload files in file-assets directory
         for (const item of filefolderContents.files) {
           if (item.type === "file") {
@@ -358,18 +376,18 @@ const DropboxSync: React.FC = () => {
               path: filePath,
               directory: Directory.Data,
             });
-
+  
             const fileType = getMimeType(item.name);
             const blob = base64ToBlob(String(fileData.data), fileType);
             const uploadedFile = new File([blob], item.name, {
               type: "application/octet-stream",
             });
-
+  
             await dbx.filesUpload({
-              path: `/Beaver Notes ${formattedDate}/file-assets/${item.name}`,
+              path: `${folderPath}/file-assets/${item.name}`,
               contents: uploadedFile,
             });
-
+  
             updateProgress();
           } else if (item.type === "directory") {
             const folderPath = `${fileAssetsPath}/${item.name}`;
@@ -377,30 +395,30 @@ const DropboxSync: React.FC = () => {
               path: folderPath,
               directory: Directory.Data,
             });
-
+  
             for (const file of folderContents.files) {
               const imagefilePath = `${folderPath}/${file.name}`;
               const imageFileData = await Filesystem.readFile({
                 path: imagefilePath,
                 directory: Directory.Data,
               });
-
+  
               const fileType = getMimeType(file.name);
               const blob = base64ToBlob(String(imageFileData.data), fileType);
               const uploadedFile = new File([blob], file.name, {
                 type: "application/octet-stream",
               });
-
+  
               await dbx.filesUpload({
-                path: `/Beaver Notes ${formattedDate}/file-assets/${item.name}/${file.name}`,
+                path: `${folderPath}/file-assets/${item.name}/${file.name}`,
                 contents: uploadedFile,
               });
-
+  
               updateProgress();
             }
           }
         }
-
+  
         // Upload files in note-assets directory
         for (const folderName of noteAssetsContents.files) {
           const folderPath = `${noteAssetsPath}/${folderName.name}`;
@@ -408,29 +426,29 @@ const DropboxSync: React.FC = () => {
             path: folderPath,
             directory: Directory.Data,
           });
-
+  
           for (const file of folderContents.files) {
             const imagefilePath = `${folderPath}/${file.name}`;
             const imageFileData = await Filesystem.readFile({
               path: imagefilePath,
               directory: Directory.Data,
             });
-
+  
             const fileType = getMimeType(file.name);
             const blob = base64ToBlob(String(imageFileData.data), fileType);
             const uploadedFile = new File([blob], file.name, {
               type: "application/octet-stream",
             });
-
+  
             await dbx.filesUpload({
-              path: `/Beaver Notes ${formattedDate}/assets/${folderName.name}/${file.name}`,
+              path: `${assetsPath}/${folderName.name}/${file.name}`,
               contents: uploadedFile,
             });
-
+  
             updateProgress();
           }
         }
-
+  
         setProgress(100); // Ensure progress is set to 100% when done
       } catch (error) {
         console.error("Error uploading note assets:", error);
@@ -442,6 +460,7 @@ const DropboxSync: React.FC = () => {
       console.error("Access token not found!");
     }
   };
+  
 
   // Function to convert base64 string to Blob
   const base64ToBlob = (base64String: string, type: string): Blob => {
@@ -558,30 +577,8 @@ const DropboxSync: React.FC = () => {
       console.error("Error logging out:", error);
     }
   };
-
-  const { saveNote } = useSaveNote();
+  const { saveNote } = useSaveNote(useNotesState);
   useNoteEditor(activeNoteId, notesState, setNotesState, saveNote);
-  const handleCreateNewNote = () => {
-    const newNote = {
-      id: uuid(),
-      title: translations.home.title || "New Note",
-      content: { type: "doc", content: [] },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
-    setNotesState((prevNotes) => ({
-      ...prevNotes,
-      [newNote.id]: newNote,
-    }));
-    setActiveNoteId(newNote.id);
-    saveNote(newNote);
-  };
-
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
     return storedSync === "dropbox";
@@ -627,23 +624,6 @@ const DropboxSync: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  const navigate = useNavigate();
-
-  const handleSwipe = (eventData: any) => {
-    const isRightSwipe = eventData.dir === "Right";
-    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
-
-    if (isRightSwipe && isSmallSwipe) {
-      eventData.event.preventDefault();
-    } else if (isRightSwipe) {
-      navigate(-1); // Navigate back
-    }
-  };
-
-  const handlers = useSwipeable({
-    onSwiped: handleSwipe,
-  });
-
   useEffect(() => {
     // Update the document class based on dark mode
     document.documentElement.classList.toggle("dark", darkMode);
@@ -654,8 +634,7 @@ const DropboxSync: React.FC = () => {
   }, [darkMode, themeMode]);
 
   return (
-    <div {...handlers}>
-      <div className="safe-area"></div>
+    <div>
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">
@@ -682,7 +661,6 @@ const DropboxSync: React.FC = () => {
             </div>
           </div>
         </div>
-        <BottomNavBar onCreateNewNote={handleCreateNewNote} />
         {accessToken ? (
           <section>
             <div className="flex flex-col">

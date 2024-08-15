@@ -11,7 +11,6 @@ import {
 import * as CryptoJS from "crypto-js";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/it";
-import { useSwipeable } from "react-swipeable";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { useNavigate } from "react-router-dom";
 import {
@@ -26,6 +25,7 @@ import dayjs from "dayjs";
 import ReactDOM from "react-dom";
 
 const Archive: React.FC = () => {
+  const navigate = useNavigate();
   const STORAGE_PATH = "notes/data.json";
   const { deleteNote } = useDeleteNote();
   const { toggleArchive } = useToggleArchive();
@@ -413,11 +413,12 @@ const Archive: React.FC = () => {
 
   const handleClickNote = async (note: Note) => {
     if (note.isLocked) {
-      // Handle locked note using handleToggleLock
       handleToggleUnlock(note.id);
+      navigate(`/editor/${note.id}`);
     } else {
       // Set active note directly
       setActiveNoteId(note.id);
+      navigate(`/editor/${note.id}`);
     }
   };
 
@@ -480,19 +481,6 @@ const Archive: React.FC = () => {
     loadTranslations();
   }, []);
 
-  const navigate = useNavigate();
-
-  const handleSwipe = (eventData: any) => {
-    const isRightSwipe = eventData.dir === "Right";
-    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
-
-    if (isRightSwipe && isSmallSwipe) {
-      eventData.event.preventDefault();
-    } else if (isRightSwipe) {
-      navigate(-1); // Navigate back
-    }
-  };
-
   const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
@@ -512,13 +500,8 @@ const Archive: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  const handlers = useSwipeable({
-    onSwiped: handleSwipe,
-  });
-
   return (
-    <div {...handlers}>
-      <div className="safe-area"></div>
+    <div >
       <div className="grid sm:grid-cols-[auto]">
         <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
