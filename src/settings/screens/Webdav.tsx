@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { WebDavService } from "../../utils/webDavApi";
 import { useExportDav, useImportDav } from "../../utils/webDavUtil";
-import BottomNavBar from "../../components/Home/BottomNavBar";
-import { v4 as uuid } from "uuid";
-import { useNotesState } from "../../store/Activenote";
-import { useSaveNote } from "../../store/notes";
-import { useNavigate } from "react-router-dom";
-import { useSwipeable } from "react-swipeable";
 import icons from "../../lib/remixicon-react";
 import CircularProgress from "../../components/ui/ProgressBar";
 
@@ -20,7 +14,6 @@ const Webdav: React.FC = () => {
   const [password, setPassword] = useState<string>(
     () => localStorage.getItem("password") || ""
   );
-  const [progressColor, setProgressColor] = useState("#e6e6e6");
   const [] = useState(
     new WebDavService({
       baseUrl: baseUrl,
@@ -29,6 +22,7 @@ const Webdav: React.FC = () => {
     })
   );
   // Translations
+  //@ts-ignore
   const [translations] = useState({
     about: {
       title: "about.title",
@@ -52,29 +46,6 @@ const Webdav: React.FC = () => {
     },
   });
   const [showInputContent, setShowInputContent] = useState(false);
-  const { setNotesState, setActiveNoteId } = useNotesState();
-  const { saveNote } = useSaveNote();
-
-  const handleCreateNewNote = () => {
-    const newNote = {
-      id: uuid(),
-      title: translations.home.title || "New Note",
-      content: { type: "doc", content: [] },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
-    setNotesState((prevNotes) => ({
-      ...prevNotes,
-      [newNote.id]: newNote,
-    }));
-    setActiveNoteId(newNote.id);
-    saveNote(newNote);
-  };
 
   useEffect(() => {
     localStorage.setItem("baseUrl", baseUrl);
@@ -146,35 +117,8 @@ const { HandleImportData, progress: importProgress, progressColor: importProgres
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  const navigate = useNavigate();
-
-  const handleSwipe = (eventData: any) => {
-    const isRightSwipe = eventData.dir === "Right";
-    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
-
-    if (isRightSwipe && isSmallSwipe) {
-      eventData.event.preventDefault();
-    } else if (isRightSwipe) {
-      navigate(-1); // Navigate back
-    }
-  };
-
-  const handlers = useSwipeable({
-    onSwiped: handleSwipe,
-  });
-
-  useEffect(() => {
-    // Update the document class based on dark mode
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-
-    // Set the progress color based on dark mode
-    setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-  }, [darkMode, themeMode]);
-
   return (
-    <div {...handlers}>
-      <div className="safe-area"></div>
+    <div>
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <section className="">
           <div className="flex flex-col">
@@ -185,7 +129,7 @@ const { HandleImportData, progress: importProgress, progressColor: importProgres
               <div className="flex justify-center items-center">
                 <CircularProgress
                   progress={importProgress || exportProgress}
-                  color={progressColor || importProgressColor || exportProgressColor}
+                  color={importProgressColor || exportProgressColor}
                   size={144}
                   strokeWidth={8}
                 >
@@ -269,7 +213,6 @@ const { HandleImportData, progress: importProgress, progressColor: importProgres
             </div>
           </div>
         </section>
-        <BottomNavBar onCreateNewNote={handleCreateNewNote} />
       </div>
     </div>
   );

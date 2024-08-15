@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  useNavigate,
+  useParams,
+  useLocation,
+} from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import Home from "./Home";
@@ -24,8 +30,9 @@ import BottomNavBar from "./components/Home/BottomNavBar";
 
 const App: React.FC = () => {
   const history = useNavigate();
-  const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const location = useLocation();
+  const [checkedFirstTime, setCheckedFirstTime] = useState(false);
+  const [isSwipe, setIsSwipe] = useState(false);
 
   // Add back button listener for Android
   CapacitorApp.addListener("backButton", ({ canGoBack }) => {
@@ -37,8 +44,12 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    const selectedDarkText = localStorage.getItem("selected-dark-text") || "white";
-    document.documentElement.style.setProperty("--selected-dark-text", selectedDarkText);
+    const selectedDarkText =
+      localStorage.getItem("selected-dark-text") || "white";
+    document.documentElement.style.setProperty(
+      "--selected-dark-text",
+      selectedDarkText
+    );
   }, []);
 
   useEffect(() => {
@@ -74,7 +85,11 @@ const App: React.FC = () => {
     const noteData = notesState[note];
 
     if (!noteData) {
-      return <div>Note not found</div>;
+      return (
+        <div className="h-screen w-screen flex justify-center items-center">
+          <div className="text-xl font-bold text-center">Note not found</div>
+        </div>
+      );
     }
     localStorage.setItem("lastNoteEdit", note);
     return <Editor note={noteData} />;
@@ -82,13 +97,26 @@ const App: React.FC = () => {
 
   // Swipeable handler to go back when swiping right
   const swipeHandlers = useSwipeable({
-    onSwipedRight: () => history(-1),
+    onSwipedRight: () => {
+      const selection = window.getSelection();
+      if (selection && selection.toString().length === 0) {
+        // No text is selected, allow swiping back
+        setIsSwipe(true);  // Set swipe state
+        history(-1);
+      }
+    },
     preventScrollOnSwipe: true,
     trackTouch: true,
   });
 
+  // Determine whether to show the BottomNavBar
+  const shouldShowNavBar = !["/welcome", "/editor"].some((path) =>
+    location.pathname.startsWith(path)
+  );
+
   return (
     <div {...swipeHandlers}>
+      <div className="safe-area"></div>
       <Auth0Provider
         domain={Auth0Config.domain}
         clientId={Auth0Config.clientId}
@@ -99,8 +127,9 @@ const App: React.FC = () => {
         <TransitionGroup>
           <CSSTransition
             key={location.pathname}
-            timeout={300}
-            classNames="fade"
+            timeout={0}
+            classNames={isSwipe ? "fade" : ""}  // Apply animation only on swipe
+            onExited={() => setIsSwipe(false)} // Reset swipe state after animation
             unmountOnExit
           >
             <Routes location={location}>
@@ -112,13 +141,13 @@ const App: React.FC = () => {
               <Route path="/webdav" element={<Webdav />} />
               <Route path="/shortcuts" element={<Shortcuts />} />
               <Route path="/welcome" element={<Welcome />} />
-              <Route path="/Sync" element={<Sync />} />
+              <Route path="/sync" element={<Sync />} />
               <Route path="/editor/:note" element={<EditorWrapper />} />
             </Routes>
           </CSSTransition>
         </TransitionGroup>
       </Auth0Provider>
-      <BottomNavBar />
+      {shouldShowNavBar && <BottomNavBar />}
     </div>
   );
 };

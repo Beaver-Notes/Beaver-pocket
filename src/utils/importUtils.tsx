@@ -75,7 +75,7 @@ export const useHandleImportData = () => {
 
       // Import note-assets
       const existingNoteAssets = await Filesystem.readdir({
-        path: "note-assets", // Change this to your app's note-assets folder
+        path: "note-assets",
         directory: Directory.Data,
       });
 
@@ -92,7 +92,7 @@ export const useHandleImportData = () => {
         if (!existingNoteFiles.has(file.name)) {
           await Filesystem.copy({
             from: `${importAssetsPath}/${file.name}`,
-            to: `note-assets/${file.name}`, // Change this to your app's note-assets folder
+            to: `note-assets/${file.name}`,
             directory: Directory.Data,
           });
         }
@@ -100,7 +100,7 @@ export const useHandleImportData = () => {
 
       // Import file-assets
       const existingFileAssets = await Filesystem.readdir({
-        path: "file-assets", // Change this to your app's file-assets folder
+        path: "file-assets",
         directory: Directory.Data,
       });
 
@@ -117,7 +117,7 @@ export const useHandleImportData = () => {
         if (!existingFileFiles.has(file.name)) {
           await Filesystem.copy({
             from: `${importFileAssetsPath}/${file.name}`,
-            to: `file-assets/${file.name}`, // Change this to your app's file-assets folder
+            to: `file-assets/${file.name}`,
             directory: Directory.Data,
           });
         }
@@ -125,7 +125,6 @@ export const useHandleImportData = () => {
 
       const parsedData = await readJsonFile(importDataPath);
 
-      // Check if sharedKey already exists in local storage
       const existingSharedKey = localStorage.getItem("sharedKey");
       if (!existingSharedKey && parsedData && parsedData.sharedKey) {
         localStorage.setItem("sharedKey", parsedData.sharedKey);
@@ -134,7 +133,6 @@ export const useHandleImportData = () => {
       if (parsedData && parsedData.data && parsedData.data.notes) {
         const importedNotes = parsedData.data.notes;
 
-        // Update image src paths in imported notes
         Object.values<Note>(importedNotes).forEach((note) => {
           if (
             note.content &&
@@ -168,50 +166,26 @@ export const useHandleImportData = () => {
           }
         });
 
-        // Handle fileEmbed src paths in imported notes
-        Object.values<Note>(importedNotes).forEach((note) => {
-          if (
-            note.content &&
-            typeof note.content === "object" &&
-            "content" in note.content
-          ) {
-            if (note.content.content) {
-              const updatedContent = note.content.content.map((node: any) => {
-                if (node.type === "fileEmbed" && node.attrs && node.attrs.src) {
-                  const srcPath = node.attrs.src;
-                  const indexOfFileAssets = srcPath.indexOf("file-assets/");
-                  if (indexOfFileAssets !== -1) {
-                    node.attrs.src = srcPath.substring(indexOfFileAssets);
-                  }
-                }
-                return node;
-              });
-              note.content.content = updatedContent;
-            }
-          }
-        });
-
-        // Merge imported notes with existing notes
         const existingNotes = await loadNotes();
         const mergedNotes = {
           ...existingNotes,
           ...importedNotes,
         };
 
-        // Filter notes based on search query
         const filtered = Object.values<Note>(mergedNotes).filter(
           (note: Note) => {
             const titleMatch = note.title
               ? note.title.toLowerCase().includes(searchQuery.toLowerCase())
               : false;
             const contentMatch = note.content
-              ? JSON.stringify(note.content).toLowerCase().includes(searchQuery.toLowerCase())
+              ? JSON.stringify(note.content)
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase())
               : false;
             return titleMatch || contentMatch;
           }
         );
 
-        // Save merged notes to storage
         await Filesystem.writeFile({
           path: STORAGE_PATH,
           data: JSON.stringify({ data: { notes: mergedNotes } }),
@@ -219,16 +193,13 @@ export const useHandleImportData = () => {
           encoding: FilesystemEncoding.UTF8,
         });
 
-        // Update state
         setNotesState(mergedNotes);
         setFilteredNotes(
           Object.fromEntries(filtered.map((note) => [note.id, note]))
         );
-      } else {
-        alert(translations.home.importInvalid);
       }
     } catch (error: any) {
-      alert(translations.home.importError);
+      alert(error);
       console.error("Error importing data:", error);
     }
   };

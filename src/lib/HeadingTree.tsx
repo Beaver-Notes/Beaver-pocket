@@ -1,12 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import icons from "./remixicon-react"
 import dayjs from 'dayjs';
 
-type HeadingTreeProps = {
-  onHeadingClick: (heading: string) => void;
-};
-
-const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
+const HeadingTree = ({}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedHeading, setSelectedHeading] = useState<string | null>(null);
 
@@ -18,7 +14,6 @@ const HeadingTree: React.FC<HeadingTreeProps> = ({ onHeadingClick }) => {
 
     if (headingElement) {
       headingElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      onHeadingClick(heading);
       setSelectedHeading(heading);
     }
   };

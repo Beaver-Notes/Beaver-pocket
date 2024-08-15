@@ -18,28 +18,22 @@ type Props = {
   setHashPopupPosition: any;
   setTextAfterHash: any;
   uniqueLabels: string[];
+  onClickLabel: (labelToAdd: string) => void;
 };
 
 function NoteLabels({
-  handleChangeNoteContent,
   note,
-  setHashPosition,
-  setHashPopupPosition,
-  setTextAfterHash,
-  editor,
   hashPopupPosition,
   textAfterHash,
   uniqueLabels,
+  onClickLabel,
 }: Props) {
   const [newLabel, setNewLabel] = useState("");
-  const [globalLabels, setGlobalLabels] = useState<string[]>([]);
   const [translations, setTranslations] = useState({
     editor: {
       addLabel: "editor.addLabel",
     },
   });
-
-  const extractLabelsFromNote = (note: Note): string[] => note.labels || [];
 
   useEffect(() => {
     const loadTranslations = async () => {
@@ -60,149 +54,13 @@ function NoteLabels({
     };
 
     loadTranslations();
-    setGlobalLabels(extractLabelsFromNote(note));
   }, [note]);
-
-  useEffect(() => {
-    const checkForDeletedLabels = () => {
-      const contentArray = editor.getJSON().content || [];
-      const currentLabels = contentArray
-        .filter((node: any) => node.type === "noteLabel" && node.attrs?.id)
-        .map((node: any) => node.attrs.id);
-
-      globalLabels.forEach((label) => {
-        if (!currentLabels.includes(label)) {
-          updateLabelsInNote(label, "");
-          setGlobalLabels((prevLabels) =>
-            prevLabels.filter((lbl) => lbl !== label)
-          );
-        }
-      });
-    };
-
-    editor.on("update", checkForDeletedLabels);
-    return () => {
-      editor.off("update", checkForDeletedLabels);
-    };
-  }, [editor, globalLabels]);
 
   useEffect(() => {
     if (textAfterHash) {
       setNewLabel(textAfterHash);
     }
   }, [textAfterHash]);
-
-  const updateLabelsInNote = (labelToUpdate: string, newLabel: string) => {
-    const updatedNote = { ...note };
-
-    if (
-      typeof updatedNote.content === "object" &&
-      updatedNote.content !== null
-    ) {
-      const contentArray = Array.isArray(updatedNote.content)
-        ? updatedNote.content
-        : updatedNote.content.content;
-
-      if (contentArray) {
-        const labelIndex = updatedNote.labels?.indexOf(labelToUpdate);
-
-        if (labelIndex !== -1) {
-          if (newLabel.trim() === "") {
-            updatedNote.labels.splice(labelIndex, 1);
-
-            const existingNoteLabelIndex = contentArray.findIndex(
-              (node: any) =>
-                node.type === "noteLabel" &&
-                node.attrs &&
-                node.attrs.id === labelToUpdate
-            );
-
-            if (existingNoteLabelIndex !== -1) {
-              contentArray.splice(existingNoteLabelIndex, 1);
-            }
-          } else {
-            updatedNote.labels[labelIndex] = newLabel;
-
-            const existingNoteLabelIndex = contentArray.findIndex(
-              (node: any) =>
-                node.type === "noteLabel" &&
-                node.attrs &&
-                node.attrs.id === labelToUpdate
-            );
-
-            if (
-              existingNoteLabelIndex !== -1 &&
-              contentArray[existingNoteLabelIndex]?.attrs
-            ) {
-              contentArray[existingNoteLabelIndex] = {
-                type: "noteLabel",
-                attrs: {
-                  id: newLabel,
-                  label: newLabel,
-                },
-              };
-            }
-          }
-
-          handleChangeNoteContent(updatedNote.content);
-        }
-      }
-    }
-  };
-
-  const addLabelToNote = (labelToAdd: string) => {
-    const updatedNote = { ...note };
-  
-    // Find the position of the hash and the text after it
-    const content = editor.getText();
-    const hashIndex = content.lastIndexOf("#");
-  
-    if (hashIndex !== -1) {
-      const textAfterHashMatch = content.slice(hashIndex).match(/^#[\w-]*/);
-      const endIndex = textAfterHashMatch
-        ? hashIndex + textAfterHashMatch[0].length
-        : hashIndex + 1; // Ensure the hash is deleted
-  
-      editor
-        .chain()
-        .focus()
-        .deleteRange({
-          from: hashIndex,
-          to: endIndex,
-        })
-        .insertContent({
-          type: "noteLabel",
-          attrs: { id: labelToAdd, label: labelToAdd },
-        })
-        .run();
-  
-      // Close the hash popup after replacing the text
-      setHashPopupPosition(null);
-      setHashPosition(null);
-      setTextAfterHash("");
-    }
-  
-    // Update the labels array
-    const updatedLabels = updatedNote.labels
-      ? [...updatedNote.labels, labelToAdd]
-      : [labelToAdd];
-  
-    // Get the editor content as JSON
-    const jsonContent = editor.getJSON();
-  
-    handleChangeNoteContent(jsonContent, note.title, updatedLabels);
-  
-    // Update global labels
-    setGlobalLabels(extractLabelsFromNote(updatedNote));
-  };
-  
-
-  const handleAddLabel = () => {
-    if (newLabel.trim() !== "") {
-      addLabelToNote(newLabel.trim());
-      setNewLabel("");
-    }
-  };
 
   return (
     <div
@@ -215,7 +73,7 @@ function NoteLabels({
           type="text"
           value={newLabel}
           readOnly
-          onClick={handleAddLabel}
+          onClick={() => onClickLabel(newLabel)}
           placeholder={translations.editor.addLabel || "-"}
           className="flex-1 bg-transparent"
         />
@@ -225,7 +83,7 @@ function NoteLabels({
           <div
             key={label}
             className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg cursor-pointer"
-            onClick={() => addLabelToNote(label)}
+            onClick={() => onClickLabel(label)}
           >
             {label.length > 20 ? label.substring(0, 17) + "..." : label}
           </div>

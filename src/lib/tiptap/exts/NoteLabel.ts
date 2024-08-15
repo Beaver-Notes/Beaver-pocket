@@ -15,17 +15,17 @@ declare module '@tiptap/core' {
 export const NoteLabel = Node.create({
   name: 'noteLabel',
 
-  group: 'inline', // This node will be displayed inline
-  inline: true, // Specifies that this is an inline node
-  atom: true, // Indicates that this node is atomic, i.e., it can't be split
+  group: 'inline',
+  inline: true,
+  atom: true,
 
   addAttributes() {
     return {
       id: {
-        default: null, // Default value for the 'id' attribute
+        default: null,
       },
       label: {
-        default: null, // Default value for the 'label' attribute
+        default: null,
       },
     };
   },
@@ -33,7 +33,7 @@ export const NoteLabel = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'noteLabel', // Custom HTML tag to identify this node
+        tag: 'noteLabel',
         getAttrs: (dom) => ({
           id: (dom as HTMLElement).getAttribute('id') || '',
           label: (dom as HTMLElement).getAttribute('label') || '',
@@ -45,14 +45,18 @@ export const NoteLabel = Node.create({
   renderHTML({ HTMLAttributes }) {
     const { id, label } = HTMLAttributes;
 
+    // Render a span element with a custom data attribute to differentiate from normal text
     return [
-      'span', // Render the node as a <span> element
-      {
-        id,
-        label,
-        class: 'mention', // Apply the CSS class for styling
-      },
-      `#${label || id}`, // Display a "#" before the label or id
+      'noteLabel',
+      { id, label },
+      [
+        'a', 
+        {
+          href: `#${id}`, // or some other identifier
+          class: 'mention', // Apply your desired CSS class here
+        },
+        `#${label || id}`,
+      ],
     ];
   },
 
@@ -68,7 +72,7 @@ export const NoteLabel = Node.create({
   addInputRules() {
     return [
       nodeInputRule({
-        find: /<noteLabel id="([^"]+)" label="([^"]*)">#([^<]*)<\/noteLabel>/,
+        find: /<noteLabel id="([^"]+)" label="([^"]*)">(#[^<]*)<\/noteLabel>/,
         type: this.type,
         getAttributes: (match) => {
           const [, id, label] = match;

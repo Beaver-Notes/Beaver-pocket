@@ -195,7 +195,6 @@ const Welcome: React.FC = () => {
 
   return (
     <div className={`view ${currentView} overflow-y-hide`}>
-      <div className="safe-area"></div>
 
       {currentView === "view1" && (
         <div className="view flex items-center justify-center">
