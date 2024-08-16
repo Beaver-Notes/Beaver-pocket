@@ -4,6 +4,7 @@ import ImageUploadComponent from "./ImageUpload";
 import { Editor } from "@tiptap/react";
 import { Note } from "../../store/types";
 import FileUploadComponent from "./FileUpload";
+import { Link } from "react-router-dom";
 
 interface ToolbarProps {
   toolbarVisible: boolean;
@@ -124,6 +125,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   if (!toolbarVisible) return null;
 
+  const handleMouseDown = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.preventDefault();
+  };
+
   return (
     <div
       className={`hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] dark:text-gray-50 overflow-x-auto sm:overflow-x-none py-1 ${
@@ -135,11 +140,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
           isTableActive ? "hidden" : "block"
         } ${isTextSelected ? "hidden" : "block"}`}
       >
-        <button
+        <Link
+          to="/"
           className="p-2 hidden sm:block sm:align-start text-white rounded-md bg-transparent cursor-pointer"
         >
           <icons.ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
-        </button>
+        </Link>
         <div className="sm:mx-auto flex overflow-y-hidden w-fit">
           <button
             className={
@@ -147,6 +153,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().setParagraph().run()}
           >
             <icons.ParagraphIcon className="border-none text-white text-xl w-7 h-7" />
@@ -157,6 +164,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 1 }).run()
             }
@@ -169,6 +177,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 2 }).run()
             }
@@ -181,6 +190,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           >
             <icons.DoubleQuotesLIcon className="border-none text-white text-xl w-7 h-7" />
@@ -191,6 +201,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
           >
             <icons.CodeBoxLineIcon className="border-none text-white text-xl w-7 h-7" />
@@ -205,6 +216,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
           >
             <icons.VideoIcon className="border-none text-white text-xl w-7 h-7" />
@@ -221,6 +233,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.commands.insertTable({
                 rows: 3,
@@ -237,6 +250,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBulletList().run()}
           >
             <icons.ListUnorderedIcon className="border-none text-white text-xl w-7 h-7" />
@@ -247,6 +261,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           >
             <icons.ListOrderedIcon className="border-none text-white text-xl w-7 h-7" />
@@ -257,6 +272,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleTaskList().run()}
           >
             <icons.ListCheck2Icon className="border-none text-white text-xl w-7 h-7" />
@@ -264,6 +280,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         </div>
         <button
           className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
+          onMouseDown={handleMouseDown}
           onClick={toggleHeadingTree}
         >
           <icons.Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
@@ -274,50 +291,58 @@ const Toolbar: React.FC<ToolbarProps> = ({
           isTableActive ? "block" : "hidden"
         } ${isTextSelected ? "hidden" : "block"}`}
       >
-        <button
+        <Link
+          to="/"
           className="p-2 hidden sm:block sm:align-start text-white rounded-md bg-transparent cursor-pointer"
         >
           <icons.ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
-        </button>
+        </Link>
         <div className="sm:mx-auto flex overflow-y-hidden w-fit">
           <button
             className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addRowAfter().run()}
           >
             <icons.InsertRowBottomIcon className="border-none text-white text-xl w-7 h-7" />
           </button>
           <button
             className="p-2 rounded-md text-white bg-transparent cursor-pointer "
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addRowBefore().run()}
           >
             <icons.InsertRowTopIcon className="border-none text-white text-xl w-7 h-7" />
           </button>
           <button
             className="p-2 rounded-md text-white bg-transparent cursor-pointer "
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteRow().run()}
           >
             <icons.DeleteRow className="border-none text-white text-xl w-7 h-7" />
           </button>
           <button
             className="p-2 rounded-md text-white bg-transparent cursor-pointer "
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnBefore().run()}
           >
             <icons.InsertColumnLeftIcon className="border-none text-white text-xl w-7 h-7" />
           </button>
           <button
             className="p-2 rounded-md text-white bg-transparent cursor-pointer "
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnAfter().run()}
           >
             <icons.InsertColumnRightIcon className="border-none text-white text-xl w-7 h-7" />
           </button>
           <button
             className="p-2 rounded-md text-white bg-transparent cursor-pointer "
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteColumn().run()}
           >
             <icons.DeleteColumn className="border-none text-white text-xl w-7 h-7" />
           </button>
           <button
             className="p-2 rounded-md text-white bg-transparent cursor-pointer "
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleHeaderCell().run()}
           >
             <icons.Brush2Fill className="border-none text-white text-xl w-7 h-7" />
@@ -328,6 +353,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           />
           <button
             className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
           >
             <icons.VideoIcon className="border-none text-white text-xl w-7 h-7" />
@@ -340,6 +366,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </div>
           <button
             className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteTable().run()}
           >
             <icons.DeleteBinLineIcon className="border-none text-white text-xl w-7 h-7" />
@@ -347,6 +374,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         </div>
         <button
           className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
+          onMouseDown={handleMouseDown}
           onClick={toggleHeadingTree}
         >
           <icons.Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
@@ -357,11 +385,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
           isTextSelected ? "block" : "hidden"
         }`}
       >
-        <button
+        <Link
+          to="/"
           className="p-2 hidden sm:block sm:align-start text-white rounded-md bg-transparent cursor-pointer"
         >
           <icons.ArrowLeftLineIcon className="border-none text-white text-xl w-7 h-7" />
-        </button>
+        </Link>
         <div className="sm:mx-auto flex overflow-y-hidden w-fit">
           <button
             className={
@@ -369,6 +398,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().setParagraph().run()}
           >
             <icons.ParagraphIcon className="border-none text-white text-xl w-7 h-7" />
@@ -379,6 +409,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 1 }).run()
             }
@@ -391,6 +422,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 2 }).run()
             }
@@ -403,6 +435,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBold().run()}
           >
             <icons.BoldIcon className="border-none text-white text-xl w-7 h-7" />
@@ -413,6 +446,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleItalic().run()}
           >
             <icons.ItalicIcon className="border-none text-white text-xl w-7 h-7" />
@@ -423,6 +457,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
           >
             <icons.UnderlineIcon className="border-none text-white text-xl w-7 h-7" />
@@ -433,6 +468,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleStrike().run()}
           >
             <icons.StrikethroughIcon className="border-none text-white text-xl w-7 h-7" />
@@ -443,6 +479,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleHighlight().run()}
           >
             <icons.MarkPenLineIcon className="border-none text-white text-xl w-7 h-7" />
@@ -453,6 +490,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSubscript()}
           >
             <icons.SubscriptIcon className="border-none text-white text-xl w-7 h-7" />
@@ -463,12 +501,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-white bg-transparent cursor-pointer"
             }
-            onClick={() => editor?.commands.toggleSuperscript()            }
+            onMouseDown={handleMouseDown}
+            onClick={() => editor?.commands.toggleSuperscript()}
           >
             <icons.SuperscriptIcon className="border-none text-white text-xl w-7 h-7" />
           </button>
           <button
             className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
             onClick={setLink}
           >
             <icons.LinkIcon className="border-none text-white text-xl w-7 h-7" />
@@ -476,6 +516,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         </div>
         <button
           className="p-2 hidden sm:block sm:align-end rounded-md text-white bg-transparent cursor-pointer"
+          onMouseDown={handleMouseDown}
           onClick={toggleHeadingTree}
         >
           <icons.Search2LineIcon className="border-none text-white text-xl w-7 h-7" />
