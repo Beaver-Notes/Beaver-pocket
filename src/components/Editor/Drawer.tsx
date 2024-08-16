@@ -130,6 +130,10 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
     };
   }, [editor]);
 
+  const handleMouseDown = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.preventDefault();
+  };
+
   return (
     <div
       className={`sm:hidden shadow-t-md block bottom-0 fixed left-0 right-0 ${
@@ -153,6 +157,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1 pl-3`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().setParagraph().run()}
           >
             <icons.ParagraphIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -163,6 +168,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 1 }).run()
             }
@@ -175,6 +181,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 2 }).run()
             }
@@ -187,6 +194,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           >
             <icons.DoubleQuotesLIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -197,6 +205,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
           >
             <icons.CodeBoxLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -213,6 +222,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
           >
             <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -236,6 +246,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.commands.insertTable({
                 rows: 3,
@@ -252,6 +263,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBulletList().run()}
           >
             <icons.ListUnorderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -262,6 +274,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           >
             <icons.ListOrderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -272,6 +285,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1 pr-6`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleTaskList().run()}
           >
             <icons.ListCheck2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -286,6 +300,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           {/* Table */}
           <button
             className="p-1 text-neutral-700 dark:text-[color:var(--selected-dark-text)] cursor-pointer flex-1 pl-3"
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addRowAfter().run()}
           >
             <icons.InsertRowBottomIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -296,6 +311,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addRowBefore().run()}
           >
             <icons.InsertRowTopIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -306,6 +322,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteRow().run()}
           >
             <icons.DeleteRow className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -316,6 +333,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnBefore().run()}
           >
             <icons.InsertColumnLeftIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -326,6 +344,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnAfter().run()}
           >
             <icons.InsertColumnRightIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -336,6 +355,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteColumn().run()}
           >
             <icons.DeleteColumn className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -347,6 +367,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleHeaderCell().run()}
           >
             <icons.Brush2Fill className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -362,6 +383,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
           >
             <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -380,6 +402,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1 pr-6`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteTable().run()}
           >
             <icons.DeleteBinLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -397,6 +420,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().setParagraph().run()}
           >
             <icons.ParagraphIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -407,6 +431,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 1 }).run()
             }
@@ -419,6 +444,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 2 }).run()
             }
@@ -431,6 +457,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBold().run()}
           >
             <icons.BoldIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -441,6 +468,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleItalic().run()}
           >
             <icons.ItalicIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -451,6 +479,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
           >
             <icons.UnderlineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -461,6 +490,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleStrike().run()}
           >
             <icons.StrikethroughIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -471,6 +501,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleHighlight().run()}
           >
             <icons.MarkPenLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -481,6 +512,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBulletList().run()}
           >
             <icons.ListUnorderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -491,6 +523,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           >
             <icons.ListOrderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -501,6 +534,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleTaskList().run()}
           >
             <icons.ListCheck2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -511,6 +545,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSubscript()}
           >
             <icons.SubscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -521,6 +556,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSuperscript()}
           >
             <icons.SuperscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
@@ -531,6 +567,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1 pr-6`}
+            onMouseDown={handleMouseDown}
             onClick={setLink}
           >
             <icons.LinkIcon className="border-none text-xl w-8 h-8 cursor-pointer" />

@@ -4,7 +4,6 @@ import icons from "../lib/remixicon-react";
 import dayjs from "dayjs";
 
 const Shortcuts: React.FC = () => {
-
   // @ts-ignore
   const [sortingOption, setSortingOption] = useState("updatedAt");
 
@@ -70,57 +69,82 @@ const Shortcuts: React.FC = () => {
 
   return (
     <div>
-        <div className="overflow-y-hidden mb-12">
-            <div className="mx-2 sm:px-20 mb-2">
-              <div className="general py-2 space-y-8 w-full">
-                <div className="py-2 mx-2 sm:px-20 mb-2">
-                  <div className="general space-y-3 w-full">
-                    <img
-                      src="./imgs/icon.png"
-                      alt="Beaver Notes Icon"
-                      className="w-32 h-32 rounded-full"
-                    />
-                    <h4 className="mt-4 font-bold">
-                      {" "}
-                      {translations.about.app}
-                    </h4>
-                    <p>{translations.about.description}</p>
-                    <p className="mt-2">
-                      {translations.about.version}{" "}
-                      <span className="ml-8">{version}</span>
-                    </p>
-
-                    <p>{translations.about.copyright}</p>
-
-                    <div className="mt-4 flex gap-4">
-                      <a
-                        href="https://beavernotes.com"
-                        className="flex items-center"
-                      >
-                        <icons.GlobalLineIcon className="w-6 h-6 mr-2" />
-                        {translations.about.website}
-                      </a>
-
-                      <a
-                        href="https://github.com/Daniele-rolli/Beaver-notes-pocket"
-                        className="flex items-center"
-                      >
-                        <icons.GithubFillIcon className="w-6 h-6 mr-2" />
-                        {translations.about.github}
-                      </a>
-
-                      <a
-                        href="https://www.buymeacoffee.com/beavernotes"
-                        className="flex items-center"
-                      >
-                        <icons.CupLineIcon className="w-6 h-6 mr-2" />
-                        {translations.about.donate}
-                      </a>
-                    </div>
-                  </div>
-                </div>
+      <div className="overflow-y-hidden mb-12">
+        <div className="mx-2 sm:px-20 mb-2">
+          <div className="general py-2 space-y-8 w-full">
+            <div className="py-2 mx-2 sm:px-20 mb-2">
+              <div className="flex items-center justify-center">
+                <img
+                  src="./imgs/icon.png"
+                  alt="Beaver Notes Icon"
+                  className="w-36 h-36 rounded-full"
+                />
               </div>
+              <p className="text-xl mt-4 font-bold text-center">
+                {" "}
+                {translations.about.app}
+              </p>
+              <p className="text-center">{version}</p>
+              <p className="text-center">{translations.about.description}</p>
+              <div className="flex flex-col gap-2 pt-2">
+                <a
+                  href="https://beavernotes.com"
+                  className="w-full p-3 text-lg bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                >
+                  <icons.GlobalLineIcon className="w-8 h-8" />
+                  <p className="text-lg pl-2 py-1 font-bold">
+                    {" "}
+                    {translations.about.website}
+                  </p>
+                </a>
+                <a
+                  href="https://github.com/Daniele-rolli/Beaver-notes-pocket"
+                  className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                >
+                  <icons.GithubFillIcon className="w-8 h-8" />
+                  <p className="text-lg pl-2 py-1 font-bold">
+                    {" "}
+                    {translations.about.github}
+                  </p>
+                </a>
+                <a
+                  href="https://www.buymeacoffee.com/beavernotes"
+                  className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                >
+                  <icons.CupLineIcon className="w-8 h-8" />
+                  <p className="text-lg pl-2 py-1 font-bold">
+                    {" "}
+                    {translations.about.donate}
+                  </p>
+                </a>
+              </div>
+              <div className="flex flex-col gap-2 pt-2">
+                <p className="text-2xl font-bold">Legal</p>
+                <a
+                  href="https://beavernotes.com/#/Terms"
+                  className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                >
+                  <p className="text-lg pl-2 py-1 font-bold">
+                    Terms and Conditions
+                  </p>
+                </a>
+                <a
+                  href="https://beavernotes.com/#/Privacy"
+                  className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                >
+                  <p className="text-lg pl-2 py-1 font-bold">Privacy Policy</p>
+                </a>
+                <a
+                  href="https://raw.githubusercontent.com/Beaver-Notes/Beaver-pocket/main/LICENSE.txt"
+                  className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                >
+                  <p className="text-lg pl-2 py-1 font-bold">License</p>
+                </a>
+              </div>
+              <p className="pt-2 text-center">{translations.about.copyright}</p>
             </div>
+          </div>
+        </div>
       </div>
     </div>
   );
