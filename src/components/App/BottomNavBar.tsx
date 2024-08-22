@@ -5,14 +5,16 @@ import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
 import { useExportDav } from "../../utils/webDavUtil";
 import { useSaveNote } from "../../store/notes";
-import { useNotesState } from "../../store/Activenote";
+import { Note } from "../../store/types";
 
+interface NavbarProps {
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
+}
 
-const BottomNavBar = ({}) => {
-  const { setNotesState } = useNotesState();
+const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
   const { saveNote } = useSaveNote(setNotesState);
   const navigate = useNavigate();
-  useNotesState();
   useEffect(() => {
     const handleKeyboardShow = () => {
       document.body.classList.add("keyboard-visible");

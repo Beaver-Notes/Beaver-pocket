@@ -144,7 +144,7 @@ const App: React.FC = () => {
             unmountOnExit
           >
             <Routes location={location}>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Home notesState={notesState} setNotesState={setNotesState}/>} />
               <Route path="/archive" element={<Archive notesState={notesState} setNotesState={setNotesState}/>} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<About />} />
@@ -162,7 +162,7 @@ const App: React.FC = () => {
         setIsCommandPromptOpen={setIsCommandPromptOpen}
         isOpen={isCommandPromptOpen}
       />
-      {shouldShowNavBar && <BottomNavBar />}
+      {shouldShowNavBar && <BottomNavBar notesState={notesState} setNotesState={setNotesState}/>}
     </div>
   );
 };

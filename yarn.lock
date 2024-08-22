@@ -4583,13 +4583,6 @@
   resolved "https://registry.yarnpkg.com/@types/q/-/q-1.5.8.tgz#95f6c6a08f2ad868ba230ead1d2d7f7be3db3837"
   integrity sha512-hroOstUScF6zhIi+5+x0dzqrHA1EJi+Irri6b1fxolMTqqHIV/Cg77EtnQcZqZCu8hR3mX2BzIxN4/GzI68Kfw==
 
-"@types/react-canvas-draw@^1.2.3":
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/@types/react-canvas-draw/-/react-canvas-draw-1.2.3.tgz#64520029ac203281a4ed96d9d641acefa89fb856"
-  integrity sha512-0Y89n63EwSFEN1cITPtq6F99SGDwhXWbbxcdw2WghoyIl4TwLCmv2Igm6B0+c8ArN6I0LFpuHdjpg7pPOsydtw==
-  dependencies:
-    "@types/react" "*"
-
 "@types/react-dom@*":
   version "18.3.0"
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-18.3.0.tgz#0cbc818755d87066ab6ca74fbedb2547d74a82b0"
@@ -6535,11 +6528,6 @@ canvas@^2.8.0:
     "@mapbox/node-pre-gyp" "^1.0.0"
     nan "^2.17.0"
     simple-get "^3.0.3"
-
-capacitor-file-chunk@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/capacitor-file-chunk/-/capacitor-file-chunk-2.0.0.tgz#ad4248cb46c71f5f4f3b056abe1c53383a7819d3"
-  integrity sha512-vwlZgBDEMyy3dXkApnko4Dhb9llJwbE0O/rSEv7My4d+BpsFJ7TuRReCwH/8WVPFGKdZ6//+x4UUhFMFGmdsOw==
 
 capacitor-native-biometric@^4.2.2:
   version "4.2.2"
