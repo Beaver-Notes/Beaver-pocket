@@ -1,136 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { v4 as uuid } from "uuid";
 import { Note } from "./store/types";
-import ModularPrompt from "./components/ui/Dialog";
-import { JSONContent } from "@tiptap/react";
-import Bookmarked from "./components/Home/Bookmarked";
 import {
   Filesystem,
   Directory,
-  FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import "dayjs/locale/it";
 import relativeTime from "dayjs/plugin/relativeTime";
 import SearchBar from "./components/Home/Search";
-import * as CryptoJS from "crypto-js";
-import CommandPrompt from "./components/Home/CommandPrompt";
 import {
-  loadNotes,
   useSaveNote,
-  useDeleteNote,
-  useToggleBookmark,
-  useToggleArchive,
 } from "./store/notes";
 import useNoteEditor from "./store/useNoteActions";
 import { useNotesState } from "./store/Activenote";
-import { useHandleImportData } from "./utils/importUtils";
-import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
 
 // Import Remix icons
-import ReactDOM from "react-dom";
+import NoteCard from "./components/Home/NoteCard";
 
 const App: React.FC = () => {
-  const { deleteNote } = useDeleteNote();
-  const { toggleArchive } = useToggleArchive();
-  const { toggleBookmark } = useToggleBookmark();
-  const { importUtils } = useHandleImportData();
-
-  const handleToggleBookmark = async (
-    noteId: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation();
-
-    try {
-      const updatedNotes = await toggleBookmark(noteId);
-      setNotesState(updatedNotes);
-    } catch (error) {
-      console.error(translations.home.bookmarkError, error);
-      alert(translations.home.bookmarkError + (error as any).message);
-    }
-  };
-  const handleToggleArchive = async (
-    noteId: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation();
-
-    try {
-      const updatedNotes = await toggleArchive(noteId);
-      setNotesState(updatedNotes);
-    } catch (error) {
-      console.error(translations.home.archiveError, error);
-      alert(translations.home.archiveError + (error as any).message);
-    }
-  };
-
-  const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    const isConfirmed = window.confirm(translations.home.confirmDelete);
-
-    if (isConfirmed) {
-      try {
-        await deleteNote(noteId);
-        // Remove the deleted note from filteredNotes state
-        setFilteredNotes((prevFilteredNotes) => {
-          const updatedFilteredNotes = { ...prevFilteredNotes };
-          delete updatedFilteredNotes[noteId];
-          return updatedFilteredNotes;
-        });
-      } catch (error) {
-        alert(error);
-      }
-    }
-  };
-
-  const [themeMode, setThemeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode, setDarkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-  };
-
-  const STORAGE_PATH = "notes/data.json";
   const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
     useNotesState();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
-
-  const handleImportData = () => {
-    importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes); // Pass notesState as an argument
-  };
   const { saveNote } = useSaveNote(setNotesState);
-
-  useEffect(() => {
-    const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
-      setNotesState(notes);
-    };
-
-    loadNotesFromStorage();
-  }, []);
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
@@ -150,27 +45,6 @@ const App: React.FC = () => {
 
   useNoteEditor(activeNoteId, notesState, setNotesState, saveNote);
 
-  const handleCreateNewNote = () => {
-    const newNote = {
-      id: uuid(),
-      title: translations.home.title || "New Note",
-      content: { type: "doc", content: [] },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
-    setNotesState((prevNotes) => ({
-      ...prevNotes,
-      [newNote.id]: newNote,
-    }));
-    setActiveNoteId(newNote.id);
-    saveNote(newNote);
-  };
-
   const [sortingOption, setSortingOption] = useState("updatedAt");
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
@@ -188,59 +62,6 @@ const App: React.FC = () => {
         return updatedAtA - updatedAtB;
     }
   });
-
-  const MAX_CONTENT_PREVIEW_LENGTH = 150;
-
-  function extractParagraphTextFromContent(content: JSONContent): string {
-    if (!content || !Array.isArray(content.content)) {
-      return translations.home.noContent;
-    }
-    if (
-      content.content.length === 1 &&
-      content.content[0].type === "paragraph" &&
-      (!content.content[0].content || content.content[0].content.length === 0)
-    ) {
-      return "";
-    }
-
-    const paragraphText = content.content
-      .filter((node) => node.type === "paragraph")
-      .map((node) => {
-        if (node.content && Array.isArray(node.content)) {
-          const textContent = node.content
-            .filter((innerNode) => innerNode.type === "text")
-            .map((innerNode) => innerNode.text)
-            .join(" ");
-          return textContent;
-        }
-        return "";
-      })
-      .join(" ");
-
-    return paragraphText || translations.home.noContent;
-  }
-
-  function truncateContentPreview(
-    content: JSONContent | string | JSONContent[]
-  ) {
-    let text = "";
-
-    if (typeof content === "string") {
-      text = content;
-    } else if (Array.isArray(content)) {
-      const jsonContent: JSONContent = { type: "doc", content };
-      text = extractParagraphTextFromContent(jsonContent);
-    } else if (content && content.content) {
-      const { title, ...contentWithoutTitle } = content;
-      text = extractParagraphTextFromContent(contentWithoutTitle);
-    }
-
-    if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
-      return text;
-    } else {
-      return text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
-    }
-  }
 
   const uniqueLabels = Array.from(
     new Set(Object.values(notesState).flatMap((note) => note.labels))
@@ -281,12 +102,6 @@ const App: React.FC = () => {
     }
   });
 
-  // catching import signal's emits
-
-  document.addEventListener("importSignal", () => {
-    handleImportData();
-  });
-
   // catching file-embed's emits
 
   document.addEventListener("fileEmbedClick", async (event: Event) => {
@@ -314,241 +129,9 @@ const App: React.FC = () => {
     }
   });
 
-  const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-
-    try {
-      // Prompt the user for a password
-      const password = await promptForPassword();
-      if (!password) {
-        // If the user cancels or enters nothing, exit the function
-        return;
-      }
-
-      // Check if a password is already stored
-      let storedPassword: string | null = null;
-      try {
-        const result = await SecureStoragePlugin.get({ key: noteId });
-        storedPassword = result.value;
-      } catch (e) {
-        // No stored password found, proceed without error
-      }
-
-      // If a stored password exists, compare it with the entered password
-      if (storedPassword && storedPassword !== password) {
-        alert(translations.home.wrongpasswd);
-        return;
-      }
-
-      // Load the notes from storage
-      const result = await Filesystem.readFile({
-        path: STORAGE_PATH,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      let notes;
-      if (typeof result.data === "string") {
-        notes = JSON.parse(result.data).data.notes;
-      } else {
-        const dataText = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsText(result.data as Blob);
-        });
-        notes = JSON.parse(dataText).data.notes;
-      }
-
-      const updatedNote = { ...notes[noteId] };
-
-      // Check if the note is locked
-      if (updatedNote.isLocked) {
-        // Note is locked, try to decrypt it
-        const decryptedContent = CryptoJS.AES.decrypt(
-          updatedNote.content.content[0],
-          password
-        ).toString(CryptoJS.enc.Utf8);
-
-        if (!decryptedContent) {
-          // If decryption fails (wrong password), show error message and exit
-          alert(translations.home.wrongpasswd);
-          return;
-        }
-
-        // Update note content with decrypted content and unlock the note
-        updatedNote.content = JSON.parse(decryptedContent);
-        updatedNote.isLocked = false;
-      } else {
-        // Note is unlocked, encrypt the content
-        const encryptedContent = CryptoJS.AES.encrypt(
-          JSON.stringify(updatedNote.content),
-          password
-        ).toString();
-
-        // Update note content with encrypted content and lock the note
-        updatedNote.content = { type: "doc", content: [encryptedContent] };
-        updatedNote.isLocked = true;
-
-        // Store the password securely if it wasn't already stored
-        if (!storedPassword) {
-          await SecureStoragePlugin.set({ key: noteId, value: password });
-        }
-      }
-
-      // Update the notes array with the updated note
-      notes[noteId] = updatedNote;
-
-      // Save the updated notes array to storage
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      // Update the state with the updated notes array
-      setNotesState(notes);
-    } catch (error) {
-      alert(translations.home.lockerror);
-    }
-  };
 
   // Helper function to prompt the user for a password
-  const promptForPassword = async (): Promise<string | null> => {
-    // Define a div where the prompt will be rendered
-    const promptRoot = document.createElement("div");
-    document.body.appendChild(promptRoot);
 
-    return new Promise<string | null>((resolve) => {
-      const handleConfirm = (value: string | null) => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        resolve(value);
-      };
-      const handleCancel = () => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        resolve(null); // Resolving with null for cancel action
-      };
-      ReactDOM.render(
-        <ModularPrompt
-          title={translations.home.enterpasswd}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />,
-        promptRoot
-      );
-    });
-  };
-
-  const handleToggleUnlock = async (noteId: string) => {
-    try {
-      // Prompt the user for a password
-      const password = await promptForPassword();
-      if (!password) {
-        // If the user cancels or enters nothing, exit the function
-        return;
-      }
-
-      // Check if a password is already stored
-      let storedPassword: string | null = null;
-      try {
-        const result = await SecureStoragePlugin.get({ key: noteId });
-        storedPassword = result.value;
-      } catch (e) {
-        // No stored password found, proceed without error
-      }
-
-      // If a stored password exists, compare it with the entered password
-      if (storedPassword && storedPassword !== password) {
-        alert(translations.home.wrongpasswd);
-        return;
-      }
-
-      // Load the notes from storage
-      const result = await Filesystem.readFile({
-        path: STORAGE_PATH,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      let notes;
-      if (typeof result.data === "string") {
-        notes = JSON.parse(result.data).data.notes;
-      } else {
-        const dataText = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsText(result.data as Blob);
-        });
-        notes = JSON.parse(dataText).data.notes;
-      }
-
-      const updatedNote = { ...notes[noteId] };
-
-      // Check if the note is locked
-      if (updatedNote.isLocked) {
-        // Note is locked, try to decrypt it
-        const decryptedContent = CryptoJS.AES.decrypt(
-          updatedNote.content.content[0],
-          password
-        ).toString(CryptoJS.enc.Utf8);
-
-        if (!decryptedContent) {
-          // If decryption fails (wrong password), show error message and exit
-          alert(translations.home.wrongpasswd);
-          return;
-        }
-
-        // Update note content with decrypted content and unlock the note
-        updatedNote.content = JSON.parse(decryptedContent);
-        updatedNote.isLocked = false;
-      } else {
-        // Note is unlocked, encrypt the content
-        const encryptedContent = CryptoJS.AES.encrypt(
-          JSON.stringify(updatedNote.content),
-          password
-        ).toString();
-
-        // Update note content with encrypted content and lock the note
-        updatedNote.content = { type: "doc", content: [encryptedContent] };
-        updatedNote.isLocked = true;
-
-        // Store the password securely if it wasn't already stored
-        if (!storedPassword) {
-          await SecureStoragePlugin.set({ key: noteId, value: password });
-        }
-      }
-
-      // Update the notes array with the updated note
-      notes[noteId] = updatedNote;
-
-      // Save the updated notes array to storage
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      // Update the state with the updated notes array
-      setNotesState(notes);
-      setActiveNoteId(noteId);
-    } catch (error) {
-      alert(translations.home.lockerror);
-    }
-  };
-
-  const handleClickNote = async (note: Note) => {
-    if (note.isLocked) {
-      handleToggleUnlock(note.id);
-      navigate(`/editor/${note.id}`);
-    } else {
-      // Set active note directly
-      setActiveNoteId(note.id);
-      navigate(`/editor/${note.id}`);
-    }
-  };
 
   dayjs.extend(relativeTime);
 
@@ -608,28 +191,6 @@ const App: React.FC = () => {
     loadTranslations();
   }, []);
 
-  const navigate = useNavigate();
-
-  const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
-
-  useEffect(() => {
-    // Listen for key combination
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        (e.metaKey || e.ctrlKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === "p"
-      ) {
-        setIsCommandPromptOpen(true);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  });
 
   return (
     <div>
@@ -650,15 +211,13 @@ const App: React.FC = () => {
                   {translations.home.bookmarked || "-"}
                 </h2>
               )}
-              <Bookmarked
-                notesList={notesList}
-                activeNoteId={activeNoteId}
-                handleToggleBookmark={handleToggleBookmark}
-                handleToggleLock={handleToggleLock}
-                handleDeleteNote={handleDeleteNote}
-                handleClickNote={handleClickNote}
-                truncateContentPreview={truncateContentPreview}
-              />
+              <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+              {notesList
+                .filter((note) => note.isBookmarked && !note.isArchived)
+                .map((note) => (
+                  <NoteCard note={note} setNotesState={setNotesState} />
+                ))}
+              </div>
               <h2 className="text-3xl font-bold">
                 {translations.home.all || "-"}
               </h2>
@@ -682,117 +241,13 @@ const App: React.FC = () => {
                 {notesList
                   .filter((note) => !note.isBookmarked && !note.isArchived)
                   .map((note) => (
-                    <div
-                      key={note.id}
-                      role="button"
-                      tabIndex={0}
-                      className={
-                        note.id === activeNoteId
-                          ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
-                          : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
-                      }
-                      onClick={() => handleClickNote(note)}
-                    >
-                      <div className="h-40 overflow-hidden">
-                        <div className="flex flex-col h-full overflow-hidden">
-                          <div className="text-xl font-bold">{note.title}</div>
-                          {note.isLocked ? (
-                            <div>
-                              <p></p>
-                            </div>
-                          ) : (
-                            <div>
-                              {note.labels.length > 0 && (
-                                <div className="flex flex-col gap-1 overflow-hidden">
-                                  <div className="flex flex-wrap gap-1">
-                                    {note.labels.map((label) => (
-                                      <span
-                                        key={label}
-                                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                      >
-                                        #{label}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {note.isLocked ? (
-                            <div className="flex flex-col items-center">
-                              <button className="flex items-center justify-center">
-                                <Icons.LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
-                              </button>
-                              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                {translations.home.unlocktoedit || "-"}
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="text-lg">
-                              {note.content &&
-                                truncateContentPreview(note.content)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center">
-                          <button
-                            className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-                            onClick={(e) => handleToggleBookmark(note.id, e)}
-                          >
-                            {note.isBookmarked ? (
-                              <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2" />
-                            ) : (
-                              <Icons.Bookmark3LineIcon className="w-8 h-8 mr-2" />
-                            )}
-                          </button>
-                          <button
-                            className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-                            onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
-                          >
-                            {note.isBookmarked ? (
-                              <Icons.ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
-                            ) : (
-                              <Icons.ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
-                            )}
-                          </button>
-                          <button
-                            className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-                            onClick={(e) => handleToggleLock(note.id, e)}
-                          >
-                            {note.isLocked ? (
-                              <Icons.LockClosedIcon className="w-8 h-8 mr-2" />
-                            ) : (
-                              <Icons.LockOpenIcon className="w-8 h-8 mr-2" />
-                            )}
-                          </button>
-                          <button
-                            className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
-                            onClick={(e) => handleDeleteNote(note.id, e)}
-                          >
-                            <Icons.DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                          </button>
-                        </div>
-                        <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
-                          {dayjs(note.createdAt).fromNow()}
-                        </div>
-                      </div>
-                    </div>
+                    <NoteCard note={note} setNotesState={setNotesState} />
                   ))}
               </div>
             </div>
           </div>
         )}
       </div>
-      <CommandPrompt
-        onCreateNewNote={handleCreateNewNote}
-        toggleTheme={() => toggleTheme(!darkMode)}
-        setIsCommandPromptOpen={setIsCommandPromptOpen}
-        isOpen={isCommandPromptOpen}
-        notes={notesList}
-        onClickNote={handleClickNote}
-      />
     </div>
   );
 };

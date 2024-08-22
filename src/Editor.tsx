@@ -1,426 +1,284 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Note } from "./store/types";
-import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
-import Toolbar from "./components/Editor/Toolbar";
-import HeadingTree from "./lib/HeadingTree";
-import { isPlatform } from "@ionic/react";
-import Drawer from "./components/Editor/Drawer";
-import Find from "./components/Editor/Find";
-import extensions from "./lib/tiptap/index";
-import { Link } from "react-router-dom";
-import { handleEditorTyping } from "./utils/bubble-menu-util";
-import BubblemenuNoteLink from "./components/Editor/BubblemenuNoteLink";
-import BubblemenuLabel from "./components/Editor/BubblemenuLabel";
-import { hasNotch } from "./utils/detectNotch";
-import DOMPurify from "dompurify";
-import useNoteEditor from "./store/useNoteActions";
-import { useNotesState } from "./store/Activenote";
-import { useSaveNote } from "./store/notes";
+import EditorComponent from "./components/Editor/EditorComponent";
+import { useNavigate, useParams } from "react-router-dom";
+import icons from "./lib/remixicon-react";
+import ReactDOM from "react-dom";
+import * as CryptoJS from "crypto-js";
+import ModularPrompt from "./components/ui/Dialog";
+import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
+import {
+  Directory,
+  Filesystem,
+  FilesystemEncoding,
+} from "@capacitor/filesystem";
+import { NativeBiometric } from "capacitor-native-biometric";
 
-// Icons
-import Icons from "./lib/remixicon-react";
+const STORAGE_PATH = "notes/data.json";
 
 type Props = {
-  note: Note;
+  notesState: any;
+  setNotesState: (notes:any) => void;
 };
 
-function Editor({ note }: Props) {
-  const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
-    useNotesState();
-  const { saveNote } = useSaveNote(setNotesState);
-  const { title, handleChangeNoteContent } = useNoteEditor(
-    activeNoteId,
-    notesState,
-    setNotesState,
-    saveNote
-  );
-
-  const [previousContent, setPreviousContent] = useState<JSONContent | null>(
-    null
-  );
-
-  const uniqueLabels = Array.from(
-    new Set(Object.values(notesState).flatMap((note) => note.labels))
-  );
-  const [searchQuery] = useState<string>("");
-  const [filteredNotes, setFilteredNotes] =
-    useState<Record<string, Note>>(notesState);
-  const [sortingOption] = useState("updatedAt");
-  useEffect(() => {
-    const filtered = Object.values(notesState).filter((note) => {
-      const titleMatch = note.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const contentMatch = JSON.stringify(note.content)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch || contentMatch;
-    });
-
-    setFilteredNotes(
-      Object.fromEntries(filtered.map((note) => [note.id, note]))
-    );
-  }, [searchQuery, notesState]);
-  const notesList = Object.values(filteredNotes).sort((a, b) => {
-    switch (sortingOption) {
-      case "alphabetical":
-        return a.title.localeCompare(b.title);
-      case "createdAt":
-        const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
-        const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
-        return createdAtA - createdAtB;
-      case "updatedAt":
-      default:
-        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
-        const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
-        return updatedAtA - updatedAtB;
-    }
+function Editor({notesState, setNotesState}: Props) {
+  const navigate = useNavigate();
+  const { note } = useParams<{ note: string }>();
+  const [translations, setTranslations] = useState({
+    home: {
+      bookmarked: "home.bookmarked",
+      all: "home.all",
+      messagePt1: "home.messagePt1",
+      messagePt2: "home.messagePt2",
+      messagePt3: "home.messagePt3",
+      unlocktoedit: "home.unlocktoedit",
+      noContent: "home.noContent",
+      title: "home.title",
+      confirmDelete: "home.confirmDelete",
+      exportSuccess: "home.exportSuccess",
+      exportError: "home.exportError",
+      shareError: "home.shareError",
+      importSuccess: "home.importSuccess",
+      importInvalid: "home.importInvalid",
+      importError: "home.importError",
+      biometricsReason: "home.biometricsReason",
+      biometricsTitle: "home.biometricsTitle",
+      subtitle: "home.subtitle",
+      biometricFace: "home.biometricFace",
+      biometricTouch: "home.biometricFinger",
+      biometricError: "home.biometricError",
+      biometricPassword: "home.biometricPassword",
+      biometricWrongPassword: "home.biometricWrongPassword",
+      biometricSuccess: "home.biometricSuccess",
+      subtitle2: "home.subtitle2",
+      biometricUnlock: "home.biometricUnlock",
+      bookmarkError: "home.bookmarkError",
+      archiveError: "home.archiveError",
+      shareTitle: "home.shareTitle",
+      wrongpasswd: "home.wrongpasswd",
+      lockerror: "home.lockerror",
+      enterpasswd: "home.enterpasswd",
+    },
   });
-  const [focusMode, setFocusMode] = useState(false);
-  const [toolbarVisible, setToolbarVisible] = useState(true);
-  const [headingTreeVisible, setHeadingTreeVisible] = useState(false);
-  const [showFind, setShowFind] = useState(false);
-  const [wd, setWd] = useState<boolean>(
-    localStorage.getItem("expand-editor") === "true"
-  );
-  const [popupPosition, setPopupPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const [hashPopupPosition, setHashPopupPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const [hashPosition, setHashPosition] = useState<number | null>(null);
-  const [textAfterHash, setTextAfterHash] = useState<string | null>(null);
-  const [atPosition, setAtPosition] = useState<number | null>(null);
-  const [textAfterAt, setTextAfterAt] = useState<string | null>(null);
-  const headingTreeRef = useRef<HTMLDivElement | null>(null);
-  const [notchPadding, setNotchPadding] = useState(false);
 
   useEffect(() => {
-    const checkNotch = async () => {
-      const hasNotchFlag = await hasNotch();
-      setNotchPadding(hasNotchFlag);
+    console.time("loadTranslations");
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        console.time("Translation module import");
+        const translationModule = await import(
+          `./assets/locales/${selectedLanguage}.json`
+        );
+        console.timeEnd("Translation module import");
+
+        setTranslations({ ...translations, ...translationModule.default });
+        dayjs.locale(selectedLanguage);
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
     };
-    checkNotch();
-    setActiveNoteId(note.id);
+
+    loadTranslations();
+    console.timeEnd("loadTranslations");
   }, []);
 
-  const editor = useEditor(
-    {
-      extensions,
-      content: note.content,
-      onUpdate: ({ editor }) => {
-        const editorContent = editor.getJSON();
+  const unlockNote = async (noteId: string): Promise<void> => {
+    console.time("unlockNote");
+    try {
+      let password: string | null = null;
+      console.time("SecureStoragePlugin.get");
+      const globalPasswordResult = await SecureStoragePlugin.get({ key: "globalPassword" }).catch(() => null);
+      console.timeEnd("SecureStoragePlugin.get");
+      const storedGlobalPassword = globalPasswordResult?.value;
 
-        // Handle note content change
-        handleChangeNoteContent(editorContent, title);
+      const biometricAvailable = await NativeBiometric.isAvailable();
 
-        // Compare previous and current content
-        if (previousContent) {
-          const previousLabels = findNoteLabels(previousContent);
-          const currentLabels = findNoteLabels(editorContent);
-
-          previousLabels.forEach((label) => {
-            if (
-              !currentLabels.some(
-                (currentLabel) => currentLabel.attrs.id === label.attrs.id
-              )
-            ) {
-              console.log(`Label deleted: ${label.attrs.label}`);
-
-              // Remove the deleted label from the labels array
-              const updatedLabels = note.labels.filter(
-                (noteLabel) => noteLabel !== label.attrs.label
-              );
-
-              // Update the note content with the new labels
-              handleChangeNoteContent(editorContent, note.title, updatedLabels);
-            }
+      if (!storedGlobalPassword) {
+        password = await promptForPassword();
+        if (password) {
+          console.time("SecureStoragePlugin.set");
+          await SecureStoragePlugin.set({
+            key: "globalPassword",
+            value: password,
           });
+          console.timeEnd("SecureStoragePlugin.set");
+        } else {
+          return;
+        }
+      } else {
+        if (biometricAvailable) {
+          try {
+            console.time("NativeBiometric.verifyIdentity");
+            await NativeBiometric.verifyIdentity({
+              reason: "Unlock your notes",
+              title: "Unlock with Biometrics",
+            });
+            console.timeEnd("NativeBiometric.verifyIdentity");
+            password = storedGlobalPassword;
+          } catch {
+            password = await promptForPassword();
+            if (!password) {
+              return;
+            }
+          }
+        } else {
+          password = await promptForPassword();
+          if (!password) {
+            return;
+          }
+        }
+      }
+
+      console.time("Filesystem read for unlock");
+      const result = await Filesystem.readFile({
+        path: STORAGE_PATH,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+      console.timeEnd("Filesystem read for unlock");
+
+      let notes;
+      if (typeof result.data === "string") {
+        console.time("JSON parse for unlock");
+        notes = JSON.parse(result.data).data.notes;
+        console.timeEnd("JSON parse for unlock");
+      } else {
+        const dataText = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsText(result.data as Blob);
+        });
+        console.time("JSON parse for unlock from Blob");
+        notes = JSON.parse(dataText).data.notes;
+        console.timeEnd("JSON parse for unlock from Blob");
+      }
+
+      const updatedNote = { ...notes[noteId] };
+
+      if (updatedNote.isLocked) {
+        console.time("CryptoJS.AES.decrypt");
+        const decryptedContent = CryptoJS.AES.decrypt(
+          updatedNote.content.content[0],
+          password
+        ).toString(CryptoJS.enc.Utf8);
+        console.timeEnd("CryptoJS.AES.decrypt");
+
+        if (!decryptedContent) {
+          alert(translations.home.wrongpasswd);
+          return;
         }
 
-        // Update previous content
-        setPreviousContent(editorContent);
-      },
-    },
-    [note.id]
-  );
+        updatedNote.content = JSON.parse(decryptedContent);
+        updatedNote.isLocked = false;
+      } else {
+        console.time("CryptoJS.AES.encrypt");
+        const encryptedContent = CryptoJS.AES.encrypt(
+          JSON.stringify(updatedNote.content),
+          password
+        ).toString();
+        console.timeEnd("CryptoJS.AES.encrypt");
 
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === "f" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        setShowFind(true);
+        updatedNote.content = { type: "doc", content: [encryptedContent] };
+        updatedNote.isLocked = true;
       }
-    };
 
-    window.addEventListener("keydown", handleKeyPress);
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, []);
+      notes[noteId] = updatedNote;
 
-  useEffect(() => {
-    setWd(localStorage.getItem("expand-editor") === "true");
-  }, []);
+      console.time("Filesystem write");
+      await Filesystem.writeFile({
+        path: STORAGE_PATH,
+        data: JSON.stringify({ data: { notes } }),
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+      console.timeEnd("Filesystem write");
 
-  const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
-    const newTitle = DOMPurify.sanitize(event.currentTarget.innerHTML);
-    handleChangeNoteContent(editor?.getJSON() || ({} as JSONContent), newTitle);
-  };
-
-  const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const text = event.clipboardData.getData("text/plain");
-    document.execCommand("insertText", false, text);
-  };
-
-  const toggleHeadingTree = () => {
-    setHeadingTreeVisible(!headingTreeVisible);
-  };
-
-  const handleOutsideClick = useCallback(
-    (event: MouseEvent) => {
-      if (
-        headingTreeVisible &&
-        headingTreeRef.current &&
-        event.target instanceof Node &&
-        !headingTreeRef.current.contains(event.target)
-      ) {
-        setHeadingTreeVisible(false);
-      }
-    },
-    [headingTreeVisible]
-  );
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, [handleOutsideClick]);
-
-  const handleClickNote = (note: Note) => {
-    const editorContent = editor?.getHTML() || "";
-    const atIndex = editorContent.lastIndexOf("@@");
-
-    if (atIndex !== -1) {
-      // Find the first whitespace or end of the string after @@ to determine the end of the text to be replaced
-      const endOfReplacementIndex = editorContent.indexOf(" ", atIndex + 2);
-      const endOfReplacement =
-        endOfReplacementIndex !== -1
-          ? endOfReplacementIndex
-          : editorContent.length;
-
-      const link = `<linkNote id="${note.id}" label="${note.title}"><a href="note://${note.id}" target="_blank" rel="noopener noreferrer nofollow">${note.title}</a></linkNote>`;
-
-      const newContent =
-        editorContent.substring(0, atIndex) +
-        link +
-        editorContent.substring(endOfReplacement);
-
-      editor?.commands.setContent(newContent, true);
-      setPopupPosition(null);
+      setNotesState(notes);
+    } catch (error) {
+      alert(translations.home.lockerror);
     }
+    console.timeEnd("unlockNote");
   };
 
-  const handleAddLabel = (labelToAdd: string) => {
-    const editorContent = editor?.getHTML() || "";
-    const atIndex = editorContent.lastIndexOf("#");
+  const promptForPassword = async (): Promise<string | null> => {
+    const promptRoot = document.createElement("div");
+    document.body.appendChild(promptRoot);
 
-    if (atIndex !== -1) {
-      // Find the end of the text following the hash
-      const endOfReplacementIndex = editorContent.indexOf(" ", atIndex + 1);
-      const endOfReplacement =
-        endOfReplacementIndex !== -1
-          ? endOfReplacementIndex
-          : editorContent.length;
-
-      // Construct new content with the label replacement
-      const newContent =
-        editorContent.substring(0, atIndex) +
-        `<noteLabel id="${labelToAdd}" label="${labelToAdd}"></noteLabel>` +
-        editorContent.substring(endOfReplacement);
-
-      // Update the editor content
-      editor?.commands.setContent(newContent, true);
-      setPopupPosition(null);
-
-      // Retrieve the existing labels from the note
-      const existingLabels = note.labels || [];
-
-      // Ensure the new label is added without duplicating
-      const updatedLabels = Array.from(
-        new Set([...existingLabels, labelToAdd])
-      ); // Use Set to avoid duplicates
-
-      // Update the note content and labels
-      const jsonContent = editor?.getJSON();
-
-      console.log("JSON Content:", jsonContent);
-
-      handleChangeNoteContent(jsonContent, note.title, updatedLabels);
-    }
+    return new Promise<string | null>((resolve) => {
+      const handleConfirm = (value: string | null) => {
+        ReactDOM.unmountComponentAtNode(promptRoot);
+        document.body.removeChild(promptRoot);
+        resolve(value);
+      };
+      const handleCancel = () => {
+        ReactDOM.unmountComponentAtNode(promptRoot);
+        document.body.removeChild(promptRoot);
+        resolve(null);
+      };
+      ReactDOM.render(
+        <ModularPrompt
+          title="Enter Password"
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />,
+        promptRoot
+      );
+    });
   };
 
-  // Utility function to find all noteLabel objects in the JSON content
-  const findNoteLabels = (content: JSONContent) => {
-    const labels: any[] = [];
-    const traverse = (node: any) => {
-      if (node.type === "noteLabel") {
-        labels.push(node);
-      }
-      if (node.content) {
-        node.content.forEach(traverse);
-      }
-    };
-    traverse(content);
-    return labels;
+  const Cancel = () => {
+    navigate(-1);
   };
 
-  const handleSearch = () => {
-    setShowFind((prevShowFind) => !prevShowFind);
-  };
+  if (!note) {
+    return <div>No note ID provided</div>;
+  }
 
-  return (
-    <div>
-      <div
-        className={`editor overflow-auto h-full justify-center items-start px-4 ${
-          wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
-        } text-black dark:text-[color:var(--selected-dark-text)]`}
-      >
-        <Toolbar
-          toolbarVisible={toolbarVisible}
-          note={note}
-          noteId={note.id}
-          editor={editor}
-          toggleHeadingTree={toggleHeadingTree}
-        />
-        {headingTreeVisible && editor && (
-          <div
-            ref={headingTreeRef}
-            className={`transition-opacity ${
-              headingTreeVisible ? "opacity-100" : "opacity-0"
-            }`}
+  const noteData = notesState[note];
+
+  if (!noteData) {
+    return (
+      <div className="h-screen w-screen flex justify-center items-center">
+        <div className="text-xl font-bold text-center">Note not found</div>
+      </div>
+    );
+  }
+
+  if (noteData.isLocked) {
+    return (
+      <div className="h-[80vh] w-screen flex flex-col justify-center items-center">
+        <icons.LockLineIcon className="w-32 h-32" />
+        <p>Unlock to edit</p>
+        <div className="flex flex-col gap-2 pt-2 w-2/4">
+          <button
+            className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl text-center"
+            onClick={() => unlockNote(note)}
           >
-            <HeadingTree />
-          </div>
-        )}
-        <div
-          className={`sm:hidden bg-white dark:bg-[#232222] px-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between ${
-            notchPadding ? "pt-6" : "sm:pt-1"
-          }`}
-        >
-          <Link
-            to="/"
-            className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
+            Unlock
+          </button>
+          <button
+            className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl text-center"
+            onClick={Cancel}
           >
-            <Icons.ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
-          </Link>
-          <div className="flex">
-            <button
-              className="p-2 mt-6 rounded-md text-white bg-transparent cursor-pointer"
-              onClick={() => {
-                setFocusMode((prevFocusMode) => !prevFocusMode);
-                setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
-              }}
-            >
-              <Icons.Focus3LineIcon
-                className={`border-none ${
-                  focusMode ? "text-amber-400" : "text-neutral-800"
-                } dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
-              />
-            </button>
-            <button
-              className="p-2 align-end mt-6 rounded-md text-white bg-transparent cursor-pointer"
-              onClick={handleSearch}
-            >
-              {showFind ? (
-                <Icons.CloseLineIcon
-                  className={`border-none ${
-                    focusMode ? "hidden" : "block"
-                  } text-red-500 text-xl w-7 h-7`}
-                />
-              ) : (
-                <Icons.Search2LineIcon
-                  className={`border-none ${
-                    focusMode ? "hidden" : "block"
-                  } dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
-                />
-              )}
-            </button>
-          </div>
-        </div>
-        <div
-          contentEditable
-          onPaste={handlePaste}
-          suppressContentEditableWarning
-          className={`text-3xl font-bold overflow-y-scroll outline-none mt-10 ${
-            isPlatform("android") ? "pt-6 sm:pt-1" : "md:pt-10s"
-          }`}
-          onInput={handleTitleChange}
-          dangerouslySetInnerHTML={{ __html: note.title }}
-        />
-        <div>
-          <div className="py-2 h-full w-full" id="container">
-            {hashPopupPosition && (
-              <BubblemenuLabel
-                hashPopupPosition={hashPopupPosition}
-                note={note}
-                handleChangeNoteContent={handleChangeNoteContent}
-                editor={editor}
-                textAfterHash={textAfterHash}
-                uniqueLabels={uniqueLabels}
-                setHashPopupPosition={setHashPopupPosition}
-                setHashPosition={setHashPosition}
-                setTextAfterHash={setTextAfterHash}
-                onClickLabel={handleAddLabel}
-              />
-            )}
-            {popupPosition && (
-              <BubblemenuNoteLink
-                popupPosition={popupPosition}
-                notes={notesList}
-                onClickNote={handleClickNote}
-                textAfterAt={textAfterAt}
-              />
-            )}
-            <EditorContent
-              onKeyUp={(event) =>
-                handleEditorTyping(
-                  event,
-                  textAfterAt,
-                  textAfterHash,
-                  atPosition,
-                  hashPosition,
-                  setPopupPosition,
-                  setAtPosition,
-                  setTextAfterAt,
-                  setHashPopupPosition,
-                  setHashPosition,
-                  setTextAfterHash
-                )
-              }
-              editor={editor}
-              className="overflow-hidden w-full mb-[6em] min-h-[25em] editor-content"
-            />
-          </div>
-        </div>
-        <div
-          className={`sm:ml-16 ${
-            showFind ? "show" : "hidden"
-          } fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60 top-20 sm:bottom-6`}
-        >
-          {showFind && <Find editor={editor} />}
-        </div>
-        <div className={`${focusMode ? "hidden" : "block"} sm:hidden`}>
-          <Drawer noteId={note.id} note={note} editor={editor} />
+            Cancel
+          </button>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  localStorage.setItem("lastNoteEdit", note);
+
+  console.time("EditorComponent render");
+  const EditorComponentWithTiming = (note: any) => {
+    const component = <EditorComponent {...note} />;
+    console.timeEnd("EditorComponent render");
+    return component;
+  };
+
+  return <EditorComponentWithTiming note={noteData} />;
 }
 
 export default Editor;

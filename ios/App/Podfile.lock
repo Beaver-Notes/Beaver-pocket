@@ -10,6 +10,9 @@ PODS:
   - CapacitorCordova (6.0.0)
   - CapacitorDevice (6.0.0):
     - Capacitor
+  - CapacitorFileChunk (2.0.0):
+    - Capacitor
+    - GCDWebServer (~> 3.0)
   - CapacitorFilesystem (6.0.0):
     - Capacitor
   - CapacitorHaptics (6.0.0):
@@ -31,6 +34,9 @@ PODS:
     - Capacitor
   - CapacitorVoiceRecorder (5.0.0):
     - Capacitor
+  - GCDWebServer (3.5.4):
+    - GCDWebServer/Core (= 3.5.4)
+  - GCDWebServer/Core (3.5.4)
   - SwiftKeychainWrapper (4.0.1)
 
 DEPENDENCIES:
@@ -40,6 +46,7 @@ DEPENDENCIES:
   - "CapacitorBrowser (from `../../node_modules/@capacitor/browser`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorDevice (from `../../node_modules/@capacitor/device`)"
+  - CapacitorFileChunk (from `../../node_modules/capacitor-file-chunk`)
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
@@ -53,6 +60,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - GCDWebServer
     - SwiftKeychainWrapper
 
 EXTERNAL SOURCES:
@@ -68,6 +76,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorDevice:
     :path: "../../node_modules/@capacitor/device"
+  CapacitorFileChunk:
+    :path: "../../node_modules/capacitor-file-chunk"
   CapacitorFilesystem:
     :path: "../../node_modules/@capacitor/filesystem"
   CapacitorHaptics:
@@ -96,6 +106,7 @@ SPEC CHECKSUMS:
   CapacitorBrowser: 7e1e2cdbb3e372f09f0bad0c4c21a6d187b679ad
   CapacitorCordova: 8c4bfdf69368512e85b1d8b724dd7546abeb30af
   CapacitorDevice: f8fd88f9edd1261c55a109f32015b09bbbfdc4a0
+  CapacitorFileChunk: 49b24fa9b57c5aaa6657bbba82f6229dc6234a5e
   CapacitorFilesystem: 60e59ba274c234a979e7a3be2552feaadcee4263
   CapacitorHaptics: 9ebc9363f0e9b8eb4295088a0b474530acf1859b
   CapacitorKeyboard: deacbd09d8d1029c3681197fb05d206b721d5f73
@@ -106,8 +117,9 @@ SPEC CHECKSUMS:
   CapacitorSplashScreen: 5431ab8d19c1c6e95777d53bfaa7a36a6c3d94c7
   CapacitorStatusBar: 2e4369f99166125435641b1908d05f561eaba6f6
   CapacitorVoiceRecorder: 872ea857b497ce2c71afe3e4eb5de0a74290c0db
+  GCDWebServer: 2c156a56c8226e2d5c0c3f208a3621ccffbe3ce4
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
 
-PODFILE CHECKSUM: e3bb583f99d4e72eb293ec413639995ab31922db
+PODFILE CHECKSUM: 07389439646356702284c0a617e97b5a0cfaa210
 
 COCOAPODS: 1.15.2
