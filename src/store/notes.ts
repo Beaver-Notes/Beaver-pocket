@@ -4,7 +4,7 @@ import {
   FilesystemEncoding,
   FilesystemDirectory
 } from "@capacitor/filesystem";
-import React, { useState } from "react";
+import React from "react";
 import { Note } from "./types";
 import {Capacitor} from "@capacitor/core";
 import {setStoreRemotePath} from "./useDataPath";
@@ -106,7 +106,9 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
 
 // Save
 
-export const useSaveNote = (setNotesState: React.Dispatch<React.SetStateAction<Record<string, Note>>>) => {
+export const useSaveNote = (
+  setNotesState: (notes: Record<string, Note>) => void
+) => {
   const saveNote = React.useCallback(
     async (note: unknown) => {
       try {
@@ -126,17 +128,21 @@ export const useSaveNote = (setNotesState: React.Dispatch<React.SetStateAction<R
               ? typedNote.updatedAt
               : Date.now();
 
-          const updatedNote = {
+          const updatedNote: Note = {
             ...typedNote,
             createdAt: createdAtTimestamp,
             updatedAt: updatedAtTimestamp,
           };
 
-          notes[typedNote.id] = updatedNote;
+          // Update the notes object with the new/updated note
+          const updatedNotes: Record<string, Note> = {
+            ...notes,
+            [typedNote.id]: updatedNote,
+          };
 
           const data = {
             data: {
-              notes,
+              notes: updatedNotes,
             },
           };
 
@@ -148,11 +154,8 @@ export const useSaveNote = (setNotesState: React.Dispatch<React.SetStateAction<R
             encoding: FilesystemEncoding.UTF8,
           });
 
-          // Update the state immediately
-          setNotesState((prevNotes) => ({
-            ...prevNotes,
-            [typedNote.id]: updatedNote,
-          }));
+          // Update the state directly
+          setNotesState(updatedNotes);
         } else {
           console.error("Invalid note object:", note);
         }
@@ -166,12 +169,9 @@ export const useSaveNote = (setNotesState: React.Dispatch<React.SetStateAction<R
   return { saveNote };
 };
 
-
 // Delete
 
-export const useDeleteNote = () => {
-  const [notesState, setNotesState] = useState<Record<string, Note>>({});
-
+export const useDeleteNote = (setNotesState: (notes: Record<string, Note>) => void, notesState: Record<string, Note>) => {
   const deleteNote = React.useCallback(
     async (noteId: string) => {
       try {

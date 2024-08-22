@@ -9,23 +9,23 @@ import dayjs from "dayjs";
 import "dayjs/locale/it";
 import relativeTime from "dayjs/plugin/relativeTime";
 import SearchBar from "./components/Home/Search";
-import {
-  useSaveNote,
-} from "./store/notes";
-import useNoteEditor from "./store/useNoteActions";
 import { useNotesState } from "./store/Activenote";
 import Icons from "./lib/remixicon-react";
 
 // Import Remix icons
 import NoteCard from "./components/Home/NoteCard";
 
-const App: React.FC = () => {
-  const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
+interface HomeProps {
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
+}
+
+const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {  // Correctly destructuring props
+  const {activeNoteId, setActiveNoteId } =
     useNotesState();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
-  const { saveNote } = useSaveNote(setNotesState);
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
@@ -42,8 +42,6 @@ const App: React.FC = () => {
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
   }, [searchQuery, notesState]);
-
-  useNoteEditor(activeNoteId, notesState, setNotesState, saveNote);
 
   const [sortingOption, setSortingOption] = useState("updatedAt");
 
@@ -215,7 +213,7 @@ const App: React.FC = () => {
               {notesList
                 .filter((note) => note.isBookmarked && !note.isArchived)
                 .map((note) => (
-                  <NoteCard note={note} setNotesState={setNotesState} />
+                  <NoteCard note={note} setNotesState={setNotesState} notesState={notesState}/>
                 ))}
               </div>
               <h2 className="text-3xl font-bold">
@@ -241,7 +239,7 @@ const App: React.FC = () => {
                 {notesList
                   .filter((note) => !note.isBookmarked && !note.isArchived)
                   .map((note) => (
-                    <NoteCard note={note} setNotesState={setNotesState} />
+                    <NoteCard note={note} setNotesState={setNotesState} notesState={notesState}/>
                   ))}
               </div>
             </div>
@@ -252,4 +250,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default Home;

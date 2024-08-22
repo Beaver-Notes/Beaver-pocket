@@ -179,7 +179,7 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {  //
                   {notesList
                     .filter((note) => note.isArchived)
                     .map((note) => (
-                      <NoteCard note={note} setNotesState={setNotesState} />
+                      <NoteCard note={note} setNotesState={setNotesState} notesState={notesState}/>
                     ))}
                 </div>
               </div>

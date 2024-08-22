@@ -23,15 +23,16 @@ import { JSONContent } from "@tiptap/react";
 
 interface BookmarkedProps {
   note: Note;
-  setNotesState: (notes: any) => void;
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState }) => {
-  const { activeNoteId, notesState } = useNotesState();
+const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }) => {
+  const { activeNoteId } = useNotesState();
 
   const STORAGE_PATH = "notes/data.json";
   const navigate = useNavigate();
-  const { deleteNote } = useDeleteNote();
+  const { deleteNote } = useDeleteNote(setNotesState, notesState);
   const { toggleArchive } = useToggleArchive();
   const { toggleBookmark } = useToggleBookmark();
   const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
