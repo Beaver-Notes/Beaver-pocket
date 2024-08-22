@@ -3,7 +3,6 @@ import {
   Routes,
   Route,
   useNavigate,
-  useParams,
   useLocation,
 } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
@@ -17,23 +16,35 @@ import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
 import Dropbox from "./settings/screens/dropbox";
 import Webdav from "./settings/screens/webdav";
-import Editor from "./Editor";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
 import Sync from "./settings/sync";
+import Editor from "./Editor";
 import { useImportDav } from "./utils/webDavUtil";
 import "./assets/css/main.css";
 import "./assets/css/fonts.css";
 import "./assets/css/animations.css"; // Import your CSS animations file
+import BottomNavBar from "./components/App/BottomNavBar";
+import CommandPrompt from "./components/App/CommandPrompt";
+import { loadNotes } from "./store/notes";
 import { useNotesState } from "./store/Activenote";
-import BottomNavBar from "./components/Home/BottomNavBar";
 
 const App: React.FC = () => {
   const history = useNavigate();
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
+  const { notesState, setNotesState } = useNotesState();
   const [isSwipe, setIsSwipe] = useState(false);
 
+  useEffect(() => {
+    const loadNotesFromStorage = async () => {
+      const notes = await loadNotes();
+      setNotesState(notes);
+    };
+
+    loadNotesFromStorage();
+  }, []);
+  
   // Add back button listener for Android
   CapacitorApp.addListener("backButton", ({ canGoBack }) => {
     if (!canGoBack) {
@@ -74,26 +85,26 @@ const App: React.FC = () => {
     }
   });
 
-  function EditorWrapper() {
-    const { note } = useParams<{ note: string }>();
-    const { notesState } = useNotesState();
+  const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
 
-    if (!note) {
-      return <div>No note ID provided</div>;
-    }
+  useEffect(() => {
+    // Listen for key combination
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "p"
+      ) {
+        setIsCommandPromptOpen(true);
+      }
+    };
 
-    const noteData = notesState[note];
+    document.addEventListener("keydown", handleKeyDown);
 
-    if (!noteData) {
-      return (
-        <div className="h-screen w-screen flex justify-center items-center">
-          <div className="text-xl font-bold text-center">Note not found</div>
-        </div>
-      );
-    }
-    localStorage.setItem("lastNoteEdit", note);
-    return <Editor note={noteData} />;
-  }
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  });
 
   // Swipeable handler to go back when swiping right
   const swipeHandlers = useSwipeable({
@@ -134,7 +145,7 @@ const App: React.FC = () => {
           >
             <Routes location={location}>
               <Route path="/" element={<Home />} />
-              <Route path="/archive" element={<Archive />} />
+              <Route path="/archive" element={<Archive notesState={notesState} setNotesState={setNotesState}/>} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<About />} />
               <Route path="/dropbox" element={<Dropbox />} />
@@ -142,14 +153,19 @@ const App: React.FC = () => {
               <Route path="/shortcuts" element={<Shortcuts />} />
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/sync" element={<Sync />} />
-              <Route path="/editor/:note" element={<EditorWrapper />} />
+              <Route path="/editor/:note" element={<Editor notesState={notesState} setNotesState={setNotesState} />} />
             </Routes>
           </CSSTransition>
         </TransitionGroup>
       </Auth0Provider>
+      <CommandPrompt
+        setIsCommandPromptOpen={setIsCommandPromptOpen}
+        isOpen={isCommandPromptOpen}
+      />
       {shouldShowNavBar && <BottomNavBar />}
     </div>
   );
 };
 
 export default App;
+

@@ -1,83 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "./store/types";
-import { JSONContent } from "@tiptap/react";
-import ModularPrompt from "./components/ui/Dialog";
 import SearchBar from "./components/Home/Search";
-import {
-  Filesystem,
-  Directory,
-  FilesystemEncoding,
-} from "@capacitor/filesystem";
-import * as CryptoJS from "crypto-js";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/it";
-import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { useNavigate } from "react-router-dom";
-import {
-  loadNotes,
-  useDeleteNote,
-  useToggleArchive,
-} from "./store/notes";
+import { useToggleArchive } from "./store/notes";
 import { useNotesState } from "./store/Activenote";
 import Icons from "./lib/remixicon-react";
-
 import dayjs from "dayjs";
-import ReactDOM from "react-dom";
+import NoteCard from "./components/Home/NoteCard";
 
-const Archive: React.FC = () => {
-  const navigate = useNavigate();
-  const STORAGE_PATH = "notes/data.json";
-  const { deleteNote } = useDeleteNote();
-  const { toggleArchive } = useToggleArchive();
-  const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
-    useNotesState();
+interface ArchiveProps {
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
+}
+
+const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {  // Correctly destructuring props
+  useToggleArchive();
+  const { activeNoteId } = useNotesState();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
-
-  const handleToggleArchive = async (
-    noteId: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation(); // Prevent event propagation
-
-    try {
-      const updatedNotes = await toggleArchive(noteId);
-      setNotesState(updatedNotes);
-    } catch (error) {
-      console.error(translations.home.archiveError, error);
-      alert(translations.home.archiveError + (error as any).message);
-    }
-  };
-
-  const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    const isConfirmed = window.confirm(translations.home.confirmDelete);
-
-    if (isConfirmed) {
-      try {
-        await deleteNote(noteId);
-        // Remove the deleted note from filteredNotes state
-        setFilteredNotes((prevFilteredNotes) => {
-          const updatedFilteredNotes = { ...prevFilteredNotes };
-          delete updatedFilteredNotes[noteId];
-          return updatedFilteredNotes;
-        });
-      } catch (error) {
-        alert(error);
-      }
-    }
-  };
-  
-
-  useEffect(() => {
-    const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
-      setNotesState(notes);
-    };
-
-    loadNotesFromStorage();
-  }, []);
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
@@ -95,8 +37,7 @@ const Archive: React.FC = () => {
     );
   }, [searchQuery, notesState]);
 
-  // @ts-ignore
-  const [sortingOption, setSortingOption] = useState("updatedAt");
+  const [sortingOption] = useState("updatedAt");
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     switch (sortingOption) {
@@ -114,63 +55,6 @@ const Archive: React.FC = () => {
     }
   });
 
-  const MAX_CONTENT_PREVIEW_LENGTH = 150;
-
-  function extractParagraphTextFromContent(content: JSONContent): string {
-    if (!content || !Array.isArray(content.content)) {
-      return translations.archive.noContent;
-    }
-
-    // Check if the content consists of a single empty paragraph
-    if (
-      content.content.length === 1 &&
-      content.content[0].type === "paragraph" &&
-      (!content.content[0].content || content.content[0].content.length === 0)
-    ) {
-      return ""; // Return an empty string for a single empty paragraph
-    }
-
-    const paragraphText = content.content
-      .filter((node) => node.type === "paragraph") // Filter paragraph nodes
-      .map((node) => {
-        if (node.content && Array.isArray(node.content)) {
-          const textContent = node.content
-            .filter((innerNode) => innerNode.type === "text") // Filter text nodes within paragraphs
-            .map((innerNode) => innerNode.text) // Get the text from text nodes
-            .join(" "); // Join text from text nodes within the paragraph
-          return textContent;
-        }
-        return ""; // Return an empty string for nodes without content
-      })
-      .join(" "); // Join paragraph text with spaces
-
-    return paragraphText || "No content"; // If no paragraph text, return "No content"
-  }
-
-  function truncateContentPreview(
-    content: JSONContent | string | JSONContent[]
-  ) {
-    let text = "";
-
-    if (typeof content === "string") {
-      text = content;
-    } else if (Array.isArray(content)) {
-      const jsonContent: JSONContent = { type: "doc", content };
-      text = extractParagraphTextFromContent(jsonContent);
-    } else if (content && content.content) {
-      const { title, ...contentWithoutTitle } = content;
-      text = extractParagraphTextFromContent(contentWithoutTitle);
-    }
-
-    if (text.trim() === "") {
-      return "No content"; // Show a placeholder for No content
-    } else if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
-      return text;
-    } else {
-      return text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
-    }
-  }
-
   const uniqueLabels = Array.from(
     new Set(Object.values(notesState).flatMap((note) => note.labels))
   );
@@ -186,245 +70,8 @@ const Archive: React.FC = () => {
     );
   };
 
-  const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-
-    try {
-      // Prompt the user for a password
-      const password = await promptForPassword();
-      if (!password) {
-        // If the user cancels or enters nothing, exit the function
-        return;
-      }
-
-      // Check if a password is already stored
-      let storedPassword: string | null = null;
-      try {
-        const result = await SecureStoragePlugin.get({ key: noteId });
-        storedPassword = result.value;
-      } catch (e) {
-        // No stored password found, proceed without error
-      }
-
-      // If a stored password exists, compare it with the entered password
-      if (storedPassword && storedPassword !== password) {
-        alert(translations.home.wrongpasswd);
-        return;
-      }
-
-      // Load the notes from storage
-      const result = await Filesystem.readFile({
-        path: STORAGE_PATH,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      let notes;
-      if (typeof result.data === "string") {
-        notes = JSON.parse(result.data).data.notes;
-      } else {
-        const dataText = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsText(result.data as Blob);
-        });
-        notes = JSON.parse(dataText).data.notes;
-      }
-
-      const updatedNote = { ...notes[noteId] };
-
-      // Check if the note is locked
-      if (updatedNote.isLocked) {
-        // Note is locked, try to decrypt it
-        const decryptedContent = CryptoJS.AES.decrypt(
-          updatedNote.content.content[0],
-          password
-        ).toString(CryptoJS.enc.Utf8);
-
-        if (!decryptedContent) {
-          // If decryption fails (wrong password), show error message and exit
-          alert(translations.home.wrongpasswd);
-          return;
-        }
-
-        // Update note content with decrypted content and unlock the note
-        updatedNote.content = JSON.parse(decryptedContent);
-        updatedNote.isLocked = false;
-      } else {
-        // Note is unlocked, encrypt the content
-        const encryptedContent = CryptoJS.AES.encrypt(
-          JSON.stringify(updatedNote.content),
-          password
-        ).toString();
-
-        // Update note content with encrypted content and lock the note
-        updatedNote.content = { type: "doc", content: [encryptedContent] };
-        updatedNote.isLocked = true;
-
-        // Store the password securely if it wasn't already stored
-        if (!storedPassword) {
-          await SecureStoragePlugin.set({ key: noteId, value: password });
-        }
-      }
-
-      // Update the notes array with the updated note
-      notes[noteId] = updatedNote;
-
-      // Save the updated notes array to storage
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      // Update the state with the updated notes array
-      setNotesState(notes);
-    } catch (error) {
-      alert(translations.home.lockerror);
-    }
-  };
-
-  // Helper function to prompt the user for a password
-  const promptForPassword = async (): Promise<string | null> => {
-    // Define a div where the prompt will be rendered
-    const promptRoot = document.createElement("div");
-    document.body.appendChild(promptRoot);
-
-    return new Promise<string | null>((resolve) => {
-      const handleConfirm = (value: string | null) => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        resolve(value);
-      };
-      const handleCancel = () => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        resolve(null); // Resolving with null for cancel action
-      };
-      ReactDOM.render(
-        <ModularPrompt
-          title={translations.home.enterpasswd}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />,
-        promptRoot
-      );
-    });
-  };
-
-  const handleToggleUnlock = async (noteId: string) => {
-    try {
-      // Prompt the user for a password
-      const password = await promptForPassword();
-      if (!password) {
-        // If the user cancels or enters nothing, exit the function
-        return;
-      }
-
-      // Check if a password is already stored
-      let storedPassword: string | null = null;
-      try {
-        const result = await SecureStoragePlugin.get({ key: noteId });
-        storedPassword = result.value;
-      } catch (e) {
-        // No stored password found, proceed without error
-      }
-
-      // If a stored password exists, compare it with the entered password
-      if (storedPassword && storedPassword !== password) {
-        alert(translations.home.wrongpasswd);
-        return;
-      }
-
-      // Load the notes from storage
-      const result = await Filesystem.readFile({
-        path: STORAGE_PATH,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      let notes;
-      if (typeof result.data === "string") {
-        notes = JSON.parse(result.data).data.notes;
-      } else {
-        const dataText = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsText(result.data as Blob);
-        });
-        notes = JSON.parse(dataText).data.notes;
-      }
-
-      const updatedNote = { ...notes[noteId] };
-
-      // Check if the note is locked
-      if (updatedNote.isLocked) {
-        // Note is locked, try to decrypt it
-        const decryptedContent = CryptoJS.AES.decrypt(
-          updatedNote.content.content[0],
-          password
-        ).toString(CryptoJS.enc.Utf8);
-
-        if (!decryptedContent) {
-          // If decryption fails (wrong password), show error message and exit
-          alert(translations.home.wrongpasswd);
-          return;
-        }
-
-        // Update note content with decrypted content and unlock the note
-        updatedNote.content = JSON.parse(decryptedContent);
-        updatedNote.isLocked = false;
-      } else {
-        // Note is unlocked, encrypt the content
-        const encryptedContent = CryptoJS.AES.encrypt(
-          JSON.stringify(updatedNote.content),
-          password
-        ).toString();
-
-        // Update note content with encrypted content and lock the note
-        updatedNote.content = { type: "doc", content: [encryptedContent] };
-        updatedNote.isLocked = true;
-
-        // Store the password securely if it wasn't already stored
-        if (!storedPassword) {
-          await SecureStoragePlugin.set({ key: noteId, value: password });
-        }
-      }
-
-      // Update the notes array with the updated note
-      notes[noteId] = updatedNote;
-
-      // Save the updated notes array to storage
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      // Update the state with the updated notes array
-      setNotesState(notes);
-      setActiveNoteId(noteId);
-    } catch (error) {
-      alert(translations.home.lockerror);
-    }
-  };
-
-  const handleClickNote = async (note: Note) => {
-    if (note.isLocked) {
-      handleToggleUnlock(note.id);
-      navigate(`/editor/${note.id}`);
-    } else {
-      // Set active note directly
-      setActiveNoteId(note.id);
-      navigate(`/editor/${note.id}`);
-    }
-  };
-
   dayjs.extend(relativeTime);
 
-  // Translations
   const [translations, setTranslations] = useState({
     archive: {
       archived: "archive.archived",
@@ -463,7 +110,6 @@ const Archive: React.FC = () => {
   });
 
   useEffect(() => {
-    // Load translations
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
@@ -486,7 +132,6 @@ const Archive: React.FC = () => {
     return storedThemeMode || "auto";
   });
 
-  // State to manage dark mode
   const [darkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
@@ -494,14 +139,13 @@ const Archive: React.FC = () => {
     return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
   });
 
-  // Effect to update the classList and localStorage when darkMode or themeMode changes
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
   return (
-    <div >
+    <div>
       <div className="grid sm:grid-cols-[auto]">
         <div className="overflow-y-hidden mb-12">
           {!activeNoteId && (
@@ -535,95 +179,7 @@ const Archive: React.FC = () => {
                   {notesList
                     .filter((note) => note.isArchived)
                     .map((note) => (
-                      <div
-                        key={note.id}
-                        role="button"
-                        tabIndex={0}
-                        className={
-                          note.id === activeNoteId
-                            ? "p-3 h-auto cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] h-48;"
-                            : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
-                        }
-                        onClick={() => handleClickNote(note)}
-                      >
-                        <div className="h-40 overflow-hidden">
-                          <div className="flex flex-col h-full overflow-hidden">
-                            <div className="text-xl font-bold">
-                              {note.title}
-                            </div>
-                            {note.isLocked ? (
-                              <div>
-                                <p></p>
-                              </div>
-                            ) : (
-                              <div>
-                                {note.labels.length > 0 && (
-                                  <div className="flex flex-col gap-1 overflow-hidden">
-                                    <div className="flex flex-wrap gap-1">
-                                      {note.labels.map((label) => (
-                                        <span
-                                          key={label}
-                                          className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
-                                        >
-                                          #{label}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            {note.isLocked ? (
-                              <div className="flex flex-col items-center">
-                                <button className="flex items-center justify-center">
-                                  <Icons.LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
-                                </button>
-                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                  {translations.home.unlocktoedit || "-"}
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="text-lg">
-                                {note.content &&
-                                  truncateContentPreview(note.content)}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between pt-2">
-                          <div className="flex items-center">
-                            <button
-                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-                              onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
-                            >
-                              {note.isBookmarked ? (
-                                <Icons.ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
-                              ) : (
-                                <Icons.ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
-                              )}
-                            </button>
-                            <button
-                              className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-                              onClick={(e) => handleToggleLock(note.id, e)}
-                            >
-                              {note.isLocked ? (
-                                <Icons.LockClosedIcon className="w-8 h-8 mr-2" />
-                              ) : (
-                                <Icons.LockOpenIcon className="w-8 h-8 mr-2" />
-                              )}
-                            </button>
-                            <button
-                              className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
-                              onClick={(e) => handleDeleteNote(note.id, e)}
-                            >
-                              <Icons.DeleteBinLineIcon className="w-8 h-8 mr-2" />
-                            </button>
-                          </div>
-                          <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
-                            {dayjs(note.createdAt).fromNow()}
-                          </div>
-                        </div>
-                      </div>
+                      <NoteCard note={note} setNotesState={setNotesState} />
                     ))}
                 </div>
               </div>
