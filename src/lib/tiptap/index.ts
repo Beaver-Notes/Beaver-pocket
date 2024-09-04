@@ -29,6 +29,7 @@ import FileEmbed from "./exts/file-block";
 import SearchAndReplace from "./exts/search-&-replace";
 import Mathblock from "./exts/math-block/Index";
 import CodeBlockComponent from "./exts/CodeBlockComponent";
+import paper from "./exts/paper-block";
 import iframe from "./exts/embed-block/iframe";
 import { useDataPath } from "../../store/useDataPath";
 import MermaidDiagram from "./exts/mermaid-block";
@@ -122,6 +123,7 @@ const extensions = [
   Superscript,
   Footnote,
   Footnotes,
+  paper,
   FootnoteReference,
   Document.extend({
     content: 'block+ footnotes?',

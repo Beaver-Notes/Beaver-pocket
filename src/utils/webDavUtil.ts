@@ -10,7 +10,6 @@ import { useState } from "react";
 import { Note } from "../store/types";
 import { useHandleImportData } from "./importUtils";
 import { loadNotes } from "../store/notes";
-import { useNotesState } from "../store/Activenote";
 
 export const useExportDav = () => {
   const [baseUrl] = useState<string>(
@@ -33,7 +32,7 @@ export const useExportDav = () => {
 
   const [progress, setProgress] = useState<number>(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
- 
+
   const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
@@ -51,7 +50,6 @@ export const useExportDav = () => {
       // Initialize progress
       setProgress(0);
       setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-
 
       // Get current date for folder name
       const currentDate = new Date();
@@ -254,7 +252,10 @@ export const useExportDav = () => {
   return { exportdata, progress, progressColor };
 };
 
-export const useImportDav = () => {
+export const useImportDav = (
+  setNotesState: (notes: Record<string, Note>) => void,
+  notesState: Record<string, Note>
+) => {
   const [baseUrl] = useState<string>(
     () => localStorage.getItem("baseUrl") || ""
   );
@@ -272,14 +273,13 @@ export const useImportDav = () => {
     })
   );
 
-  const { notesState, setNotesState } = useNotesState();
   const { importUtils } = useHandleImportData();
   const [searchQuery] = useState<string>("");
   const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
 
   const [progress, setProgress] = useState<number>(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
- 
+
   const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
@@ -296,90 +296,102 @@ export const useImportDav = () => {
     try {
       setProgress(0);
       setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-  
+
       await downloadAssets();
       setProgress(50);
-  
+
       await downloadFileAssets();
       setProgress(75);
-  
+
       await downloadData();
       setProgress(100);
-  
+
       // If everything went well, delete the export folder
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().slice(0, 10);
       const folderPath = `export/Beaver Notes ${formattedDate}`;
-  
+
       await deleteFolder(folderPath);
-  
     } catch (error) {
       alert(error);
       setProgressColor("#ff3333"); // Set the progress color to red to indicate an error
       setProgress(0); // Reset progress to 0 on failure or stop it at the last successful point
     }
-  };  
+  };
 
   const deleteFolder = async (path: string) => {
-  try {
-    await Filesystem.rmdir({
-      path: path,
-      directory: FilesystemDirectory.Data,
-      recursive: true, // Delete all contents of the directory
-    });
-    console.log("Folder deleted:", path);
-  } catch (error) {
-    console.error("Error deleting folder:", path, error);
-  }
-};
+    try {
+      await Filesystem.rmdir({
+        path: path,
+        directory: FilesystemDirectory.Data,
+        recursive: true, // Delete all contents of the directory
+      });
+      console.log("Folder deleted:", path);
+    } catch (error) {
+      console.error("Error deleting folder:", path, error);
+    }
+  };
 
   const downloadFileAssets = async (): Promise<void> => {
     try {
       // Get current date for folder name
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().slice(0, 10);
-  
+
       // Base directory for file-assets in WebDAV and local export path
       const baseWebDavPath = `Beaver-Pocket/Beaver Notes ${formattedDate}/file-assets`;
       const baseLocalPath = `export/Beaver Notes ${formattedDate}/file-assets`;
-  
+
       // Function to recursively download files and directories
-      const downloadDirectory = async (webDavPath: string, localPath: string) => {
+      const downloadDirectory = async (
+        webDavPath: string,
+        localPath: string
+      ) => {
         // Fetch directory content from WebDAV
-        const directoryContent = await webDavService.getDirectoryContent(webDavPath);
-      
+        const directoryContent = await webDavService.getDirectoryContent(
+          webDavPath
+        );
+
         // Parse the XML response
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
-      
+
         // Extract file and folder names from the XML
         const responses = xmlDoc.getElementsByTagName("d:response");
-      
+
         for (let i = 0; i < responses.length; i++) {
           const hrefElement = responses[i].getElementsByTagName("d:href")[0];
-          const propStatElement = responses[i].getElementsByTagName("d:propstat")[0];
-          const propElement = propStatElement?.getElementsByTagName("d:prop")[0];
-          const resourceTypeElement = propElement?.getElementsByTagName("d:resourcetype")[0];
-      
+          const propStatElement =
+            responses[i].getElementsByTagName("d:propstat")[0];
+          const propElement =
+            propStatElement?.getElementsByTagName("d:prop")[0];
+          const resourceTypeElement =
+            propElement?.getElementsByTagName("d:resourcetype")[0];
+
           const href = hrefElement?.textContent;
-          const isCollection = resourceTypeElement?.getElementsByTagName("d:collection").length > 0;
-      
+          const isCollection =
+            resourceTypeElement?.getElementsByTagName("d:collection").length >
+            0;
+
           if (href) {
             // Decode URL to handle spaces and special characters
             const decodedHref = decodeURIComponent(href);
-            const name = decodedHref.split("/").filter((part) => part !== "").pop();
-      
+            const name = decodedHref
+              .split("/")
+              .filter((part) => part !== "")
+              .pop();
+
             if (name === webDavPath.split("/").pop()) {
               continue; // Skip the base directory itself
             }
-      
+
             const fullWebDavPath = `${webDavPath}/${name}`;
             const fullLocalPath = `${localPath}/${name}`;
-      
+
             console.log(`Processing: ${decodedHref}`);
             console.log(`Full WebDAV Path: ${fullWebDavPath}`);
             console.log(`Full Local Path: ${fullLocalPath}`);
-      
+
             if (isCollection) {
               // Create the folder locally
               await Filesystem.mkdir({
@@ -388,7 +400,7 @@ export const useImportDav = () => {
                 recursive: true, // Ensure parent folders are created
               });
               console.log("Folder created:", fullLocalPath);
-      
+
               // Recursively download the contents of the folder
               await downloadDirectory(fullWebDavPath, fullLocalPath);
             } else {
@@ -406,24 +418,26 @@ export const useImportDav = () => {
                 });
                 console.log("File downloaded:", file);
               } catch (fileError) {
-                console.error("Error downloading file:", `${baseUrl}/${fullWebDavPath}`, fileError);
+                console.error(
+                  "Error downloading file:",
+                  `${baseUrl}/${fullWebDavPath}`,
+                  fileError
+                );
               }
             }
           }
         }
       };
-      
-  
+
       // Start downloading from the base directory
       await downloadDirectory(baseWebDavPath, baseLocalPath);
-  
+
       // Import data into the app after all files are downloaded
       importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes);
     } catch (error) {
       throw error;
     }
   };
-  
 
   const downloadData = async (): Promise<void> => {
     try {

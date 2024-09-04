@@ -3,8 +3,15 @@ import { WebDavService } from "../../utils/webDavApi";
 import { useExportDav, useImportDav } from "../../utils/webDavUtil";
 import icons from "../../lib/remixicon-react";
 import CircularProgress from "../../components/ui/ProgressBar";
+import { Note } from "../../store/types";
 
-const Webdav: React.FC = () => {
+interface WebdavProps {
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
+}
+
+const Webdav: React.FC<WebdavProps> = ({ notesState, setNotesState }) => {
+  // Correctly destructuring props
   const [baseUrl, setBaseUrl] = useState<string>(
     () => localStorage.getItem("baseUrl") || ""
   );
@@ -23,28 +30,37 @@ const Webdav: React.FC = () => {
   );
   // Translations
   //@ts-ignore
-  const [translations] = useState({
-    about: {
-      title: "about.title",
-      app: "about.app",
-      description: "about.description",
-      version: "about.version",
-      website: "about.website",
-      github: "about.github",
-      donate: "about.donate",
-      copyright: "about.Copyright",
-    },
-    home: {
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareTitle: "home.shareTitle",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importError: "home.importError",
-      importInvalid: "home.importInvalid",
-      title: "home.title",
+  const [translations, setTranslations] = useState({
+    webdav: {
+      title: "webdav.title",
+      login: "webdav.login",
+      username: "webdav.username",
+      password: "webdav.password",
+      export: "webdav.export",
+      import: "webdav.import",
+      autoSync: "wevdav.autoSync",
     },
   });
+
+
+  useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+
   const [showInputContent, setShowInputContent] = useState(false);
 
   useEffect(() => {
@@ -64,9 +80,16 @@ const Webdav: React.FC = () => {
     }
   };
 
-const { exportdata, progress: exportProgress, progressColor: exportProgressColor } = useExportDav();
-const { HandleImportData, progress: importProgress, progressColor: importProgressColor } = useImportDav();
-
+  const {
+    exportdata,
+    progress: exportProgress,
+    progressColor: exportProgressColor,
+  } = useExportDav();
+  const {
+    HandleImportData,
+    progress: importProgress,
+    progressColor: importProgressColor,
+  } = useImportDav(setNotesState, notesState);
 
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
@@ -123,8 +146,8 @@ const { HandleImportData, progress: importProgress, progressColor: importProgres
         <section className="">
           <div className="flex flex-col">
             <div className="space-y-2">
-            <p className="text-4xl text-center font-bold p-4">
-                Sync with <br /> WebDAV
+              <p className="text-4xl text-center font-bold p-4">
+                {translations.webdav.title || "-"}
               </p>
               <div className="flex justify-center items-center">
                 <CircularProgress
@@ -154,7 +177,7 @@ const { HandleImportData, progress: importProgress, progressColor: importProgres
               <input
                 type="text"
                 className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-amber-400 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
-                placeholder="Username"
+                placeholder={translations.webdav.username}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -162,7 +185,7 @@ const { HandleImportData, progress: importProgress, progressColor: importProgres
                 <input
                   className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-amber-400 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
                   type={showInputContent ? "text" : "password"}
-                  placeholder="Password"
+                  placeholder={translations.webdav.password}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -181,35 +204,36 @@ const { HandleImportData, progress: importProgress, progressColor: importProgres
                 className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                 onClick={login}
               >
-                Log in
+                {translations.webdav.login || "-"}
               </button>
               <button
                 className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                 onClick={exportdata}
               >
-                Export data
+                {translations.webdav.export || "-"}
               </button>
               <button
                 className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                 onClick={HandleImportData}
               >
-                Import Data
+                {translations.webdav.import || "-"}
               </button>
               <div className="flex items-center py-2 justify-between">
-              <div>
-                <p className="block text-lg align-left">Auto Sync</p>
+                <div>
+                  <p className="block text-lg align-left">                {translations.webdav.autoSync || "-"}
+                  </p>
+                </div>
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input
+                    id="switch"
+                    type="checkbox"
+                    checked={autoSync}
+                    onChange={handleSyncToggle}
+                    className="peer sr-only"
+                  />
+                  <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                </label>
               </div>
-              <label className="relative inline-flex cursor-pointer items-center">
-                <input
-                  id="switch"
-                  type="checkbox"
-                  checked={autoSync}
-                  onChange={handleSyncToggle}
-                  className="peer sr-only"
-                />
-                <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-              </label>
-            </div>
             </div>
           </div>
         </section>

@@ -81,32 +81,6 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {  //
       noContent: "archive.noContent",
       title: "archive.title",
     },
-    home: {
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareError: "home.shareError",
-      archiveError: "home.archiveError",
-      confirmDelete: "home.confirmDelete",
-      importSuccess: "home.importSuccess",
-      importInvalid: "home.importInvalid",
-      importError: "home.importError",
-      biometricsReason: "home.biometricsReason",
-      biometricsTitle: "home.biometricsTitle",
-      subtitle: "home.subtitle",
-      biometricFace: "home.biometricFace",
-      biometricTouch: "home.biometricFinger",
-      biometricError: "home.biometricError",
-      biometricPassword: "home.biometricPassword",
-      biometricWrongPassword: "home.biometricWrongPassword",
-      biometricSuccess: "home.biometricSuccess",
-      biometricUnlock: "home.biometricUnlock",
-      subtitle2: "home.subtitle2",
-      shareTitle: "home.shareTitle",
-      wrongpasswd: "home.wrongpasswd",
-      lockerror: "home.lockerror",
-      enterpasswd: "home.enterpasswd",
-      unlocktoedit: "home.unlocktoedit",
-    },
   });
 
   useEffect(() => {
@@ -126,23 +100,6 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {  //
 
     loadTranslations();
   }, []);
-
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
 
   return (
     <div>

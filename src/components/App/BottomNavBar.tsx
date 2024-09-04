@@ -80,7 +80,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
   const handleCreateNewNote = async () => {
     const newNote = {
       id: uuid(),
-      title: "New Note",
+      title: `${translations.home.title || "-"}`,
       content: { type: "doc", content: [] },
       createdAt: Date.now(),
       updatedAt: Date.now(),

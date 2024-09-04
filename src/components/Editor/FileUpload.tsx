@@ -44,15 +44,15 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
     try {
       await createDirectory();
       const fileName = `${Date.now()}_${file.name}`;
-  
+
       // Read file contents as data URL
       const fileReader = new FileReader();
       fileReader.readAsDataURL(file);
-  
+
       return new Promise((resolve, reject) => {
         fileReader.onload = async () => {
           const fileDataUrl = fileReader.result as string;
-  
+
           // Write file to filesystem under "note-assets/noteId" directory
           const filePath = `file-assets/${noteId}/${fileName}`;
           await Filesystem.writeFile({
@@ -61,10 +61,10 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             directory: FilesystemDirectory.Data,
             recursive: true,
           });
-  
+
           resolve({ fileUrl: filePath, fileName: file.name });
         };
-  
+
         fileReader.onerror = (error) => {
           reject(error);
         };
@@ -74,12 +74,12 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
       return { fileUrl: "", fileName: "" };
     }
   };
-  
+
   return (
     <div>
-      <div className="flex items-center justify-between sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-      <label htmlFor="file-upload-input">
-          <icons.FileIcon className="sm:text-white text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
+      <div className="flex items-center justify-between sm:p-2 md:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+        <label htmlFor="file-upload-input">
+          <icons.FileIcon className="sm:text-white text-xl  border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7cursor-pointer" />
         </label>
         <input
           type="file"

@@ -10,20 +10,21 @@ import {
   FilesystemDirectory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { loadNotes, useSaveNote } from "../../store/notes";
+import { loadNotes } from "../../store/notes";
 import getMimeType from "../../utils/mimetype";
-import useNoteEditor from "../../store/useNoteActions";
-import { useNotesState } from "../../store/Activenote";
-import dayjs from "dayjs";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import icons from "../../lib/remixicon-react";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 const STORAGE_PATH = "notes/data.json";
 
-const DropboxSync: React.FC = () => {
-  const { notesState, setNotesState, activeNoteId } =
-    useNotesState();
+interface DropboxProps {
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
+}
+
+const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
+  // Correctly destructuring props
   const { importUtils } = useHandleImportData();
   const [searchQuery] = useState<string>("");
   const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
@@ -35,25 +36,16 @@ const DropboxSync: React.FC = () => {
 
   // Translations
   const [translations, setTranslations] = useState({
-    about: {
-      title: "about.title",
-      app: "about.app",
-      description: "about.description",
-      version: "about.version",
-      website: "about.website",
-      github: "about.github",
-      donate: "about.donate",
-      copyright: "about.Copyright",
-    },
-    home: {
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareTitle: "home.shareTitle",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importError: "home.importError",
-      importInvalid: "home.importInvalid",
-      title: "home.title",
+    dropbox: {
+      title: "dropbox.title",
+      import: "dropbox.import",
+      export: "dropbox.export",
+      submit: "dropbox.submit",
+      getToken: "dropbox.getToken",
+      autoSync: "dropbox.Autosync",
+      logout: "dropbox.logout",
+      existingFolder: "dropbox.existingFolder",
+      refreshingToken: "dropbox.refreshingToken"
     },
   });
 
@@ -67,7 +59,6 @@ const DropboxSync: React.FC = () => {
         );
 
         setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
       } catch (error) {
         console.error("Error loading translations:", error);
       }
@@ -213,7 +204,7 @@ const DropboxSync: React.FC = () => {
         );
 
         if (!response.ok) {
-          alert("Access token expired, refreshing...");
+          alert(translations.dropbox.refreshingToken);
           await refreshAccessToken();
         }
       } catch (error) {
@@ -227,13 +218,12 @@ const DropboxSync: React.FC = () => {
   useEffect(() => {
     const tokenExpirationCheckInterval = setInterval(() => {
       checkTokenExpiration();
-    }, 600000); // Check every minute
+    }, 600000);
 
     return () => clearInterval(tokenExpirationCheckInterval);
   }, [accessToken]);
 
   useEffect(() => {
-    // Retrieve access token from secure storage
     const retrieveAccessToken = async () => {
       try {
         const storedAccessToken = (
@@ -253,10 +243,9 @@ const DropboxSync: React.FC = () => {
   const exportdata = async () => {
     if (accessToken) {
       try {
-        setProgress(0); // Initialize progress
+        setProgress(0);
         setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-  
-        // Helper function to count files recursively
+
         const countFilesInDirectory = async (path: any) => {
           let count = 0;
           const contents = await Filesystem.readdir({
@@ -272,8 +261,7 @@ const DropboxSync: React.FC = () => {
           }
           return count;
         };
-  
-        // Count files in note-assets directory
+
         const noteAssetsPath = "note-assets";
         const noteAssetsContents = await Filesystem.readdir({
           path: noteAssetsPath,
@@ -285,8 +273,7 @@ const DropboxSync: React.FC = () => {
             `${noteAssetsPath}/${folderName.name}`
           );
         }
-  
-        // Count files in file-assets directory
+
         const fileAssetsPath = "file-assets";
         const filefolderContents = await Filesystem.readdir({
           path: fileAssetsPath,
@@ -302,72 +289,68 @@ const DropboxSync: React.FC = () => {
             );
           }
         }
-  
+
         // Calculate total files to upload
         const totalFiles = noteFilesCount + fileFilesCount + 1; // +1 for data.json
-  
+
         let processedFiles = 0;
-  
+
         const updateProgress = () => {
           processedFiles++;
           setProgress(Math.round((processedFiles / totalFiles) * 100));
         };
-  
+
         // Read the data.json
         const datafile = await Filesystem.readFile({
           path: STORAGE_PATH,
           directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
-  
+
         // Get current date for folder name
         const currentDate = new Date();
         const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
         const folderPath = `/Beaver Notes ${formattedDate}`;
         const assetsPath = `${folderPath}/assets`;
-  
-        // Initialize Dropbox client
+
         const dbx = new Dropbox({ accessToken });
-  
-        // Check if the folder already exists
+
         try {
           await dbx.filesGetMetadata({ path: folderPath });
-  
-          // If autoSync is set to dropbox, delete the folder without asking
           const autoSync = localStorage.getItem("autoSync");
           if (autoSync === "dropbox") {
             await dbx.filesDeleteV2({ path: folderPath });
           } else {
-            // Ask the user if they want to delete the existing folder
             const userConfirmed = window.confirm(
-              `The folder ${folderPath} already exists. Do you want to delete it and create a new one?`
+              translations.dropbox.existingFolder.replace(
+                "${folderPath}",
+                folderPath
+              )
             );
             if (userConfirmed) {
               await dbx.filesDeleteV2({ path: folderPath });
             } else {
-              console.log("Folder exists and user chose not to delete it.");
-              return; // Exit the function as the folder already exists and the user didn't want to delete it.
+              return;
             }
           }
         } catch (error: any) {
-          // If the error is that the folder doesn't exist, proceed normally
           if (error.status !== 409) {
             throw error;
           }
         }
-  
+
         // Create folders
         await dbx.filesCreateFolderV2({ path: folderPath, autorename: false });
         await dbx.filesCreateFolderV2({ path: assetsPath, autorename: false });
-  
+
         // Upload the data.json
         await dbx.filesUpload({
           path: `${folderPath}/data.json`,
           contents: datafile.data,
         });
-  
+
         updateProgress();
-  
+
         // Upload files in file-assets directory
         for (const item of filefolderContents.files) {
           if (item.type === "file") {
@@ -376,18 +359,18 @@ const DropboxSync: React.FC = () => {
               path: filePath,
               directory: Directory.Data,
             });
-  
+
             const fileType = getMimeType(item.name);
             const blob = base64ToBlob(String(fileData.data), fileType);
             const uploadedFile = new File([blob], item.name, {
               type: "application/octet-stream",
             });
-  
+
             await dbx.filesUpload({
               path: `${folderPath}/file-assets/${item.name}`,
               contents: uploadedFile,
             });
-  
+
             updateProgress();
           } else if (item.type === "directory") {
             const folderPath = `${fileAssetsPath}/${item.name}`;
@@ -395,30 +378,30 @@ const DropboxSync: React.FC = () => {
               path: folderPath,
               directory: Directory.Data,
             });
-  
+
             for (const file of folderContents.files) {
               const imagefilePath = `${folderPath}/${file.name}`;
               const imageFileData = await Filesystem.readFile({
                 path: imagefilePath,
                 directory: Directory.Data,
               });
-  
+
               const fileType = getMimeType(file.name);
               const blob = base64ToBlob(String(imageFileData.data), fileType);
               const uploadedFile = new File([blob], file.name, {
                 type: "application/octet-stream",
               });
-  
+
               await dbx.filesUpload({
                 path: `${folderPath}/file-assets/${item.name}/${file.name}`,
                 contents: uploadedFile,
               });
-  
+
               updateProgress();
             }
           }
         }
-  
+
         // Upload files in note-assets directory
         for (const folderName of noteAssetsContents.files) {
           const folderPath = `${noteAssetsPath}/${folderName.name}`;
@@ -426,29 +409,29 @@ const DropboxSync: React.FC = () => {
             path: folderPath,
             directory: Directory.Data,
           });
-  
+
           for (const file of folderContents.files) {
             const imagefilePath = `${folderPath}/${file.name}`;
             const imageFileData = await Filesystem.readFile({
               path: imagefilePath,
               directory: Directory.Data,
             });
-  
+
             const fileType = getMimeType(file.name);
             const blob = base64ToBlob(String(imageFileData.data), fileType);
             const uploadedFile = new File([blob], file.name, {
               type: "application/octet-stream",
             });
-  
+
             await dbx.filesUpload({
               path: `${assetsPath}/${folderName.name}/${file.name}`,
               contents: uploadedFile,
             });
-  
+
             updateProgress();
           }
         }
-  
+
         setProgress(100); // Ensure progress is set to 100% when done
       } catch (error) {
         console.error("Error uploading note assets:", error);
@@ -460,7 +443,6 @@ const DropboxSync: React.FC = () => {
       console.error("Access token not found!");
     }
   };
-  
 
   // Function to convert base64 string to Blob
   const base64ToBlob = (base64String: string, type: string): Blob => {
@@ -479,16 +461,16 @@ const DropboxSync: React.FC = () => {
         setProgressColor(darkMode ? "#444444" : "#e6e6e6");
         const currentDate = new Date();
         const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
-  
+
         const mainFolderPath = `/Beaver Notes ${formattedDate}`;
-  
+
         await Filesystem.mkdir({
           path: `export/Beaver Notes ${formattedDate}`,
           directory: FilesystemDirectory.Data,
         });
-  
+
         const dbx = new Dropbox({ accessToken });
-  
+
         const createFoldersRecursively = async (
           folderPath: string,
           parentPath = ""
@@ -496,22 +478,22 @@ const DropboxSync: React.FC = () => {
           const response = await dbx.filesListFolder({ path: folderPath });
           const totalEntries = response.result.entries.length;
           let processedEntries = 0;
-  
+
           for (const entry of response.result.entries) {
             if (entry[".tag"] === "folder") {
               const folderFullPath = `${parentPath}/${entry.name}`.replace(
                 /^\/+/,
                 ""
               ); // Remove leading slash
-  
+
               await Filesystem.mkdir({
                 path: `export/${mainFolderPath}/${folderFullPath}`,
                 directory: FilesystemDirectory.Data,
               });
-  
+
               processedEntries++;
               setProgress(Math.round((processedEntries / totalEntries) * 100));
-  
+
               const subFolderPath = `${folderPath}/${entry.name}`;
               await createFoldersRecursively(subFolderPath, folderFullPath);
             } else if (entry[".tag"] === "file") {
@@ -519,7 +501,7 @@ const DropboxSync: React.FC = () => {
                 /^\/+/,
                 ""
               ); // Remove leading slash
-  
+
               await Filesystem.downloadFile({
                 url: `https://content.dropboxapi.com/2/files/download`,
                 path: `export/${mainFolderPath}/${fileFullPath}`,
@@ -529,24 +511,28 @@ const DropboxSync: React.FC = () => {
                   "Dropbox-API-Arg": JSON.stringify({ path: entry.path_lower }),
                 },
               });
-  
+
               processedEntries++;
               setProgress(Math.round((processedEntries / totalEntries) * 100));
             }
           }
         };
-  
+
         await createFoldersRecursively(mainFolderPath);
-        await importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes);
+        await importUtils(
+          setNotesState,
+          loadNotes,
+          searchQuery,
+          setFilteredNotes
+        );
         await Filesystem.rmdir({
           path: `export/Beaver Notes ${formattedDate}`,
           directory: FilesystemDirectory.Data,
           recursive: true, // This ensures the folder and its contents are deleted
         });
         setProgress(100);
-  
+
         console.log("Folder deleted successfully!");
-  
       } catch (error) {
         console.error("Error during import or folder deletion:", error);
         setProgress(0); // Reset progress on error
@@ -580,8 +566,6 @@ const DropboxSync: React.FC = () => {
       console.error("Error logging out:", error);
     }
   };
-  const { saveNote } = useSaveNote(useNotesState);
-  useNoteEditor(activeNoteId, notesState, setNotesState, saveNote);
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
     return storedSync === "dropbox";
@@ -642,7 +626,7 @@ const DropboxSync: React.FC = () => {
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">
             <p className="text-4xl text-center font-bold p-4">
-              Sync with Dropbox
+              {translations.dropbox.title || "-"}
             </p>
             <div className="flex justify-center items-center">
               <CircularProgress
@@ -667,10 +651,6 @@ const DropboxSync: React.FC = () => {
         {accessToken ? (
           <section>
             <div className="flex flex-col">
-              <div className="flex items-center p-1">
-                <span className="bg-green-500 w-4 h-4 inline-block rounded-full"></span>
-                <p className="ml-2">Logged in</p>
-              </div>
               <div className="space-y-2">
                 {" "}
                 {/* Adjusted margin */}
@@ -678,19 +658,19 @@ const DropboxSync: React.FC = () => {
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
                   onClick={importData}
                 >
-                  Import
+                  {translations.dropbox.import || "-"}
                 </button>
                 <button
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                   onClick={exportdata}
                 >
-                  Export
+                  {translations.dropbox.export || "-"}
                 </button>
                 <button
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                   onClick={Logout}
                 >
-                  Logout
+                  {translations.dropbox.logout || "-"}
                 </button>
               </div>
             </div>
@@ -726,13 +706,13 @@ const DropboxSync: React.FC = () => {
                     className="bg-neutral-200 dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] bg-opacity-40 w-full text-black p-3 text-xl font-bold rounded-xl"
                     onClick={handleExchange}
                   >
-                    Submit
+                    {translations.dropbox.submit || "-"}
                   </button>
                   <button
                     className="bg-amber-400 w-full text-white p-3 text-xl font-bold rounded-xl"
                     onClick={handleLogin}
                   >
-                    Login
+                    {translations.dropbox.getToken || "-"}
                   </button>
                 </div>
               </div>

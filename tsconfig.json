@@ -2,7 +2,7 @@
   "compileOnSave": true,
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
-    "target": "ES5",
+    "target": "ES6",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",

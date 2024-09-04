@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import dayjs from "dayjs";
 
 const Shortcuts: React.FC = () => {
   // Translations
@@ -29,16 +28,6 @@ const Shortcuts: React.FC = () => {
       Navigates: "shortcuts.Navigates",
       Editor: "shortcuts.Editor",
     },
-    home: {
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareTitle: "home.shareTitle",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importError: "home.importError",
-      importInvalid: "home.importInvalid",
-      title: "home.title",
-    },
   });
 
   useEffect(() => {
@@ -51,7 +40,6 @@ const Shortcuts: React.FC = () => {
         );
 
         setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
       } catch (error) {
         console.error("Error loading translations:", error);
       }

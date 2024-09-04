@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Note } from "../../store/types";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
-import HeadingTree from "../../lib/HeadingTree";
 import { isPlatform } from "@ionic/react";
 import Drawer from "./Drawer";
 import Find from "./Find";
@@ -15,24 +14,22 @@ import { hasNotch } from "../../utils/detectNotch";
 import DOMPurify from "dompurify";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
-import { useSaveNote } from "../../store/notes";
 
 // Icons
 import Icons from "../../lib/remixicon-react";
 
 type Props = {
   note: Note;
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
 };
 
-function EditorComponent({ note }: Props) {
-  const { notesState, setNotesState, activeNoteId, setActiveNoteId } =
-    useNotesState();
-  const { saveNote } = useSaveNote(setNotesState);
+function EditorComponent({ note, notesState, setNotesState }: Props) {
+  const { activeNoteId, setActiveNoteId } = useNotesState();
   const { title, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
     notesState,
-    setNotesState,
-    saveNote
+    setNotesState
   );
 
   const [previousContent, setPreviousContent] = useState<JSONContent | null>(
@@ -78,7 +75,6 @@ function EditorComponent({ note }: Props) {
   });
   const [focusMode, setFocusMode] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(true);
-  const [headingTreeVisible, setHeadingTreeVisible] = useState(false);
   const [showFind, setShowFind] = useState(false);
   const [wd, setWd] = useState<boolean>(
     localStorage.getItem("expand-editor") === "true"
@@ -95,7 +91,6 @@ function EditorComponent({ note }: Props) {
   const [textAfterHash, setTextAfterHash] = useState<string | null>(null);
   const [atPosition, setAtPosition] = useState<number | null>(null);
   const [textAfterAt, setTextAfterAt] = useState<string | null>(null);
-  const headingTreeRef = useRef<HTMLDivElement | null>(null);
   const [notchPadding, setNotchPadding] = useState(false);
 
   useEffect(() => {
@@ -162,6 +157,10 @@ function EditorComponent({ note }: Props) {
     };
   }, []);
 
+  document.addEventListener("showFind", () => {
+    setShowFind((prevShowFind) => !prevShowFind);
+  });
+
   useEffect(() => {
     setWd(localStorage.getItem("expand-editor") === "true");
   }, []);
@@ -176,31 +175,6 @@ function EditorComponent({ note }: Props) {
     const text = event.clipboardData.getData("text/plain");
     document.execCommand("insertText", false, text);
   };
-
-  const toggleHeadingTree = () => {
-    setHeadingTreeVisible(!headingTreeVisible);
-  };
-
-  const handleOutsideClick = useCallback(
-    (event: MouseEvent) => {
-      if (
-        headingTreeVisible &&
-        headingTreeRef.current &&
-        event.target instanceof Node &&
-        !headingTreeRef.current.contains(event.target)
-      ) {
-        setHeadingTreeVisible(false);
-      }
-    },
-    [headingTreeVisible]
-  );
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, [handleOutsideClick]);
 
   const handleClickNote = (note: Note) => {
     const editorContent = editor?.getHTML() || "";
@@ -296,18 +270,7 @@ function EditorComponent({ note }: Props) {
           note={note}
           noteId={note.id}
           editor={editor}
-          toggleHeadingTree={toggleHeadingTree}
         />
-        {headingTreeVisible && editor && (
-          <div
-            ref={headingTreeRef}
-            className={`transition-opacity ${
-              headingTreeVisible ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <HeadingTree />
-          </div>
-        )}
         <div
           className={`sm:hidden bg-white dark:bg-[#232222] px-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between ${
             notchPadding ? "pt-6" : "sm:pt-1"
@@ -357,9 +320,9 @@ function EditorComponent({ note }: Props) {
           contentEditable
           onPaste={handlePaste}
           suppressContentEditableWarning
-          className={`text-3xl font-bold overflow-y-scroll outline-none mt-10 ${
-            isPlatform("android") ? "pt-6 sm:pt-1" : "md:pt-10s"
-          }`}
+          className={`text-3xl font-bold overflow-y-scroll outline-none ${
+            isPlatform("android") ? "mt-10 sm:pt-14" : "md:pt-14"
+          } ${isPlatform("ios") ? "mt-10 sm:pt-14" : "md:pt-14"}`}
           onInput={handleTitleChange}
           dangerouslySetInnerHTML={{ __html: note.title }}
         />
@@ -404,17 +367,20 @@ function EditorComponent({ note }: Props) {
                 )
               }
               editor={editor}
-              className="overflow-hidden w-full mb-[6em] min-h-[25em] editor-content"
+              className="overflow-hidden w-full mb-[6em] min-h-[25em] editor-content editor-box"
             />
           </div>
         </div>
         <div
-          className={`sm:ml-16 ${
+          className={`${
             showFind ? "show" : "hidden"
-          } fixed px-4 w-full inset-x-0 sm:px-10 md:px-20 lg:px-60 top-20 sm:bottom-6`}
+          } fixed inset-x-0 top-20 sm:top-auto sm:bottom-6 md:bottom-6 flex justify-center`}
         >
-          {showFind && <Find editor={editor} />}
+          <div className="w-full px-4 sm:px-10 md:px-20 lg:px-60">
+            {showFind && <Find editor={editor} />}
+          </div>
         </div>
+
         <div className={`${focusMode ? "hidden" : "block"} sm:hidden`}>
           <Drawer noteId={note.id} note={note} editor={editor} />
         </div>

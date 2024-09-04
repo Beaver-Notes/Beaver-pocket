@@ -84,30 +84,22 @@ const Welcome: React.FC = () => {
   // Translations
   const [translations, setTranslations] = useState({
     welcome: {
+      welcomeMessage: "welcome.welcomeMessage",
+      themeTitle: "welcome.themeTitle",
       next: "welcome.next",
       back: "welcome.back",
       welcomeTitle: "welcome.welcomeTitle",
       welcomeParagraph: "welcome.welcomeParagraph",
-      welcomeWarning: "welcome.welcomeWarning",
-      languageText: "welcome.languageText",
       getStarted: "welcome.getStarted",
-      themeTitle: "welcome.themeTitle",
-      themeText: "welcome.themeText",
-      typographyTitle: "welcome.typographyTitle",
-      typographyText: "welcome.typographyText",
-      importTitle: "welcome.importTitle",
-      importText: "welcome.importText",
-      start: "welcome.start",
-      startTitle: "welcome.startTitle",
-      skip: "welcome.skip",
-      dark: "welcome.dark",
-      light: "welcome.light",
-      system: "welcome.system",
-      import: "welcome.import",
+      startTitle: "welcome.startTitle"
     },
     settings: {
       apptheme: "settings.appTheme",
       selectfont: "settings.selectfont",
+      codeFont: "settings.codeFont",
+      light: "settings.light",
+      dark: "settings.dark",
+      system: "settings.system"
     },
   });
 
@@ -160,8 +152,6 @@ const Welcome: React.FC = () => {
     setThemeMode("auto");
   };
 
-  const modes = ["Light", "Dark", "System"];
-
   const [selectedOption, setSelectedOption] = useState(
     themeMode === "auto" ? "System" : darkMode ? "Dark" : "Light"
   );
@@ -169,21 +159,23 @@ const Welcome: React.FC = () => {
   const handleChangeMode = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedOption(event.target.value);
     switch (event.target.value) {
-      case "Light":
+      case translations.settings.light:
         toggleTheme(false);
         break;
-      case "Dark":
+      case translations.settings.dark:
         toggleTheme(true);
         break;
-      case "System":
+      case translations.settings.system:
         setAutoMode();
         break;
       default:
         break;
     }
   };
+  
+  const modes = [translations.settings.light, translations.settings.dark, translations.settings.system];
+  
 
-  // Redirect to home page if currentView is "view3" after 3 seconds
   useEffect(() => {
     if (currentView === "view3") {
       const timer = setTimeout(() => {
@@ -195,7 +187,6 @@ const Welcome: React.FC = () => {
 
   return (
     <div className={`view ${currentView} overflow-y-hide`}>
-
       {currentView === "view1" && (
         <div className="view flex items-center justify-center">
           <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between h-full">
@@ -211,7 +202,7 @@ const Welcome: React.FC = () => {
                 {translations.welcome.welcomeTitle || "-"}
               </h3>
               <p className="text-center sm:mx-10">
-                Build your knowledge one log at the time
+                {translations.welcome.welcomeMessage || "-"}
               </p>
             </div>
             <div className="flex flex-col w-full items-center mb-5 gap-2">
@@ -247,7 +238,7 @@ const Welcome: React.FC = () => {
               <Icons.FontSizeIcon className="w-12 h-12 mx-auto rounded-xl" />
             </div>
             <div className="flex flex-col w-full items-center justify-center flex-grow">
-              <h3 className="text-center">Make it Yours</h3>
+              <h3 className="text-center">{translations.welcome.themeTitle || "-"}</h3>
               <section className="w-full relative">
                 <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                   {translations.settings.apptheme || "-"}
@@ -288,7 +279,7 @@ const Welcome: React.FC = () => {
               </section>
               <section className=" w-full relative">
                 <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                  Select Font Code
+                {translations.settings.codeFont || "-"}
                 </p>
                 <div className="relative">
                   <select
@@ -328,7 +319,7 @@ const Welcome: React.FC = () => {
         <div className="flex view items-center justify-center">
           <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between h-full">
             <div className="flex flex-col w-full items-center justify-center flex-grow">
-              <h3 className="text-center">🎉 Ready, Set, Go!</h3>
+              <h3 className="text-center">{translations.welcome.startTitle || "-"}</h3>
             </div>
             <div className="flex flex-col w-full items-center mb-5 gap-2">
               <button
@@ -352,17 +343,23 @@ const Welcome: React.FC = () => {
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
         <span
           className={`transition-all w-3 h-3 rounded-full ${
-            currentView === "view1" ? "w-6 bg-amber-400" : "bg-neutral-100 dark:bg-neutral-500"
+            currentView === "view1"
+              ? "w-6 bg-amber-400"
+              : "bg-neutral-100 dark:bg-neutral-500"
           }`}
         ></span>
         <span
           className={`transition-all w-3 h-3 rounded-full ${
-            currentView === "view2" ? "w-6 bg-amber-400" : "bg-neutral-100 dark:bg-neutral-500"
+            currentView === "view2"
+              ? "w-6 bg-amber-400"
+              : "bg-neutral-100 dark:bg-neutral-500"
           }`}
         ></span>
         <span
           className={`transition-all w-3 h-3 rounded-full ${
-            currentView === "view3" ? "w-6 bg-amber-400" : "bg-neutral-100 dark:bg-neutral-500"
+            currentView === "view3"
+              ? "w-6 bg-amber-400"
+              : "bg-neutral-100 dark:bg-neutral-500"
           }`}
         ></span>
       </div>

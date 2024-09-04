@@ -29,6 +29,7 @@ function NoteLabels({
   onClickLabel,
 }: Props) {
   const [newLabel, setNewLabel] = useState("");
+
   const [translations, setTranslations] = useState({
     editor: {
       addLabel: "editor.addLabel",

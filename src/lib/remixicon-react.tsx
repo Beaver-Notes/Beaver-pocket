@@ -1,4 +1,5 @@
 // icons.ts
+import BallPenLine from "remixicon-react/BallPenLineIcon";
 import PlayLineIcon from "remixicon-react/PlayLineIcon";
 import PauseLineIcon from "remixicon-react/PauseLineIcon";
 import VolumeUpLineIcon from "remixicon-react/VolumeUpLineIcon";
@@ -72,6 +73,8 @@ import ArrowDownSLineIcon from "remixicon-react/ArrowDownSLineIcon";
 import FontSizeIcon from "remixicon-react/FontSizeIcon";
 import SubscriptIcon from "remixicon-react/SubscriptIcon";
 import SuperscriptIcon from "remixicon-react/SuperscriptIcon";
+import ArrowGoForwardLineIcon from "remixicon-react/ArrowGoForwardLineIcon";
+import ArrowGoBackLineIcon from "remixicon-react/ArrowGoBackLineIcon";
 
 const Forward5Line: React.FC<{ className?: string }> = ({ className }) => (
   <svg
@@ -139,6 +142,29 @@ const Spinner: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+const iCloud: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    fill="currentColor"
+    className={className}
+    height="200px"
+    width="200px"
+    version="1.1"
+    id="Capa_1"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 304.315 304.315"
+  >
+    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+    <g
+      id="SVGRepo_tracerCarrier"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    ></g>
+    <g id="SVGRepo_iconCarrier">
+      {" "}
+      <path d="M254.831,131.694c-1.738-43.42-37.604-78.212-81.441-78.212c-29.725,0-56.691,16.007-71.026,41.473 c-6.424-3.661-13.722-5.616-21.253-5.616c-22.167,0-40.471,16.86-42.759,38.43C15.213,137.962,0,160.985,0,186.585 c0,16.843,6.47,32.762,18.218,44.824c11.723,12.036,27.419,18.929,44.192,19.408c0.359,0.011,32.254,0.016,94.799,0.016 c80.686,0,88.054-0.01,88.842-0.015v0.001l0.11-0.002c0.037-0.001,0.074-0.001,0.111-0.003c15.617-0.515,30.217-6.984,41.109-18.214 c10.92-11.259,16.934-26.1,16.934-41.789C304.315,161.422,283.092,136.705,254.831,131.694z M245.896,235.821 c-0.023,0-0.046,0-0.069,0c-1.253,0.007-37.631,0.012-88.619,0.012c-44.391,0-92.178-0.004-94.446-0.012 C35.974,235.011,15,213.4,15,186.585c0-20.957,13.298-39.66,33.091-46.542c3.053-1.061,5.082-3.958,5.036-7.19 c-0.002-0.149-0.007-0.297-0.012-0.445l-0.003-0.072c0-15.438,12.561-27.999,28-27.999c7.05,0,13.788,2.634,18.972,7.416 c1.796,1.656,4.286,2.336,6.672,1.817c2.387-0.517,4.373-2.164,5.323-4.414c10.428-24.71,34.494-40.676,61.311-40.676 c36.672,0,66.507,29.836,66.507,66.51c0,0.869-0.024,1.805-0.078,3.036c-0.179,4.099,2.968,7.581,7.065,7.815 c23.794,1.36,42.432,21.113,42.432,44.969C289.315,215.206,270.252,234.953,245.896,235.821z"></path>{" "}
+    </g>
+  </svg>
+);
 
 const Icons = {
   AddFillIcon,
@@ -220,6 +246,10 @@ const Icons = {
   Forward5Line,
   Backward5Line,
   Spinner,
+  iCloud,
+  BallPenLine,
+  ArrowGoForwardLineIcon,
+  ArrowGoBackLineIcon,
 };
 
 export default Icons;

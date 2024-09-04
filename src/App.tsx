@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Routes,
-  Route,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import Home from "./Home";
@@ -16,6 +11,7 @@ import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
 import Dropbox from "./settings/screens/dropbox";
 import Webdav from "./settings/screens/webdav";
+import Icloud from "./settings/screens/icloud";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
 import Sync from "./settings/sync";
@@ -44,7 +40,7 @@ const App: React.FC = () => {
 
     loadNotesFromStorage();
   }, []);
-  
+
   // Add back button listener for Android
   CapacitorApp.addListener("backButton", ({ canGoBack }) => {
     if (!canGoBack) {
@@ -80,7 +76,7 @@ const App: React.FC = () => {
       const dropboxImport = new CustomEvent("dropboxImport");
       document.dispatchEvent(dropboxImport);
     } else if (syncValue === "webdav") {
-      const { HandleImportData } = useImportDav();
+      const { HandleImportData } = useImportDav(setNotesState, notesState);
       HandleImportData();
     }
   });
@@ -108,22 +104,45 @@ const App: React.FC = () => {
 
   // Swipeable handler to go back when swiping right
   const swipeHandlers = useSwipeable({
-    onSwipedRight: () => {
+    onSwipedRight: (eventData) => {
       const selection = window.getSelection();
-      if (selection && selection.toString().length === 0) {
-        // No text is selected, allow swiping back
-        setIsSwipe(true);  // Set swipe state
-        history(-1);
+      const target = eventData.event.target as HTMLElement | null;
+  
+      const isInsideDrawer = target?.closest(".drawer");
+      const isInsideEditor = target?.closest(".editor");
+  
+      if (!selection || selection.toString().length > 0 || isInsideDrawer || isInsideEditor) {
+        return;
       }
+  
+      setIsSwipe(true);
+      history(-1);  // Go back one page in history
     },
     preventScrollOnSwipe: true,
     trackTouch: true,
-  });
+  });  
 
   // Determine whether to show the BottomNavBar
   const shouldShowNavBar = !["/welcome", "/editor"].some((path) =>
     location.pathname.startsWith(path)
   );
+
+  const [themeMode] = useState(() => {
+    const storedThemeMode = localStorage.getItem("themeMode");
+    return storedThemeMode || "auto";
+  });
+
+  const [darkMode] = useState(() => {
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("themeMode", themeMode);
+  }, [darkMode, themeMode]);
 
   return (
     <div {...swipeHandlers}>
@@ -139,21 +158,72 @@ const App: React.FC = () => {
           <CSSTransition
             key={location.pathname}
             timeout={0}
-            classNames={isSwipe ? "fade" : ""}  // Apply animation only on swipe
-            onExited={() => setIsSwipe(false)} // Reset swipe state after animation
+            classNames={isSwipe ? "fade" : ""}
+            onExited={() => setIsSwipe(false)}
             unmountOnExit
           >
             <Routes location={location}>
-              <Route path="/" element={<Home notesState={notesState} setNotesState={setNotesState}/>} />
-              <Route path="/archive" element={<Archive notesState={notesState} setNotesState={setNotesState}/>} />
+              <Route
+                path="/"
+                element={
+                  <Home notesState={notesState} setNotesState={setNotesState} />
+                }
+              />
+              <Route
+                path="/archive"
+                element={
+                  <Archive
+                    notesState={notesState}
+                    setNotesState={setNotesState}
+                  />
+                }
+              />
               <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<About />} />
-              <Route path="/dropbox" element={<Dropbox />} />
-              <Route path="/webdav" element={<Webdav />} />
+              <Route
+                path="/dropbox"
+                element={
+                  <Dropbox
+                    notesState={notesState}
+                    setNotesState={setNotesState}
+                  />
+                }
+              />
+              <Route
+                path="/icloud"
+                element={
+                  <Icloud
+                    notesState={notesState}
+                    setNotesState={setNotesState}
+                  />
+                }
+              />
+              <Route
+                path="/webdav"
+                element={
+                  <Webdav
+                    notesState={notesState}
+                    setNotesState={setNotesState}
+                  />
+                }
+              />
               <Route path="/shortcuts" element={<Shortcuts />} />
               <Route path="/welcome" element={<Welcome />} />
-              <Route path="/sync" element={<Sync />} />
-              <Route path="/editor/:note" element={<Editor notesState={notesState} setNotesState={setNotesState} />} />
+              <Route
+                path="/sync"
+                element={
+                  <Sync notesState={notesState} setNotesState={setNotesState} />
+                }
+              />
+              <Route
+                path="/editor/:note"
+                element={
+                  <Editor
+                    notesState={notesState}
+                    setNotesState={setNotesState}
+                  />
+                }
+              />
             </Routes>
           </CSSTransition>
         </TransitionGroup>
@@ -161,11 +231,14 @@ const App: React.FC = () => {
       <CommandPrompt
         setIsCommandPromptOpen={setIsCommandPromptOpen}
         isOpen={isCommandPromptOpen}
+        setNotesState={setNotesState}
+        notesState={notesState}
       />
-      {shouldShowNavBar && <BottomNavBar notesState={notesState} setNotesState={setNotesState}/>}
+      {shouldShowNavBar && (
+        <BottomNavBar notesState={notesState} setNotesState={setNotesState} />
+      )}
     </div>
   );
 };
 
 export default App;
-

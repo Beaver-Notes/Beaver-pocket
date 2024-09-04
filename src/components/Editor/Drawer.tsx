@@ -15,6 +15,29 @@ interface DrawerProps {
 }
 
 const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
+  const [translations, setTranslations] = useState({
+    editor: {
+      embedUrl: "editor.embedUrl"
+    },
+  });
+  
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../assets/locales/${selectedLanguage}.json`
+        );
+  
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+  
+    loadTranslations();
+  }, []);
+
   const handleImageUpload = (imageUrl: string) => {
     editor?.chain().setImage({ src: imageUrl }).run();
   };
@@ -66,7 +89,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
   }, [editor]);
 
   const handleAddIframe = () => {
-    const videoUrl = prompt("Please enter the URL of the Embed:");
+    const videoUrl = prompt(`${translations.editor.embedUrl}`);
     if (!videoUrl || videoUrl.trim() === "") {
       return;
     }
@@ -136,7 +159,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
 
   return (
     <div
-      className={`sm:hidden shadow-t-md block bottom-0 fixed left-0 right-0 ${
+      className={`drawer sm:hidden shadow-t-md block bottom-0 fixed left-0 right-0 ${
         isKeyboardVisible
           ? "bg-[#F8F8F7] dark:bg-[#2D2C2C]"
           : "bg-white dark:bg-[#232222] p-1 pb-2"
@@ -160,7 +183,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().setParagraph().run()}
           >
-            <icons.ParagraphIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.ParagraphIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -173,7 +196,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               editor?.chain().focus().toggleHeading({ level: 1 }).run()
             }
           >
-            <icons.Heading1Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.Heading1Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -186,7 +209,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               editor?.chain().focus().toggleHeading({ level: 2 }).run()
             }
           >
-            <icons.Heading2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.Heading2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -197,7 +220,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           >
-            <icons.DoubleQuotesLIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.DoubleQuotesLIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -208,7 +231,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
           >
-            <icons.CodeBoxLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.CodeBoxLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
 
           {/* Media and File Upload Options */}
@@ -225,7 +248,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
           >
-            <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
@@ -255,7 +278,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               })
             }
           >
-            <icons.Table2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.Table2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -266,7 +289,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBulletList().run()}
           >
-            <icons.ListUnorderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.ListUnorderedIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -277,7 +300,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           >
-            <icons.ListOrderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.ListOrderedIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -288,7 +311,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleTaskList().run()}
           >
-            <icons.ListCheck2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.ListCheck2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
         </div>
         <div
@@ -303,7 +326,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addRowAfter().run()}
           >
-            <icons.InsertRowBottomIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.InsertRowBottomIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -314,7 +337,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addRowBefore().run()}
           >
-            <icons.InsertRowTopIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.InsertRowTopIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -325,7 +348,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteRow().run()}
           >
-            <icons.DeleteRow className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.DeleteRow className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -336,7 +359,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnBefore().run()}
           >
-            <icons.InsertColumnLeftIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.InsertColumnLeftIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -347,7 +370,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnAfter().run()}
           >
-            <icons.InsertColumnRightIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.InsertColumnRightIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -358,9 +381,8 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteColumn().run()}
           >
-            <icons.DeleteColumn className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.DeleteColumn className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
-          {/* List and Table Options */}
           <button
             className={`p-1 ${
               editor?.isActive("Tasklist")
@@ -370,7 +392,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleHeaderCell().run()}
           >
-            <icons.Brush2Fill className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.Brush2Fill className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           {/* Media and File Upload Options */}
           <ImageUploadComponent
@@ -386,7 +408,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
           >
-            <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
@@ -405,7 +427,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteTable().run()}
           >
-            <icons.DeleteBinLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.DeleteBinLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
         </div>
         <div
@@ -423,7 +445,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().setParagraph().run()}
           >
-            <icons.ParagraphIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.ParagraphIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -436,7 +458,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               editor?.chain().focus().toggleHeading({ level: 1 }).run()
             }
           >
-            <icons.Heading1Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.Heading1Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -449,7 +471,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               editor?.chain().focus().toggleHeading({ level: 2 }).run()
             }
           >
-            <icons.Heading2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.Heading2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -460,7 +482,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBold().run()}
           >
-            <icons.BoldIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.BoldIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -471,7 +493,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleItalic().run()}
           >
-            <icons.ItalicIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.ItalicIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -482,7 +504,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
           >
-            <icons.UnderlineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.UnderlineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -493,7 +515,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleStrike().run()}
           >
-            <icons.StrikethroughIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.StrikethroughIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -504,7 +526,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleHighlight().run()}
           >
-            <icons.MarkPenLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.MarkPenLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -515,7 +537,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBulletList().run()}
           >
-            <icons.ListUnorderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.ListUnorderedIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -526,7 +548,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           >
-            <icons.ListOrderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.ListOrderedIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -537,7 +559,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleTaskList().run()}
           >
-            <icons.ListCheck2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.ListCheck2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -548,7 +570,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSubscript()}
           >
-            <icons.SubscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.SubscriptIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -559,7 +581,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSuperscript()}
           >
-            <icons.SuperscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.SuperscriptIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -570,7 +592,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onMouseDown={handleMouseDown}
             onClick={setLink}
           >
-            <icons.LinkIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+            <icons.LinkIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
         </div>
       </div>

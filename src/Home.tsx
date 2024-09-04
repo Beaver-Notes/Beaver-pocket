@@ -141,33 +141,6 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {  // Corre
       messagePt1: "home.messagePt1",
       messagePt2: "home.messagePt2",
       messagePt3: "home.messagePt3",
-      unlocktoedit: "home.unlocktoedit",
-      noContent: "home.noContent",
-      title: "home.title",
-      confirmDelete: "home.confirmDelete",
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importInvalid: "home.importInvalid",
-      importError: "home.importError",
-      biometricsReason: "home.biometricsReason",
-      biometricsTitle: "home.biometricsTitle",
-      subtitle: "home.subtitle",
-      biometricFace: "home.biometricFace",
-      biometricTouch: "home.biometricFinger",
-      biometricError: "home.biometricError",
-      biometricPassword: "home.biometricPassword",
-      biometricWrongPassword: "home.biometricWrongPassword",
-      biometricSuccess: "home.biometricSuccess",
-      subtitle2: "home.subtitle2",
-      biometricUnlock: "home.biometricUnlock",
-      bookmarkError: "home.bookmarkError",
-      archiveError: "home.archiveError",
-      shareTitle: "home.shareTitle",
-      wrongpasswd: "home.wrongpasswd",
-      lockerror: "home.lockerror",
-      enterpasswd: "home.enterpasswd",
     },
   });
 
@@ -230,8 +203,6 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {  // Corre
                     {translations.home.messagePt1 || "-"}
                     <Icons.AddFillIcon className="inline-block w-5 h-5" />{" "}
                     {translations.home.messagePt2 || "-"}
-                    <Icons.Download2LineIcon className="inline-block w-5 h-5" />{" "}
-                    {translations.home.messagePt3 || "-"}
                   </p>
                 </div>
               )}
