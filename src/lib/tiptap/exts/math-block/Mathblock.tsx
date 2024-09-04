@@ -1,8 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { NodeViewWrapperProps, NodeViewWrapper } from "@tiptap/react";
 import Settings4LineIcon from "remixicon-react/Settings4LineIcon";
 import katex from "katex";
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Transition } from '@headlessui/react';
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+} from "@headlessui/react";
 
 interface MathBlockProps extends NodeViewWrapperProps {
   updateAttributes: (attributes: Record<string, any>) => void;
@@ -14,6 +20,8 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
   const [isContentChange, setIsContentChange] = useState(false);
   const [showSecondTextarea, setShowSecondTextarea] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [startY, setStartY] = useState(0);
   const dialogPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,9 +71,81 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
     setShowSecondTextarea(!showSecondTextarea);
   };
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setShowModal(false);
-  };
+  }, []);
+
+  const handleTouchStart = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      setStartY(event.touches[0].clientY);
+      setDragging(true);
+    },
+    []
+  );
+
+  const handleTouchMove = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      if (!dragging) return;
+      const currentY = event.touches[0].clientY;
+      const delta = currentY - startY;
+
+      // Limit dragging to positive delta (downwards)
+      if (delta > 0) {
+        dialogPanelRef.current!.style.transform = `translateY(${delta}px)`;
+      }
+    },
+    [startY, dragging]
+  );
+
+  const handleTouchEnd = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      if (!dragging) return;
+      const currentY = event.changedTouches[0].clientY;
+      const delta = currentY - startY;
+
+      if (delta > 200) {
+        // User has dragged down enough to close the modal
+        closeModal();
+      } else {
+        // Animate back to original position
+        dialogPanelRef.current!.style.transition = "transform 0.3s ease";
+        dialogPanelRef.current!.style.transform = "translateY(0)";
+      }
+
+      // Reset states
+      setDragging(false);
+      setStartY(0);
+    },
+    [startY, dragging, closeModal]
+  );
+
+  const [translations, setTranslations] = useState({
+    editor: {
+      mermaidContent: "editor.mermaidContent",
+      editContent: "editor.editContent",
+      close: "editor.console",
+      mathContent: "editor.mathContent",
+      katexMacros: "editor.katexMacros",
+    },
+  });
+
+  useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
 
   return (
     <NodeViewWrapper className="math-block-node-view">
@@ -80,7 +160,11 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
         ></p>
       </div>
       <Transition show={showModal} as={React.Fragment}>
-        <Dialog open={showModal} onClose={closeModal} className="fixed inset-0 z-50 overflow-y-auto">
+        <Dialog
+          open={showModal}
+          onClose={closeModal}
+          className="fixed inset-0 z-50 overflow-y-auto"
+        >
           <DialogBackdrop className="fixed inset-0 bg-neutral-300 dark:bg-neutral-600 bg-opacity-75 dark:bg-opacity-75 transition-opacity" />
           <div className="fixed inset-0 flex items-center justify-center">
             <Transition.Child
@@ -95,51 +179,59 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
               <DialogPanel
                 ref={dialogPanelRef}
                 className="relative w-full sm:mx-auto sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{
+                  transition: dragging ? "none" : "transform 0.3s ease",
+                }}
               >
                 <div className="flex justify-between items-center bg-gray-100 dark:bg-[#2D2C2C] px-4 py-3">
                   <DialogTitle as="h3" className="text-lg font-semibold">
-                    Edit Content
+                    {translations.editor.editContent || "-"}
                   </DialogTitle>
-                  <button
-                    onClick={closeModal}
-                    className="text-amber-400 hover:text-gray-700 focus:outline-none"
-                  >
-                    Close
-                  </button>
+                  <div className="flex space-x-4">
+                    <button
+                      title="Toggle KaTeX Macros"
+                      className={`cursor-pointer ${
+                        useKatexMacros ? "text-primary" : ""
+                      } ${
+                        showSecondTextarea
+                          ? "text-amber-400"
+                          : "text-neutral-800 dark:text-white"
+                      }`}
+                      onClick={toggleSecondTextarea}
+                    >
+                      <Settings4LineIcon className="active:text-amber-500" />
+                    </button>
+                    <button
+                      onClick={closeModal}
+                      className="text-amber-400 hover:text-gray-700 focus:outline-none"
+                    >
+                      {translations.editor.close || "-"}
+                    </button>
+                  </div>
                 </div>
-                <div className="p-4 h-full flex flex-col">
+
+                <div className="p-4 h-[80vh] flex flex-col">
                   <div className="flex-grow">
                     <textarea
                       value={props.node.attrs.content}
                       onChange={(e) => updateContent(e, "content", true)}
                       className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"
-                      placeholder="Enter Math content here..."
+                      placeholder={translations.editor.mathContent || "-"}
                     />
                   </div>
                   {showSecondTextarea && (
-                    <div className="mt-4 flex-grow">
+                  <div className="flex-grow">
                       <textarea
                         value={props.node.attrs.macros}
                         onChange={(e) => updateContent(e, "macros", true)}
                         className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"
-                        placeholder="Enter KaTeX macros here..."
+                        placeholder={translations.editor.katexMacros || "-"}
                       />
                     </div>
                   )}
-                  <div className="flex justify-between items-center border-t dark:border-neutral-600 border-neutral-200 pt-2 text-gray-600 dark:text-gray-300">
-                    <p className="text-sm" style={{ margin: 0 }}>
-                      Press <strong>Enter</strong> to exit
-                    </p>
-                    <button
-                      title="Toggle KaTeX Macros"
-                      className={`riSettings3Line cursor-pointer ${
-                        useKatexMacros ? "text-primary" : ""
-                      } ${showSecondTextarea ? "text-amber-400" : "text-neutral-800 dark:text-white"}`}
-                      onClick={toggleSecondTextarea}
-                    >
-                      <Settings4LineIcon className="active:text-amber-500" />
-                    </button>
-                  </div>
                 </div>
               </DialogPanel>
             </Transition.Child>

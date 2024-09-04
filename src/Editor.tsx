@@ -13,51 +13,30 @@ import {
   FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { NativeBiometric } from "capacitor-native-biometric";
+import { Note } from "./store/types";
 
 const STORAGE_PATH = "notes/data.json";
 
-type Props = {
-  notesState: any;
-  setNotesState: (notes:any) => void;
-};
+interface Props {
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
+}
 
 function Editor({notesState, setNotesState}: Props) {
   const navigate = useNavigate();
   const { note } = useParams<{ note: string }>();
   const [translations, setTranslations] = useState({
-    home: {
-      bookmarked: "home.bookmarked",
-      all: "home.all",
-      messagePt1: "home.messagePt1",
-      messagePt2: "home.messagePt2",
-      messagePt3: "home.messagePt3",
-      unlocktoedit: "home.unlocktoedit",
-      noContent: "home.noContent",
-      title: "home.title",
-      confirmDelete: "home.confirmDelete",
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importInvalid: "home.importInvalid",
-      importError: "home.importError",
-      biometricsReason: "home.biometricsReason",
-      biometricsTitle: "home.biometricsTitle",
-      subtitle: "home.subtitle",
-      biometricFace: "home.biometricFace",
-      biometricTouch: "home.biometricFinger",
-      biometricError: "home.biometricError",
-      biometricPassword: "home.biometricPassword",
-      biometricWrongPassword: "home.biometricWrongPassword",
-      biometricSuccess: "home.biometricSuccess",
-      subtitle2: "home.subtitle2",
-      biometricUnlock: "home.biometricUnlock",
-      bookmarkError: "home.bookmarkError",
-      archiveError: "home.archiveError",
-      shareTitle: "home.shareTitle",
-      wrongpasswd: "home.wrongpasswd",
-      lockerror: "home.lockerror",
-      enterpasswd: "home.enterpasswd",
+    editor: {
+      unlocktoedit: "editor.unlocktoedit",
+      wrongpasswd: "editor.wrongpasswd",
+      lockerror: "editor.lockerror",
+      unlock: "editor.unlock",
+      cancel: "editor.cancel",
+      enterpasswd: "enter.enterpasswd",
+      biometricReason: "enter.biometricReason",
+      biometricTitle: "enter.biometricTitle",
+      noteNotFound: "enter.noteNotFound",
+      noNoteId: "enter.noNoteId"
     },
   });
 
@@ -111,8 +90,8 @@ function Editor({notesState, setNotesState}: Props) {
           try {
             console.time("NativeBiometric.verifyIdentity");
             await NativeBiometric.verifyIdentity({
-              reason: "Unlock your notes",
-              title: "Unlock with Biometrics",
+              reason: `${translations.editor.biometricReason}`,
+              title: `${translations.editor.biometricTitle}`,
             });
             console.timeEnd("NativeBiometric.verifyIdentity");
             password = storedGlobalPassword;
@@ -166,7 +145,7 @@ function Editor({notesState, setNotesState}: Props) {
         console.timeEnd("CryptoJS.AES.decrypt");
 
         if (!decryptedContent) {
-          alert(translations.home.wrongpasswd);
+          alert(translations.editor.wrongpasswd);
           return;
         }
 
@@ -197,7 +176,7 @@ function Editor({notesState, setNotesState}: Props) {
 
       setNotesState(notes);
     } catch (error) {
-      alert(translations.home.lockerror);
+      alert(translations.editor.lockerror);
     }
     console.timeEnd("unlockNote");
   };
@@ -219,7 +198,7 @@ function Editor({notesState, setNotesState}: Props) {
       };
       ReactDOM.render(
         <ModularPrompt
-          title="Enter Password"
+          title={translations.editor.enterpasswd || "-"}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
         />,
@@ -233,7 +212,7 @@ function Editor({notesState, setNotesState}: Props) {
   };
 
   if (!note) {
-    return <div>No note ID provided</div>;
+    return <div>{translations.editor.noNoteId || "-"}</div>;
   }
 
   const noteData = notesState[note];
@@ -241,7 +220,7 @@ function Editor({notesState, setNotesState}: Props) {
   if (!noteData) {
     return (
       <div className="h-screen w-screen flex justify-center items-center">
-        <div className="text-xl font-bold text-center">Note not found</div>
+        <div className="text-xl font-bold text-center">{translations.editor.noteNotFound || "-"}</div>
       </div>
     );
   }
@@ -250,19 +229,19 @@ function Editor({notesState, setNotesState}: Props) {
     return (
       <div className="h-[80vh] w-screen flex flex-col justify-center items-center">
         <icons.LockLineIcon className="w-32 h-32" />
-        <p>Unlock to edit</p>
+        <p>{translations.editor.unlocktoedit || "-"}</p>
         <div className="flex flex-col gap-2 pt-2 w-2/4">
           <button
             className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl text-center"
             onClick={() => unlockNote(note)}
           >
-            Unlock
+            {translations.editor.unlock || "-"}
           </button>
           <button
             className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl text-center"
             onClick={Cancel}
           >
-            Cancel
+            {translations.editor.cancel || "-"}
           </button>
         </div>
       </div>
@@ -271,14 +250,7 @@ function Editor({notesState, setNotesState}: Props) {
 
   localStorage.setItem("lastNoteEdit", note);
 
-  console.time("EditorComponent render");
-  const EditorComponentWithTiming = (note: any) => {
-    const component = <EditorComponent {...note} />;
-    console.timeEnd("EditorComponent render");
-    return component;
-  };
-
-  return <EditorComponentWithTiming note={noteData} />;
+  return <EditorComponent note={noteData} notesState={notesState} setNotesState={setNotesState}/>;
 }
 
 export default Editor;

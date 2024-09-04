@@ -1,5 +1,4 @@
 import { Note } from "../../store/types";
-import dayjs from "dayjs";
 import Icons from "../../lib/remixicon-react";
 import { useNotesState } from "../../store/Activenote";
 import ReactDOM from "react-dom";
@@ -20,6 +19,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { JSONContent } from "@tiptap/react";
+import dayjs from "dayjs";
+import "dayjs/locale/en";
+import "dayjs/locale/de";
+import "dayjs/locale/zh-cn"; 
 
 interface BookmarkedProps {
   note: Note;
@@ -66,8 +69,8 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
         if (biometricAvailable.isAvailable) {
           try {
             await NativeBiometric.verifyIdentity({
-              reason: "Unlock your notes",
-              title: "Unlock with Biometrics",
+              reason: `${translations.card.biometricReason}`,
+              title: `${translations.card.biometricTitle}`,
             });
             password = storedGlobalPassword; // Use the stored global password
           } catch {
@@ -118,7 +121,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
 
         if (!decryptedContent) {
           // If decryption fails (wrong password), show error message and exit
-          alert(translations.home.wrongpasswd);
+          alert(translations.card.wrongpasswd);
           return;
         }
 
@@ -151,7 +154,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
       // Update the state with the updated notes array
       setNotesState(notes);
     } catch (error) {
-      alert(translations.home.lockerror);
+      alert(translations.card.lockerror);
     }
   };
 
@@ -172,7 +175,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
       };
       ReactDOM.render(
         <ModularPrompt
-          title={translations.home.enterpasswd}
+          title={translations.card.enterpasswd}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
         />,
@@ -187,39 +190,17 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
 
   // Translations
   const [translations, setTranslations] = useState({
-    home: {
-      bookmarked: "home.bookmarked",
-      all: "home.all",
-      messagePt1: "home.messagePt1",
-      messagePt2: "home.messagePt2",
-      messagePt3: "home.messagePt3",
-      unlocktoedit: "home.unlocktoedit",
-      noContent: "home.noContent",
-      title: "home.title",
-      confirmDelete: "home.confirmDelete",
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importInvalid: "home.importInvalid",
-      importError: "home.importError",
-      biometricsReason: "home.biometricsReason",
-      biometricsTitle: "home.biometricsTitle",
-      subtitle: "home.subtitle",
-      biometricFace: "home.biometricFace",
-      biometricTouch: "home.biometricFinger",
-      biometricError: "home.biometricError",
-      biometricPassword: "home.biometricPassword",
-      biometricWrongPassword: "home.biometricWrongPassword",
-      biometricSuccess: "home.biometricSuccess",
-      subtitle2: "home.subtitle2",
-      biometricUnlock: "home.biometricUnlock",
-      bookmarkError: "home.bookmarkError",
-      archiveError: "home.archiveError",
-      shareTitle: "home.shareTitle",
-      wrongpasswd: "home.wrongpasswd",
-      lockerror: "home.lockerror",
-      enterpasswd: "home.enterpasswd",
+    card: {
+      unlocktoedit: "card.unlocktoedit",
+      noContent: "card.noContent",
+      confirmDelete: "card.confirmDelete",
+      bookmarkError: "card.bookmarkError",
+      archiveError: "card.archiveError",
+      wrongpasswd: "card.wrongpasswd",
+      lockerror: "card.lockerror",
+      enterpasswd: "card.enterpasswd",
+      biometricReason: "card.biometricReason",
+      biometricTitle: "card.biometricTitle"
     },
   });
 
@@ -251,8 +232,8 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
       const updatedNotes = await toggleBookmark(noteId);
       setNotesState(updatedNotes);
     } catch (error) {
-      console.error(translations.home.bookmarkError, error);
-      alert(translations.home.bookmarkError + (error as any).message);
+      console.error(translations.card.bookmarkError, error);
+      alert(translations.card.bookmarkError + (error as any).message);
     }
   };
   const handleToggleArchive = async (
@@ -265,14 +246,14 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
       const updatedNotes = await toggleArchive(noteId);
       setNotesState(updatedNotes);
     } catch (error) {
-      console.error(translations.home.archiveError, error);
-      alert(translations.home.archiveError + (error as any).message);
+      console.error(translations.card.archiveError, error);
+      alert(translations.card.archiveError + (error as any).message);
     }
   };
 
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    const isConfirmed = window.confirm(translations.home.confirmDelete);
+    const isConfirmed = window.confirm(translations.card.confirmDelete);
 
     if (isConfirmed) {
       try {
@@ -293,7 +274,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
 
   function extractParagraphTextFromContent(content: JSONContent): string {
     if (!content || !Array.isArray(content.content)) {
-      return translations.home.noContent;
+      return translations.card.noContent;
     }
     if (
       content.content.length === 1 &&
@@ -317,7 +298,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
       })
       .join(" ");
 
-    return paragraphText || translations.home.noContent;
+    return paragraphText || translations.card.noContent;
   }
 
   function truncateContentPreview(
@@ -385,7 +366,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
                 <Icons.LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
               </button>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                {translations.home.unlocktoedit || "-"}
+                {translations.card.unlocktoedit || "-"}
               </p>
             </div>
           ) : (

@@ -4,26 +4,54 @@ import icons from "../../lib/remixicon-react"
 import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useSaveNote } from "../../store/notes";
-import { useNotesState } from "../../store/Activenote";
 
 interface CommandPromptProps {
   isOpen: boolean;
   setIsCommandPromptOpen: (value: boolean) => void;
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
 }
 
 const CommandPrompt: React.FC<CommandPromptProps> = ({
   isOpen,
   setIsCommandPromptOpen,
+  notesState,
+  setNotesState,
 }) => {
+  const { saveNote } = useSaveNote(setNotesState);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSubMenu, setShowSubMenu] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [sortingOption] = useState("updatedAt");
-  const { notesState, setNotesState } = useNotesState();
   const [searchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
   useState<Record<string, Note>>(notesState);
-  const { saveNote } = useSaveNote(setNotesState);
+
+  const [translations, setTranslations] = useState({
+    commandprompt: {
+      newNote: "commandprompt.newNote",
+      settings: "commandprompt.settings",
+      theme: "commandprompt.theme",
+      placeholder: "commandprompt.placeholder"
+    },
+  });
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
@@ -162,7 +190,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
               <input
                 className="text-xl text-gray-800 bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
                 type="text"
-                placeholder="Search file or type '>' to search commands"
+                placeholder={translations.commandprompt.placeholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleKeyPress}
@@ -179,7 +207,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                     }`}
                     onClick={handleCreateNewNote}
                   >
-                    <h1 className="text-lg">Create new note</h1>
+                    <h1 className="text-lg">{translations.commandprompt.newNote}</h1>
                   </div>
                   <div
                     className={`note-item cursor-pointer rounded-lg p-2 ${
@@ -189,7 +217,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                     }`}
                     onClick={goTosettings}
                   >
-                    <h1 className="text-lg">Settings</h1>
+                    <h1 className="text-lg">{translations.commandprompt.settings}</h1>
                   </div>
                   <div
                     className={`note-item cursor-pointer rounded-lg p-2 ${
@@ -199,7 +227,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                     }`}
                     onClick={switchTheme}
                   >
-                    <h1 className="text-lg">Change Theme</h1>
+                    <h1 className="text-lg">{translations.commandprompt.theme}</h1>
                   </div>
                 </>
               ) : (

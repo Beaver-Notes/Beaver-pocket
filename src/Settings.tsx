@@ -31,7 +31,6 @@ const Settings: React.FC = () => {
     "Ubuntu",
   ];
 
-
   useEffect(() => {
     document.documentElement.style.setProperty("--selected-font", selectedFont);
     localStorage.setItem("selected-font", selectedFont);
@@ -94,31 +93,20 @@ const Settings: React.FC = () => {
   // Translations
   const [translations, setTranslations] = useState({
     settings: {
+      title: "settings.title",
       apptheme: "settings.apptheme",
       light: "settings.light",
       dark: "settings.dark",
       system: "settings.system",
       selectlanguage: "settings.selectlanguage",
-      encryptwpasswd: "settings.encryptwpasswd",
       selectfont: "settings.selectfont",
-      iedata: "settings.iedata",
-      importdata: "settings.importdata",
-      exportdata: "settings.exportdata",
       About: "settings.About",
       Shortcuts: "settings.Shortcuts",
-      title: "settings.title",
-      Inputpassword: "settings.Inputpassword",
-    },
-    home: {
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareTitle: "home.shareTitle",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importError: "home.importError",
-      importInvalid: "home.importInvalid",
-      title: "home.title",
-      enterpasswd: "home.enterpasswd",
+      codeFont: "settings.codeFont",
+      interfaceOptions: "settings.interfaceOptions",
+      clearFont: "settings.clearFont",
+      Sync: "settings.Sync",
+      expandPage: "settings.expandPage"
     },
   });
 
@@ -188,25 +176,29 @@ const Settings: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState(
     themeMode === "auto" ? "System" : darkMode ? "Dark" : "Light"
   );
-  const modes = ["Light", "Dark", "System"];
 
-  // Handle theme mode change
   const handleChangeMode = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedOption(event.target.value);
     switch (event.target.value) {
-      case "Light":
+      case translations.settings.light:
         toggleTheme(false);
         break;
-      case "Dark":
+      case translations.settings.dark:
         toggleTheme(true);
         break;
-      case "System":
+      case translations.settings.system:
         setAutoMode();
         break;
       default:
         break;
     }
   };
+
+  const modes = [
+    translations.settings.light,
+    translations.settings.dark,
+    translations.settings.system,
+  ];
 
   return (
     <div>
@@ -263,7 +255,7 @@ const Settings: React.FC = () => {
               {/* Code Font */}
               <section>
                 <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                  Select Font Code
+                  {translations.settings.codeFont || "-"}
                 </p>
                 <div className="relative">
                   <select
@@ -303,14 +295,14 @@ const Settings: React.FC = () => {
               <section className="py-2">
                 {/* Interface Options */}
                 <p className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                  Interface options
+                  {translations.settings.interfaceOptions || "-"}
                 </p>
-                <div className="flex items-center py-2 justify-between hidden sm:block">
+                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
                   <div>
-                    <p className="block text-lg align-left">Expand page</p>
+                  <p className="block text-lg align-left"> {translations.settings.expandPage || "-"}</p>
                   </div>
                   <label className="relative inline-flex cursor-pointer items-center">
-                    <input
+                  <input
                       id="switch"
                       type="checkbox"
                       checked={wd}
@@ -322,7 +314,7 @@ const Settings: React.FC = () => {
                 </div>
                 <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
                   <div>
-                    <p className="block text-lg align-left">Clear Font</p>
+                    <p className="block text-lg align-left"> {translations.settings.clearFont || "-"}</p>
                   </div>
                   <label className="relative inline-flex cursor-pointer items-center">
                     <input
@@ -343,7 +335,7 @@ const Settings: React.FC = () => {
                     className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                   >
                     <Icons.SyncLineIcon className="w-6 h-6 mr-2" />
-                    Sync
+                    {translations.settings.Sync || "-"}
                   </Link>
                   <Link
                     to="/about"

@@ -1,21 +1,16 @@
-import { SetStateAction, useState } from 'react';
+import { useState } from 'react';
 import { Note } from './types';
 import { JSONContent } from '@tiptap/react';
-
-// Typing for the saveNote function
-type SaveNoteFunction = (note: Note) => Promise<void>;
-
-// Typing for the setNotesState function
-type SetNotesStateFunction = React.Dispatch<SetStateAction<Record<string, Note>>>;
+import { useSaveNote } from './notes';
 
 const useNoteEditor = (
   activeNoteId: string | number | null, 
-  notesState: Record<string, Note>, 
-  setNotesState: SetNotesStateFunction, 
-  saveNote: SaveNoteFunction
+  notesState: Record<string, Note>,
+  setNotesState: (notes: Record<string, Note>) => void,
 ) => {
   // Initialize title state based on the active note
   const [title, setTitle] = useState<string>(activeNoteId ? notesState[activeNoteId]?.title || "" : "");
+  const { saveNote } = useSaveNote(setNotesState);
 
   const handleChangeNoteContent = async (
     content: JSONContent, // Update type here if JSONContent is expected
@@ -43,14 +38,8 @@ const useNoteEditor = (
           labels: updatedLabels,
         };
 
-        // Update notes state
-        setNotesState((prevNotes) => ({
-          ...prevNotes,
-          [activeNoteId]: updatedNote,
-        }));
-
         // Save the updated note
-        await saveNote(updatedNote);
+        saveNote(updatedNote);
       } else {
         console.warn("No active note ID provided.");
       }

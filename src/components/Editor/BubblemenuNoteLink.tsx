@@ -16,6 +16,32 @@ const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
+  const [translations, setTranslations] = useState({
+    editor: {
+      noNotes: "editor.noNotes",
+    },
+  });
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations((prevTranslations) => ({
+          ...prevTranslations,
+          ...translationModule.default,
+        }));
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  });
+
   useEffect(() => {
     if (textAfterAt !== null) {
       setSearchQuery(textAfterAt); // Initialize search query if textAfterAt is provided
@@ -24,11 +50,15 @@ const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
 
   // Function to filter notes based on search query
   const filteredNotes = notes
-    .filter((note) => note.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((note) =>
+      note.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     .slice(0, 5); // Limit to 5 items
 
   const truncateTitle = (title: string, maxLength: number) => {
-    return title.length > maxLength ? title.substring(0, maxLength) + "..." : title;
+    return title.length > maxLength
+      ? title.substring(0, maxLength) + "..."
+      : title;
   };
 
   return (
@@ -37,7 +67,7 @@ const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
       style={{ top: popupPosition.top, left: popupPosition.left }}
     >
       {filteredNotes.length === 0 ? (
-        <div className="p-2 text-sm text-gray-500">No notes found.</div>
+        <div className="p-2 text-sm text-gray-500">{translations.editor.noNotes || "-"}</div>
       ) : (
         filteredNotes.map((note) => (
           <div

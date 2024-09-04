@@ -60,7 +60,7 @@ export const useHandleImportData = () => {
   };
 
   const importUtils = async (
-    setNotesState: React.Dispatch<React.SetStateAction<Record<string, Note>>>,
+    setNotesState: (notes: Record<string, Note>) => void,
     loadNotes: () => Promise<Record<string, Note>>,
     searchQuery: string,
     setFilteredNotes: React.Dispatch<React.SetStateAction<Record<string, Note>>>

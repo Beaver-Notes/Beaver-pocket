@@ -2,12 +2,12 @@ import {
   Directory,
   Filesystem,
   FilesystemEncoding,
-  FilesystemDirectory
+  FilesystemDirectory,
 } from "@capacitor/filesystem";
 import React from "react";
 import { Note } from "./types";
-import {Capacitor} from "@capacitor/core";
-import {setStoreRemotePath} from "./useDataPath";
+import { Capacitor } from "@capacitor/core";
+import { setStoreRemotePath } from "./useDataPath";
 
 const STORAGE_PATH = "notes/data.json";
 
@@ -82,7 +82,9 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
           if (note.title) {
             acc[noteId] = note;
           } else {
-            console.warn(`Note with ID ${noteId} is missing a title. Skipping.`);
+            console.warn(
+              `Note with ID ${noteId} is missing a title. Skipping.`
+            );
           }
           return acc;
         }, {} as Record<string, Note>);
@@ -171,28 +173,54 @@ export const useSaveNote = (
 
 // Delete
 
-export const useDeleteNote = (setNotesState: (notes: Record<string, Note>) => void, notesState: Record<string, Note>) => {
+export const useDeleteNote = (
+  setNotesState: (notes: Record<string, Note>) => void,
+  notesState: Record<string, Note>
+) => {
   const deleteNote = React.useCallback(
     async (noteId: string) => {
       try {
         const notes = { ...notesState }; // Create a copy of notesState
         delete notes[noteId]; // Delete the note with the given noteId
-  
+
+        // Define paths for the folders
+        const fileAssetsPath = `file-assets/${noteId}`;
+        const noteAssetsPath = `note-assets/${noteId}`;
+
+        // Attempt to delete the folders if they exist
+        await Filesystem.rmdir({
+          path: fileAssetsPath,
+          directory: Directory.Data,
+          recursive: true, // This will ensure the directory is deleted even if it contains files
+        }).catch((error) => {
+          console.warn(`Error deleting file-assets for note ${noteId}:`, error);
+        });
+
+        await Filesystem.rmdir({
+          path: noteAssetsPath,
+          directory: Directory.Data,
+          recursive: true,
+        }).catch((error) => {
+          console.warn(`Error deleting note-assets for note ${noteId}:`, error);
+        });
+
+        // Update the storage after deletion
         await Filesystem.writeFile({
           path: STORAGE_PATH,
           data: JSON.stringify({ data: { notes } }),
           directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
-  
-        setNotesState(notes); // Update the state with the new notes object
+
+        // Update the state with the new notes object
+        setNotesState(notes);
       } catch (error) {
         console.error("Error deleting note:", error);
         alert("Error deleting note: " + (error as any).message);
       }
     },
     [notesState, setNotesState]
-  );  
+  );
 
   return { deleteNote };
 };

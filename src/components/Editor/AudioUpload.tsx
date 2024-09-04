@@ -69,21 +69,21 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+      <div className="flex items-center justify-between md:p-2 sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
         {!isRecording ? (
           <button onClick={startRecording} disabled={isProcessing}>
             {isProcessing ? (
-              <icons.Spinner className="text-xl w-8 h-8 cursor-pointer animate-spin" />
+              <icons.Spinner className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer animate-spin" />
             ) : (
-              <icons.MicLineIcon className="text-xl w-8 h-8 cursor-pointer" />
+              <icons.MicLineIcon className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer" />
             )}
           </button>
         ) : (
           <button onClick={stopRecording} disabled={isProcessing}>
             {isProcessing ? (
-              <icons.Spinner className="text-xl w-8 h-8 cursor-pointer animate-spin" />
+              <icons.Spinner className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer animate-spin" />
             ) : (
-              <icons.StopCircleLineIcon className="text-xl w-8 h-8 cursor-pointer" />
+              <icons.StopCircleLineIcon className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer" />
             )}
           </button>
         )}

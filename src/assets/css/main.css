@@ -86,7 +86,7 @@ code {
   cursor: pointer;
 }
 .ProseMirror .math-block {
-  @apply dark:bg-gray-800;
+  @apply dark:bg-neutral-800;
 }
 .math-node .math-src {
   @apply dark:text-purple-400 text-purple-500 !important;
@@ -178,7 +178,7 @@ code {
   p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     float: left;
-    @apply text-gray-400 dark:text-[#A1A1AA];
+    @apply text-neutral-400 dark:text-[#A1A1AA];
     pointer-events: none;
     height: 0;
   }
@@ -256,7 +256,7 @@ code {
   }
 
   pre {
-    @apply bg-[#F2F2F2] dark:bg-[#303033] rounded-lg py-3 px-4 text-gray-700 text-lg dark:text-gray-200 pt-10 !important;
+    @apply bg-[#F2F2F2] dark:bg-[#303033] rounded-lg py-3 px-4 text-neutral-700 text-lg dark:text-neutral-200 pt-10 !important;
     font-family: var(--selected-font-code);
     tab-size: 2;
     font-variant-ligatures: normal;
@@ -341,10 +341,10 @@ code {
 }
 
 .hoverable {
-  @apply hover:bg-gray-800 hover:bg-opacity-5 dark:hover:bg-gray-200 dark:hover:bg-opacity-5;
+  @apply hover:bg-neutral-800 hover:bg-opacity-5 dark:hover:bg-neutral-200 dark:hover:bg-opacity-5;
 }
 .bg-input {
-  @apply bg-black bg-opacity-5 hover:bg-opacity-10 dark:bg-gray-200 dark:bg-opacity-5 dark:hover:bg-opacity-10 focus:ring-2;
+  @apply bg-black bg-opacity-5 hover:bg-opacity-10 dark:bg-neutral-200 dark:bg-opacity-5 dark:hover:bg-opacity-10 focus:ring-2;
 }
 
 kbd {
@@ -426,9 +426,20 @@ input[type="checkbox"]:checked::before {
   transform: rotate(90deg);
 }
 .collapse-indicator {
-  @apply absolute -left-6 top-2 cursor-pointer h-5 w-6;
+  @apply absolute -left-6 top-2 cursor-pointer h-8 w-9;
 }
 .collapse-indicator[data-hide] {
   transform: none;
   @apply opacity-100;
+}
+.editor-box {
+  touch-action: manipulation;
+}
+.ui-select__arrow {
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+}
+.ui-select option,
+.ui-select optgroup {
+  @apply bg-neutral-300 dark:bg-neutral-700;
 }

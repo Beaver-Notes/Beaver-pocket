@@ -18,16 +18,9 @@ const Shortcuts: React.FC = () => {
       github: "about.github",
       donate: "about.donate",
       copyright: "about.Copyright",
-    },
-    home: {
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareTitle: "home.shareTitle",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importError: "home.importError",
-      importInvalid: "home.importInvalid",
-      title: "home.title",
+      termsConditions: "about.termsConditions",
+      privacyPolicy: "about.privacyPolicy",
+      license: "about.license"
     },
   });
 
@@ -125,20 +118,20 @@ const Shortcuts: React.FC = () => {
                   className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                 >
                   <p className="text-lg pl-2 py-1 font-bold">
-                    Terms and Conditions
+                  {translations.about.termsConditions}
                   </p>
                 </a>
                 <a
                   href="https://beavernotes.com/#/Privacy"
                   className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                 >
-                  <p className="text-lg pl-2 py-1 font-bold">Privacy Policy</p>
+                  <p className="text-lg pl-2 py-1 font-bold">{translations.about.privacyPolicy}</p>
                 </a>
                 <a
                   href="https://raw.githubusercontent.com/Beaver-Notes/Beaver-pocket/main/LICENSE.txt"
                   className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                 >
-                  <p className="text-lg pl-2 py-1 font-bold">License</p>
+                  <p className="text-lg pl-2 py-1 font-bold">{translations.about.license}</p>
                 </a>
               </div>
               <p className="pt-2 text-center">{translations.about.copyright}</p>
