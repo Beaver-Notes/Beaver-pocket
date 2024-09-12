@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Beaver Pocket</string>
+    <string name="title_activity_main">Beaver Pocket</string>
+    <string name="package_name">beaver.notes.pocket</string>
+    <string name="custom_url_scheme">beaver.notes.pocket</string>
+</resources>
