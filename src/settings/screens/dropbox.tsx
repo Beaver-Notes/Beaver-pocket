@@ -23,11 +23,9 @@ interface DropboxProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
+const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
   // Correctly destructuring props
   const { importUtils } = useHandleImportData();
-  const [searchQuery] = useState<string>("");
-  const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [authorizationCode, setAuthorizationCode] = useState<string>("");
@@ -45,7 +43,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
       autoSync: "dropbox.Autosync",
       logout: "dropbox.logout",
       existingFolder: "dropbox.existingFolder",
-      refreshingToken: "dropbox.refreshingToken"
+      refreshingToken: "dropbox.refreshingToken",
     },
   });
 
@@ -176,7 +174,6 @@ const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
             value: newAccessToken,
           });
           setAccessToken(newAccessToken);
-          alert(newAccessToken);
         } else {
           const errorData = await response.json();
           console.error("Failed to refresh access token:", errorData);
@@ -204,7 +201,6 @@ const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
         );
 
         if (!response.ok) {
-          alert(translations.dropbox.refreshingToken);
           await refreshAccessToken();
         }
       } catch (error) {
@@ -216,12 +212,18 @@ const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
   };
 
   useEffect(() => {
+    const tokenExpirationCheck = async () => {
+      await checkTokenExpiration();
+    };
+
+     tokenExpirationCheck();
+
     const tokenExpirationCheckInterval = setInterval(() => {
       checkTokenExpiration();
-    }, 600000);
+    }, 14400000);
 
     return () => clearInterval(tokenExpirationCheckInterval);
-  }, [accessToken]);
+  }, [accessToken, refreshToken]);
 
   useEffect(() => {
     const retrieveAccessToken = async () => {
@@ -519,12 +521,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
         };
 
         await createFoldersRecursively(mainFolderPath);
-        await importUtils(
-          setNotesState,
-          loadNotes,
-          searchQuery,
-          setFilteredNotes
-        );
+        await importUtils(setNotesState, loadNotes);
         await Filesystem.rmdir({
           path: `export/Beaver Notes ${formattedDate}`,
           directory: FilesystemDirectory.Data,
@@ -548,9 +545,11 @@ const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
   document.addEventListener("dropboxImport", handleDropboxImport);
 
   async function handleDropboxExport() {
+    await checkTokenExpiration();
     await exportdata();
   }
   async function handleDropboxImport() {
+    await checkTokenExpiration();
     await importData();
   }
 
@@ -621,7 +620,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
   }, [darkMode, themeMode]);
 
   return (
-    <div>
+    <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">
@@ -676,7 +675,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ notesState, setNotesState }) => {
             </div>
             <div className="flex items-center py-2 justify-between">
               <div>
-                <p className="block text-lg align-left">Auto Sync</p>
+                <p className="block text-lg align-left">{translations.dropbox.autoSync || "-"}</p>
               </div>
               <label className="relative inline-flex cursor-pointer items-center">
                 <input

@@ -39,6 +39,22 @@
     "autoSync": "Auto Sync",
     "logout": "Logout"
   },
+  "gdrive": {
+    "title": "Sync with Google Drive",
+    "import": "Import",
+    "export": "Export",
+    "autoSync": "Auto Sync",
+    "logout": "Logout",
+    "login": "Login",
+    "existingFolder":"The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
+    "refreshingToken": "Access token expired, refreshing..."
+  },
+  "icloud": {
+    "title": "Sync with iCloud",
+    "import": "Import",
+    "export": "Export",
+    "autoSync": "Auto Sync"
+  },
   "webdav": {
     "title": "Sync with WebDAV",
     "login": "Login",

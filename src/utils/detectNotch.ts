@@ -1,4 +1,3 @@
-// utils/detectNotch.ts
 import { Device } from "@capacitor/device";
 
 const notchedDevices = [
@@ -27,6 +26,10 @@ const notchedDevices = [
   "iPhone15,5", // iPhone 15 Plus
   "iPhone16,1", // iPhone 15 Pro
   "iPhone16,2", // iPhone 15 Pro Max
+  "iPhone17,1", // iPhone 16
+  "iPhone17,2", // iPhone 16 Plus
+  "iPhone17,3", // iPhone 16 Pro
+  "iPhone17,4", // iPhone 16 Pro Max
 ];
 
 export const hasNotch = async (): Promise<boolean> => {

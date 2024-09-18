@@ -4,8 +4,15 @@ import enTranslations from "./assets/locales/en.json";
 import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
 import Icons from "./lib/remixicon-react";
+import { Note } from "./store/types";
+import { loadNotes } from "./store/notes";
 
-const Settings: React.FC = () => {
+interface SettingsProps {
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
+}
+
+const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
   );
@@ -106,7 +113,7 @@ const Settings: React.FC = () => {
       interfaceOptions: "settings.interfaceOptions",
       clearFont: "settings.clearFont",
       Sync: "settings.Sync",
-      expandPage: "settings.expandPage"
+      expandPage: "settings.expandPage",
     },
   });
 
@@ -171,6 +178,24 @@ const Settings: React.FC = () => {
       newValue ? "#CCCCCC" : "white"
     );
     window.location.reload();
+  };
+
+  const [collapsibleHeading, setCollapsibleHeading] = useState(() => {
+    const storedValue = localStorage.getItem("collapsibleHeading");
+    return storedValue === "true"; // Convert stored string to boolean
+  });
+
+  // Function to toggle collapsibleHeading
+  const toggleCollapsibleHeading = async () => {
+    // Toggle collapsibleHeading synchronously
+    setCollapsibleHeading((prevValue) => {
+      const newValue = !prevValue;
+      localStorage.setItem("collapsibleHeading", newValue.toString()); // Store as string
+      return newValue;
+    });
+    // Load notes asynchronously
+    const notes = await loadNotes();
+    setNotesState(notes);
   };
 
   const [selectedOption, setSelectedOption] = useState(
@@ -297,24 +322,32 @@ const Settings: React.FC = () => {
                 <p className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                   {translations.settings.interfaceOptions || "-"}
                 </p>
-                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
-                  <div>
-                  <p className="block text-lg align-left"> {translations.settings.expandPage || "-"}</p>
+                <div className="hidden sm:block">
+                  <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                    <div>
+                      <p className="block text-lg align-left">
+                        {" "}
+                        {translations.settings.expandPage || "-"}
+                      </p>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        id="switch"
+                        type="checkbox"
+                        checked={wd}
+                        onChange={toggleBackground}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                    </label>
                   </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
-                  <input
-                      id="switch"
-                      type="checkbox"
-                      checked={wd}
-                      onChange={toggleBackground}
-                      className="peer sr-only"
-                    />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                  </label>
                 </div>
                 <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
                   <div>
-                    <p className="block text-lg align-left"> {translations.settings.clearFont || "-"}</p>
+                    <p className="block text-lg align-left">
+                      {" "}
+                      {translations.settings.clearFont || "-"}
+                    </p>
                   </div>
                   <label className="relative inline-flex cursor-pointer items-center">
                     <input
@@ -322,6 +355,23 @@ const Settings: React.FC = () => {
                       type="checkbox"
                       checked={ClearFontChecked}
                       onChange={toggleClearFont}
+                      className="peer sr-only"
+                    />
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  </label>
+                </div>
+                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                  <div>
+                    <p className="block text-lg align-left">
+                      Collapsible headings
+                    </p>
+                  </div>
+                  <label className="relative inline-flex cursor-pointer items-center">
+                    <input
+                      id="switch"
+                      type="checkbox"
+                      checked={collapsibleHeading}
+                      onChange={toggleCollapsibleHeading}
                       className="peer sr-only"
                     />
                     <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
@@ -361,4 +411,4 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings;
+export default Archive;

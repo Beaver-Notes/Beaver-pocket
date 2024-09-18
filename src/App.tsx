@@ -10,6 +10,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
 import Dropbox from "./settings/screens/dropbox";
+import Gdrive from "./settings/screens/gdrive";
 import Webdav from "./settings/screens/webdav";
 import Icloud from "./settings/screens/icloud";
 import { Auth0Provider } from "@auth0/auth0-react";
@@ -76,8 +77,11 @@ const App: React.FC = () => {
       const dropboxImport = new CustomEvent("dropboxImport");
       document.dispatchEvent(dropboxImport);
     } else if (syncValue === "webdav") {
-      const { HandleImportData } = useImportDav(setNotesState, notesState);
+      const { HandleImportData } = useImportDav(setNotesState);
       HandleImportData();
+    } else if (syncValue === "iCloud") {
+      const iCloudImport = new CustomEvent("iCloudImport");
+      document.dispatchEvent(iCloudImport);
     }
   });
 
@@ -107,20 +111,25 @@ const App: React.FC = () => {
     onSwipedRight: (eventData) => {
       const selection = window.getSelection();
       const target = eventData.event.target as HTMLElement | null;
-  
+
       const isInsideDrawer = target?.closest(".drawer");
       const isInsideEditor = target?.closest(".editor");
-  
-      if (!selection || selection.toString().length > 0 || isInsideDrawer || isInsideEditor) {
+
+      if (
+        !selection ||
+        selection.toString().length > 0 ||
+        isInsideDrawer ||
+        isInsideEditor
+      ) {
         return;
       }
-  
+
       setIsSwipe(true);
-      history(-1);  // Go back one page in history
+      history(-1); // Go back one page in history
     },
     preventScrollOnSwipe: true,
     trackTouch: true,
-  });  
+  });
 
   // Determine whether to show the BottomNavBar
   const shouldShowNavBar = !["/welcome", "/editor"].some((path) =>
@@ -178,21 +187,20 @@ const App: React.FC = () => {
                   />
                 }
               />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/about" element={<About />} />
               <Route
-                path="/dropbox"
+                path="/settings"
                 element={
-                  <Dropbox
+                  <Settings
                     notesState={notesState}
                     setNotesState={setNotesState}
                   />
                 }
               />
+              <Route path="/about" element={<About />} />
               <Route
-                path="/icloud"
+                path="/dropbox"
                 element={
-                  <Icloud
+                  <Dropbox
                     notesState={notesState}
                     setNotesState={setNotesState}
                   />
@@ -207,6 +215,16 @@ const App: React.FC = () => {
                   />
                 }
               />
+              <Route
+                path="/icloud"
+                element={
+                  <Icloud
+                    notesState={notesState}
+                    setNotesState={setNotesState}
+                  />
+                }
+              />
+              <Route path="/gdrive" element={<Gdrive setNotesState={setNotesState}/>} />
               <Route path="/shortcuts" element={<Shortcuts />} />
               <Route path="/welcome" element={<Welcome />} />
               <Route

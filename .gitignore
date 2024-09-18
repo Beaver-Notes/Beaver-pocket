@@ -8,3 +8,6 @@ resources/android/**/*
 ios/App/.DS_Store
 ios/.DS_Store
 .DS_Store
+ios/App/App/Keys/Secrets.xcconfig
+ios/App/Keys/Secrets.xcconfig
+android/app/gradle.properties

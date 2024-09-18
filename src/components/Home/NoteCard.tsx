@@ -344,7 +344,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
             </div>
           ) : (
             <div>
-              {note.labels.length > 0 && (
+              {note.labels?.length > 0 && (
                 <div className="flex flex-col gap-1 overflow-hidden">
                   <div className="flex flex-wrap gap-1">
                     {note.labels.map((label) => (

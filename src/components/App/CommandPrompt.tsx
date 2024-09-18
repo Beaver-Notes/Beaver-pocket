@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "../../store/types";
-import icons from "../../lib/remixicon-react"
+import icons from "../../lib/remixicon-react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useSaveNote } from "../../store/notes";
@@ -25,14 +25,14 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
   const [sortingOption] = useState("updatedAt");
   const [searchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
-  useState<Record<string, Note>>(notesState);
+    useState<Record<string, Note>>(notesState);
 
   const [translations, setTranslations] = useState({
     commandprompt: {
       newNote: "commandprompt.newNote",
       settings: "commandprompt.settings",
       theme: "commandprompt.theme",
-      placeholder: "commandprompt.placeholder"
+      placeholder: "commandprompt.placeholder",
     },
   });
 
@@ -55,13 +55,23 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
-      const titleMatch = note.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const contentMatch = JSON.stringify(note.content)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch || contentMatch;
+      try {
+        // Treat missing titles as empty
+        const titleMatch = note.title
+          ? note.title.toLowerCase().includes(searchQuery.toLowerCase())
+          : false;
+
+        const contentMatch = note.content
+          ? JSON.stringify(note.content)
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
+          : false;
+
+        return titleMatch || contentMatch;
+      } catch (error) {
+        console.error("Error processing note:", error);
+        return false; // Skip the note if there's any error
+      }
     });
 
     setFilteredNotes(
@@ -171,13 +181,13 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
 
   const goTosettings = () => {
     navigate("/settings");
-  }
+  };
 
   const Notes = notes.filter((note) => {
     const noteTitle = note.title;
     return noteTitle.toLowerCase().includes(searchTerm.toLowerCase());
   });
-  
+
   return (
     <>
       {isOpen && (
@@ -207,7 +217,9 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                     }`}
                     onClick={handleCreateNewNote}
                   >
-                    <h1 className="text-lg">{translations.commandprompt.newNote}</h1>
+                    <h1 className="text-lg">
+                      {translations.commandprompt.newNote}
+                    </h1>
                   </div>
                   <div
                     className={`note-item cursor-pointer rounded-lg p-2 ${
@@ -217,7 +229,9 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                     }`}
                     onClick={goTosettings}
                   >
-                    <h1 className="text-lg">{translations.commandprompt.settings}</h1>
+                    <h1 className="text-lg">
+                      {translations.commandprompt.settings}
+                    </h1>
                   </div>
                   <div
                     className={`note-item cursor-pointer rounded-lg p-2 ${
@@ -227,7 +241,9 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                     }`}
                     onClick={switchTheme}
                   >
-                    <h1 className="text-lg">{translations.commandprompt.theme}</h1>
+                    <h1 className="text-lg">
+                      {translations.commandprompt.theme}
+                    </h1>
                   </div>
                 </>
               ) : (

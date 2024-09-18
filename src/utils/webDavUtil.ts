@@ -253,8 +253,7 @@ export const useExportDav = () => {
 };
 
 export const useImportDav = (
-  setNotesState: (notes: Record<string, Note>) => void,
-  notesState: Record<string, Note>
+setNotesState: (notes: Record<string, Note>) => void,
 ) => {
   const [baseUrl] = useState<string>(
     () => localStorage.getItem("baseUrl") || ""
@@ -274,8 +273,6 @@ export const useImportDav = (
   );
 
   const { importUtils } = useHandleImportData();
-  const [searchQuery] = useState<string>("");
-  const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
 
   const [progress, setProgress] = useState<number>(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
@@ -433,7 +430,7 @@ export const useImportDav = (
       await downloadDirectory(baseWebDavPath, baseLocalPath);
 
       // Import data into the app after all files are downloaded
-      importUtils(setNotesState, loadNotes, searchQuery, setFilteredNotes);
+      importUtils(setNotesState, loadNotes);
     } catch (error) {
       throw error;
     }

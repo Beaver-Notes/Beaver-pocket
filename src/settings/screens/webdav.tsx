@@ -10,7 +10,7 @@ interface WebdavProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const Webdav: React.FC<WebdavProps> = ({ notesState, setNotesState }) => {
+const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
   // Correctly destructuring props
   const [baseUrl, setBaseUrl] = useState<string>(
     () => localStorage.getItem("baseUrl") || ""
@@ -42,14 +42,13 @@ const Webdav: React.FC<WebdavProps> = ({ notesState, setNotesState }) => {
     },
   });
 
-
   useEffect(() => {
     // Load translations
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
         const translationModule = await import(
-          `../../../assets/locales/${selectedLanguage}.json`
+          `../../assets/locales/${selectedLanguage}.json`
         );
 
         setTranslations({ ...translations, ...translationModule.default });
@@ -89,7 +88,7 @@ const Webdav: React.FC<WebdavProps> = ({ notesState, setNotesState }) => {
     HandleImportData,
     progress: importProgress,
     progressColor: importProgressColor,
-  } = useImportDav(setNotesState, notesState);
+  } = useImportDav(setNotesState);
 
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
@@ -141,7 +140,7 @@ const Webdav: React.FC<WebdavProps> = ({ notesState, setNotesState }) => {
   }, [darkMode, themeMode]);
 
   return (
-    <div>
+    <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <section className="">
           <div className="flex flex-col">
@@ -220,7 +219,9 @@ const Webdav: React.FC<WebdavProps> = ({ notesState, setNotesState }) => {
               </button>
               <div className="flex items-center py-2 justify-between">
                 <div>
-                  <p className="block text-lg align-left">                {translations.webdav.autoSync || "-"}
+                  <p className="block text-lg align-left">
+                    {" "}
+                    {translations.webdav.autoSync || "-"}
                   </p>
                 </div>
                 <label className="relative inline-flex cursor-pointer items-center">

@@ -6,7 +6,7 @@ import * as d3 from "d3";
 import { v4 as uuid } from "uuid";
 
 const thicknessOptions = {
-  thin: 2,
+  thin: 2.5,
   medium: 5,
   thick: 8,
 };
@@ -24,7 +24,7 @@ const backgroundStyles = {
 const CustomNodeView = ({ node, updateAttributes }) => {
   const svgRef = useRef(null);
   const [color, setColor] = useState("#000000");
-  const [size, setSize] = useState(thicknessOptions.medium);
+  const [size, setSize] = useState(thicknessOptions.thin);
   const [drawing, setDrawing] = useState(false);
   const [points, setPoints] = useState([]);
   const [path, setPath] = useState("");
@@ -47,60 +47,102 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   useEffect(() => {
     const svg = d3.select(svgRef.current);
 
-    const handleEvent = (event) => {
-      event.preventDefault();
-      const [x, y] = getPointerCoordinates(event);
+    const eraseRadius = 20; // Defines the size of the eraser's area
+    let isErasing = false;
 
-      if (event.type === "mousedown" || event.type === "touchstart") {
-        if (tool === "erase") {
-          const clickedPath = d3.select(event.target).node();
-          if (clickedPath.tagName === "path") {
-            deletePath(clickedPath);
+    const handlePointerEvent = (event) => {
+      if (event.pointerType === "pen") {
+        // Only allow stylus input
+        event.preventDefault(); // Prevent Scribble from activating
+
+        const [x, y] = getPointerCoordinates(event);
+
+        if (event.type === "pointerdown") {
+          if (tool === "erase") {
+            isErasing = true;
+            eraseOverlappingPaths(x, y); // Start erasing immediately
+          } else {
+            startDrawing(x, y);
           }
-        } else {
-          startDrawing(x, y);
+        } else if (event.type === "pointermove") {
+          if (tool === "erase" && isErasing) {
+            eraseOverlappingPaths(x, y); // Continuously erase during movement
+          } else if (tool !== "erase") {
+            draw(x, y);
+          }
+        } else if (event.type === "pointerup") {
+          if (tool === "erase") {
+            isErasing = false; // Stop erasing after pointer is lifted
+          } else {
+            stopDrawing();
+          }
         }
-      } else if (event.type === "mousemove" || event.type === "touchmove") {
-        draw(x, y);
-      } else if (event.type === "mouseup" || event.type === "touchend") {
-        stopDrawing();
       }
     };
 
+    const eraseOverlappingPaths = (x, y) => {
+      const eraserArea = {
+        x: x - eraseRadius,
+        y: y - eraseRadius,
+        width: eraseRadius * 2,
+        height: eraseRadius * 2,
+      };
+
+      svg.selectAll("path").each(function () {
+        const path = d3.select(this);
+        const pathNode = path.node();
+        const pathBBox = pathNode.getBBox(); // Get the bounding box of the path
+
+        // Check if the path overlaps the eraser area
+        if (
+          pathBBox.x < eraserArea.x + eraserArea.width &&
+          pathBBox.x + pathBBox.width > eraserArea.x &&
+          pathBBox.y < eraserArea.y + eraserArea.height &&
+          pathBBox.y + pathBBox.height > eraserArea.y
+        ) {
+          deletePath(pathNode); // Delete the path if it intersects with the eraser area
+        }
+      });
+    };
+
+    // Use pointer events for unified handling of mouse, touch, and pen input
     svg
-      .on("mousedown touchstart", handleEvent)
-      .on("mousemove touchmove", handleEvent)
-      .on("mouseup touchend", handleEvent);
+      .on("pointerdown", handlePointerEvent)
+      .on("pointermove", handlePointerEvent)
+      .on("pointerup", handlePointerEvent);
+
+    // Add touchmove listener to prevent Scribble interference
+    const preventTouchMove = (event) => event.preventDefault();
+    svg
+      .on("touchmove", preventTouchMove, { passive: false })
+      .on("touchstart", preventTouchMove, { passive: false })
+      .on("touchend", preventTouchMove, { passive: false });
 
     return () => {
-      svg
-        .on("mousedown touchstart", null)
-        .on("mousemove touchmove", null)
-        .on("mouseup touchend", null);
+      svg.on("pointerdown", null).on("pointermove", null).on("pointerup", null);
+      svg.on("touchmove", null).on("touchstart", null).on("touchend", null);
     };
   }, [tool, color, size, points]);
 
   const deletePath = (pathElement) => {
-    // Get the d attribute of the clicked path
     const clickedPathData = pathElement.getAttribute("d");
-
-    // Find the corresponding line in linesRef.current
     const pathIndex = linesRef.current.findIndex(
       (line) => line.path === clickedPathData
     );
 
-    // If a matching line is found, remove it from the linesRef
     if (pathIndex !== -1) {
+      const removedLine = linesRef.current[pathIndex];
+
+      // Save the deletion action
+      setHistory((prevHistory) => [
+        ...prevHistory,
+        { action: "delete", line: removedLine },
+      ]);
+
       linesRef.current.splice(pathIndex, 1);
       updateAttributes({
         lines: linesRef.current,
       });
-
-      // Update the history to enable undo functionality
-      setHistory((prevHistory) => [
-        ...prevHistory,
-        { id, lines: [...linesRef.current] },
-      ]);
     }
   };
 
@@ -212,18 +254,39 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   const saveDrawing = () => {
     const newLine = { id: uuid(), path, color, size, tool };
     linesRef.current = [...linesRef.current, newLine];
+
+    // Save the action as adding this specific line, not the entire drawing
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      { action: "add", line: newLine },
+    ]);
+
+    // Clear the redo stack since a new action was taken
+    setRedoStack([]);
+
     updateAttributes({
       lines: linesRef.current,
       id: id,
     });
   };
 
+  // Store only actions in history (add or delete)
   const undo = () => {
     if (history.length > 0) {
       const lastAction = history[history.length - 1];
-      setRedoStack((prevStack) => [...prevStack, lastAction]);
       setHistory((prevHistory) => prevHistory.slice(0, -1));
-      linesRef.current = lastAction.lines || [];
+      setRedoStack((prevStack) => [...prevStack, lastAction]);
+
+      if (lastAction.action === "add") {
+        // Undo adding a line by removing it
+        linesRef.current = linesRef.current.filter(
+          (line) => line.id !== lastAction.line.id
+        );
+      } else if (lastAction.action === "delete") {
+        // Undo deleting a line by adding it back
+        linesRef.current = [...linesRef.current, lastAction.line];
+      }
+
       updateAttributes({
         lines: linesRef.current,
       });
@@ -233,9 +296,19 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   const redo = () => {
     if (redoStack.length > 0) {
       const lastRedo = redoStack[redoStack.length - 1];
-      setHistory((prevHistory) => [...prevHistory, lastRedo]);
       setRedoStack((prevStack) => prevStack.slice(0, -1));
-      linesRef.current = [...linesRef.current, ...(lastRedo.lines || [])];
+      setHistory((prevHistory) => [...prevHistory, lastRedo]);
+
+      if (lastRedo.action === "add") {
+        // Redo adding a line by adding it back
+        linesRef.current = [...linesRef.current, lastRedo.line];
+      } else if (lastRedo.action === "delete") {
+        // Redo deleting a line by removing it again
+        linesRef.current = linesRef.current.filter(
+          (line) => line.id !== lastRedo.line.id
+        );
+      }
+
       updateAttributes({
         lines: linesRef.current,
       });
@@ -259,21 +332,28 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   };
 
   return (
-    <NodeViewWrapper className="draw">
+    <NodeViewWrapper className="draw select-none">
       <div className="relative drawing-container">
         <svg
           ref={svgRef}
           height={svgHeight}
           width={svgWidth}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          className={`border border-neutral-300 dark:border-neutral-600 ${background}`}
+          preserveAspectRatio="xMidYMid meet"
+          className={`w-full h-auto border border-gray-300 dark:border-neutral-600 ${background}`}
           style={{ touchAction: "none" }}
         >
           {linesRef.current.map((item) => (
             <path
               key={`${item.id}-${item.color}-${item.size}-${Date.now()}`}
               d={item.path}
-              stroke={item.color}
+              stroke={
+                isDarkMode
+                  ? item.color === "#000000"
+                    ? "#FFFFFF"
+                    : item.color
+                  : item.color
+              }
               strokeWidth={item.size}
               opacity={item.tool === "highlighter" ? 0.3 : 1}
               fill="none"
@@ -289,6 +369,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
             />
           )}
         </svg>
+
         <div
           className="absolute bottom-0 w-full h-3 cursor-row-resize bg-neutral-200 dark:bg-neutral-700 border-r border-l border-gray-300 dark:border-neutral-600 dark:border-neutral-600 hover:bg-neutral-300 hover:dark:bg-neutral-600 hover:bg-opacity-60 flex items-center justify-center"
           onMouseDown={startResize}
@@ -301,25 +382,43 @@ const CustomNodeView = ({ node, updateAttributes }) => {
         {/* Left side controls */}
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setTool("pencil")}
+            onClick={() => {
+              setTool("pencil");
+              setColor(`${isDarkMode ? "#FFFFFF" : "#000000"}`);
+            }}
             onMouseDown={handleMouseDown}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+            className={`flex items-center justify-center p-2 border ${
+              tool === "pencil"
+                ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
+                : "border-gray-300 dark:border-neutral-600"
+            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
             <Icons.BallPenLine className="w-6 h-6" />
           </button>
           <button
-            onClick={() => setTool("highlighter")}
+            onClick={() => {
+              setTool("highlighter");
+              setColor("#FFFF00");
+            }}
             onMouseDown={handleMouseDown}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+            className={`flex items-center justify-center p-2 border ${
+              tool === "highlighter"
+                ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
+                : "border-gray-300 dark:border-neutral-600"
+            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
-            Highlighter
+            <Icons.MarkPenLineIcon className="w-6 h-6" />
           </button>
           <button
             onClick={() => setTool("erase")}
             onMouseDown={handleMouseDown}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+            className={`flex items-center justify-center p-2 border ${
+              tool === "erase"
+                ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
+                : "border-gray-300 dark:border-neutral-600"
+            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
-            Eraser
+            <Icons.EraserLineIcon className="w-6 h-6" />
           </button>
           <div className="relative">
             <select
@@ -355,7 +454,11 @@ const CustomNodeView = ({ node, updateAttributes }) => {
           </button>
           <button
             onClick={() => setSize(thicknessOptions.thin)}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+            className={`flex items-center justify-center p-2 border ${
+              size === thicknessOptions.thin
+                ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
+                : "border-gray-300 dark:border-neutral-600"
+            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
             onMouseDown={handleMouseDown}
           >
             <svg
@@ -374,7 +477,11 @@ const CustomNodeView = ({ node, updateAttributes }) => {
           <button
             onClick={() => setSize(thicknessOptions.medium)}
             onMouseDown={handleMouseDown}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+            className={`flex items-center justify-center p-2 border ${
+              size === thicknessOptions.medium
+                ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
+                : "border-gray-300 dark:border-neutral-600"
+            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
             <svg
               width="24"
@@ -392,7 +499,11 @@ const CustomNodeView = ({ node, updateAttributes }) => {
           <button
             onClick={() => setSize(thicknessOptions.thick)}
             onMouseDown={handleMouseDown}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+            className={`flex items-center justify-center p-2 border ${
+              size === thicknessOptions.thick
+                ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
+                : "border-gray-300 dark:border-neutral-600"
+            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
             <svg
               width="24"

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "./store/types";
-import {
-  Filesystem,
-  Directory,
-} from "@capacitor/filesystem";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import "dayjs/locale/it";
@@ -20,22 +17,32 @@ interface HomeProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {  // Correctly destructuring props
-  const {activeNoteId, setActiveNoteId } =
-    useNotesState();
+const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
+  // Correctly destructuring props
+  const { activeNoteId, setActiveNoteId } = useNotesState();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
-      const titleMatch = note.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const contentMatch = JSON.stringify(note.content)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch || contentMatch;
+      try {
+        // Treat missing titles as empty
+        const titleMatch = note.title
+          ? note.title.toLowerCase().includes(searchQuery.toLowerCase())
+          : false;
+
+        const contentMatch = note.content
+          ? JSON.stringify(note.content)
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
+          : false;
+
+        return titleMatch || contentMatch;
+      } catch (error) {
+        console.error("Error processing note:", error);
+        return false; // Skip the note if there's any error
+      }
     });
 
     setFilteredNotes(
@@ -127,9 +134,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {  // Corre
     }
   });
 
-
   // Helper function to prompt the user for a password
-
 
   dayjs.extend(relativeTime);
 
@@ -162,7 +167,6 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {  // Corre
     loadTranslations();
   }, []);
 
-
   return (
     <div>
       <div className="overflow-y mb-12">
@@ -182,12 +186,16 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {  // Corre
                   {translations.home.bookmarked || "-"}
                 </h2>
               )}
-              <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg-grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
-              {notesList
-                .filter((note) => note.isBookmarked && !note.isArchived)
-                .map((note) => (
-                  <NoteCard note={note} setNotesState={setNotesState} notesState={notesState}/>
-                ))}
+              <div className="grid py-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 cursor-pointer rounded-md items-center justify-center">
+                {notesList
+                  .filter((note) => note.isBookmarked && !note.isArchived)
+                  .map((note) => (
+                    <NoteCard
+                      note={note}
+                      setNotesState={setNotesState}
+                      notesState={notesState}
+                    />
+                  ))}
               </div>
               <h2 className="text-3xl font-bold">
                 {translations.home.all || "-"}
@@ -210,7 +218,11 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {  // Corre
                 {notesList
                   .filter((note) => !note.isBookmarked && !note.isArchived)
                   .map((note) => (
-                    <NoteCard note={note} setNotesState={setNotesState} notesState={notesState}/>
+                    <NoteCard
+                      note={note}
+                      setNotesState={setNotesState}
+                      notesState={notesState}
+                    />
                   ))}
               </div>
             </div>
