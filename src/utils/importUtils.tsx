@@ -62,8 +62,6 @@ export const useHandleImportData = () => {
   const importUtils = async (
     setNotesState: (notes: Record<string, Note>) => void,
     loadNotes: () => Promise<Record<string, Note>>,
-    searchQuery: string,
-    setFilteredNotes: React.Dispatch<React.SetStateAction<Record<string, Note>>>
   ) => {
     try {
       const currentDate = new Date();
@@ -171,20 +169,7 @@ export const useHandleImportData = () => {
           ...existingNotes,
           ...importedNotes,
         };
-
-        const filtered = Object.values<Note>(mergedNotes).filter(
-          (note: Note) => {
-            const titleMatch = note.title
-              ? note.title.toLowerCase().includes(searchQuery.toLowerCase())
-              : false;
-            const contentMatch = note.content
-              ? JSON.stringify(note.content)
-                  .toLowerCase()
-                  .includes(searchQuery.toLowerCase())
-              : false;
-            return titleMatch || contentMatch;
-          }
-        );
+   
 
         await Filesystem.writeFile({
           path: STORAGE_PATH,
@@ -194,9 +179,6 @@ export const useHandleImportData = () => {
         });
 
         setNotesState(mergedNotes);
-        setFilteredNotes(
-          Object.fromEntries(filtered.map((note) => [note.id, note]))
-        );
       }
     } catch (error: any) {
       alert(error);

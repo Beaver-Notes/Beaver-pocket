@@ -35,11 +35,14 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
   const buttonClicked = () => {
     const syncValue = localStorage.getItem("sync");
     if (syncValue === "dropbox") {
-      const exportAndDownloadEvent = new CustomEvent("exportAndDownloadEvent");
-      document.dispatchEvent(exportAndDownloadEvent);
+      const dropboxExport = new CustomEvent("dropboxExport");
+      document.dispatchEvent(dropboxExport);
     } else if (syncValue === "webdav") {
       const { exportdata } = useExportDav();
       exportdata();
+    } else if (syncValue === "iCloud") {
+      const iCloudExport = new CustomEvent("iCloudExport");
+      document.dispatchEvent(iCloudExport);
     }
   };
 

@@ -14,7 +14,8 @@ interface ArchiveProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {  // Correctly destructuring props
+const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
+  // Correctly destructuring props
   useToggleArchive();
   const { activeNoteId } = useNotesState();
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -23,13 +24,23 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {  //
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
-      const titleMatch = note.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const contentMatch = JSON.stringify(note.content)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch || contentMatch;
+      try {
+        // Treat missing titles as empty
+        const titleMatch = note.title
+          ? note.title.toLowerCase().includes(searchQuery.toLowerCase())
+          : false;
+
+        const contentMatch = note.content
+          ? JSON.stringify(note.content)
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
+          : false;
+
+        return titleMatch || contentMatch;
+      } catch (error) {
+        console.error("Error processing note:", error);
+        return false; // Skip the note if there's any error
+      }
     });
 
     setFilteredNotes(
@@ -136,7 +147,11 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {  //
                   {notesList
                     .filter((note) => note.isArchived)
                     .map((note) => (
-                      <NoteCard note={note} setNotesState={setNotesState} notesState={notesState}/>
+                      <NoteCard
+                        note={note}
+                        setNotesState={setNotesState}
+                        notesState={notesState}
+                      />
                     ))}
                 </div>
               </div>

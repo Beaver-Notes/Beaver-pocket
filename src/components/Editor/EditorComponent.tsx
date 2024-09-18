@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Note } from "../../store/types";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
@@ -6,6 +6,7 @@ import { isPlatform } from "@ionic/react";
 import Drawer from "./Drawer";
 import Find from "./Find";
 import extensions from "../../lib/tiptap/index";
+import CollapseHeading from '../../lib/tiptap/exts/collapse-heading';
 import { Link } from "react-router-dom";
 import { handleEditorTyping } from "../../utils/bubble-menu-util";
 import BubblemenuNoteLink from "./BubblemenuNoteLink";
@@ -32,32 +33,30 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     setNotesState
   );
 
-  const [previousContent, setPreviousContent] = useState<JSONContent | null>(
-    null
-  );
+  const [previousContent, setPreviousContent] = useState<JSONContent | null>(null);
 
   const uniqueLabels = Array.from(
     new Set(Object.values(notesState).flatMap((note) => note.labels))
   );
+
   const [searchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
   const [sortingOption] = useState("updatedAt");
+
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
       const titleMatch = note.title
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
-      const contentMatch = JSON.stringify(note.content)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch || contentMatch;
+      return titleMatch;
     });
 
     setFilteredNotes(
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
   }, [searchQuery, notesState]);
+
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     switch (sortingOption) {
       case "alphabetical":
@@ -73,6 +72,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
         return updatedAtA - updatedAtB;
     }
   });
+
   const [focusMode, setFocusMode] = useState(false);
   const [toolbarVisible, setToolbarVisible] = useState(true);
   const [showFind, setShowFind] = useState(false);
@@ -93,6 +93,9 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const [textAfterAt, setTextAfterAt] = useState<string | null>(null);
   const [notchPadding, setNotchPadding] = useState(false);
 
+  const titleRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<any>(null);
+
   useEffect(() => {
     const checkNotch = async () => {
       const hasNotchFlag = await hasNotch();
@@ -100,11 +103,17 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     };
     checkNotch();
     setActiveNoteId(note.id);
-  }, []);
+  }, [note.id, setActiveNoteId]);
 
+  const exts = [...extensions];
+
+  // Check collapsibleHeading from localStorage
+  if (localStorage.getItem('collapsibleHeading') === 'true') {
+    exts.push(CollapseHeading);
+  }
   const editor = useEditor(
     {
-      extensions,
+      extensions: exts,
       content: note.content,
       onUpdate: ({ editor }) => {
         const editorContent = editor.getJSON();
@@ -142,6 +151,13 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     },
     [note.id]
   );
+
+  useEffect(() => {
+    if (editor) {
+      editor.commands.focus();
+      editorRef.current = editor; // Store editor in ref
+    }
+  }, [editor]);
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -258,8 +274,15 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     setShowFind((prevShowFind) => !prevShowFind);
   };
 
+  const handleKeyDownTitle = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      editorRef.current?.commands.focus(); // Focus the editor
+    }
+  };
+
   return (
-    <div>
+    <div className="Shaded">
       <div
         className={`editor overflow-auto h-full justify-center items-start px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
@@ -323,8 +346,10 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
           className={`text-3xl font-bold overflow-y-scroll outline-none ${
             isPlatform("android") ? "mt-10 sm:pt-14" : "md:pt-14"
           } ${isPlatform("ios") ? "mt-10 sm:pt-14" : "md:pt-14"}`}
-          onInput={handleTitleChange}
+          onBlur={handleTitleChange}
+          onKeyDown={handleKeyDownTitle} // Add onKeyDown to handle Enter key
           dangerouslySetInnerHTML={{ __html: note.title }}
+          ref={titleRef} // Attach ref to title field
         />
         <div>
           <div className="py-2 h-full w-full" id="container">

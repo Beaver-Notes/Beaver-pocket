@@ -77,15 +77,22 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
 
       if (parsedData?.data?.notes) {
         const notes = parsedData.data.notes;
+        const collapsibleSetting = localStorage.getItem("collapsibleHeading");
+
         const filteredNotes = Object.keys(notes).reduce((acc, noteId) => {
           const note = notes[noteId];
-          if (note.title) {
-            acc[noteId] = note;
-          } else {
-            console.warn(
-              `Note with ID ${noteId} is missing a title. Skipping.`
-            );
+
+          // If the title is missing or empty, assign an empty string as the title
+          note.title = note.title || "";
+
+          // If collapsible headings are disabled, uncollapse all headings
+          if (collapsibleSetting === "false" && note.content?.content) {
+            note.content.content = uncollapseHeading(note.content.content);
           }
+
+          // Add the note to the accumulator
+          acc[noteId] = note;
+
           return acc;
         }, {} as Record<string, Note>);
 
@@ -285,3 +292,35 @@ export const useToggleArchive = () => {
 
   return { toggleArchive };
 };
+
+// Function to uncollapse headings
+function uncollapseHeading(contents: any[] = []): any[] {
+  if (contents.length === 0) {
+    return contents;
+  }
+
+  let newContents = [];
+  for (let i = 0; i < contents.length; i++) {
+    const content = contents[i];
+    newContents.push(content);
+
+    if (content.type === "heading") {
+      let collapsedContent = content.attrs.collapsedContent ?? [];
+
+      if (typeof collapsedContent === "string") {
+        collapsedContent = collapsedContent ? JSON.parse(collapsedContent) : [];
+      }
+
+      // Mark the heading as open and remove collapsed content
+      content.attrs.open = true;
+      content.attrs.collapsedContent = null;
+
+      // Recursively uncollapse any nested collapsed content
+      if (collapsedContent.length > 0) {
+        newContents = [...newContents, ...uncollapseHeading(collapsedContent)];
+      }
+    }
+  }
+
+  return newContents;
+}

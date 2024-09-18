@@ -1,6 +1,5 @@
 // index.ts
 import { lowlight } from "lowlight";
-import CollapseHeading from './exts/collapse-heading';
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Audio from "./exts/audio-block";
@@ -114,7 +113,6 @@ const extensions = [
   blueCallout,
   labels,
   greenCallout,
-  CollapseHeading,
   purpleCallout,
   redCallout,
   yellowCallout,
