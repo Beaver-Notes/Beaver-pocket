@@ -33,7 +33,6 @@
 		AB18EA252C7D002400CCCCFC /* iCloudPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iCloudPlugin.swift; sourceTree = "<group>"; };
 		AB18EA272C7D00E800CCCCFC /* MyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyViewController.swift; sourceTree = "<group>"; };
 		AB219B862C9ABF5E008E638F /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
-		AB219B8A2C9AC00A008E638F /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		AB9760032C7D10AC007D098E /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
@@ -67,7 +66,6 @@
 				504EC3051FED79650016851F /* Products */,
 				7F8756D8B27F46E3366F6CEA /* Pods */,
 				27E2DDA53C4D2A4D1A88CE4A /* Frameworks */,
-				AB219B8B2C9AC00A008E638F /* Keys */,
 			);
 			sourceTree = "<group>";
 		};
@@ -111,14 +109,6 @@
 			isa = PBXGroup;
 			children = (
 				AB219B862C9ABF5E008E638F /* Secrets.xcconfig */,
-			);
-			path = Keys;
-			sourceTree = "<group>";
-		};
-		AB219B8B2C9AC00A008E638F /* Keys */ = {
-			isa = PBXGroup;
-			children = (
-				AB219B8A2C9AC00A008E638F /* Secrets.xcconfig */,
 			);
 			path = Keys;
 			sourceTree = "<group>";
@@ -378,14 +368,14 @@
 		};
 		504EC3171FED79650016851F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AB219B8A2C9AC00A008E638F /* Secrets.xcconfig */;
+			baseConfigurationReference = AB219B862C9ABF5E008E638F /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1.1;
 				DEVELOPMENT_TEAM = F8U6VTU2DJ;
-				GOOGLE_CLIENT_ID = "462278481265-6iqc4hebk7g98s6b4qduj1gpdvc89jr6";
+				GOOGLE_CLIENT_ID = "$(GOOGLE_CLIENT_ID)";
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Beaver Pocket";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -403,14 +393,14 @@
 		};
 		504EC3181FED79650016851F /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AB219B8A2C9AC00A008E638F /* Secrets.xcconfig */;
+			baseConfigurationReference = AB219B862C9ABF5E008E638F /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1.1;
 				DEVELOPMENT_TEAM = F8U6VTU2DJ;
-				GOOGLE_CLIENT_ID = "462278481265-6iqc4hebk7g98s6b4qduj1gpdvc89jr6";
+				GOOGLE_CLIENT_ID = "$(GOOGLE_CLIENT_ID)";
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Beaver Pocket";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
