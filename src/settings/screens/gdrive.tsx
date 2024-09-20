@@ -137,14 +137,14 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
 
   const exportdata = async () => {
     if (!driveAPI) return;
-
+  
     try {
       setProgress(0);
       setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-
+  
       const autoSync = localStorage.getItem("autoSync");
-
-      // Helper function to recursively upload folder contents
+  
+      // Helper function to recursively upload folder contents with parallel uploads
       const uploadFolderContents = async (
         localFolderPath: string,
         driveFolderId: string
@@ -153,18 +153,18 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
           path: localFolderPath,
           directory: Directory.Data,
         });
-
-        for (const item of folderContents.files) {
+  
+        const uploadPromises = folderContents.files.map(async (item) => {
           if (item.type === "file") {
             // Read the local file as binary (base64 encoded) and convert to Blob
             const fileData = await Filesystem.readFile({
               path: `${localFolderPath}/${item.name}`,
               directory: Directory.Data,
             });
-
+  
             const fileType = getMimeType(item.name); // Determine MIME type
             const blob = base64ToBlob(String(fileData.data), fileType); // Convert base64 to Blob
-
+  
             // Upload the file to the corresponding Google Drive folder
             await driveAPI.uploadFile(
               item.name,
@@ -181,32 +181,35 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
             const newFolderId =
               newDriveFolderId ||
               (await driveAPI.createFolder(item.name, driveFolderId));
-
+  
             // Recursively upload the contents of the subfolder
             await uploadFolderContents(
               `${localFolderPath}/${item.name}`,
               String(newFolderId)
             );
           }
-        }
+        });
+  
+        // Wait for all uploads in the folder to complete
+        await Promise.all(uploadPromises);
       };
-
+  
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
       const datedFolderPath = `Beaver Notes ${formattedDate}`;
-
+  
       // Check if the root "beaver-pocket" folder exists in Google Drive
       let rootFolderId = await driveAPI.checkFolderExists("beaver-pocket");
       if (!rootFolderId) {
         rootFolderId = await driveAPI.createFolder("beaver-pocket");
       }
-
+  
       // Check if the "Beaver Notes YYYY-MM-DD" folder already exists
       let datedFolderId = await driveAPI.checkFolderExists(
         datedFolderPath,
         rootFolderId
       );
-
+  
       // If folder exists and autoSync is not set, ask the user for confirmation
       if (datedFolderId && autoSync !== "googledrive") {
         const confirmDelete = window.confirm(
@@ -217,28 +220,25 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
           return; // Exit if user cancels
         }
       }
-
+  
       // If autoSync is set to "googledrive", or user confirmed deletion, delete the existing folder
       if (datedFolderId) {
         await driveAPI.deleteFolder(datedFolderId);
         datedFolderId = null; // Reset folder ID after deletion
       }
-
+  
       // Create the "Beaver Notes YYYY-MM-DD" folder inside "beaver-pocket"
       if (!datedFolderId) {
-        datedFolderId = await driveAPI.createFolder(
-          datedFolderPath,
-          rootFolderId
-        );
+        datedFolderId = await driveAPI.createFolder(datedFolderPath, rootFolderId);
       }
-
+  
       // Upload the main data.json file to the "Beaver Notes YYYY-MM-DD" folder
       const dataFile = await Filesystem.readFile({
         path: "notes/data.json",
         directory: Directory.Data,
         encoding: Encoding.UTF8, // Use UTF-8 for text-based files like JSON
       });
-
+  
       const dataBlob = new Blob([dataFile.data], { type: "application/json" });
       await driveAPI.uploadFile(
         "data.json",
@@ -246,7 +246,7 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
         String(datedFolderId),
         "application/json"
       );
-
+  
       // Create the "note-assets" and "file-assets" folders inside "Beaver Notes YYYY-MM-DD"
       const noteAssetsFolderId = await driveAPI.createFolder(
         "note-assets",
@@ -256,13 +256,13 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
         "file-assets",
         datedFolderId
       );
-
+  
       // Recursively upload contents of the local "note-assets" folder to the corresponding Google Drive folder
       await uploadFolderContents("note-assets", String(noteAssetsFolderId));
-
+  
       // Recursively upload contents of the local "file-assets" folder to the corresponding Google Drive folder
       await uploadFolderContents("file-assets", String(fileAssetsFolderId));
-
+  
       setProgress(100); // Ensure progress is set to 100% when done
     } catch (error) {
       console.error("Error exporting data:", error);
@@ -271,7 +271,7 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
       alert(error);
     }
   };
-
+  
   // Function to convert base64 string to Blob
   const base64ToBlob = (base64String: string, type: string): Blob => {
     const byteCharacters = atob(base64String); // Decode base64 string
@@ -282,6 +282,7 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
     const byteArray = new Uint8Array(byteNumbers);
     return new Blob([byteArray], { type: type });
   };
+  
 
   const importData = async () => {
     if (!driveAPI) {

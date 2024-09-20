@@ -29,7 +29,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   const [points, setPoints] = useState([]);
   const [path, setPath] = useState("");
   const [svgHeight, setSvgHeight] = useState(node.attrs.height || 400);
-  const [svgWidth] = useState("100%");
+  const [svgWidth] = useState(500);
   const [tool, setTool] = useState("pencil");
   const [history, setHistory] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
@@ -336,13 +336,10 @@ const CustomNodeView = ({ node, updateAttributes }) => {
       <div className="relative drawing-container">
         <svg
           ref={svgRef}
-          height={svgHeight}
-          width={svgWidth}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           preserveAspectRatio="xMidYMid meet"
           className={`w-full h-auto border border-gray-300 dark:border-neutral-600 ${background}`}
-          style={{ touchAction: "none" }}
-        >
+          >
           {linesRef.current.map((item) => (
             <path
               key={`${item.id}-${item.color}-${item.size}-${Date.now()}`}
