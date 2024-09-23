@@ -126,7 +126,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                   </Link>
                   <Link
                     className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    to="/icloud"
+                    to="/onedrive"
                   >
                     <icons.OneDrive className="w-10 h-10" />
                     <p className="text-2xl pl-2 py-1 font-bold">OneDrive</p>

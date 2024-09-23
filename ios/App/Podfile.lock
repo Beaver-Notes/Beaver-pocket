@@ -16,7 +16,7 @@ PODS:
   - CapacitorCordova (6.0.0)
   - CapacitorDevice (6.0.0):
     - Capacitor
-  - CapacitorFilesystem (6.0.0):
+  - CapacitorFilesystem (6.0.1):
     - Capacitor
   - CapacitorHaptics (6.0.0):
     - Capacitor
@@ -121,7 +121,7 @@ SPEC CHECKSUMS:
   CapacitorBrowser: 7e1e2cdbb3e372f09f0bad0c4c21a6d187b679ad
   CapacitorCordova: 8c4bfdf69368512e85b1d8b724dd7546abeb30af
   CapacitorDevice: f8fd88f9edd1261c55a109f32015b09bbbfdc4a0
-  CapacitorFilesystem: 60e59ba274c234a979e7a3be2552feaadcee4263
+  CapacitorFilesystem: 37fb3aa5c945b4539ab11c74a5c57925a302bf24
   CapacitorHaptics: 9ebc9363f0e9b8eb4295088a0b474530acf1859b
   CapacitorKeyboard: deacbd09d8d1029c3681197fb05d206b721d5f73
   CapacitorNativeBiometric: b47637a8cd349bdac014424bb4ddcae9ee5d4919
