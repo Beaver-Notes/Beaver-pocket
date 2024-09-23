@@ -225,6 +225,7 @@ const App: React.FC = () => {
                 }
               />
               <Route path="/gdrive" element={<Gdrive setNotesState={setNotesState}/>} />
+              <Route path="/onedrive" element={<Welcome />} />
               <Route path="/shortcuts" element={<Shortcuts />} />
               <Route path="/welcome" element={<Welcome />} />
               <Route
