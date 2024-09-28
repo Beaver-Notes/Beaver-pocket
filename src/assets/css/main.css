@@ -25,7 +25,8 @@
 body {
   @apply dark:text-[color:var(--selected-dark-text)] bg-white dark:bg-[#232222];
   font-family: var(--selected-font);
-  transition: background-color 0.3s ease;
+  height: 100%;
+  width: 100%;
 }
 
 h1 {

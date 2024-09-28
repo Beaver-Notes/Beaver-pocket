@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { useSwipeable } from "react-swipeable";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import Home from "./Home";
 import Archive from "./Archive";
@@ -10,6 +9,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import Shortcuts from "./settings/shortcuts";
 import Welcome from "./Welcome";
 import Dropbox from "./settings/screens/dropbox";
+import Onedrive from "./settings/screens/onedrive";
 import Gdrive from "./settings/screens/gdrive";
 import Webdav from "./settings/screens/webdav";
 import Icloud from "./settings/screens/icloud";
@@ -106,31 +106,6 @@ const App: React.FC = () => {
     };
   });
 
-  // Swipeable handler to go back when swiping right
-  const swipeHandlers = useSwipeable({
-    onSwipedRight: (eventData) => {
-      const selection = window.getSelection();
-      const target = eventData.event.target as HTMLElement | null;
-
-      const isInsideDrawer = target?.closest(".drawer");
-      const isInsideEditor = target?.closest(".editor");
-
-      if (
-        !selection ||
-        selection.toString().length > 0 ||
-        isInsideDrawer ||
-        isInsideEditor
-      ) {
-        return;
-      }
-
-      setIsSwipe(true);
-      history(-1); // Go back one page in history
-    },
-    preventScrollOnSwipe: true,
-    trackTouch: true,
-  });
-
   // Determine whether to show the BottomNavBar
   const shouldShowNavBar = !["/welcome", "/editor"].some((path) =>
     location.pathname.startsWith(path)
@@ -154,7 +129,7 @@ const App: React.FC = () => {
   }, [darkMode, themeMode]);
 
   return (
-    <div {...swipeHandlers}>
+    <div>
       <div className="safe-area"></div>
       <Auth0Provider
         domain={Auth0Config.domain}
@@ -206,6 +181,7 @@ const App: React.FC = () => {
                   />
                 }
               />
+              <Route path="/onedrive" element={<Onedrive setNotesState={setNotesState}/>} />
               <Route
                 path="/webdav"
                 element={
