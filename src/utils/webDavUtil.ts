@@ -308,6 +308,7 @@ setNotesState: (notes: Record<string, Note>) => void,
       const formattedDate = currentDate.toISOString().slice(0, 10);
       const folderPath = `export/Beaver Notes ${formattedDate}`;
 
+      await importUtils(setNotesState, loadNotes);
       await deleteFolder(folderPath);
     } catch (error) {
       alert(error);
@@ -428,9 +429,6 @@ setNotesState: (notes: Record<string, Note>) => void,
 
       // Start downloading from the base directory
       await downloadDirectory(baseWebDavPath, baseLocalPath);
-
-      // Import data into the app after all files are downloaded
-      importUtils(setNotesState, loadNotes);
     } catch (error) {
       throw error;
     }

@@ -1,13 +1,10 @@
 // index.ts
-import { lowlight } from "lowlight";
-import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Audio from "./exts/audio-block";
 import Document from '@tiptap/extension-document'
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import Placeholder from "@tiptap/extension-placeholder";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Highlight from "@tiptap/extension-highlight";
 import Underline from "@tiptap/extension-underline";
 import OrderedList from "@tiptap/extension-ordered-list";
@@ -27,7 +24,7 @@ import { LinkNote } from "./exts/note-link";
 import FileEmbed from "./exts/file-block";
 import SearchAndReplace from "./exts/search-&-replace";
 import Mathblock from "./exts/math-block/Index";
-import CodeBlockComponent from "./exts/CodeBlockComponent";
+import CodeBlock from './exts/code-block';
 import paper from "./exts/paper-block";
 import iframe from "./exts/embed-block/iframe";
 import { useDataPath } from "../../store/useDataPath";
@@ -64,11 +61,7 @@ if (selectedLanguage === "it") {
 }
 
 const extensions = [
-  CodeBlockLowlight.extend({
-    addNodeView() {
-      return ReactNodeViewRenderer(CodeBlockComponent);
-    },
-  }).configure({ lowlight }),
+  CodeBlock,
   StarterKit,
   Placeholder.configure({
     placeholder: translations.tiptap.placeholder,

@@ -11,3 +11,4 @@ ios/.DS_Store
 android/app/gradle.properties
 ios/App/App/Keys/Secrets.xcconfig
 /ios/App/App/Keys
+dist/
