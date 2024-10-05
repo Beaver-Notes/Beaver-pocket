@@ -1,5 +1,3 @@
-// handleEditorTyping.ts
-
 type PopupPosition = { top: number; left: number } | null;
 
 export function handleEditorTyping(
@@ -8,14 +6,20 @@ export function handleEditorTyping(
   textAfterAt: string | null,
   // @ts-ignores
   textAfterHash: string | null,
+  // @ts-ignores
+  textAfterSlash: string | null,
   atPosition: number | null,
   hashPosition: number | null,
+  slashPosition: number | null,
   setPopupPosition: React.Dispatch<React.SetStateAction<PopupPosition>>,
   setAtPosition: React.Dispatch<React.SetStateAction<number | null>>,
   setTextAfterAt: React.Dispatch<React.SetStateAction<string | null>>,
   setHashPopupPosition: React.Dispatch<React.SetStateAction<PopupPosition>>,
   setHashPosition: React.Dispatch<React.SetStateAction<number | null>>,
-  setTextAfterHash: React.Dispatch<React.SetStateAction<string | null>>
+  setTextAfterHash: React.Dispatch<React.SetStateAction<string | null>>,
+  setSlashPopupPosition: React.Dispatch<React.SetStateAction<PopupPosition>>,
+  setSlashPosition: React.Dispatch<React.SetStateAction<number | null>>,
+  setTextAfterSlash: React.Dispatch<React.SetStateAction<string | null>>
 ) {
   const { key } = event;
   const text = event.currentTarget.innerText.trim(); // Trimmed the text to avoid unnecessary whitespace
@@ -27,11 +31,15 @@ export function handleEditorTyping(
     setHashPopupPosition(null);
     setHashPosition(null);
     setTextAfterHash("");
+    setSlashPopupPosition(null);
+    setSlashPosition(null);
+    setTextAfterSlash("");
     return;
   }
 
   const atIndex = text.lastIndexOf("@@");
   const hashIndex = text.lastIndexOf("#");
+  const slashIndex = text.lastIndexOf("/");
 
   const setPosition = (trigger: string, index: number) => {
     const selection = window.getSelection();
@@ -39,21 +47,54 @@ export function handleEditorTyping(
       const range = selection.getRangeAt(0).cloneRange();
       const rect = range.getBoundingClientRect();
 
-      const top = rect.bottom + window.scrollY; // Adjusted top position relative to the viewport
-      const left = rect.left + window.scrollX; // Adjusted left position relative to the viewport
+      // If rect dimensions are 0 (indicating an empty or improperly calculated range),
+      // manually adjust the range to select the specific character for accurate positioning
+      if (rect.width === 0 && rect.height === 0 && index >= 0) {
+        //@ts-ignore
+        range.setStart(event.currentTarget.firstChild, index); // Set start of range
+        //@ts-ignore
+        range.setEnd(event.currentTarget.firstChild, index + 1); // Set end of range after the character
+        const newRect = range.getBoundingClientRect();
 
-      if (trigger === "@@") {
-        setPopupPosition({ top, left });
-        setAtPosition(index); // Set the position of '@@'
-        setTextAfterAt(""); // Initialize textAfterAt to an empty string
-      } else if (trigger === "#") {
-        setHashPopupPosition({ top, left });
-        setHashPosition(index); // Set the position of '#'
-        setTextAfterHash(""); // Initialize textAfterHash to an empty string
+        const top = newRect.bottom + window.scrollY; // Correct the top position
+        const left = newRect.left + window.scrollX; // Correct the left position
+
+        if (trigger === "@@") {
+          setPopupPosition({ top, left });
+          setAtPosition(index);
+          setTextAfterAt("");
+        } else if (trigger === "#") {
+          setHashPopupPosition({ top, left });
+          setHashPosition(index);
+          setTextAfterHash("");
+        } else if (trigger === "/") {
+          setSlashPopupPosition({ top, left });
+          setSlashPosition(index);
+          setTextAfterSlash("");
+        }
+      } else {
+        // Standard case where rect dimensions are valid
+        const top = rect.bottom + window.scrollY;
+        const left = rect.left + window.scrollX;
+
+        if (trigger === "@@") {
+          setPopupPosition({ top, left });
+          setAtPosition(index);
+          setTextAfterAt("");
+        } else if (trigger === "#") {
+          setHashPopupPosition({ top, left });
+          setHashPosition(index);
+          setTextAfterHash("");
+        } else if (trigger === "/") {
+          setSlashPopupPosition({ top, left });
+          setSlashPosition(index);
+          setTextAfterSlash("");
+        }
       }
     }
   };
 
+  // Handle @@
   if (
     key === "@" &&
     atIndex !== -1 &&
@@ -78,6 +119,7 @@ export function handleEditorTyping(
     }
   }
 
+  // Handle #
   if (key === "#" && text[hashIndex] === "#" && text[hashIndex + 1] !== " ") {
     setPosition("#", hashIndex);
   } else if (hashPosition !== null) {
@@ -97,6 +139,26 @@ export function handleEditorTyping(
     }
   }
 
+  // Handle /
+  if (key === "/" && text[slashIndex] === "/" && text[slashIndex + 1] !== " ") {
+    setPosition("/", slashIndex);
+  } else if (slashPosition !== null) {
+    if (
+      key === " " ||
+      key === "Enter" ||
+      (key === "Backspace" && slashIndex === -1)
+    ) {
+      setSlashPopupPosition(null);
+      setSlashPosition(null);
+      setTextAfterSlash("");
+    } else {
+      const textAfterSlash = text.substring(slashPosition + 1).split(/\s/)[0];
+      if (textAfterSlash) {
+        setTextAfterSlash(textAfterSlash);
+      }
+    }
+  }
+
   if (key === "Backspace") {
     if (text.indexOf("@@") === -1) {
       setPopupPosition(null);
@@ -108,6 +170,12 @@ export function handleEditorTyping(
       setHashPopupPosition(null);
       setHashPosition(null);
       setTextAfterHash("");
+    }
+
+    if (text.indexOf("/") === -1) {
+      setSlashPopupPosition(null);
+      setSlashPosition(null);
+      setTextAfterSlash("");
     }
   }
 }

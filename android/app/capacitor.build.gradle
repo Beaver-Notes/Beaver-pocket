@@ -21,6 +21,7 @@ dependencies {
     implementation project(':capacitor-splash-screen')
     implementation project(':capacitor-status-bar')
     implementation project(':codetrix-studio-capacitor-google-auth')
+    implementation project(':recognizebv-capacitor-plugin-msauth')
     implementation project(':capacitor-native-biometric')
     implementation project(':capacitor-secure-storage-plugin')
     implementation project(':capacitor-voice-recorder')

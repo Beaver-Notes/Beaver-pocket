@@ -2,39 +2,39 @@ export type FileMetadata = {
   id: string;
   name: string;
   mimeType: string;
-  createdTime?: string;
 };
 
-export class GoogleDriveAPI {
+export class OneDriveAPI {
   private accessToken: string;
 
   constructor(accessToken: string) {
     this.accessToken = accessToken;
   }
 
-  // Create a folder in Google Drive
+  // Create a folder in OneDrive
   async createFolder(
     folderName: string,
     parentId: string | null = null
   ): Promise<string | null> {
+    const endpoint = parentId
+      ? `https://graph.microsoft.com/v1.0/me/drive/items/${parentId}/children`
+      : `https://graph.microsoft.com/v1.0/me/drive/root/children`;
+
     const metadata = {
       name: folderName,
-      mimeType: "application/vnd.google-apps.folder",
-      parents: parentId ? [parentId] : [],
+      folder: {},
+      "@microsoft.graph.conflictBehavior": "rename",
     };
 
     try {
-      const response = await fetch(
-        "https://www.googleapis.com/drive/v3/files",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(metadata),
-        }
-      );
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(metadata),
+      });
 
       if (!response.ok) {
         const error = await response.text();
@@ -55,37 +55,28 @@ export class GoogleDriveAPI {
     folderName: string,
     parentId: string | null = null
   ): Promise<string | null> {
-    const query =
-      `name='${folderName}' and mimeType='application/vnd.google-apps.folder'` +
-      (parentId ? ` and '${parentId}' in parents` : ` and 'root' in parents`);
+    const endpoint = parentId
+      ? `https://graph.microsoft.com/v1.0/me/drive/items/${parentId}/children`
+      : `https://graph.microsoft.com/v1.0/me/drive/root/children`;
 
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
-          query
-        )}&fields=files(id,name)`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
-      );
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
 
       if (!response.ok) {
         const error = await response.text();
         console.error("Error checking folder existence:", error);
-        throw new Error(
-          `Error checking folder existence: ${response.statusText}`
-        );
+        throw new Error(`Error checking folder existence: ${response.statusText}`);
       }
 
       const data = await response.json();
-      if (data.files && data.files.length > 0) {
-        return data.files[0].id; // Return folder ID if found
-      }
+      const folder = data.value.find((item: any) => item.name === folderName && item.folder);
 
-      return null; // Folder does not exist
+      return folder ? folder.id : null; // Return folder ID if found
     } catch (error) {
       console.error("Exception in checkFolderExists:", error);
       throw error;
@@ -96,7 +87,7 @@ export class GoogleDriveAPI {
   async deleteFolder(folderId: string): Promise<void> {
     try {
       const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${folderId}`,
+        `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}`,
         {
           method: "DELETE",
           headers: {
@@ -120,40 +111,22 @@ export class GoogleDriveAPI {
   async uploadFile(
     fileName: string,
     content: Blob | string,
-    parentId: string,
-    mimeType: string
-  ): Promise<void> {
-    const metadata = {
-      name: fileName,
-      parents: [parentId],
-    };
-
-    const form = new FormData();
-    form.append(
-      "metadata",
-      new Blob([JSON.stringify(metadata)], { type: "application/json" })
-    );
-
-    // Dynamically set the MIME type based on the file type
-    const fileBlob =
-      typeof content === "string"
-        ? new Blob([content], { type: mimeType || "text/plain" }) // Fallback to 'text/plain' for strings
-        : content; // If content is already a Blob, use it directly
-
-    form.append("file", fileBlob);
-
+  ): Promise<void> {    
     try {
-      const response = await fetch(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-          body: form,
-        }
-      );
+      // Prepare the upload URL for OneDrive
+      const uploadUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${fileName}:/content`;
 
+      alert(uploadUrl);
+  
+      const response = await fetch(uploadUrl, {
+        method: "PUT", // Use PUT to upload content directly
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: content, // Send only the file blob in the body
+      });
+  
       if (!response.ok) {
         const error = await response.text();
         console.error("Error uploading file:", error);
@@ -164,19 +137,20 @@ export class GoogleDriveAPI {
       throw error;
     }
   }
-
+  
   // List contents of a folder
   async listContents(folderId: string): Promise<FileMetadata[]> {
+    const endpoint = folderId
+      ? `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children`
+      : `https://graph.microsoft.com/v1.0/me/drive/root/children`;
+
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents&fields=files(id,name,mimeType,createdTime)`, // Add createdTime to the fields
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
-      );
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
 
       if (!response.ok) {
         const error = await response.text();
@@ -185,7 +159,11 @@ export class GoogleDriveAPI {
       }
 
       const data = await response.json();
-      return data.files || [];
+      return data.value.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        mimeType: item.file ? item.file.mimeType : "folder",
+      }));
     } catch (error) {
       console.error("Exception in listContents:", error);
       throw error;
@@ -196,7 +174,7 @@ export class GoogleDriveAPI {
   async downloadFile(fileId: string): Promise<string> {
     try {
       const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+        `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`,
         {
           method: "GET",
           headers: {

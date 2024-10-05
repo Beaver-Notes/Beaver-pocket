@@ -48,6 +48,12 @@ PODS:
     - AppAuth/Core (~> 1.6)
     - GTMSessionFetcher/Core (< 3.0, >= 1.5)
   - GTMSessionFetcher/Core (2.3.0)
+  - MSAL (1.2.5):
+    - MSAL/app-lib (= 1.2.5)
+  - MSAL/app-lib (1.2.5)
+  - RecognizebvCapacitorPluginMsauth (3.6.0):
+    - Capacitor
+    - MSAL (~> 1.1)
   - SwiftKeychainWrapper (4.0.1)
 
 DEPENDENCIES:
@@ -68,6 +74,7 @@ DEPENDENCIES:
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - CapacitorVoiceRecorder (from `../../node_modules/capacitor-voice-recorder`)
   - "CodetrixStudioCapacitorGoogleAuth (from `../../node_modules/@codetrix-studio/capacitor-google-auth`)"
+  - "RecognizebvCapacitorPluginMsauth (from `../../node_modules/@recognizebv/capacitor-plugin-msauth`)"
 
 SPEC REPOS:
   trunk:
@@ -75,6 +82,7 @@ SPEC REPOS:
     - GoogleSignIn
     - GTMAppAuth
     - GTMSessionFetcher
+    - MSAL
     - SwiftKeychainWrapper
 
 EXTERNAL SOURCES:
@@ -112,6 +120,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/capacitor-voice-recorder"
   CodetrixStudioCapacitorGoogleAuth:
     :path: "../../node_modules/@codetrix-studio/capacitor-google-auth"
+  RecognizebvCapacitorPluginMsauth:
+    :path: "../../node_modules/@recognizebv/capacitor-plugin-msauth"
 
 SPEC CHECKSUMS:
   AashuDubeyCapacitorStatusbarSafeArea: e62fcce2cbd8e1b9ea953cad1831687d8791c3a2
@@ -135,8 +145,10 @@ SPEC CHECKSUMS:
   GoogleSignIn: 5651ce3a61e56ca864160e79b484cd9ed3f49b7a
   GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
   GTMSessionFetcher: 3a63d75eecd6aa32c2fc79f578064e1214dfdec2
+  MSAL: 5149daaa19228c2c27d81987634da15b50981cef
+  RecognizebvCapacitorPluginMsauth: 10ee32ab10281f811dff2e3cbb925c60b27551df
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
 
-PODFILE CHECKSUM: d86b309bb2ea0969aea561a7c3931e9c1edd25f2
+PODFILE CHECKSUM: 30caaa2e5b12ef92c8d8cac6249cadfa7abac4f0
 
 COCOAPODS: 1.15.2

@@ -46,7 +46,7 @@
     "autoSync": "Auto Sync",
     "logout": "Logout",
     "login": "Login",
-    "existingFolder":"The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
+    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
     "refreshingToken": "Access token expired, refreshing..."
   },
   "icloud": {
@@ -63,6 +63,16 @@
     "export": "Export",
     "import": "Import",
     "autoSync": "Auto Sync"
+  },
+  "onedrive": {
+    "title": "Sync with Onedrive",
+    "import": "Import",
+    "export": "Export",
+    "login": "Login",
+    "logout": "Logout",
+    "autoSync": "Auto Sync",
+    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
+    "refreshingToken": "Access token expired, refreshing..."
   },
   "welcome": {
     "welcomeTitle": "🎉 Welcome to Beaver Pocket",
@@ -158,7 +168,7 @@
     "Blockcode": "Block code",
     "Previousnote": "Previous notes"
   },
-  "commandprompt":{
+  "commandprompt": {
     "newNote": "Create new note",
     "settings": "Settings",
     "theme": "Change Theme",
@@ -173,7 +183,7 @@
     "github": "GitHub",
     "donate": "Donate",
     "copyright": "Copyright © 2023 - 2024. All rights reserved.",
-    "termsConditions": "Terms and Coditions",
+    "termsConditions": "Terms and Conditions",
     "privacyPolicy": "Privacy Policy",
     "license": "License"
   },

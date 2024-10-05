@@ -216,7 +216,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
       await checkTokenExpiration();
     };
 
-     tokenExpirationCheck();
+    tokenExpirationCheck();
 
     const tokenExpirationCheckInterval = setInterval(() => {
       checkTokenExpiration();
@@ -248,7 +248,54 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
         setProgress(0);
         setProgressColor(darkMode ? "#444444" : "#e6e6e6");
 
-        const countFilesInDirectory = async (path: any) => {
+        // Sync limit for folders
+        const syncLimit = parseInt(
+          localStorage.getItem("synclimit") || "5",
+          10
+        );
+        const dbx = new Dropbox({ accessToken });
+
+        // Function to extract date from folder name in the format "Beaver Notes YYYY-MM-DD"
+        const extractDateFromFolderName = (folderName: string): Date | null => {
+          const datePattern = /Beaver Notes (\d{4}-\d{2}-\d{2})/;
+          const match = folderName.match(datePattern);
+          return match ? new Date(match[1]) : null;
+        };
+
+        // Retrieve folders from Dropbox
+        const folderMetadata = await dbx.filesListFolder({ path: "" });
+        const folders = folderMetadata.result.entries.filter(
+          (entry) => entry[".tag"] === "folder"
+        );
+
+        // Extract dates from folder names and sort them by date (oldest first)
+        const sortedFolders = folders
+          .map((folder) => {
+            const date = extractDateFromFolderName(folder.name);
+            return { ...folder, date };
+          })
+          .filter((folder) => folder.date !== null) // Filter out folders with invalid names
+          .sort(
+            (a, b) => (a.date as Date).getTime() - (b.date as Date).getTime()
+          );
+
+        // If folder count exceeds syncLimit, delete the oldest folders
+        if (sortedFolders.length > syncLimit) {
+          for (let i = 0; i < sortedFolders.length - syncLimit; i++) {
+            const folderToDelete = sortedFolders[i];
+
+            // Ensure that path_lower is defined before trying to delete
+            if (folderToDelete.path_lower) {
+              await dbx.filesDeleteV2({ path: folderToDelete.path_lower });
+            } else {
+              console.warn(
+                `Folder ${folderToDelete.name} does not have a valid path_lower`
+              );
+            }
+          }
+        }
+
+        const countFilesInDirectory = async (path: string): Promise<number> => {
           let count = 0;
           const contents = await Filesystem.readdir({
             path,
@@ -265,23 +312,26 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
         };
 
         const noteAssetsPath = "note-assets";
+        const fileAssetsPath = "file-assets";
+
+        // Count the number of files in note-assets and file-assets
+        let noteFilesCount = 0;
+        let fileFilesCount = 0;
+
         const noteAssetsContents = await Filesystem.readdir({
           path: noteAssetsPath,
           directory: Directory.Data,
         });
-        let noteFilesCount = 0;
         for (const folderName of noteAssetsContents.files) {
           noteFilesCount += await countFilesInDirectory(
             `${noteAssetsPath}/${folderName.name}`
           );
         }
 
-        const fileAssetsPath = "file-assets";
         const filefolderContents = await Filesystem.readdir({
           path: fileAssetsPath,
           directory: Directory.Data,
         });
-        let fileFilesCount = 0;
         for (const item of filefolderContents.files) {
           if (item.type === "file") {
             fileFilesCount++;
@@ -292,9 +342,8 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
           }
         }
 
-        // Calculate total files to upload
-        const totalFiles = noteFilesCount + fileFilesCount + 1; // +1 for data.json
-
+        // Total files to upload (including data.json)
+        const totalFiles = noteFilesCount + fileFilesCount + 1;
         let processedFiles = 0;
 
         const updateProgress = () => {
@@ -302,21 +351,20 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
           setProgress(Math.round((processedFiles / totalFiles) * 100));
         };
 
-        // Read the data.json
+        // Read data.json
         const datafile = await Filesystem.readFile({
           path: STORAGE_PATH,
           directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
 
-        // Get current date for folder name
+        // Get the current date for folder naming
         const currentDate = new Date();
-        const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
+        const formattedDate = currentDate.toISOString().slice(0, 10);
         const folderPath = `/Beaver Notes ${formattedDate}`;
         const assetsPath = `${folderPath}/assets`;
 
-        const dbx = new Dropbox({ accessToken });
-
+        // Check if folder exists in Dropbox, handle deletion if necessary
         try {
           await dbx.filesGetMetadata({ path: folderPath });
           const autoSync = localStorage.getItem("autoSync");
@@ -341,11 +389,11 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
           }
         }
 
-        // Create folders
+        // Create folders in Dropbox
         await dbx.filesCreateFolderV2({ path: folderPath, autorename: false });
         await dbx.filesCreateFolderV2({ path: assetsPath, autorename: false });
 
-        // Upload the data.json
+        // Upload the data.json file
         await dbx.filesUpload({
           path: `${folderPath}/data.json`,
           contents: datafile.data,
@@ -353,88 +401,77 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
 
         updateProgress();
 
-        // Upload files in file-assets directory
-        for (const item of filefolderContents.files) {
-          if (item.type === "file") {
-            const filePath = `${fileAssetsPath}/${item.name}`;
-            const fileData = await Filesystem.readFile({
-              path: filePath,
-              directory: Directory.Data,
-            });
+        // Helper function to upload files recursively
+        const uploadFolderToDropbox = async (
+          localFolderPath: string,
+          dropboxFolderPath: string
+        ) => {
+          const folderContents = await Filesystem.readdir({
+            path: localFolderPath,
+            directory: Directory.Data,
+          });
 
-            const fileType = getMimeType(item.name);
-            const blob = base64ToBlob(String(fileData.data), fileType);
-            const uploadedFile = new File([blob], item.name, {
-              type: "application/octet-stream",
-            });
+          for (const item of folderContents.files) {
+            const localPath = `${localFolderPath}/${item.name}`;
+            const dropboxPath = `${dropboxFolderPath}/${item.name}`;
 
-            await dbx.filesUpload({
-              path: `${folderPath}/file-assets/${item.name}`,
-              contents: uploadedFile,
-            });
-
-            updateProgress();
-          } else if (item.type === "directory") {
-            const folderPath = `${fileAssetsPath}/${item.name}`;
-            const folderContents = await Filesystem.readdir({
-              path: folderPath,
-              directory: Directory.Data,
-            });
-
-            for (const file of folderContents.files) {
-              const imagefilePath = `${folderPath}/${file.name}`;
-              const imageFileData = await Filesystem.readFile({
-                path: imagefilePath,
+            if (item.type === "file") {
+              // Read the file from local storage
+              const fileData = await Filesystem.readFile({
+                path: localPath,
                 directory: Directory.Data,
               });
 
-              const fileType = getMimeType(file.name);
-              const blob = base64ToBlob(String(imageFileData.data), fileType);
-              const uploadedFile = new File([blob], file.name, {
+              // Determine file type and create a blob
+              const fileType = getMimeType(item.name);
+              const blob = base64ToBlob(String(fileData.data), fileType);
+              const uploadedFile = new File([blob], item.name, {
                 type: "application/octet-stream",
               });
 
+              // Upload the file to Dropbox
               await dbx.filesUpload({
-                path: `${folderPath}/file-assets/${item.name}/${file.name}`,
+                path: dropboxPath,
                 contents: uploadedFile,
               });
 
               updateProgress();
+            } else if (item.type === "directory") {
+              // Create the directory in Dropbox
+              await dbx.filesCreateFolderV2({
+                path: dropboxPath,
+                autorename: false,
+              });
+              // Recursively upload the directory's contents
+              await uploadFolderToDropbox(localPath, dropboxPath);
             }
           }
-        }
+        };
 
-        // Upload files in note-assets directory
+        // Upload the contents of file-assets folder to Dropbox
+        await dbx.filesCreateFolderV2({
+          path: `${folderPath}/file-assets`,
+          autorename: false,
+        });
+        await uploadFolderToDropbox(
+          fileAssetsPath,
+          `${folderPath}/file-assets`
+        );
+
+        // Upload files in the note-assets folder
         for (const folderName of noteAssetsContents.files) {
-          const folderPath = `${noteAssetsPath}/${folderName.name}`;
-          const folderContents = await Filesystem.readdir({
-            path: folderPath,
-            directory: Directory.Data,
+          const localFolderPath = `${noteAssetsPath}/${folderName.name}`;
+          const dropboxFolderPath = `${assetsPath}/${folderName.name}`;
+
+          // Create the directory in Dropbox and upload its contents
+          await dbx.filesCreateFolderV2({
+            path: dropboxFolderPath,
+            autorename: false,
           });
-
-          for (const file of folderContents.files) {
-            const imagefilePath = `${folderPath}/${file.name}`;
-            const imageFileData = await Filesystem.readFile({
-              path: imagefilePath,
-              directory: Directory.Data,
-            });
-
-            const fileType = getMimeType(file.name);
-            const blob = base64ToBlob(String(imageFileData.data), fileType);
-            const uploadedFile = new File([blob], file.name, {
-              type: "application/octet-stream",
-            });
-
-            await dbx.filesUpload({
-              path: `${assetsPath}/${folderName.name}/${file.name}`,
-              contents: uploadedFile,
-            });
-
-            updateProgress();
-          }
+          await uploadFolderToDropbox(localFolderPath, dropboxFolderPath);
         }
 
-        setProgress(100); // Ensure progress is set to 100% when done
+        setProgress(100); // Ensure progress reaches 100% when done
       } catch (error) {
         console.error("Error uploading note assets:", error);
         setProgressColor("#ff3333");
@@ -461,49 +498,78 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
     if (accessToken) {
       try {
         setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-        const currentDate = new Date();
-        const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
-
-        const mainFolderPath = `/Beaver Notes ${formattedDate}`;
-
+  
+        const dbx = new Dropbox({ accessToken });
+  
+        // Function to format date to YYYY-MM-DD
+        const formatDate = (date: Date) => {
+          return date.toISOString().slice(0, 10);
+        };
+  
+        // Function to go back 1 day
+        const goBackOneDay = (date: Date) => {
+          const newDate = new Date(date);
+          newDate.setDate(newDate.getDate() - 1);
+          return newDate;
+        };
+  
+        // Try to find a viable folder, going back 1 day at a time (max 30 days)
+        let currentDate = new Date();
+        let mainFolderPath = `/Beaver Notes ${formatDate(currentDate)}`;
+        let folderFound = false;
+        const maxAttempts = 30;  // Stop after 30 attempts (30 days)
+        let attempts = 0;
+  
+        while (!folderFound && attempts < maxAttempts) {
+          try {
+            // Check if the folder exists in Dropbox
+            await dbx.filesGetMetadata({ path: mainFolderPath });
+            folderFound = true; // Folder exists, break the loop
+          } catch (error: any) {
+            if (error.status === 409) {
+              // Folder not found, go back 1 day and try again
+              currentDate = goBackOneDay(currentDate);
+              mainFolderPath = `/Beaver Notes ${formatDate(currentDate)}`;
+              attempts++;
+            } else {
+              throw error; // Other Dropbox errors should be handled
+            }
+          }
+        }
+  
+        if (!folderFound) {
+          throw new Error("No viable folder found in the last 30 days.");
+        }
+  
+        // Create the folder structure locally
         await Filesystem.mkdir({
-          path: `export/Beaver Notes ${formattedDate}`,
+          path: `export/Beaver Notes ${formatDate(currentDate)}`,
           directory: FilesystemDirectory.Data,
         });
-
-        const dbx = new Dropbox({ accessToken });
-
-        const createFoldersRecursively = async (
-          folderPath: string,
-          parentPath = ""
-        ) => {
+  
+        // Function to create folders recursively
+        const createFoldersRecursively = async (folderPath: string, parentPath = "") => {
           const response = await dbx.filesListFolder({ path: folderPath });
           const totalEntries = response.result.entries.length;
           let processedEntries = 0;
-
+  
           for (const entry of response.result.entries) {
             if (entry[".tag"] === "folder") {
-              const folderFullPath = `${parentPath}/${entry.name}`.replace(
-                /^\/+/,
-                ""
-              ); // Remove leading slash
-
+              const folderFullPath = `${parentPath}/${entry.name}`.replace(/^\/+/, ""); // Remove leading slash
+  
               await Filesystem.mkdir({
                 path: `export/${mainFolderPath}/${folderFullPath}`,
                 directory: FilesystemDirectory.Data,
               });
-
+  
               processedEntries++;
               setProgress(Math.round((processedEntries / totalEntries) * 100));
-
+  
               const subFolderPath = `${folderPath}/${entry.name}`;
               await createFoldersRecursively(subFolderPath, folderFullPath);
             } else if (entry[".tag"] === "file") {
-              const fileFullPath = `${parentPath}/${entry.name}`.replace(
-                /^\/+/,
-                ""
-              ); // Remove leading slash
-
+              const fileFullPath = `${parentPath}/${entry.name}`.replace(/^\/+/, ""); // Remove leading slash
+  
               await Filesystem.downloadFile({
                 url: `https://content.dropboxapi.com/2/files/download`,
                 path: `export/${mainFolderPath}/${fileFullPath}`,
@@ -513,22 +579,25 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
                   "Dropbox-API-Arg": JSON.stringify({ path: entry.path_lower }),
                 },
               });
-
+  
               processedEntries++;
               setProgress(Math.round((processedEntries / totalEntries) * 100));
             }
           }
         };
-
+  
+        // Start importing from the found folder
         await createFoldersRecursively(mainFolderPath);
         await importUtils(setNotesState, loadNotes);
+  
+        // Clean up: Remove the folder locally after import
         await Filesystem.rmdir({
-          path: `export/Beaver Notes ${formattedDate}`,
+          path: `export/Beaver Notes ${formatDate(currentDate)}`,
           directory: FilesystemDirectory.Data,
-          recursive: true, // This ensures the folder and its contents are deleted
+          recursive: true,
         });
         setProgress(100);
-
+  
         console.log("Folder deleted successfully!");
       } catch (error) {
         console.error("Error during import or folder deletion:", error);
@@ -538,7 +607,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
     } else {
       console.error("Access token not found!");
     }
-  };
+  };  
 
   document.addEventListener("dropboxExport", handleDropboxExport);
 
@@ -675,7 +744,9 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
             </div>
             <div className="flex items-center py-2 justify-between">
               <div>
-                <p className="block text-lg align-left">{translations.dropbox.autoSync || "-"}</p>
+                <p className="block text-lg align-left">
+                  {translations.dropbox.autoSync || "-"}
+                </p>
               </div>
               <label className="relative inline-flex cursor-pointer items-center">
                 <input

@@ -21,6 +21,15 @@ const config: CapacitorConfig = {
       layoutName: "launch_screen",
       useDialog: true,
     },
+    GoogleAuth: {
+      scopes: ["profile", "email", "https://www.googleapis.com/auth/drive"],
+      serverClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID,
+      forceCodeForRefreshToken: true,
+    },
+    Keyboard: {
+      //@ts-ignore
+      resize: "none",
+    },
     CapacitorHttp: {
       enabled: true,
     },

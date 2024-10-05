@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Note } from "../../store/types";
 
 type BubblemenuNoteLinkProps = {
@@ -40,7 +40,7 @@ const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
     };
 
     loadTranslations();
-  });
+  }, []);
 
   useEffect(() => {
     if (textAfterAt !== null) {
@@ -48,12 +48,12 @@ const BubblemenuNoteLink: React.FC<BubblemenuNoteLinkProps> = ({
     }
   }, [textAfterAt]);
 
-  // Function to filter notes based on search query
-  const filteredNotes = notes
-    .filter((note) =>
-      note.title.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .slice(0, 5); // Limit to 5 items
+  // Memoized function to filter notes
+  const filteredNotes = useMemo(() => {
+    return notes
+      .filter((note) => note.title && note.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      .slice(0, 5); // Limit to 5 items
+  }, [searchQuery, notes]);
 
   const truncateTitle = (title: string, maxLength: number) => {
     return title.length > maxLength

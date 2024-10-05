@@ -18,16 +18,21 @@ interface HomeProps {
 }
 
 const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
-  // Correctly destructuring props
   const { activeNoteId, setActiveNoteId } = useNotesState();
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedLabel, setSelectedLabel] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
       try {
-        // Treat missing titles as empty
+        // Label filter
+        const labelMatch = selectedLabel
+          ? note.labels.includes(selectedLabel)
+          : true;
+
+        // Search query filter
         const titleMatch = note.title
           ? note.title.toLowerCase().includes(searchQuery.toLowerCase())
           : false;
@@ -38,7 +43,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
               .includes(searchQuery.toLowerCase())
           : false;
 
-        return titleMatch || contentMatch;
+        return labelMatch && (titleMatch || contentMatch);
       } catch (error) {
         console.error("Error processing note:", error);
         return false; // Skip the note if there's any error
@@ -48,7 +53,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
     setFilteredNotes(
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
-  }, [searchQuery, notesState]);
+  }, [searchQuery, selectedLabel, notesState]);
 
   const [sortingOption, setSortingOption] = useState("updatedAt");
 
@@ -62,9 +67,9 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
         return createdAtA - createdAtB;
       case "updatedAt":
       default:
-        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
         const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
-        return updatedAtA - updatedAtB;
+        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
+        return updatedAtB - updatedAtA;
     }
   });
 
@@ -73,14 +78,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
   );
 
   const handleLabelFilterChange = (selectedLabel: string) => {
-    setSearchQuery("");
-    const filteredNotes = Object.values(notesState).filter((note) => {
-      return selectedLabel ? note.labels.includes(selectedLabel) : true;
-    });
-
-    setFilteredNotes(
-      Object.fromEntries(filteredNotes.map((note) => [note.id, note]))
-    );
+    setSelectedLabel(selectedLabel); // This updates the label filter
   };
 
   // catching editNote's emits

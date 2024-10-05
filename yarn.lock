@@ -32,6 +32,18 @@
   resolved "https://registry.yarnpkg.com/@auth0/auth0-spa-js/-/auth0-spa-js-2.1.3.tgz#aabf6f439e41edbeef0cf4766ad754e5b47616e5"
   integrity sha512-NMTBNuuG4g3rame1aCnNS5qFYIzsTUV5qTFPRfTyYFS1feS6jsCBR+eTq9YkxCp1yuoM2UIcjunPaoPl77U9xQ==
 
+"@azure/msal-browser@^2.32.2":
+  version "2.39.0"
+  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-2.39.0.tgz#684fd3974c2628b2dffd04a4c8416a0945b42b69"
+  integrity sha512-kks/n2AJzKUk+DBqZhiD+7zeQGBl+WpSOQYzWy6hff3bU0ZrYFqr4keFLlzB5VKuKZog0X59/FGHb1RPBDZLVg==
+  dependencies:
+    "@azure/msal-common" "13.3.3"
+
+"@azure/msal-common@13.3.3":
+  version "13.3.3"
+  resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-13.3.3.tgz#b4963c9e5a164ed890b204becb036303ccf4f6ac"
+  integrity sha512-n278DdCXKeiWhLwhEL7/u9HRMyzhUXLefeajiknf6AmEedoiOiv2r5aRJ7LXdT3NGPyubkdIbthaJlVtmuEqvA==
+
 "@babel/cli@^7.7.5":
   version "7.25.6"
   resolved "https://registry.yarnpkg.com/@babel/cli/-/cli-7.25.6.tgz#bc35561adc78ade43ac9c09a690768493ab9ed95"
@@ -1255,7 +1267,7 @@
   resolved "https://registry.yarnpkg.com/@capacitor/ios/-/ios-6.0.0.tgz#b04ce2967d732c73ebf29ec38b4b585255930e43"
   integrity sha512-7mAs3gjWiE5DPM4AGPduqFSDGXCPwwqQRMzbohVway7/cTWnHomHV8mIojMZE4GILeWO2fILbyu3C8q9pHg2vg==
 
-"@capacitor/keyboard@^6.0.0":
+"@capacitor/keyboard@^6.0.2":
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/@capacitor/keyboard/-/keyboard-6.0.2.tgz#5c8e2a499284dfbfd90142d08c91cb5a13e3c801"
   integrity sha512-fOfO3rQ0ZXuTHpK03INVTwmBnpqMiH8EHPpNaHjwjKwdrVRWBvtgIFhuyHNXh53rdcXw+uHB+1RIiNabnCrITw==
@@ -2039,6 +2051,13 @@
   resolved "https://registry.yarnpkg.com/@react-types/shared/-/shared-3.24.1.tgz#fa06cb681d144fce9c515d8bd296d81440a45d25"
   integrity sha512-AUQeGYEm/zDTN6zLzdXolDxz3Jk5dDL7f506F07U8tBwxNNI3WRdhU84G0/AaFikOZzDXhOZDr3MhQMzyE7Ydw==
 
+"@recognizebv/capacitor-plugin-msauth@^3.6.0":
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/@recognizebv/capacitor-plugin-msauth/-/capacitor-plugin-msauth-3.6.0.tgz#3bbf513eeeb1789bd2c8b1d33e5ae24a25fbffcc"
+  integrity sha512-MBBL2Y9pi3zH40VoRt4RCt41xxU5pw9b0HzECoktiIPHFbErMPx3T+X1jbe/t+htRuCEhCqRkrxtiPfDtoAn7w==
+  dependencies:
+    "@azure/msal-browser" "^2.32.2"
+
 "@remirror/core-constants@3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@remirror/core-constants/-/core-constants-3.0.0.tgz#96fdb89d25c62e7b6a5d08caf0ce5114370e3b8f"
@@ -2168,7 +2187,7 @@
   dependencies:
     tslib "^2.4.0"
 
-"@tailwindcss/typography@^0.5.12":
+"@tailwindcss/typography@^0.5.15":
   version "0.5.15"
   resolved "https://registry.yarnpkg.com/@tailwindcss/typography/-/typography-0.5.15.tgz#007ab9870c86082a1c76e5b3feda9392c7c8d648"
   integrity sha512-AqhlCXl+8grUz8uqExv5OTtgpjuVIwFTSXTrh8y9/pw6q2ek7fJ+Y8ZEVw7EB2DCcuCOtEjf9w3+J3rzts01uA==
@@ -2224,7 +2243,7 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-bullet-list/-/extension-bullet-list-2.7.4.tgz#67a88918ac86876ca9776f01c2535b30844f4625"
   integrity sha512-uO08vui6uEgLEgLIYJSLrUb2An3u0If8XRW0Z0kB13zpwQ9pq0S1JOc0KwPTDPeIrgLQ7OOH87/bM9rGUFC3AQ==
 
-"@tiptap/extension-code-block-lowlight@^2.1.13":
+"@tiptap/extension-code-block-lowlight@^2.7.4":
   version "2.7.4"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-code-block-lowlight/-/extension-code-block-lowlight-2.7.4.tgz#28f6d5a9ca84609bd34850cc96a612ea34b42b33"
   integrity sha512-FqglbreyR2HOlimOM11nypL8pRPtOA3CKhep2/eVduM5WZ8R6sh5c8/OoFGH4N9rwiHUHW1JdD89MirvWsPduw==
@@ -2378,10 +2397,10 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-text/-/extension-text-2.7.4.tgz#7ac58c102a3b1e33b7a2c6c03961101363fa52d7"
   integrity sha512-1bF9LdfUumqXOz0A6xnOo7UHx+YLshxjMnjoMXjv7cOFOjdHbLmwKNTKGd2ltoCy3bSajoCPhPZL2Id89XDZfQ==
 
-"@tiptap/extension-typography@^2.5.7":
-  version "2.7.4"
-  resolved "https://registry.yarnpkg.com/@tiptap/extension-typography/-/extension-typography-2.7.4.tgz#423da537b9eda7ee2473dd2474e87d5b28052aa4"
-  integrity sha512-GIafvRQ3HSnf7+MnCMMt1j5o7Iyuy445MVAiZAqeT1ZnRxajNaasS0v+vSQ+0nz0GUCEVAeMjIamPdDKqQ2RdA==
+"@tiptap/extension-typography@^2.8.0":
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-typography/-/extension-typography-2.8.0.tgz#c5614707d4efe70bb094ed01241da6ac0545529e"
+  integrity sha512-g+tbUba6cHbz62rLlmAdXw3GqBfZBVnYXtRqnQzTTPgb8a00+vEoUWA3sNyloq8FhfKFYcMWQDiqaVDqmity+w==
 
 "@tiptap/extension-underline@^2.1.13":
   version "2.7.4"
