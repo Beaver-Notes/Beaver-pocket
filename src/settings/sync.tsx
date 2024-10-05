@@ -131,13 +131,6 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     <icons.OneDrive className="w-10 h-10" />
                     <p className="text-2xl pl-2 py-1 font-bold">OneDrive</p>
                   </Link>
-                  <Link
-                    className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    to="/ftp"
-                  >
-                    <icons.HardDriveLine className="w-10 h-10" />
-                    <p className="text-2xl pl-2 py-1 font-bold">(S)FTP</p>
-                  </Link>
                 </div>
                 <div className="relative pt-2 gap-1 flex flex-col sm:flex-row">
                   <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">

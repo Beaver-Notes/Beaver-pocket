@@ -43,6 +43,12 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     } else if (syncValue === "iCloud") {
       const iCloudExport = new CustomEvent("iCloudExport");
       document.dispatchEvent(iCloudExport);
+    } else if (syncValue === "googledrive") {
+      const driveExport = new CustomEvent("driveExport");
+      document.dispatchEvent(driveExport);
+    } else if (syncValue === "onedrive") {
+      const onedriveExport = new CustomEvent("onedriveExport");
+      document.dispatchEvent(onedriveExport);
     }
   };
 
@@ -97,7 +103,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     await saveNote(newNote);
     navigate(`/editor/${newNote.id}`);
   };
-  
+
   return (
     <div className={`element-to-hide spacingdiv`}>
       <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto">

@@ -4,6 +4,7 @@ import Audio from "./exts/audio-block";
 import Document from '@tiptap/extension-document'
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
+import Typography from '@tiptap/extension-typography';
 import Placeholder from "@tiptap/extension-placeholder";
 import Highlight from "@tiptap/extension-highlight";
 import Underline from "@tiptap/extension-underline";
@@ -61,6 +62,9 @@ if (selectedLanguage === "it") {
 }
 
 const extensions = [
+  Document.extend({
+    content: 'block+ footnotes?',
+  }),
   CodeBlock,
   StarterKit,
   Placeholder.configure({
@@ -102,6 +106,7 @@ const extensions = [
   SearchAndReplace,
   Mathblock,
   iframe,
+  Typography,
   blackCallout,
   blueCallout,
   labels,
@@ -116,9 +121,6 @@ const extensions = [
   Footnotes,
   paper,
   FootnoteReference,
-  Document.extend({
-    content: 'block+ footnotes?',
-  }),
 ];
 
 export default extensions;

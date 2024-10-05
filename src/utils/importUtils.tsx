@@ -65,8 +65,32 @@ export const useHandleImportData = () => {
   ) => {
     try {
       const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split("T")[0];
-      const importFolderPath = `/export/Beaver Notes ${formattedDate}`;
+      const oneDayInMs = 24 * 60 * 60 * 1000; // milliseconds in a day
+      let foundViableFolder = false;
+      let importFolderPath = '';
+  
+      // Check back for 30 days
+      for (let i = 0; i < 30; i++) {
+        const checkDate = new Date(currentDate.getTime() - i * oneDayInMs);
+        const formattedDate = checkDate.toISOString().split("T")[0];
+        importFolderPath = `/export/Beaver Notes ${formattedDate}`;
+        
+        // Check if the folder exists
+        const folderExists = await Filesystem.readdir({
+          path: importFolderPath,
+          directory: Directory.Data,
+        }).then(() => true).catch(() => false);
+  
+        if (folderExists) {
+          foundViableFolder = true;
+          break; // Exit the loop if a viable folder is found
+        }
+      }
+  
+      if (!foundViableFolder) {
+        throw new Error('No viable folder found for the past 30 days.');
+      }
+  
       const importDataPath = `${importFolderPath}/data.json`;
       const importAssetsPath = `${importFolderPath}/assets`;
       const importFileAssetsPath = `${importFolderPath}/file-assets`;
@@ -179,6 +203,12 @@ export const useHandleImportData = () => {
         });
 
         setNotesState(mergedNotes);
+        const triggerReload = () => {
+          const event = new Event("reload");
+          document.dispatchEvent(event);
+        };
+        
+        triggerReload();    
       }
     } catch (error: any) {
       alert(error);

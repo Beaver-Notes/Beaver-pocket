@@ -5,19 +5,20 @@ import Toolbar from "./Toolbar";
 import { isPlatform } from "@ionic/react";
 import Drawer from "./Drawer";
 import Find from "./Find";
+import "../../assets/css/editor.css";
 import extensions from "../../lib/tiptap/index";
-import CollapseHeading from '../../lib/tiptap/exts/collapse-heading';
+import CollapseHeading from "../../lib/tiptap/exts/collapse-heading";
 import { Link } from "react-router-dom";
 import { handleEditorTyping } from "../../utils/bubble-menu-util";
 import BubblemenuNoteLink from "./BubblemenuNoteLink";
 import BubblemenuLabel from "./BubblemenuLabel";
-import { hasNotch } from "../../utils/detectNotch";
 import DOMPurify from "dompurify";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 
 // Icons
 import Icons from "../../lib/remixicon-react";
+import FloatingMenuComponent from "./Floatingmenu";
 
 type Props = {
   note: Note;
@@ -33,7 +34,9 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     setNotesState
   );
 
-  const [previousContent, setPreviousContent] = useState<JSONContent | null>(null);
+  const [previousContent, setPreviousContent] = useState<JSONContent | null>(
+    null
+  );
 
   const uniqueLabels = Array.from(
     new Set(Object.values(notesState).flatMap((note) => note.labels))
@@ -87,28 +90,28 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     top: number;
     left: number;
   } | null>(null);
+  const [slashPopupPosition, setSlashPopupPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [hashPosition, setHashPosition] = useState<number | null>(null);
   const [textAfterHash, setTextAfterHash] = useState<string | null>(null);
+  const [slashPosition, setSlashPosition] = useState<number | null>(null);
+  const [textAfterSlash, setTextAfterSlash] = useState<string | null>(null);
   const [atPosition, setAtPosition] = useState<number | null>(null);
   const [textAfterAt, setTextAfterAt] = useState<string | null>(null);
-  const [notchPadding, setNotchPadding] = useState(false);
 
   const titleRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
-    const checkNotch = async () => {
-      const hasNotchFlag = await hasNotch();
-      setNotchPadding(hasNotchFlag);
-    };
-    checkNotch();
     setActiveNoteId(note.id);
   }, [note.id, setActiveNoteId]);
 
   const exts = [...extensions];
 
   // Check collapsibleHeading from localStorage
-  if (localStorage.getItem('collapsibleHeading') === 'true') {
+  if (localStorage.getItem("collapsibleHeading") === "true") {
     exts.push(CollapseHeading);
   }
   const editor = useEditor(
@@ -282,7 +285,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   };
 
   return (
-    <div className="Shaded">
+    <div>
       <div
         className={`editor overflow-auto h-full justify-center items-start px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
@@ -295,19 +298,17 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
           editor={editor}
         />
         <div
-          className={`sm:hidden bg-white dark:bg-[#232222] px-2 fixed top-0 inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between ${
-            notchPadding ? "pt-6" : "sm:pt-1"
-          }`}
+          className={`sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] fixed inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between`}
         >
           <Link
             to="/"
-            className="p-2 mt-4 align-start rounded-md text-white bg-transparent cursor-pointer"
+            className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
           >
             <Icons.ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
           </Link>
           <div className="flex">
             <button
-              className="p-2 mt-6 rounded-md text-white bg-transparent cursor-pointer"
+              className="p-2 rounded-md text-white bg-transparent cursor-pointer"
               onClick={() => {
                 setFocusMode((prevFocusMode) => !prevFocusMode);
                 setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
@@ -320,7 +321,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
               />
             </button>
             <button
-              className="p-2 align-end mt-6 rounded-md text-white bg-transparent cursor-pointer"
+              className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
               onClick={handleSearch}
             >
               {showFind ? (
@@ -375,31 +376,53 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
                 textAfterAt={textAfterAt}
               />
             )}
+            {popupPosition && (
+              <BubblemenuNoteLink
+                popupPosition={popupPosition}
+                notes={notesList}
+                onClickNote={handleClickNote}
+                textAfterAt={textAfterAt}
+              />
+            )}
+            {slashPopupPosition && (
+              <FloatingMenuComponent
+                editor={editor}
+                slashPopupPosition={slashPopupPosition}
+                slashPosition={slashPosition}
+                setSlashPopupPosition={setSlashPopupPosition}
+                setSlashPosition={setSlashPosition}
+              />
+            )}
             <EditorContent
               onKeyUp={(event) =>
                 handleEditorTyping(
                   event,
                   textAfterAt,
                   textAfterHash,
+                  textAfterSlash,
                   atPosition,
                   hashPosition,
+                  slashPosition,
                   setPopupPosition,
                   setAtPosition,
                   setTextAfterAt,
                   setHashPopupPosition,
                   setHashPosition,
-                  setTextAfterHash
+                  setTextAfterHash,
+                  setSlashPopupPosition,
+                  setSlashPosition,
+                  setTextAfterSlash
                 )
               }
               editor={editor}
-              className="overflow-hidden w-full mb-[6em] min-h-[25em] editor-content editor-box"
+              className="prose dark:text-gray-100 max-w-none prose-indigo mb-12"
             />
           </div>
         </div>
         <div
           className={`${
             showFind ? "show" : "hidden"
-          } fixed inset-x-0 top-20 sm:top-auto sm:bottom-6 md:bottom-6 flex justify-center`}
+          } fixed inset-x-0 sm:bottom-6 md:bottom-6 flex justify-center`}
         >
           <div className="w-full px-4 sm:px-10 md:px-20 lg:px-60">
             {showFind && <Find editor={editor} />}

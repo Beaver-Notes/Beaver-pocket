@@ -12,7 +12,7 @@ import icons from "../../lib/remixicon-react";
 import getMimeType from "../../utils/mimetype";
 import CircularProgress from "../../components/ui/ProgressBar";
 import { Note } from "../../store/types";
-import { isPlatform } from '@ionic/react'
+import { isPlatform } from "@ionic/react";
 import { useHandleImportData } from "../../utils/importUtils";
 import { loadNotes } from "../../store/notes";
 
@@ -30,36 +30,35 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
   const [progress, setProgress] = useState<number>(0);
   const [progressColor, setProgressColor] = useState<string>("#e6e6e6");
 
-
   useEffect(() => {
     const initializeGoogleAuth = async () => {
       try {
-        let clientId = '';
-  
+        let clientId = "";
+
         // Determine the platform and select the correct clientId
-        if (isPlatform('ios')) {
+        if (isPlatform("ios")) {
           clientId = IOS_CLIENT_ID; // iOS Client ID
-        } else if (isPlatform('android')) {
+        } else if (isPlatform("android")) {
           clientId = ANDROID_CLIENT_ID; // Android Client ID
         } else {
-          console.error('Platform not supported');
+          console.error("Platform not supported");
           return;
         }
-  
+
         await GoogleAuth.initialize({
           clientId: clientId,
           scopes: ["profile", "email", "https://www.googleapis.com/auth/drive"],
           grantOfflineAccess: true,
         });
-  
+
         await loadAccessToken();
       } catch (error) {
         console.error("Failed to initialize Google Auth:", error);
       }
     };
-  
+
     initializeGoogleAuth();
-  }, []);  
+  }, []);
 
   const loadAccessToken = async () => {
     try {
@@ -109,6 +108,17 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
     }
   };
 
+  document.addEventListener("driveExport", handleDriveExport);
+
+  document.addEventListener("driveImport", handleDriveImport);
+
+  async function handleDriveExport() {
+    await exportdata();
+  }
+  async function handleDriveImport() {
+    await importData();
+  }
+
   const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
@@ -143,12 +153,38 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
       setProgressColor(darkMode ? "#444444" : "#e6e6e6");
   
       const autoSync = localStorage.getItem("autoSync");
+      const syncLimit = parseInt(localStorage.getItem("synclimit") || "5", 10);
   
-      // Helper function to recursively upload folder contents with parallel uploads
-      const uploadFolderContents = async (
-        localFolderPath: string,
-        driveFolderId: string
-      ) => {
+      let totalItems = 0; // Track total number of items to upload
+      let uploadedItems = 0; // Track uploaded items for progress calculation
+  
+      // Helper function to update the progress bar
+      const updateProgress = () => {
+        if (totalItems > 0) {
+          const progressPercentage = Math.round((uploadedItems / totalItems) * 100);
+          setProgress(progressPercentage);
+        }
+      };
+  
+      // Helper function to count all items (files and folders) in a directory
+      const countFolderItems = async (localFolderPath: string) => {
+        const folderContents = await Filesystem.readdir({
+          path: localFolderPath,
+          directory: Directory.Data,
+        });
+  
+        for (const item of folderContents.files) {
+          if (item.type === "file") {
+            totalItems++;
+          } else if (item.type === "directory") {
+            totalItems++; // Count the directory itself
+            await countFolderItems(`${localFolderPath}/${item.name}`); // Recursively count subfolder items
+          }
+        }
+      };
+  
+      // Helper function to recursively upload folder contents with progress updates
+      const uploadFolderContents = async (localFolderPath: string, driveFolderId: string) => {
         const folderContents = await Filesystem.readdir({
           path: localFolderPath,
           directory: Directory.Data,
@@ -172,27 +208,31 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
               driveFolderId,
               fileType || "application/octet-stream"
             );
+  
+            uploadedItems++; // Increment uploaded items count
+            updateProgress(); // Update progress
           } else if (item.type === "directory") {
             // Create a corresponding folder on Google Drive if it doesn't exist
-            const newDriveFolderId = await driveAPI.checkFolderExists(
-              item.name,
-              driveFolderId
-            );
-            const newFolderId =
-              newDriveFolderId ||
-              (await driveAPI.createFolder(item.name, driveFolderId));
+            const newDriveFolderId = await driveAPI.checkFolderExists(item.name, driveFolderId);
+            const newFolderId = newDriveFolderId || (await driveAPI.createFolder(item.name, driveFolderId));
+  
+            uploadedItems++; // Count the directory itself as uploaded
+            updateProgress();
   
             // Recursively upload the contents of the subfolder
-            await uploadFolderContents(
-              `${localFolderPath}/${item.name}`,
-              String(newFolderId)
-            );
+            await uploadFolderContents(`${localFolderPath}/${item.name}`, String(newFolderId));
           }
         });
   
         // Wait for all uploads in the folder to complete
         await Promise.all(uploadPromises);
       };
+  
+      // Count total items to upload (data.json, note-assets, file-assets)
+      await countFolderItems("note-assets");
+      await countFolderItems("file-assets");
+      totalItems += 1; // Count data.json file
+      totalItems += 2; // Count note-assets and file-assets folders themselves
   
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
@@ -204,11 +244,30 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
         rootFolderId = await driveAPI.createFolder("beaver-pocket");
       }
   
+      if (rootFolderId === null) {
+        throw new Error("Root folder ID could not be determined.");
+      }
+  
+      const existingFolders = await driveAPI.listContents(rootFolderId);
+      const datedFolders = existingFolders.filter((folder) => folder.name.startsWith("Beaver Notes"));
+  
+      // Sort dated folders by creation date (assuming `createdTime` is available)
+      datedFolders.sort((a, b) => {
+        const dateA = new Date(a.createdTime || 0).getTime(); // Fallback to 0 if createdTime is not present
+        const dateB = new Date(b.createdTime || 0).getTime();
+        return dateA - dateB;
+      });
+  
+      // Delete the oldest folders if they exceed the sync limit
+      while (datedFolders.length > syncLimit) {
+        const folderToDelete = datedFolders.shift(); // Get the oldest folder
+        if (folderToDelete) {
+          await driveAPI.deleteFolder(folderToDelete.id);
+        }
+      }
+  
       // Check if the "Beaver Notes YYYY-MM-DD" folder already exists
-      let datedFolderId = await driveAPI.checkFolderExists(
-        datedFolderPath,
-        rootFolderId
-      );
+      let datedFolderId = await driveAPI.checkFolderExists(datedFolderPath, rootFolderId);
   
       // If folder exists and autoSync is not set, ask the user for confirmation
       if (datedFolderId && autoSync !== "googledrive") {
@@ -240,22 +299,17 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
       });
   
       const dataBlob = new Blob([dataFile.data], { type: "application/json" });
-      await driveAPI.uploadFile(
-        "data.json",
-        dataBlob,
-        String(datedFolderId),
-        "application/json"
-      );
+      await driveAPI.uploadFile("data.json", dataBlob, String(datedFolderId), "application/json");
+  
+      uploadedItems++; // Increment progress for data.json
+      updateProgress();
   
       // Create the "note-assets" and "file-assets" folders inside "Beaver Notes YYYY-MM-DD"
-      const noteAssetsFolderId = await driveAPI.createFolder(
-        "note-assets",
-        datedFolderId
-      );
-      const fileAssetsFolderId = await driveAPI.createFolder(
-        "file-assets",
-        datedFolderId
-      );
+      const noteAssetsFolderId = await driveAPI.createFolder("note-assets", datedFolderId);
+      const fileAssetsFolderId = await driveAPI.createFolder("file-assets", datedFolderId);
+  
+      uploadedItems += 2; // Increment progress for the note-assets and file-assets folder creation
+      updateProgress();
   
       // Recursively upload contents of the local "note-assets" folder to the corresponding Google Drive folder
       await uploadFolderContents("note-assets", String(noteAssetsFolderId));
@@ -272,6 +326,7 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
     }
   };
   
+
   // Function to convert base64 string to Blob
   const base64ToBlob = (base64String: string, type: string): Blob => {
     const byteCharacters = atob(base64String); // Decode base64 string
@@ -282,7 +337,6 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
     const byteArray = new Uint8Array(byteNumbers);
     return new Blob([byteArray], { type: type });
   };
-  
 
   const importData = async () => {
     if (!driveAPI) {
@@ -306,14 +360,33 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
         );
       }
 
-      const datedFolderId = await driveAPI!.checkFolderExists(
+      let datedFolderId: string | null = await driveAPI!.checkFolderExists(
         datedFolderPath,
         rootFolderId
-      ); // Use '!'
-      if (!datedFolderId) {
-        throw new Error(
-          `The folder "${datedFolderPath}" does not exist on Google Drive.`
+      ); // Initial check for today's folder
+
+      // If the folder doesn't exist, look back up to 30 days
+      const maxDaysToCheck = 30;
+      for (let i = 1; i <= maxDaysToCheck && !datedFolderId; i++) {
+        const pastDate = new Date(currentDate);
+        pastDate.setDate(currentDate.getDate() - i); // Go back i days
+        const pastFormattedDate = pastDate.toISOString().slice(0, 10);
+        const pastDatedFolderPath = `Beaver Notes ${pastFormattedDate}`;
+
+        datedFolderId = await driveAPI!.checkFolderExists(
+          pastDatedFolderPath,
+          rootFolderId
         );
+
+        if (datedFolderId) {
+          console.log(`Found folder from ${pastFormattedDate}`);
+          break; // Exit loop if we find a folder
+        }
+      }
+
+      // If still no folder found, throw an error
+      if (!datedFolderId) {
+        throw new Error(`No folder found for the last ${maxDaysToCheck} days.`);
       }
 
       // Download the folder and its contents recursively to "export/Beaver Notes YYYY-MM-DD"

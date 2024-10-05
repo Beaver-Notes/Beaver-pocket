@@ -81,7 +81,6 @@
 			isa = PBXGroup;
 			children = (
 				AB219B832C9ABF0B008E638F /* Keys */,
-				AB9760032C7D10AC007D098E /* App.entitlements */,
 				AB18EA252C7D002400CCCCFC /* iCloudPlugin.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -92,6 +91,7 @@
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				AB18EA272C7D00E800CCCCFC /* MyViewController.swift */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				AB9760032C7D10AC007D098E /* App.entitlements */,
 			);
 			path = App;
 			sourceTree = "<group>";

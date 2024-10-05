@@ -38,6 +38,9 @@ project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacit
 include ':codetrix-studio-capacitor-google-auth'
 project(':codetrix-studio-capacitor-google-auth').projectDir = new File('../node_modules/@codetrix-studio/capacitor-google-auth/android')
 
+include ':recognizebv-capacitor-plugin-msauth'
+project(':recognizebv-capacitor-plugin-msauth').projectDir = new File('../node_modules/@recognizebv/capacitor-plugin-msauth/android')
+
 include ':capacitor-native-biometric'
 project(':capacitor-native-biometric').projectDir = new File('../node_modules/capacitor-native-biometric/android')
 

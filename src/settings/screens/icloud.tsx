@@ -61,6 +61,38 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
       const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
       const baseFolderPath = `Beaver Notes ${formattedDate}`;
 
+      // Step 1: Get sync limit from localStorage
+      const syncLimit = parseInt(localStorage.getItem("synclimit") || "5", 10);
+
+      // Step 2: Read existing folders in iCloud and sort by date
+      const { files: existingFiles } = await iCloud.listContents({
+        folderName: "/",
+      }); // Note: using files, not folders
+      const beaverNoteFolders = existingFiles
+        .filter(
+          (file) =>
+            file.name.startsWith("Beaver Notes") && file.type === "directory"
+        )
+        .sort((a: { name: string }, b: { name: string }) => {
+          // Extract date from "Beaver Notes YYYY-MM-DD"
+          const dateA = new Date(a.name.replace("Beaver Notes ", ""));
+          const dateB = new Date(b.name.replace("Beaver Notes ", ""));
+          return dateA.getTime() - dateB.getTime(); // Sort oldest to newest
+        });
+
+      // Step 3: Delete oldest folders if they exceed syncLimit
+      if (beaverNoteFolders.length >= syncLimit) {
+        const foldersToDelete = beaverNoteFolders.slice(
+          0,
+          beaverNoteFolders.length - syncLimit + 1
+        ); // Select oldest folders to delete
+        for (const folder of foldersToDelete) {
+          await iCloud.deleteFolder({ folderName: folder.name });
+          console.log(`[INFO] Deleted old folder: ${folder.name}`);
+        }
+      }
+
+      // Step 4: Proceed with data export
       const { data } = await Filesystem.readFile({
         path: STORAGE_PATH,
         directory: Directory.Data,
@@ -265,21 +297,34 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
       setProgressColor("#e6e6e6"); // Set progress color based on theme
       setProgress(0); // Reset progress to 0 at the start
 
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
-      const baseFolderPath = `Beaver Notes ${formattedDate}`;
-      const localFolderPath = `export/${baseFolderPath}`;
+      const getValidFolder = async (): Promise<string | null> => {
+        let currentDate = new Date();
+        for (let i = 0; i < 30; i++) {
+          // Loop back 30 days
+          const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
+          const baseFolderPath = `Beaver Notes ${formattedDate}`;
 
-      const { exists } = await iCloud.checkFolderExists({
-        folderName: baseFolderPath,
-      });
+          const { exists } = await iCloud.checkFolderExists({
+            folderName: baseFolderPath,
+          });
 
-      if (!exists) {
-        throw new Error(
-          `Base folder ${baseFolderPath} does not exist in iCloud.`
-        );
+          if (exists) {
+            return baseFolderPath; // Found a valid folder
+          }
+
+          // Subtract one day
+          currentDate.setDate(currentDate.getDate() - 1);
+        }
+
+        return null; // No folder found in the past 30 days
+      };
+
+      const baseFolderPath = await getValidFolder();
+      if (!baseFolderPath) {
+        throw new Error("No valid folder found in the last 30 days.");
       }
 
+      const localFolderPath = `export/${baseFolderPath}`;
       const { fileData: base64Data } = await iCloud.downloadFile({
         fileName: `${baseFolderPath}/data.json`,
       });
@@ -625,7 +670,9 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
           </div>
           <div className="flex items-center py-2 justify-between">
             <div>
-              <p className="block text-lg align-left">{translations.icloud.autoSync || "-"}</p>
+              <p className="block text-lg align-left">
+                {translations.icloud.autoSync || "-"}
+              </p>
             </div>
             <label className="relative inline-flex cursor-pointer items-center">
               <input

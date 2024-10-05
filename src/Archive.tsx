@@ -3,7 +3,6 @@ import { Note } from "./store/types";
 import SearchBar from "./components/Home/Search";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/it";
-import { useToggleArchive } from "./store/notes";
 import { useNotesState } from "./store/Activenote";
 import Icons from "./lib/remixicon-react";
 import dayjs from "dayjs";
@@ -15,17 +14,21 @@ interface ArchiveProps {
 }
 
 const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
-  // Correctly destructuring props
-  useToggleArchive();
   const { activeNoteId } = useNotesState();
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedLabel, setSelectedLabel] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
       try {
-        // Treat missing titles as empty
+        // Label filter
+        const labelMatch = selectedLabel
+          ? note.labels.includes(selectedLabel)
+          : true;
+
+        // Search query filter
         const titleMatch = note.title
           ? note.title.toLowerCase().includes(searchQuery.toLowerCase())
           : false;
@@ -36,7 +39,7 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
               .includes(searchQuery.toLowerCase())
           : false;
 
-        return titleMatch || contentMatch;
+        return labelMatch && (titleMatch || contentMatch);
       } catch (error) {
         console.error("Error processing note:", error);
         return false; // Skip the note if there's any error
@@ -46,7 +49,7 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
     setFilteredNotes(
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
-  }, [searchQuery, notesState]);
+  }, [searchQuery, selectedLabel, notesState]);
 
   const [sortingOption] = useState("updatedAt");
 
@@ -60,9 +63,9 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
         return createdAtA - createdAtB;
       case "updatedAt":
       default:
-        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
         const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
-        return updatedAtA - updatedAtB;
+        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
+        return updatedAtB - updatedAtA;
     }
   });
 
@@ -71,14 +74,7 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
   );
 
   const handleLabelFilterChange = (selectedLabel: string) => {
-    setSearchQuery("");
-    const filteredNotes = Object.values(notesState).filter((note) => {
-      return selectedLabel ? note.labels.includes(selectedLabel) : true;
-    });
-
-    setFilteredNotes(
-      Object.fromEntries(filteredNotes.map((note) => [note.id, note]))
-    );
+    setSelectedLabel(selectedLabel); // This updates the label filter
   };
 
   dayjs.extend(relativeTime);

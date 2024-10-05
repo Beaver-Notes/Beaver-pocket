@@ -22,6 +22,7 @@ export const useExportDav = () => {
     () => localStorage.getItem("password") || ""
   );
   const STORAGE_PATH = "notes/data.json";
+  const syncLimit = parseInt(localStorage.getItem("synclimit") || "5", 10); // Get syncLimit from localStorage or default to 5
   const [webDavService] = useState(
     new WebDavService({
       baseUrl: baseUrl,
@@ -62,6 +63,9 @@ export const useExportDav = () => {
         // If the folder doesn't exist, create it
         await webDavService.createFolder("Beaver-Pocket");
       }
+
+      // Manage folder limit: Delete old folders if syncLimit is exceeded
+      await manageFolderLimit();
 
       const exportFolderExists = await webDavService.folderExists(
         `Beaver-Pocket/Beaver Notes ${formattedDate}`
@@ -106,6 +110,74 @@ export const useExportDav = () => {
     } catch (error) {
       // Handle error
       console.error("Error uploading note assets:", error);
+    }
+  };
+
+  // Manage folder limit and delete old folders if needed
+  const manageFolderLimit = async () => {
+    try {
+      // Fetch directory content from WebDAV for the "Beaver-Pocket" folder
+      const directoryContent = await webDavService.getDirectoryContent(
+        "Beaver-Pocket"
+      );
+
+      // Parse the XML response
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
+
+      // Extract file and folder names from the XML
+      const responses = xmlDoc.getElementsByTagName("d:response");
+      const beaverNoteFolders: any[] = [];
+
+      for (let i = 0; i < responses.length; i++) {
+        const hrefElement = responses[i].getElementsByTagName("d:href")[0];
+        const propStatElement =
+          responses[i].getElementsByTagName("d:propstat")[0];
+        const propElement = propStatElement?.getElementsByTagName("d:prop")[0];
+        const resourceTypeElement =
+          propElement?.getElementsByTagName("d:resourcetype")[0];
+        const isCollection =
+          resourceTypeElement?.getElementsByTagName("d:collection").length > 0;
+
+        const href = hrefElement?.textContent;
+        if (href && isCollection) {
+          // Decode the URL to handle special characters and spaces
+          const decodedHref = decodeURIComponent(href);
+          const folderName = decodedHref
+            .split("/")
+            .filter((part) => part !== "")
+            .pop();
+
+          // Check if the folder starts with "Beaver Notes"
+          if (folderName && folderName.startsWith("Beaver Notes")) {
+            beaverNoteFolders.push({ name: folderName });
+          }
+        }
+      }
+
+      // If the number of Beaver Notes folders exceeds the limit
+      if (beaverNoteFolders.length > syncLimit) {
+        // Sort the folders by date (oldest first)
+        const sortedFolders = beaverNoteFolders.sort(
+          (a: any, b: any) =>
+            new Date(a.name.replace("Beaver Notes ", "")).getTime() -
+            new Date(b.name.replace("Beaver Notes ", "")).getTime()
+        );
+
+        // Calculate the number of folders to delete
+        const foldersToDelete = sortedFolders.slice(
+          0,
+          beaverNoteFolders.length - syncLimit
+        );
+
+        await Promise.all(
+          foldersToDelete.map(async (folder: any) => {
+            await webDavService.deleteFolder(`Beaver-Pocket/${folder.name}`);
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Error managing folder limit:", error);
     }
   };
 
@@ -253,7 +325,7 @@ export const useExportDav = () => {
 };
 
 export const useImportDav = (
-setNotesState: (notes: Record<string, Note>) => void,
+  setNotesState: (notes: Record<string, Note>) => void
 ) => {
   const [baseUrl] = useState<string>(
     () => localStorage.getItem("baseUrl") || ""
@@ -294,27 +366,64 @@ setNotesState: (notes: Record<string, Note>) => void,
       setProgress(0);
       setProgressColor(darkMode ? "#444444" : "#e6e6e6");
 
-      await downloadAssets();
+      // Attempt to find a folder
+      const folderPath = await findValidFolderPath();
+      if (!folderPath) {
+        alert("No valid 'Beaver Notes' folder found in the past 30 days.");
+        return;
+      }
+
+      await downloadAssets(folderPath);
       setProgress(50);
 
-      await downloadFileAssets();
+      await downloadFileAssets(folderPath);
       setProgress(75);
 
-      await downloadData();
+      await downloadData(folderPath);
       setProgress(100);
 
       // If everything went well, delete the export folder
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().slice(0, 10);
-      const folderPath = `export/Beaver Notes ${formattedDate}`;
-
       await importUtils(setNotesState, loadNotes);
       await deleteFolder(folderPath);
     } catch (error) {
       alert(error);
-      setProgressColor("#ff3333"); // Set the progress color to red to indicate an error
-      setProgress(0); // Reset progress to 0 on failure or stop it at the last successful point
+      setProgressColor("#ff3333");
+      setProgress(0);
     }
+  };
+
+  // Function to find a valid "Beaver Notes" folder path
+  const findValidFolderPath = async (): Promise<string | null> => {
+    const currentDate = new Date();
+    const folderDate = new Date(currentDate);
+
+    for (let i = 0; i < 30; i++) {
+      const formattedDate = folderDate.toISOString().slice(0, 10);
+      const testFolderPath = `Beaver-Pocket/Beaver Notes ${formattedDate}/`;
+
+      try {
+        // Fetch directory content from WebDAV
+        const directoryContent = await webDavService.getDirectoryContent(
+          testFolderPath
+        );
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
+        const responses = xmlDoc.getElementsByTagName("d:response");
+
+        // Check if the folder exists
+        if (responses.length > 0) {
+          console.log(`Found folder: ${testFolderPath}`);
+          return testFolderPath; // Return the first valid folder found
+        }
+      } catch (error) {
+        console.error(`Error checking folder ${testFolderPath}:`, error);
+      }
+
+      // Go back one day
+      folderDate.setDate(folderDate.getDate() - 1);
+    }
+
+    return null; // No valid folder found after 30 days
   };
 
   const deleteFolder = async (path: string) => {
@@ -330,14 +439,14 @@ setNotesState: (notes: Record<string, Note>) => void,
     }
   };
 
-  const downloadFileAssets = async (): Promise<void> => {
+  const downloadFileAssets = async (folderPath:string): Promise<void> => {
     try {
       // Get current date for folder name
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().slice(0, 10);
 
       // Base directory for file-assets in WebDAV and local export path
-      const baseWebDavPath = `Beaver-Pocket/Beaver Notes ${formattedDate}/file-assets`;
+      const baseWebDavPath = `${folderPath}/file-assets`;
       const baseLocalPath = `export/Beaver Notes ${formattedDate}/file-assets`;
 
       // Function to recursively download files and directories
@@ -434,7 +543,7 @@ setNotesState: (notes: Record<string, Note>) => void,
     }
   };
 
-  const downloadData = async (): Promise<void> => {
+  const downloadData = async (folderPath:string): Promise<void> => {
     try {
       // Get current date for folder name
       const currentDate = new Date();
@@ -442,7 +551,7 @@ setNotesState: (notes: Record<string, Note>) => void,
 
       // Fetch directory content from WebDAV
       const directoryContent = await webDavService.getDirectoryContent(
-        `Beaver-Pocket/Beaver Notes ${formattedDate}/`
+        `${folderPath}`
       );
 
       // Parse the XML response
@@ -510,7 +619,7 @@ setNotesState: (notes: Record<string, Note>) => void,
     }
   };
 
-  const downloadAssets = async (): Promise<void> => {
+  const downloadAssets = async (folderPath:string): Promise<void> => {
     try {
       // Get current date for folder name
       const currentDate = new Date();
@@ -518,7 +627,7 @@ setNotesState: (notes: Record<string, Note>) => void,
 
       // Fetch directory content from WebDAV
       const directoryContent = await webDavService.getDirectoryContent(
-        `Beaver-Pocket/Beaver Notes ${formattedDate}/assets`
+        `${folderPath}`
       );
 
       // Parse the XML response

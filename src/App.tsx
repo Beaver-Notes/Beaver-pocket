@@ -20,7 +20,6 @@ import Editor from "./Editor";
 import { useImportDav } from "./utils/webDavUtil";
 import "./assets/css/main.css";
 import "./assets/css/fonts.css";
-import "./assets/css/animations.css"; // Import your CSS animations file
 import BottomNavBar from "./components/App/BottomNavBar";
 import CommandPrompt from "./components/App/CommandPrompt";
 import { loadNotes } from "./store/notes";
@@ -32,6 +31,15 @@ const App: React.FC = () => {
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { notesState, setNotesState } = useNotesState();
   const [isSwipe, setIsSwipe] = useState(false);
+
+  document.addEventListener("reload", () => {
+    const loadNotesFromStorage = async () => {
+      const notes = await loadNotes();
+      setNotesState(notes);
+    };
+
+    loadNotesFromStorage();
+  });
 
   useEffect(() => {
     const loadNotesFromStorage = async () => {
@@ -82,6 +90,12 @@ const App: React.FC = () => {
     } else if (syncValue === "iCloud") {
       const iCloudImport = new CustomEvent("iCloudImport");
       document.dispatchEvent(iCloudImport);
+    } else if (syncValue === "googledrive") {
+      const driveImport = new CustomEvent("driveImport");
+      document.dispatchEvent(driveImport);
+    } else if (syncValue === "onedrive") {
+      const onedriveImport = new CustomEvent("onedriveImport");
+      document.dispatchEvent(onedriveImport);
     }
   });
 
@@ -181,7 +195,10 @@ const App: React.FC = () => {
                   />
                 }
               />
-              <Route path="/onedrive" element={<Onedrive setNotesState={setNotesState}/>} />
+              <Route
+                path="/onedrive"
+                element={<Onedrive setNotesState={setNotesState} />}
+              />
               <Route
                 path="/webdav"
                 element={
@@ -200,7 +217,10 @@ const App: React.FC = () => {
                   />
                 }
               />
-              <Route path="/gdrive" element={<Gdrive setNotesState={setNotesState}/>} />
+              <Route
+                path="/gdrive"
+                element={<Gdrive setNotesState={setNotesState} />}
+              />
               <Route path="/onedrive" element={<Welcome />} />
               <Route path="/shortcuts" element={<Shortcuts />} />
               <Route path="/welcome" element={<Welcome />} />
