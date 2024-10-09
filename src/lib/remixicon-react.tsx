@@ -1,5 +1,9 @@
 // icons.ts
 import BallPenLine from "remixicon-react/BallPenLineIcon";
+import SingleQuotesLIcon from "remixicon-react/SingleQuotesLIcon";
+import BrushLineIcon from "remixicon-react/BrushLineIcon";
+import CalculatorLineIcon from "remixicon-react/CalculatorLineIcon";
+import PieChart2LineIcon from "remixicon-react/PieChart2LineIcon";
 import HardDriveLine from "remixicon-react/HardDrive2LineIcon";
 import EraserLineIcon from "remixicon-react/EraserLineIcon";
 import PlayLineIcon from "remixicon-react/PlayLineIcon";
@@ -36,6 +40,10 @@ import UnderlineIcon from "remixicon-react/UnderlineIcon";
 import StrikethroughIcon from "remixicon-react/StrikethroughIcon";
 import Heading1Icon from "remixicon-react/H1Icon";
 import Heading2Icon from "remixicon-react/H2Icon";
+import Heading3Icon from "remixicon-react/H3Icon";
+import Heading4Icon from "remixicon-react/H4Icon";
+import Heading5Icon from "remixicon-react/H5Icon";
+import Heading6Icon from "remixicon-react/H6Icon";
 import InsertRowTopIcon from "remixicon-react/InsertRowTopIcon";
 import DeleteRow from "remixicon-react/DeleteRowIcon";
 import DeleteColumn from "remixicon-react/DeleteColumnIcon";
@@ -266,6 +274,10 @@ const Icons = {
   StrikethroughIcon,
   Heading1Icon,
   Heading2Icon,
+  Heading3Icon,
+  Heading4Icon,
+  Heading5Icon,
+  Heading6Icon,
   InsertRowTopIcon,
   DeleteRow,
   DeleteColumn,
@@ -307,6 +319,10 @@ const Icons = {
   HardDriveLine,
   GDrive,
   OneDrive,
+  SingleQuotesLIcon,
+  CalculatorLineIcon,
+  PieChart2LineIcon,
+  BrushLineIcon,
 };
 
 export default Icons;

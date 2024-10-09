@@ -3,9 +3,10 @@ import icons from "../../lib/remixicon-react";
 import { Link, useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
-import { useExportDav } from "../../utils/webDavUtil";
+import { useExportDav } from "../../utils/Webdav/webDavUtil";
 import { useSaveNote } from "../../store/notes";
 import { Note } from "../../store/types";
+import Mousetrap from "../../utils/mousetrap";
 
 interface NavbarProps {
   notesState: Record<string, Note>;
@@ -52,10 +53,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     }
   };
 
-  const handleEditNote = (
-    event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
-  ) => {
-    event.preventDefault();
+  const handleEditNote = () => {
     buttonClicked;
     const editedNote = localStorage.getItem("lastNoteEdit");
     if (editedNote) {
@@ -103,6 +101,41 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     await saveNote(newNote);
     navigate(`/editor/${newNote.id}`);
   };
+
+  useEffect(() => {
+    Mousetrap.bind("mod+n", (e) => {
+      e.preventDefault();
+      handleCreateNewNote();
+    });
+
+    Mousetrap.bind("mod+shift+n", (e) => {
+      e.preventDefault();
+      navigate("/");
+    });
+
+    Mousetrap.bind("mod+shift+w", (e) => {
+      e.preventDefault();
+      handleEditNote();
+    });
+
+    Mousetrap.bind("mod+shift+a", (e) => {
+      e.preventDefault();
+      navigate("/archive");
+    });
+
+    Mousetrap.bind("mod+,", (e) => {
+      e.preventDefault();
+      navigate("/archive");
+    });
+
+    return () => {
+      Mousetrap.unbind("mod+n");
+      Mousetrap.unbind("mod+shift+n");
+      Mousetrap.unbind("mod+shift+w");
+      Mousetrap.unbind("mod+shift+a");
+      Mousetrap.unbind("mod+,");
+    };
+  }, []);
 
   return (
     <div className={`element-to-hide spacingdiv`}>

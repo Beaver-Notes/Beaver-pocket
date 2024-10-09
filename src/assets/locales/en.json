@@ -13,7 +13,9 @@
     "interfaceOptions": "Interface Options",
     "clearFont": "Clear Font",
     "Sync": "Sync",
-    "expandPage": "Expand Page"
+    "expandPage": "Expand Page",
+    "CollapsibleHeading": "Collapsible Heading",
+    "scribbleCompatibility": "Scribble compatibility"
   },
   "sync": {
     "Dropbox": "Dropbox",
@@ -37,7 +39,8 @@
     "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
     "getToken": "Get Access Token",
     "autoSync": "Auto Sync",
-    "logout": "Logout"
+    "logout": "Logout",
+    "placeholder": "Paste authorization code here"
   },
   "gdrive": {
     "title": "Sync with Google Drive",
@@ -88,7 +91,10 @@
     "all": "All",
     "messagePt1": "It's a little empty in here. Click",
     "messagePt2": "to add a new note.",
-    "title": "New Note"
+    "title": "New Note",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "enterpasswd": "Enter Password"
   },
   "editor": {
     "unlocktoedit": "Unlock to edit",
@@ -187,7 +193,61 @@
     "privacyPolicy": "Privacy Policy",
     "license": "License"
   },
+  "menuItems": {
+    "fileLabel": "File",
+    "fileDescription": "Attach a file.",
+    "imageLabel": "Image",
+    "imageDescription": "Insert an image.",
+    "videoLabel": "Video",
+    "videoDescription": "Embed a video.",
+    "paragraphLabel": "Paragraph",
+    "paragraphDescription": "Create a standard paragraph.",
+    "heading1Label": "Heading 1",
+    "heading1Description": "Largest heading for main titles.",
+    "heading2Label": "Heading 2",
+    "heading2Description": "Subheading for major sections.",
+    "heading3Label": "Heading 3",
+    "heading3Description": "Subsections under Heading 2.",
+    "heading4Label": "Heading 4",
+    "heading4Description": "Smaller subsection titles.",
+    "heading5Label": "Heading 5",
+    "heading5Description": "Detailed subsections.",
+    "heading6Label": "Heading 6",
+    "heading6Description": "Smallest heading for notes.",
+    "quoteLabel": "Quote",
+    "quoteDescription": "Format text as a quote.",
+    "codeLabel": "Code",
+    "codeDescription": "Insert a code block.",
+    "tableLabel": "Table",
+    "tableDescription": "Insert a structured data table.",
+    "bulletListLabel": "Bullet List",
+    "bulletListDescription": "Create a bulleted list.",
+    "orderedListLabel": "Ordered List",
+    "orderedListDescription": "Create a numbered list.",
+    "checklistLabel": "Checklist",
+    "checklistDescription": "Add a checklist for tasks.",
+    "blackCalloutLabel": "Black Callout",
+    "blackCalloutDescription": "Add a black callout.",
+    "blueCalloutLabel": "Blue Callout",
+    "blueCalloutDescription": "Add a blue callout.",
+    "greenCalloutLabel": "Green Callout",
+    "greenCalloutDescription": "Add a green callout.",
+    "purpleCalloutLabel": "Purple Callout",
+    "purpleCalloutDescription": "Add a purple callout.",
+    "redCalloutLabel": "Red Callout",
+    "redCalloutDescription": "Add a red callout.",
+    "yellowCalloutLabel": "Yellow Callout",
+    "yellowCalloutDescription": "Add a yellow callout.",
+    "mathBlockLabel": "Math Block",
+    "mathBlockDescription": "Insert a math block.",
+    "mermaidBlockLabel": "Mermaid Block",
+    "mermaidBlockDescription": "Insert a Mermaid diagram.",
+    "embedLabel": "Embed",
+    "embedDescription": "Embed a website.",
+    "drawingBlockLabel": "Drawing Block",
+    "drawingBlockDescription": "Insert a drawing block."
+  },
   "tiptap": {
-    "placeholder": "Write something..."
+    "placeholder": "Write something... or type \"/\" for commands."
   }
 }

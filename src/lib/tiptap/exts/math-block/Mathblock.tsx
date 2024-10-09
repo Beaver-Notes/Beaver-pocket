@@ -17,25 +17,25 @@ interface MathBlockProps extends NodeViewWrapperProps {
 const MathBlock: React.FC<MathBlockProps> = (props) => {
   const contentRef = useRef<HTMLParagraphElement>(null);
   const [useKatexMacros] = useState(false);
-  const [isContentChange, setIsContentChange] = useState(false);
   const [showSecondTextarea, setShowSecondTextarea] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const dialogPanelRef = useRef<HTMLDivElement>(null);
 
+  // Render content whenever content or macros change
   useEffect(() => {
-    props.updateAttributes({ init: "true" });
     renderContent();
-  }, []);
+  }, [props.node.attrs.content, props.node.attrs.macros]);
 
   const renderContent = () => {
     let macros = {};
 
     try {
-      macros = JSON.parse(props.node.attrs.macros);
+      macros = JSON.parse(props.node.attrs.macros || "{}");
     } catch (error) {
-      // Do nothing
+      // Handle JSON parse error
+      console.error("Error parsing macros:", error);
     }
 
     const mathContent = props.node.attrs.content || "Empty";
@@ -54,13 +54,9 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
 
   const updateContent = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
-    key: string,
-    isRenderContent: boolean
+    key: string
   ) => {
-    setIsContentChange(true);
     props.updateAttributes({ [key]: event.target.value });
-
-    if (isRenderContent) renderContent();
   };
 
   const handleContentClick = () => {
@@ -154,10 +150,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
           ref={contentRef}
           contentEditable={useKatexMacros}
           suppressContentEditableWarning
-          className={`${
-            isContentChange ? "dark:text-purple-400 text-purple-500" : ""
-          }`}
-        ></p>
+        />
       </div>
       <Transition show={showModal} as={React.Fragment}>
         <Dialog
@@ -178,7 +171,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
             >
               <DialogPanel
                 ref={dialogPanelRef}
-                className="relative w-full sm:mx-auto sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
+                className="relative w-full landscape:w-2/4 portrait:w-4/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -217,16 +210,16 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                   <div className="flex-grow">
                     <textarea
                       value={props.node.attrs.content}
-                      onChange={(e) => updateContent(e, "content", true)}
+                      onChange={(e) => updateContent(e, "content")}
                       className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"
                       placeholder={translations.editor.mathContent || "-"}
                     />
                   </div>
                   {showSecondTextarea && (
-                  <div className="flex-grow">
+                    <div className="flex-grow">
                       <textarea
                         value={props.node.attrs.macros}
-                        onChange={(e) => updateContent(e, "macros", true)}
+                        onChange={(e) => updateContent(e, "macros")}
                         className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"
                         placeholder={translations.editor.katexMacros || "-"}
                       />

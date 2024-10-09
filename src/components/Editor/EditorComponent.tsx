@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Note } from "../../store/types";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
@@ -19,6 +19,8 @@ import { useNotesState } from "../../store/Activenote";
 // Icons
 import Icons from "../../lib/remixicon-react";
 import FloatingMenuComponent from "./Floatingmenu";
+import Mousetrap from "mousetrap";
+import { saveImageToFileSystem } from "../../utils/fileHandler";
 
 type Props = {
   note: Note;
@@ -189,7 +191,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     handleChangeNoteContent(editor?.getJSON() || {}, newTitle);
   };
 
-  const handlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+  const handleTitlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
     event.preventDefault();
     const text = event.clipboardData.getData("text/plain");
     document.execCommand("insertText", false, text);
@@ -284,12 +286,203 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     }
   };
 
+  const preventKeyboardToggle = (event: any) => {
+    event.preventDefault();
+  };
+
+  const setLink = useCallback(() => {
+    const previousUrl = editor?.getAttributes("link").href;
+    const url = window.prompt("URL", previousUrl);
+
+    // cancelled
+    if (url === null) {
+      return;
+    }
+
+    // empty
+    if (url === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+
+      return;
+    }
+
+    // update link
+    editor
+      ?.chain()
+      .focus()
+      .extendMarkRange("link")
+      .setLink({ href: url })
+      .run();
+  }, [editor]);
+
+  useEffect(() => {
+    // Mousetrap key bindings
+    Mousetrap.bind("mod+k", (e) => {
+      e.preventDefault();
+      setLink();
+    });
+    Mousetrap.bind("mod+shift+x", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleStrike().run();
+    });
+    Mousetrap.bind("mod+shift+h", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleHighlight().run();
+    });
+    Mousetrap.bind("mod+.", (e) => {
+      e.preventDefault();
+      editor?.commands.toggleSuperscript();
+    });
+    Mousetrap.bind("alt+,", (e) => {
+      e.preventDefault();
+      editor?.commands.toggleSubscript();
+    });
+    Mousetrap.bind("mod+e", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleCode().run();
+    });
+    Mousetrap.bind("alt+1", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleHeading({ level: 1 }).run();
+    });
+    Mousetrap.bind("alt+2", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleHeading({ level: 2 }).run();
+    });
+    Mousetrap.bind("alt+3", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleHeading({ level: 3 }).run();
+    });
+    Mousetrap.bind("alt+4", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleHeading({ level: 4 }).run();
+    });
+    Mousetrap.bind("alt+5", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleHeading({ level: 5 }).run();
+    });
+    Mousetrap.bind("alt+6", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleHeading({ level: 6 }).run();
+    });
+    Mousetrap.bind("mod+shift+7", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleOrderedList().run();
+    });
+    Mousetrap.bind("mod+shift+8", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleBulletList().run();
+    });
+    Mousetrap.bind("mod+shift+b", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleBlockquote().run();
+    });
+    Mousetrap.bind("mod+alt+c", (e) => {
+      e.preventDefault();
+      editor?.chain().focus().toggleCodeBlock().run();
+    });
+
+    // Cleanup all key bindings on unmount
+    return () => {
+      Mousetrap.unbind("mod+k");
+      Mousetrap.unbind("mod+shift+x");
+      Mousetrap.unbind("mod+shift+h");
+      Mousetrap.unbind("mod+.");
+      Mousetrap.unbind("alt+,");
+      Mousetrap.unbind("mod+e");
+      Mousetrap.unbind("alt+1");
+      Mousetrap.unbind("alt+2");
+      Mousetrap.unbind("alt+3");
+      Mousetrap.unbind("alt+4");
+      Mousetrap.unbind("alt+5");
+      Mousetrap.unbind("alt+6");
+      Mousetrap.unbind("mod+shift+7");
+      Mousetrap.unbind("mod+shift+8");
+      Mousetrap.unbind("mod+shift+b");
+      Mousetrap.unbind("mod+alt+c");
+    };
+  }, [editor, setLink]);
+
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault(); // Prevent default behavior of the drop event
+
+    const items = event.dataTransfer.items;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+
+      // Handle image files
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          // Save the image file to the filesystem
+          const { imageUrl } = await saveImageToFileSystem(file, note.id);
+          if (imageUrl) {
+            // Insert saved image URL into the editor
+            editor?.chain().setImage({ src: imageUrl }).run();
+          }
+        }
+      }
+    }
+  };
+
+  const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault(); // Prevent default paste behavior
+    event.stopPropagation(); // Stop event bubbling to higher handlers
+  
+    const items = event.clipboardData.items;
+    let containsImage = false; // Flag to track if there's an image
+  
+    // Add a space before pasting
+    document.execCommand("insertText", false, " ");
+  
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+  
+      // Handle pasted image files only
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          // Save the image file to the filesystem
+          const { imageUrl } = await saveImageToFileSystem(file, note.id);
+          if (imageUrl) {
+            // Insert the image and prevent the URL from being pasted
+            editor?.chain().setImage({ src: imageUrl }).run();
+            containsImage = true; // Mark that an image was processed
+          }
+        }
+      }
+  
+      // Handle plain text, which may contain URLs, but ignore image URLs
+      if (item.kind === "string" && item.type === "text/plain") {
+        item.getAsString((text) => {
+          // Regular expression to identify URLs that are image links (e.g., ending with image file extensions)
+          const imageUrlPattern = /\.(jpeg|jpg|gif|png|svg|webp)$/i;
+  
+          // Split the text by spaces and filter out any image URLs
+          const filteredText = text
+            .split(/\s+/)
+            .filter((word) => !imageUrlPattern.test(word)) // Remove image URLs
+            .join(" ");
+  
+          // If no image was pasted, insert the filtered text
+          if (!containsImage) {
+            document.execCommand("insertText", false, filteredText);
+          }
+        });
+      }
+    }
+  };
+  
+  
   return (
     <div>
       <div
         className={`editor overflow-auto h-full justify-center items-start px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
         } text-black dark:text-[color:var(--selected-dark-text)]`}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
       >
         <Toolbar
           toolbarVisible={toolbarVisible}
@@ -342,8 +535,9 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
         </div>
         <div
           contentEditable
-          onPaste={handlePaste}
+          onPaste={handleTitlePaste}
           suppressContentEditableWarning
+          onTouchStart={preventKeyboardToggle}
           className={`text-3xl font-bold overflow-y-scroll outline-none ${
             isPlatform("android") ? "mt-10 sm:pt-14" : "md:pt-14"
           } ${isPlatform("ios") ? "mt-10 sm:pt-14" : "md:pt-14"}`}
@@ -387,6 +581,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
             {slashPopupPosition && (
               <FloatingMenuComponent
                 editor={editor}
+                noteId={note.id}
                 slashPopupPosition={slashPopupPosition}
                 slashPosition={slashPosition}
                 setSlashPopupPosition={setSlashPopupPosition}
@@ -394,6 +589,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
               />
             )}
             <EditorContent
+              onPaste={handlePaste}
               onKeyUp={(event) =>
                 handleEditorTyping(
                   event,
@@ -415,6 +611,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
                 )
               }
               editor={editor}
+              onTouchStart={preventKeyboardToggle}
               className="prose dark:text-gray-100 max-w-none prose-indigo mb-12"
             />
           </div>

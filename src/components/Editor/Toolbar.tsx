@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import icons from "../../lib/remixicon-react";
 import ImageUploadComponent from "./ImageUpload";
 import { Editor } from "@tiptap/react";
@@ -20,6 +21,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
   toolbarVisible,
   noteId,
 }) => {
+  const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+  }>({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null); // Reference to the trigger button
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [translations, setTranslations] = useState({
     editor: {
       embedUrl: "editor.embedUrl",
@@ -155,6 +163,51 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const showFind = () => {
     const event = new CustomEvent("showFind");
     document.dispatchEvent(event);
+  };
+
+  const colors = [
+    "bg-orange-200 dark:bg-orange-40",
+    "bg-yellow-200 dark:bg-yellow-100",
+    "bg-green-200 dark:bg-green-100",
+    "bg-blue-200 dark:bg-blue-100",
+    "bg-purple-200 dark:bg-purple-100",
+    "bg-pink-200 dark:bg-pink-100",
+    "bg-red-200 dark:bg-red-100",
+  ];
+
+  // Toggle dropdown visibility
+  const toggleDropdown = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect(); // Get the button's position
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+      }); // Set dropdown position relative to button
+    }
+    setDropdownOpen(!isDropdownOpen);
+  };
+
+  // Close the dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Handle setting highlight color
+  const setHighlightColor = (color: string) => {
+    editor?.chain().focus().setHighlight({ color }).run();
+    setDropdownOpen(false); // Close dropdown after color is selected
   };
 
   return (
@@ -304,7 +357,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </button>
           <button
             className={
-              editor?.isActive("orderedList")
+              editor?.isActive("paper")
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             }
@@ -531,16 +584,53 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <icons.StrikethroughIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
           <button
+            ref={buttonRef}
             className={
               editor?.isActive("highlight")
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             }
             onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleHighlight().run()}
+            onClick={toggleDropdown}
           >
             <icons.MarkPenLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
+          {isDropdownOpen &&
+            createPortal(
+              <div
+                ref={dropdownRef}
+                className="absolute p-2 bg-white dark:bg-[#353333] shadow-lg rounded-md grid grid-cols-4 gap-2"
+                style={{
+                  top: dropdownPosition.top,
+                  left: dropdownPosition.left,
+                  zIndex: 1000,
+                }}
+              >
+                {/* Option to remove highlight */}
+                <button
+                  className={
+                    editor?.isActive("highlight")
+                      ? "rounded-md text-amber-400 cursor-pointer"
+                      : "rounded-md bg-transparent cursor-pointer"
+                  }
+                  onClick={() => {
+                    editor?.chain().focus().unsetHighlight().run();
+                    setDropdownOpen(false); // Close dropdown after removing highlight
+                  }}
+                >
+                  <icons.CloseLineIcon className={editor?.isActive("highlight") ? "border-none text-amber-400 text-xl w-8 h-8" : "border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"} />
+                </button>
+                {/* Color options */}
+                {colors.map((color, index) => (
+                  <button
+                    key={index}
+                    className={`w-8 h-8 cursor-pointer ${color}`}
+                    onClick={() => setHighlightColor(color)}
+                  />
+                ))}
+              </div>,
+              document.body // Mount the dropdown in the document body
+            )}
           <button
             className={`p-1 ${
               editor?.isActive("bulletList")
@@ -587,7 +677,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </button>
           <button
             className={`p-1 ${
-              editor?.isActive("highlight")
+              editor?.isActive("link")
                 ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
                 : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             } cursor-pointer flex-1 pr-6`}

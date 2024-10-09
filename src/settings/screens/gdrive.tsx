@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { GoogleDriveAPI } from "../../utils/GoogleDriveAPI";
+import { GoogleDriveAPI } from "../../utils/Google Drive/GoogleDriveAPI";
 import {
   Filesystem,
   Directory,

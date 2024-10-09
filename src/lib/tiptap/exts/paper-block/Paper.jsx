@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../../../../assets/css/paper.scss";
 import { NodeViewWrapper } from "@tiptap/react";
 import Icons from "../../../remixicon-react";
+import { isPlatform } from "@ionic/react";
 import * as d3 from "d3";
 import { v4 as uuid } from "uuid";
 
@@ -47,7 +48,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   useEffect(() => {
     const svg = d3.select(svgRef.current);
 
-    const eraseRadius = 20; // Defines the size of the eraser's area
+    const eraseRadius = 5; // Defines the size of the eraser's area
     let isErasing = false;
 
     const handlePointerEvent = (event) => {
@@ -196,17 +197,19 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   const getPointerCoordinates = (event) => {
     const svg = svgRef.current;
     const rect = svg.getBoundingClientRect();
-    let clientX, clientY;
 
-    if (event.touches && event.touches.length > 0) {
-      clientX = event.touches[0].clientX;
-      clientY = event.touches[0].clientY;
-    } else {
-      clientX = event.clientX;
-      clientY = event.clientY;
-    }
+    // Get the correct pointer position, including page scroll and scale
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
 
-    return [clientX - rect.left, clientY - rect.top];
+    // Calculate the mouse position relative to the SVG
+    const scaleX = svg.viewBox.baseVal.width / rect.width;
+    const scaleY = svg.viewBox.baseVal.height / rect.height;
+
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+
+    return [x, y];
   };
 
   const startDrawing = (x, y) => {
@@ -331,15 +334,27 @@ const CustomNodeView = ({ node, updateAttributes }) => {
     updateAttributes({ paperType: newBackground });
   };
 
+  const preventKeyboardToggle = (event) => {
+    event.preventDefault();
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener("touchmove", handleMouseMove);
+    document.removeEventListener("touchend", handleMouseUp);
+  };
+
+  const scribbleCompatibility = localStorage.getItem("scribbleCompatibility") === "true";
+  const paddingClass = scribbleCompatibility ? "p-[52px]" : "";  
+
   return (
-    <NodeViewWrapper className="draw select-none">
+    <NodeViewWrapper className={`draw select-none ${paddingClass}`}>
       <div className="relative drawing-container">
         <svg
           ref={svgRef}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          onTouchStart={preventKeyboardToggle}
           preserveAspectRatio="xMidYMid meet"
           className={`w-full h-auto border border-gray-300 dark:border-neutral-600 ${background}`}
-          >
+        >
           {linesRef.current.map((item) => (
             <path
               key={`${item.id}-${item.color}-${item.size}-${Date.now()}`}
@@ -375,7 +390,11 @@ const CustomNodeView = ({ node, updateAttributes }) => {
           <div className="bg-neutral-400 rounded w-10 h-1"></div>
         </div>
       </div>
-      <div className="p-4 flex justify-between items-center bg-gray-100 border border-gray-300 dark:border-neutral-600 rounded-b-xl bg-neutral-100 dark:bg-neutral-800">
+      <div
+        className="p-4 flex justify-between items-center bg-gray-100 border border-gray-300 dark:border-neutral-600 rounded-b-xl bg-neutral-100 dark:bg-neutral-800"
+        onTouchStart={preventKeyboardToggle}
+        onMouseDown={preventKeyboardToggle}
+      >
         {/* Left side controls */}
         <div className="flex items-center space-x-2">
           <button
@@ -384,6 +403,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
               setColor(`${isDarkMode ? "#FFFFFF" : "#000000"}`);
             }}
             onMouseDown={handleMouseDown}
+            onTouchStart={preventKeyboardToggle}
             className={`flex items-center justify-center p-2 border ${
               tool === "pencil"
                 ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
@@ -398,6 +418,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
               setColor("#FFFF00");
             }}
             onMouseDown={handleMouseDown}
+            onTouchStart={preventKeyboardToggle}
             className={`flex items-center justify-center p-2 border ${
               tool === "highlighter"
                 ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
@@ -409,6 +430,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
           <button
             onClick={() => setTool("erase")}
             onMouseDown={handleMouseDown}
+            onTouchStart={preventKeyboardToggle}
             className={`flex items-center justify-center p-2 border ${
               tool === "erase"
                 ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
@@ -422,6 +444,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
               className="border border-neutral-300 dark:border-neutral-600 rounded w-full p-2 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none mr-6 "
               value={background}
               onChange={handleBackgroundChange}
+              onTouchStart={preventKeyboardToggle}
             >
               <option value="none">None</option>
               <option value="grid">Grid</option>
@@ -437,6 +460,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
           <button
             onClick={undo}
             onMouseDown={handleMouseDown}
+            onTouchStart={preventKeyboardToggle}
             className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
           >
             <Icons.ArrowGoBackLineIcon className="w-6 h-6" />
@@ -444,6 +468,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
           <button
             onClick={redo}
             onMouseDown={handleMouseDown}
+            onTouchStart={preventKeyboardToggle}
             className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
           >
             {" "}
@@ -457,6 +482,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
                 : "border-gray-300 dark:border-neutral-600"
             } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
             onMouseDown={handleMouseDown}
+            onTouchStart={preventKeyboardToggle}
           >
             <svg
               width="24"
@@ -474,6 +500,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
           <button
             onClick={() => setSize(thicknessOptions.medium)}
             onMouseDown={handleMouseDown}
+            onTouchStart={preventKeyboardToggle}
             className={`flex items-center justify-center p-2 border ${
               size === thicknessOptions.medium
                 ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
@@ -496,6 +523,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
           <button
             onClick={() => setSize(thicknessOptions.thick)}
             onMouseDown={handleMouseDown}
+            onTouchStart={preventKeyboardToggle}
             className={`flex items-center justify-center p-2 border ${
               size === thicknessOptions.thick
                 ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
@@ -522,6 +550,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
               value={color}
               onChange={handleColorChange}
               ref={colorInputRef}
+              onTouchStart={preventKeyboardToggle}
               className="absolute inset-0 opacity-0 cursor-pointer"
             />
             {/* Custom button */}

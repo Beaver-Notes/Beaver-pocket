@@ -44,6 +44,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
       logout: "dropbox.logout",
       existingFolder: "dropbox.existingFolder",
       refreshingToken: "dropbox.refreshingToken",
+      placeholder: "dropbox.placeholder"
     },
   });
 
@@ -517,7 +518,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
         let currentDate = new Date();
         let mainFolderPath = `/Beaver Notes ${formatDate(currentDate)}`;
         let folderFound = false;
-        const maxAttempts = 30;  // Stop after 30 attempts (30 days)
+        const maxAttempts = 30; // Stop after 30 attempts (30 days)
         let attempts = 0;
   
         while (!folderFound && attempts < maxAttempts) {
@@ -547,11 +548,27 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
           directory: FilesystemDirectory.Data,
         });
   
-        // Function to create folders recursively
+        // Step 1: Calculate the total number of entries (files + folders)
+        const calculateTotalEntries = async (folderPath: string): Promise<number> => {
+          const response = await dbx.filesListFolder({ path: folderPath });
+          let totalEntries = response.result.entries.length;
+  
+          for (const entry of response.result.entries) {
+            if (entry[".tag"] === "folder") {
+              // Recursively count subfolders and files
+              totalEntries += await calculateTotalEntries(`${folderPath}/${entry.name}`);
+            }
+          }
+  
+          return totalEntries;
+        };
+  
+        const totalEntries = await calculateTotalEntries(mainFolderPath); // Calculate total files + folders
+        let processedEntries = 0;
+  
+        // Step 2: Create folders recursively and track progress globally
         const createFoldersRecursively = async (folderPath: string, parentPath = "") => {
           const response = await dbx.filesListFolder({ path: folderPath });
-          const totalEntries = response.result.entries.length;
-          let processedEntries = 0;
   
           for (const entry of response.result.entries) {
             if (entry[".tag"] === "folder") {
@@ -563,7 +580,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
               });
   
               processedEntries++;
-              setProgress(Math.round((processedEntries / totalEntries) * 100));
+              setProgress(Math.round((processedEntries / totalEntries) * 100)); // Global progress
   
               const subFolderPath = `${folderPath}/${entry.name}`;
               await createFoldersRecursively(subFolderPath, folderFullPath);
@@ -581,7 +598,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
               });
   
               processedEntries++;
-              setProgress(Math.round((processedEntries / totalEntries) * 100));
+              setProgress(Math.round((processedEntries / totalEntries) * 100)); // Global progress
             }
           }
         };
@@ -590,13 +607,12 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
         await createFoldersRecursively(mainFolderPath);
         await importUtils(setNotesState, loadNotes);
   
-        // Clean up: Remove the folder locally after import
         await Filesystem.rmdir({
           path: `export/Beaver Notes ${formatDate(currentDate)}`,
           directory: FilesystemDirectory.Data,
           recursive: true,
         });
-        setProgress(100);
+        setProgress(100); // Complete progress
   
         console.log("Folder deleted successfully!");
       } catch (error) {
@@ -607,7 +623,8 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
     } else {
       console.error("Access token not found!");
     }
-  };  
+  };
+  
 
   document.addEventListener("dropboxExport", handleDropboxExport);
 
@@ -768,7 +785,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
                   <input
                     type="text"
                     className="bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 w-full p-3 text-neutral-800 dark:text-neutral-200 outline-none p-2 text-lg rounded-xl"
-                    placeholder="Paste authorization code here"
+                    placeholder={translations.dropbox.placeholder || "-"}
                     value={authorizationCode}
                     onChange={(e) => setAuthorizationCode(e.target.value)}
                   />

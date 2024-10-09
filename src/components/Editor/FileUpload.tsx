@@ -7,12 +7,16 @@ const { Filesystem } = Plugins;
 
 interface FileUploadProps {
   onFileUpload: (fileUrl: string, fileName: string) => void;
-  noteId: string; // New prop to hold the note ID
+  noteId: string;
+  menu?: boolean;
+  translations?: any;
 }
 
 const FileUploadComponent: React.FC<FileUploadProps> = ({
   onFileUpload,
   noteId,
+  menu,
+  translations,
 }) => {
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -77,17 +81,48 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between sm:p-2 md:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-        <label htmlFor="file-upload-input">
-          <icons.FileIcon className="sm:text-white text-xl  border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7cursor-pointer" />
-        </label>
-        <input
-          type="file"
-          onChange={handleFileChange}
-          id="file-upload-input"
-          className="hidden"
-        />
-      </div>
+      {/* Conditionally render content based on `menu` value */}
+      {menu ? (
+        <div className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#353333] transition duration-200">
+          <label
+            htmlFor="file-upload-input"
+            className="flex items-center cursor-pointer"
+          >
+            {/* Icon */}
+            <icons.FileIcon className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3" />
+
+            {/* Text Container */}
+            <div className="flex flex-col text-left">
+              <h3 className="font-medium text-gray-900 dark:text-[color:var(--selected-dark-text)]">
+                {translations.menuItems.fileLabel}
+              </h3>
+              <p className="text-sm text-gray-500">
+                {translations.menuItems.fileDescription}
+              </p>
+            </div>
+          </label>
+
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            onChange={handleFileChange}
+            id="file-upload-input"
+            className="hidden"
+          />
+        </div>
+      ) : (
+        <div className="flex items-center justify-between sm:p-2 md:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+          <label htmlFor="file-upload-input">
+            <icons.FileIcon className="sm:text-white text-xl  border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7cursor-pointer" />
+          </label>
+          <input
+            type="file"
+            onChange={handleFileChange}
+            id="file-upload-input"
+            className="hidden"
+          />
+        </div>
+      )}
     </div>
   );
 };

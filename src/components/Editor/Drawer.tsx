@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Editor } from "@tiptap/react";
 import { Note } from "../../store/types";
 import ImageUploadComponent from "./ImageUpload";
@@ -15,12 +16,19 @@ interface DrawerProps {
 }
 
 const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
+  const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+  }>({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null); // Reference to the trigger button
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [translations, setTranslations] = useState({
     editor: {
-      embedUrl: "editor.embedUrl"
+      embedUrl: "editor.embedUrl",
     },
   });
-  
+
   useEffect(() => {
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
@@ -28,13 +36,13 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
         const translationModule = await import(
           `../../assets/locales/${selectedLanguage}.json`
         );
-  
+
         setTranslations({ ...translations, ...translationModule.default });
       } catch (error) {
         console.error("Error loading translations:", error);
       }
     };
-  
+
     loadTranslations();
   }, []);
 
@@ -153,8 +161,68 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
     };
   }, [editor]);
 
-  const handleMouseDown = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const handleMouseDown = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
     event.preventDefault();
+  };
+
+  const colors = [
+    "bg-orange-200 dark:bg-orange-40",
+    "bg-yellow-200 dark:bg-yellow-100",
+    "bg-green-200 dark:bg-green-100",
+    "bg-blue-200 dark:bg-blue-100",
+    "bg-purple-200 dark:bg-purple-100",
+    "bg-pink-200 dark:bg-pink-100",
+    "bg-red-200 dark:bg-red-100",
+  ];
+
+  // Toggle dropdown visibility
+  const toggleDropdown = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect(); // Get the button's position
+      const dropdownHeight = 80; // Adjust based on your dropdown height
+      let top = rect.top + window.scrollY - dropdownHeight;
+
+      // Adjust top if the dropdown goes off the top of the viewport
+      if (top < 0) {
+        top = rect.bottom + window.scrollY; // Position below if above would go off-screen
+      }
+
+      // Check for right overflow
+      let left = rect.left + window.scrollX;
+      const dropdownWidth = 200; // Set a fixed width for your dropdown
+
+      if (left + dropdownWidth > window.innerWidth) {
+        left = window.innerWidth - dropdownWidth; // Position it to the left if it goes off the screen
+      }
+
+      setDropdownPosition({ top, left });
+    }
+    setDropdownOpen(!isDropdownOpen);
+  };
+
+  // Close the dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Handle setting highlight color
+  const setHighlightColor = (color: string) => {
+    editor?.chain().focus().setHighlight({ color }).run();
+    setDropdownOpen(false); // Close dropdown after color is selected
   };
 
   return (
@@ -518,16 +586,59 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             <icons.StrikethroughIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
+            ref={buttonRef}
             className={`p-1 ${
               editor?.isActive("highlight")
                 ? "text-amber-400"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleHighlight().run()}
+            onClick={toggleDropdown}
           >
             <icons.MarkPenLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
+          {isDropdownOpen &&
+            createPortal(
+              <div
+                ref={dropdownRef}
+                className="absolute p-2 bg-white dark:bg-[#353333] shadow-lg rounded-md grid grid-cols-4 gap-2"
+                style={{
+                  top: dropdownPosition.top,
+                  left: dropdownPosition.left,
+                  zIndex: 1000,
+                }}
+              >
+                {/* Option to remove highlight */}
+                <button
+                  className={
+                    editor?.isActive("highlight")
+                      ? "rounded-md text-amber-400 cursor-pointer"
+                      : "rounded-md bg-transparent cursor-pointer"
+                  }
+                  onClick={() => {
+                    editor?.chain().focus().unsetHighlight().run();
+                    setDropdownOpen(false); // Close dropdown after removing highlight
+                  }}
+                >
+                  <icons.CloseLineIcon
+                    className={
+                      editor?.isActive("highlight")
+                        ? "border-none text-amber-400 text-xl w-8 h-8"
+                        : "border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"
+                    }
+                  />
+                </button>
+                {/* Color options */}
+                {colors.map((color, index) => (
+                  <button
+                    key={index}
+                    className={`w-8 h-8 cursor-pointer ${color}`}
+                    onClick={() => setHighlightColor(color)}
+                  />
+                ))}
+              </div>,
+              document.body // Mount the dropdown in the document body
+            )}
           <button
             className={`p-1 ${
               editor?.isActive("bulletList")
