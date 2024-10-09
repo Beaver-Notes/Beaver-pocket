@@ -1,6 +1,6 @@
 import { isPlatform } from "@ionic/react";
 import axios, { AxiosRequestConfig } from "axios";
-import WebDAV from "./androidDavApi";
+import WebDAV from "../Android/androidDavApi";
 
 interface WebDavOptions {
   baseUrl: string;

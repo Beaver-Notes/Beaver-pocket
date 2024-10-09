@@ -5,7 +5,7 @@ import { Note } from "../../store/types";
 import CircularProgress from "../../components/ui/ProgressBar";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import icons from "../../lib/remixicon-react";
-import iCloud from "../../utils/iCloud";
+import iCloud from "../../utils/iCloud/iCloud";
 import getMimeType from "../../utils/mimetype";
 const STORAGE_PATH = "notes/data.json";
 

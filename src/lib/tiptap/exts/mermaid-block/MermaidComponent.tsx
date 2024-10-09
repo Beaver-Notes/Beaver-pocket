@@ -142,7 +142,7 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
               >
                 <DialogPanel
                   ref={dialogPanelRef}
-                  className="relative w-full sm:mx-auto sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
+                  className="relative w-full landscape:w-2/4 portrait:w-4/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}

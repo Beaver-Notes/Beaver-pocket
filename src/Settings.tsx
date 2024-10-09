@@ -6,6 +6,7 @@ import deTranslations from "./assets/locales/de.json";
 import Icons from "./lib/remixicon-react";
 import { Note } from "./store/types";
 import { loadNotes } from "./store/notes";
+import { isPlatform } from "@ionic/react";
 
 interface SettingsProps {
   notesState: Record<string, Note>;
@@ -114,6 +115,8 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
       clearFont: "settings.clearFont",
       Sync: "settings.Sync",
       expandPage: "settings.expandPage",
+      CollapsibleHeading: "settings.CollapsibleHeading",
+      scribbleCompatibility: "settings.scribbleCompatibility",
     },
   });
 
@@ -198,6 +201,19 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
     setNotesState(notes);
   };
 
+  const [scribbleCompatibility, setScribbleCompatibility] = useState(() => {
+    const storedValue = localStorage.getItem("scribbleCompatibility");
+    return storedValue !== null ? storedValue === "true" : true; // Default to true
+  });
+
+  const toggleScribbleCompatibility = async () => {
+    setScribbleCompatibility((prevValue) => {
+      const newValue = !prevValue;
+      localStorage.setItem("scribbleCompatibility", newValue.toString());
+      return newValue;
+    });
+  };
+  
   const [selectedOption, setSelectedOption] = useState(
     themeMode === "auto" ? "System" : darkMode ? "Dark" : "Light"
   );
@@ -363,7 +379,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                 <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
                   <div>
                     <p className="block text-lg align-left">
-                      Collapsible headings
+                      {translations.settings.CollapsibleHeading || "-"}
                     </p>
                   </div>
                   <label className="relative inline-flex cursor-pointer items-center">
@@ -372,6 +388,27 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       type="checkbox"
                       checked={collapsibleHeading}
                       onChange={toggleCollapsibleHeading}
+                      className="peer sr-only"
+                    />
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  </label>
+                </div>
+                <div
+                  className={`flex items-center py-2 dark:border-neutral-600 justify-between ${
+                    isPlatform("ipad") ? "show" : "hide"
+                  }`}
+                >
+                  <div>
+                    <p className="block text-lg align-left">
+                      {translations.settings.scribbleCompatibility || "-"}
+                    </p>
+                  </div>
+                  <label className="relative inline-flex cursor-pointer items-center">
+                    <input
+                      id="switch"
+                      type="checkbox"
+                      checked={scribbleCompatibility}
+                      onChange={toggleScribbleCompatibility}
                       className="peer sr-only"
                     />
                     <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>

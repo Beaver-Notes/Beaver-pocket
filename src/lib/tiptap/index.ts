@@ -1,12 +1,13 @@
 // index.ts
 import StarterKit from "@tiptap/starter-kit";
+import Video from "./exts/video-block";
 import Audio from "./exts/audio-block";
 import Document from '@tiptap/extension-document'
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import Typography from '@tiptap/extension-typography';
 import Placeholder from "@tiptap/extension-placeholder";
-import Highlight from "@tiptap/extension-highlight";
+import Highlight from "./exts/highlight";
 import Underline from "@tiptap/extension-underline";
 import OrderedList from "@tiptap/extension-ordered-list";
 import TaskItem from "@tiptap/extension-task-item";
@@ -121,6 +122,7 @@ const extensions = [
   Footnotes,
   paper,
   FootnoteReference,
+  Video,
 ];
 
 export default extensions;

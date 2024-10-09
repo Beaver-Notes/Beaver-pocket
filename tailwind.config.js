@@ -6,6 +6,10 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      screens: {
+        'portrait': { raw: '(orientation: portrait)' },
+        'landscape': { raw: '(orientation: landscape)' },
+      },
       fontFamily: {
         primary: ['Arimo'],
         arimo: ['Arimo'],

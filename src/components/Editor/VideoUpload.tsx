@@ -7,12 +7,16 @@ const { Filesystem } = Plugins;
 
 interface FileUploadProps {
   onVideoUpload: (fileUrl: string) => void;
-  noteId: string; // New prop to hold the note ID
+  noteId: string;
+  menu?: boolean;
+  translations?: any;
 }
 
 const VideoUploadComponent: React.FC<FileUploadProps> = ({
   onVideoUpload,
   noteId,
+  menu,
+  translations,
 }) => {
   const handleVideoInputChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -77,17 +81,48 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-        <label htmlFor="video-upload-input">
-          <icons.VideoIcon className="sm:text-white text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
-        </label>
-        <input
-          type="file"
-          onChange={handleVideoInputChange}
-          id="video-upload-input"
-          className="hidden"
-        />
-      </div>
+      {/* Conditionally render content based on `menu` value */}
+      {menu ? (
+        <div className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#353333] transition duration-200">
+          <label
+            htmlFor="video-upload-input"
+            className="flex items-center cursor-pointer"
+          >
+            {/* Icon */}
+            <icons.VideoIcon className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3" />
+
+            {/* Text Container */}
+            <div className="flex flex-col text-left">
+              <h3 className="font-medium text-gray-900 dark:text-[color:var(--selected-dark-text)]">
+                {translations.menuItems.videoLabel}
+              </h3>
+              <p className="text-sm text-gray-500">
+                {translations.menuItems.videoDescription}
+              </p>
+            </div>
+          </label>
+
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            onChange={handleVideoInputChange}
+            id="video-upload-input"
+            className="hidden"
+          />
+        </div>
+      ) : (
+        <div className="flex items-center justify-between sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+          <label htmlFor="video-upload-input">
+            <icons.VideoIcon className="sm:text-white text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 cursor-pointer" />
+          </label>
+          <input
+            type="file"
+            onChange={handleVideoInputChange}
+            id="video-upload-input"
+            className="hidden"
+          />
+        </div>
+      )}
     </div>
   );
 };

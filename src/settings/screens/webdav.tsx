@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { WebDavService } from "../../utils/webDavApi";
-import { useExportDav, useImportDav } from "../../utils/webDavUtil";
+import { WebDavService } from "../../utils/Webdav/webDavApi";
+import { useExportDav, useImportDav } from "../../utils/Webdav/webDavUtil";
 import icons from "../../lib/remixicon-react";
 import CircularProgress from "../../components/ui/ProgressBar";
 import { Note } from "../../store/types";

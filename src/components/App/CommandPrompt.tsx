@@ -4,6 +4,9 @@ import icons from "../../lib/remixicon-react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useSaveNote } from "../../store/notes";
+import Mousetrap from "mousetrap";
+import { formatTime } from "../../utils/time-format";
+import { JSONContent } from "@tiptap/react";
 
 interface CommandPromptProps {
   isOpen: boolean;
@@ -28,6 +31,12 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
     useState<Record<string, Note>>(notesState);
 
   const [translations, setTranslations] = useState({
+    card: {
+      noContent: "card.noContent",
+    },
+    home: {
+      title: "home.title",
+    },
     commandprompt: {
       newNote: "commandprompt.newNote",
       settings: "commandprompt.settings",
@@ -36,6 +45,8 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
     },
   });
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
@@ -43,24 +54,20 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
         const translationModule = await import(
           `../../assets/locales/${selectedLanguage}.json`
         );
-
         setTranslations({ ...translations, ...translationModule.default });
       } catch (error) {
         console.error("Error loading translations:", error);
       }
     };
-
     loadTranslations();
   }, []);
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
       try {
-        // Treat missing titles as empty
         const titleMatch = note.title
           ? note.title.toLowerCase().includes(searchQuery.toLowerCase())
           : false;
-
         const contentMatch = note.content
           ? JSON.stringify(note.content)
               .toLowerCase()
@@ -70,7 +77,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
         return titleMatch || contentMatch;
       } catch (error) {
         console.error("Error processing note:", error);
-        return false; // Skip the note if there's any error
+        return false;
       }
     });
 
@@ -84,52 +91,12 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
       case "alphabetical":
         return a.title.localeCompare(b.title);
       case "createdAt":
-        const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
-        const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
-        return createdAtA - createdAtB;
+        return (a.createdAt || 0) - (b.createdAt || 0);
       case "updatedAt":
       default:
-        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
-        const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
-        return updatedAtA - updatedAtB;
+        return (a.updatedAt || 0) - (b.updatedAt || 0);
     }
   });
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen) {
-        if (e.key === "ArrowUp") {
-          setSelectedIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : 0));
-        } else if (e.key === "ArrowDown") {
-          setSelectedIndex((prevIndex) =>
-            prevIndex < Notes.length + 1 ? prevIndex + 1 : prevIndex
-          );
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, filteredNotes.length]);
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === ">") {
-      setShowSubMenu(true);
-    } else if (e.key === "Backspace" && searchTerm === ">") {
-      setShowSubMenu(false);
-    } else if (e.key === "Enter") {
-      if (showSubMenu && selectedIndex === 0) {
-        handleCreateNewNote();
-      } else if (showSubMenu && selectedIndex === 1) {
-        goTosettings();
-      } else if (showSubMenu && selectedIndex === 2) {
-        switchTheme();
-      } else {
-        const selectedNote = filteredNotes[selectedIndex];
-        handleClickNote(selectedNote);
-      }
-    }
-  };
 
   const handleClickNote = async (note: Note) => {
     navigate(`/editor/${note.id}`);
@@ -138,7 +105,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
   const handleCreateNewNote = async () => {
     const newNote = {
       id: uuid(),
-      title: "New Note",
+      title: `${translations.home.title || "-"}`,
       content: { type: "doc", content: [] },
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -165,33 +132,128 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
     return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
   });
 
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
+  const toggleTheme = () => {
+    setDarkMode(!darkMode);
+    setThemeMode(!darkMode ? "dark" : "light");
+    setIsCommandPromptOpen(false);
   };
 
-  const switchTheme = () => {
-    toggleTheme(!darkMode);
-    isOpen && setIsCommandPromptOpen(false);
-  };
-
-  const navigate = useNavigate();
-
-  const goTosettings = () => {
+  const goToSettings = () => {
     navigate("/settings");
+    setIsCommandPromptOpen(false);
   };
 
-  const Notes = notes.filter((note) => {
-    const noteTitle = note.title;
-    return noteTitle.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  // Keyboard navigation for submenu and notes
+  useEffect(() => {
+    if (isOpen) {
+      Mousetrap.bind("up", (e) => {
+        e.preventDefault();
+        setSelectedIndex((prevIndex) => {
+          const maxIndex = showSubMenu ? 2 : Math.min(4, notes.length - 1); // Change maxIndex to limit to 5 notes
+          return prevIndex > 0 ? prevIndex - 1 : maxIndex;
+        });
+      });
+
+      Mousetrap.bind("down", (e) => {
+        e.preventDefault();
+        setSelectedIndex((prevIndex) => {
+          const maxIndex = showSubMenu ? 2 : Math.min(4, notes.length - 1); // Change maxIndex to limit to 5 notes
+          return prevIndex < maxIndex ? prevIndex + 1 : 0;
+        });
+      });
+
+      return () => {
+        Mousetrap.unbind("up");
+        Mousetrap.unbind("down");
+      };
+    }
+  }, [isOpen, showSubMenu, notes.length]);
+
+  // Handle specific key presses in the input field
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const { key } = e;
+
+    if (key === ">") {
+      setShowSubMenu(true);
+    } else if (key === "Backspace" && searchTerm === ">") {
+      setShowSubMenu(false);
+    } else if (key === "Enter") {
+      if (showSubMenu) {
+        switch (selectedIndex) {
+          case 0:
+            handleCreateNewNote();
+            break;
+          case 1:
+            goToSettings();
+            break;
+          case 2:
+            toggleTheme();
+            break;
+        }
+      } else {
+        const selectedNote = notes[selectedIndex];
+        handleClickNote(selectedNote);
+      }
+    }
+  };
+
+  const MAX_CONTENT_PREVIEW_LENGTH = 150;
+
+  function extractParagraphTextFromContent(content: JSONContent): string {
+    if (!content || !Array.isArray(content.content)) {
+      return translations.card.noContent;
+    }
+    if (
+      content.content.length === 1 &&
+      content.content[0].type === "paragraph" &&
+      (!content.content[0].content || content.content[0].content.length === 0)
+    ) {
+      return "";
+    }
+
+    const paragraphText = content.content
+      .filter((node) => node.type === "paragraph")
+      .map((node) => {
+        if (node.content && Array.isArray(node.content)) {
+          const textContent = node.content
+            .filter((innerNode) => innerNode.type === "text")
+            .map((innerNode) => innerNode.text)
+            .join(" ");
+          return textContent;
+        }
+        return "";
+      })
+      .join(" ");
+
+    return paragraphText || translations.card.noContent;
+  }
+
+  function truncateContentPreview(
+    content: JSONContent | string | JSONContent[]
+  ) {
+    let text = "";
+
+    if (typeof content === "string") {
+      text = content;
+    } else if (Array.isArray(content)) {
+      const jsonContent: JSONContent = { type: "doc", content };
+      text = extractParagraphTextFromContent(jsonContent);
+    } else if (content && content.content) {
+      const { title, ...contentWithoutTitle } = content;
+      text = extractParagraphTextFromContent(contentWithoutTitle);
+    }
+
+    if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
+      return text;
+    } else {
+      return text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
+    }
+  }
 
   return (
     <>
       {isOpen && (
-        <div className="fixed top-16 shadow-xl left-0 right-0 mx-auto sm:w-1/4 w-4/5 flex flex-col items-center justify-center z-100">
+        <div className="fixed top-16 shadow-xl left-0 right-0 mx-auto sm:w-2/4 w-4/5 flex flex-col items-center justify-center z-100">
           <div className="bg-[#FDFDFA] dark:bg-[#353333] transform w-full rounded-lg shadow-xl py-2 px-4 relative">
             <div className="w-full p-2 border-b-2 dark:border-neutral-600 bg-transparent align-middle text-gray-800 cursor-pointer flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2">
               <div>
@@ -227,7 +289,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                         ? "bg-amber-400 bg-opacity-10 text-amber-400"
                         : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
                     }`}
-                    onClick={goTosettings}
+                    onClick={goToSettings}
                   >
                     <h1 className="text-lg">
                       {translations.commandprompt.settings}
@@ -239,7 +301,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                         ? "bg-amber-400 bg-opacity-10 text-amber-400"
                         : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
                     }`}
-                    onClick={switchTheme}
+                    onClick={toggleTheme}
                   >
                     <h1 className="text-lg">
                       {translations.commandprompt.theme}
@@ -247,17 +309,39 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                   </div>
                 </>
               ) : (
-                Notes.map((note, index) => (
+                notes.slice(0, 5).map((note, index) => ( // Limit to 5 notes
                   <div
                     key={note.id}
                     className={`note-item cursor-pointer rounded-lg p-2 ${
-                      index === selectedIndex - 2
+                      index === selectedIndex
                         ? "bg-amber-400 bg-opacity-10 text-amber-400"
                         : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
                     }`}
                     onClick={() => handleClickNote(note)}
                   >
-                    <h1 className="text-lg">{note.title}</h1>
+                    <div className="w-full flex items-center justify-between">
+                      <p className="text-overflow w-full flex justify-between">
+                        <span>
+                          {note.title || "Untitled Note"}
+                          {note.isLocked && (
+                            <icons.LockClosedIcon className="text-gray-600 ml-2 w-4 translate-y-[-1.5px]" />
+                          )}
+                        </span>
+                        <span>
+                          {note.updatedAt && formatTime(note.updatedAt)}{" "}
+                          {/* Ensure date is formatted */}
+                        </span>
+                      </p>
+                      {note.isLocked && (
+                        <icons.LockClosedIcon className="text-gray-600 ml-2 w-4 translate-y-[-1.5px]" />
+                      )}
+                    </div>
+                    {!note.isLocked && (
+                      <p className="text-overflow text-xs">
+                        {" "}
+                        {note.content && truncateContentPreview(note.content)}
+                      </p>
+                    )}
                   </div>
                 ))
               )}

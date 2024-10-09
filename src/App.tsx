@@ -17,16 +17,17 @@ import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
 import Sync from "./settings/sync";
 import Editor from "./Editor";
-import { useImportDav } from "./utils/webDavUtil";
+import { useImportDav } from "./utils/Webdav/webDavUtil";
 import "./assets/css/main.css";
 import "./assets/css/fonts.css";
 import BottomNavBar from "./components/App/BottomNavBar";
 import CommandPrompt from "./components/App/CommandPrompt";
 import { loadNotes } from "./store/notes";
 import { useNotesState } from "./store/Activenote";
+import Mousetrap from "mousetrap";
 
 const App: React.FC = () => {
-  const history = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { notesState, setNotesState } = useNotesState();
@@ -72,7 +73,7 @@ const App: React.FC = () => {
     if (!checkedFirstTime) {
       const isFirstTime = localStorage.getItem("isFirstTime");
       if (isFirstTime === null || isFirstTime === "true") {
-        history("/welcome");
+        navigate("/welcome");
         localStorage.setItem("isFirstTime", "false");
       }
       setCheckedFirstTime(true);
@@ -102,25 +103,46 @@ const App: React.FC = () => {
   const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
 
   useEffect(() => {
-    // Listen for key combination
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        (e.metaKey || e.ctrlKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === "p"
-      ) {
-        setIsCommandPromptOpen(true);
-      }
-    };
+    Mousetrap.bind("mod+shift+p", (e) => {
+      e.preventDefault();
+      setIsCommandPromptOpen(true);
+    });
 
-    document.addEventListener("keydown", handleKeyDown);
+    Mousetrap.bind("mod+backspace", (e) => {
+      e.preventDefault();
+      handleEscape();
+    });
+
+    Mousetrap.bind("mod+shift+n", (e) => {
+      e.preventDefault();
+      navigate("/");
+    });
+
+    Mousetrap.bind("mod+shift+a", (e) => {
+      e.preventDefault();
+      navigate("/archive");
+    });
+
+    Mousetrap.bind("mod+,", (e) => {
+      e.preventDefault();
+      navigate("/archive");
+    });
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      Mousetrap.unbind("mod+shift+p");
+      Mousetrap.unbind("mod+backspace");
+      Mousetrap.unbind("mod+n");
+      Mousetrap.unbind("mod+shift+n");
+      Mousetrap.unbind("mod+shift+w");
+      Mousetrap.unbind("mod+shift+a");
+      Mousetrap.unbind("mod+,");
     };
-  });
+  }, []);
 
-  // Determine whether to show the BottomNavBar
+  const handleEscape = () => {
+    setIsCommandPromptOpen(false);
+  };
+
   const shouldShowNavBar = !["/welcome", "/editor"].some((path) =>
     location.pathname.startsWith(path)
   );

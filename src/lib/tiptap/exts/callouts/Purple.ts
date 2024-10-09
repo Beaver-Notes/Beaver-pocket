@@ -35,34 +35,24 @@ import {
   
     addCommands() {
       return {
-        setCallout:
-          (attrs: Record<string, any>) =>
-          ({ commands }: { commands: any }) => {
-            return commands.wrapIn(this.name, attrs);
-          },
-        toggleCallout:
-          (attrs: Record<string, any>) =>
-          ({ commands }: { commands: any }) => {
-            return commands.toggleWrap(this.name, attrs);
-          },
-        unsetCallout:
+        setPurpleCallout:
           () =>
           ({ commands }: { commands: any }) => {
-            return commands.lift(this.name);
+            return commands.wrapIn(this.name);
           },
-      } as Partial<RawCommands>; // Explicitly define the return type
+      } as Partial<RawCommands>;
     },
-  
+
     addInputRules() {
       return [
         wrappingInputRule({
           // Ensure proper type definition for find
-          find: /(?:^|\s)>(\[purple])\s?$/,
+          find: /(?:^|\s)::purple\s?$/,
           type: this.type,
           // @ts-expect-error
           getContent: (match: ExtendedRegExpMatchArray) => {
-            const [, purple] = match;
-            return purple ? [{ type: "text", text: purple }] : undefined;
+            const [, blue] = match;
+            return blue ? [{ type: "text", text: blue }] : undefined;
           },
         }),
       ];

@@ -7,12 +7,16 @@ const { Filesystem } = Plugins;
 
 interface ImageUploadProps {
   onImageUpload: (imageUrl: string, fileUri: string) => void;
-  noteId: string; // New prop to hold the note ID
+  noteId: string;
+  menu?: boolean;
+  translations?: any;
 }
 
 const ImageUploadComponent: React.FC<ImageUploadProps> = ({
   onImageUpload,
   noteId,
+  translations,
+  menu = false, // default value for the `menu` prop
 }) => {
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -78,7 +82,6 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
 
       console.log("upload", uri);
 
-      // const imageUrl = Capacitor.convertFileSrc(uri); // Convert file URI to displayable URL
       return { imageUrl: filePath, fileUri: uri };
     } catch (error) {
       console.error("Error saving image to file system:", error);
@@ -87,20 +90,53 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
   };
 
   return (
-    <>
-      <div className="flex items-center justify-between sm:p-2 md:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-        <label htmlFor="image-upload-input">
-          <icons.ImageLineIcon className="sm:text-white text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer" />
-        </label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          id="image-upload-input"
-          className="hidden"
-        />
-      </div>
-    </>
+    <div>
+      {/* Conditionally render content based on `menu` value */}
+      {menu ? (
+        <div className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#353333] transition duration-200">
+          <label
+            htmlFor="image-upload-input"
+            className="flex items-center cursor-pointer"
+          >
+            {/* Icon */}
+            <icons.ImageLineIcon className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3" />
+
+            {/* Text Container */}
+            <div className="flex flex-col text-left">
+              <h3 className="font-medium text-gray-900 dark:text-[color:var(--selected-dark-text)]">
+                {translations.menuItems.imageLabel}
+              </h3>
+              <p className="text-sm text-gray-500">
+                {translations.menuItems.imageDescription}
+              </p>
+            </div>
+          </label>
+
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            id="image-upload-input"
+            className="hidden"
+          />
+        </div>
+      ) : (
+        // Default image upload component
+        <div className="flex items-center justify-between sm:p-2 md:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+          <label htmlFor="image-upload-input">
+            <icons.ImageLineIcon className="sm:text-white text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer" />
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            id="image-upload-input"
+            className="hidden"
+          />
+        </div>
+      )}
+    </div>
   );
 };
 
