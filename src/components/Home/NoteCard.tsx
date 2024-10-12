@@ -305,7 +305,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
     content: JSONContent | string | JSONContent[]
   ) {
     let text = "";
-
+  
     if (typeof content === "string") {
       text = content;
     } else if (Array.isArray(content)) {
@@ -315,13 +315,17 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
       const { title, ...contentWithoutTitle } = content;
       text = extractParagraphTextFromContent(contentWithoutTitle);
     }
-
+  
+    // Handle long URLs or continuous text
+    text = text.replace(/(\S{30,})/g, '$1 '); // Add space after long continuous strings
+  
     if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
       return text;
     } else {
       return text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
     }
   }
+  
 
   return (
     <div
@@ -415,7 +419,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
             <Icons.DeleteBinLineIcon className="w-8 h-8 mr-2" />
           </button>
         </div>
-        <div className="text-lg text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
+        <div className="text-lg text-neutral-500 dark:text-neutral-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
           {dayjs(note.createdAt).fromNow()}
         </div>
       </div>

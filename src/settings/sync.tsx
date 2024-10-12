@@ -135,7 +135,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                 <div className="relative pt-2 gap-1 flex flex-col sm:flex-row">
                   <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                      <icons.FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
+                      <icons.FileDownloadLineIcon className="w-12 h-12 text-neutral-800 dark:text-neutral-300" />
                     </div>
                     <div className="bottom-0">
                       <button
@@ -149,7 +149,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
 
                   <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                      <icons.FileUploadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
+                      <icons.FileUploadLineIcon className="w-12 h-12 text-neutral-800 dark:text-neutral-300" />
                     </div>
                     <div className="flex items-center pt-2">
                       <input type="checkbox" />

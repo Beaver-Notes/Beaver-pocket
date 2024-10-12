@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plugins } from "@capacitor/core";
 import { FilesystemDirectory } from "@capacitor/filesystem";
 import { VoiceRecorder } from "capacitor-voice-recorder";
@@ -18,7 +18,31 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [translations, setTranslations] = useState({
+    accessibility: {
+      processing: "accessibility.processing",
+      startRecording: "accessibility.startRecording",
+      stopRecording: "accessibility.stopRecording",
+    },
+  });
 
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+  
   const startRecording = async () => {
     if (hasPermission === null) {
       const permission = await VoiceRecorder.requestAudioRecordingPermission();
@@ -69,9 +93,14 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between md:p-2 sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+      <div className="flex items-center justify-between md:p-2 sm:p-2 p-1 rounded-md sm:text-white bg-transparent text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
         {!isRecording ? (
-          <button onClick={startRecording} disabled={isProcessing}>
+          <button
+            onClick={startRecording}
+            disabled={isProcessing}
+            aria-label={isProcessing ? translations.accessibility.processing : translations.accessibility.startRecording} 
+            aria-disabled={isProcessing}
+          >
             {isProcessing ? (
               <icons.Spinner className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer animate-spin" />
             ) : (
@@ -79,7 +108,12 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
             )}
           </button>
         ) : (
-          <button onClick={stopRecording} disabled={isProcessing}>
+          <button
+            onClick={stopRecording}
+            disabled={isProcessing}
+            aria-label={isProcessing ? translations.accessibility.processing : translations.accessibility.stopRecording} 
+            aria-disabled={isProcessing}
+          >
             {isProcessing ? (
               <icons.Spinner className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer animate-spin" />
             ) : (

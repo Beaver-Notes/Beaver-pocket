@@ -341,7 +341,7 @@ const FloatingMenuComponent: React.FC<FloatingMenuProps> = ({
   return (
     <div
       ref={ref}
-      className="z-50 fixed bg-white dark:bg-[#232222] rounded-lg shadow-lg border border-gray-200 p-4"
+      className="z-50 fixed bg-white dark:bg-[#232222] rounded-lg shadow-lg border-2 shadow dark:border-neutral-600 p-4"
       style={{ top: slashPopupPosition.top, left: slashPopupPosition.left }}
     >
       <div className="max-h-40 overflow-y-auto flex flex-col space-y-2 no-scrollbar">

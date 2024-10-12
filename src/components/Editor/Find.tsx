@@ -86,10 +86,10 @@ const Find: React.FC<FindProps> = ({ editor }) => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 w-full">
         {/* Search Input and Button */}
         <div className="flex items-center sm:col-span-1 w-full space-x-2">
-          <div className="flex w-full px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-gray-800">
-            <icons.Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6 mr-2" />
+          <div className="flex w-full px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-neutral-800">
+            <icons.Search2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6 mr-2" />
             <input
-              className="text-lg text-gray-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
+              className="text-lg text-neutral-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
               ref={searchInputRef}
               type="text"
               value={searchTerm}
@@ -107,9 +107,9 @@ const Find: React.FC<FindProps> = ({ editor }) => {
 
         {/* Replace Input */}
         <div className="hidden sm:flex items-center sm:col-span-1 w-full space-x-2">
-          <div className="flex w-full px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-gray-800">
+          <div className="flex w-full px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-neutral-800">
             <input
-              className="text-lg text-gray-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
+              className="text-lg text-neutral-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
               type="text"
               value={replaceTerm}
               onChange={(e) => setReplaceTerm(e.target.value)}
