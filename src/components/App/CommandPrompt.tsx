@@ -43,6 +43,16 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
       theme: "commandprompt.theme",
       placeholder: "commandprompt.placeholder",
     },
+    accessibility: {
+      commandPrompt: "accessibility.commandPrompt",
+      search: "accessibility.search",
+      createNew: "accessibility.createNew",
+      settings: "accessibility.settings",
+      toggleTheme: "accessibility.toggleTheme",
+      openNote: "accessibility.openNote",
+      untitled: "accessibility.untitled",
+      lockedNote: "accessibility.lockedNote",
+    },
   });
 
   const navigate = useNavigate();
@@ -197,7 +207,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
     }
   };
 
-  const MAX_CONTENT_PREVIEW_LENGTH = 150;
+  const MAX_CONTENT_PREVIEW_LENGTH = 100;
 
   function extractParagraphTextFromContent(content: JSONContent): string {
     if (!content || !Array.isArray(content.content)) {
@@ -243,6 +253,9 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
       text = extractParagraphTextFromContent(contentWithoutTitle);
     }
 
+    // Handle long URLs or continuous text
+    text = text.replace(/(\S{30,})/g, "$1 "); // Add space after long continuous strings
+
     if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
       return text;
     } else {
@@ -253,22 +266,36 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
   return (
     <>
       {isOpen && (
-        <div className="fixed top-16 shadow-xl left-0 right-0 mx-auto sm:w-2/4 w-4/5 flex flex-col items-center justify-center z-100">
+        <div
+          className="fixed top-16 shadow-xl left-0 right-0 mx-auto sm:w-2/4 w-4/5 flex flex-col items-center justify-center z-100"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={translations.accessibility.commandPrompt}
+        >
           <div className="bg-[#FDFDFA] dark:bg-[#353333] transform w-full rounded-lg shadow-xl py-2 px-4 relative">
-            <div className="w-full p-2 border-b-2 dark:border-neutral-600 bg-transparent align-middle text-gray-800 cursor-pointer flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2">
+            <div
+              className="w-full p-2 border-b-2 dark:border-neutral-600 bg-transparent align-middle text-neutral-800 cursor-pointer flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2"
+              role="search"
+            >
               <div>
-                <icons.Search2LineIcon className="text-gray-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6" />
+                <icons.Search2LineIcon
+                  className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6"
+                  aria-hidden="true"
+                />
               </div>
               <input
-                className="text-xl text-gray-800 bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
+                className="text-xl text-neutral-800 bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
                 type="text"
                 placeholder={translations.commandprompt.placeholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleKeyPress}
+                aria-label={translations.accessibility.search}
+                aria-expanded={isOpen ? "true" : "false"}
+                role="combobox"
               />
             </div>
-            <div className="py-1">
+            <div className="py-1" role="listbox">
               {showSubMenu ? (
                 <>
                   <div
@@ -278,8 +305,10 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                         : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
                     }`}
                     onClick={handleCreateNewNote}
+                    aria-label={translations.accessibility.createNew}
+                    role="option"
                   >
-                    <h1 className="text-lg">
+                    <h1 id="command-prompt-title" className="text-lg">
                       {translations.commandprompt.newNote}
                     </h1>
                   </div>
@@ -290,6 +319,8 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                         : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
                     }`}
                     onClick={goToSettings}
+                    aria-label={translations.accessibility.settings}
+                    role="option"
                   >
                     <h1 className="text-lg">
                       {translations.commandprompt.settings}
@@ -302,6 +333,8 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                         : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
                     }`}
                     onClick={toggleTheme}
+                    aria-label={translations.accessibility.toggleTheme}
+                    role="option"
                   >
                     <h1 className="text-lg">
                       {translations.commandprompt.theme}
@@ -309,7 +342,7 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                   </div>
                 </>
               ) : (
-                notes.slice(0, 5).map((note, index) => ( // Limit to 5 notes
+                notes.slice(0, 5).map((note, index) => (
                   <div
                     key={note.id}
                     className={`note-item cursor-pointer rounded-lg p-2 ${
@@ -318,27 +351,27 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                         : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
                     }`}
                     onClick={() => handleClickNote(note)}
+                    aria-label={`${translations.accessibility.openNote} ${note.title}`}
+                    role="option"
                   >
                     <div className="w-full flex items-center justify-between">
                       <p className="text-overflow w-full flex justify-between">
                         <span>
                           {note.title || "Untitled Note"}
                           {note.isLocked && (
-                            <icons.LockClosedIcon className="text-gray-600 ml-2 w-4 translate-y-[-1.5px]" />
+                            <icons.LockClosedIcon
+                              className="text-neutral-600 ml-2 w-4 translate-y-[-1.5px]"
+                              aria-label={translations.accessibility.lockedNote}
+                            />
                           )}
                         </span>
                         <span>
-                          {note.updatedAt && formatTime(note.updatedAt)}{" "}
-                          {/* Ensure date is formatted */}
+                          {note.updatedAt && formatTime(note.updatedAt)}
                         </span>
                       </p>
-                      {note.isLocked && (
-                        <icons.LockClosedIcon className="text-gray-600 ml-2 w-4 translate-y-[-1.5px]" />
-                      )}
                     </div>
                     {!note.isLocked && (
                       <p className="text-overflow text-xs">
-                        {" "}
                         {note.content && truncateContentPreview(note.content)}
                       </p>
                     )}

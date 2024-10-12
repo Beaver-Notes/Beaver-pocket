@@ -93,7 +93,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
     <div>
       {/* Conditionally render content based on `menu` value */}
       {menu ? (
-        <div className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#353333] transition duration-200">
+        <div className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200">
           <label
             htmlFor="image-upload-input"
             className="flex items-center cursor-pointer"
@@ -103,10 +103,10 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
-              <h3 className="font-medium text-gray-900 dark:text-[color:var(--selected-dark-text)]">
+              <h3 className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]">
                 {translations.menuItems.imageLabel}
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-neutral-500">
                 {translations.menuItems.imageDescription}
               </p>
             </div>

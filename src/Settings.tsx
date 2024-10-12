@@ -245,7 +245,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
     <div>
       <div className="grid sm:grid-cols-[auto]">
         <div className="overflow-y-hidden mb-12">
-          <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
+          <div className="py-2 w-full flex flex-col border-neutral-300 overflow-auto">
             <div className="mx-6 md:px-24 pb-8 overflow-y-auto flex-grow">
               <section>
                 <p className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
@@ -262,7 +262,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                   <select
                     value={selectedOption}
                     onChange={handleChangeMode}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
                     {modes.map((mode) => (
                       <option key={mode} value={mode}>
@@ -270,7 +270,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
                 </div>
               </section>
               {/* Select Font */}
@@ -282,7 +282,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                   <select
                     value={selectedFont}
                     onChange={updateFont}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
                     {fonts.map((font) => (
                       <option key={font} value={font}>
@@ -290,7 +290,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
                 </div>
               </section>
               {/* Code Font */}
@@ -302,7 +302,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                   <select
                     value={selectedCodeFont}
                     onChange={updatCodeFont}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
                     {Codefonts.map((Codefonts) => (
                       <option key={Codefonts} value={Codefonts}>
@@ -310,7 +310,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
                 </div>
               </section>
               {/* Select Language */}
@@ -322,7 +322,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                   <select
                     value={selectedLanguage}
                     onChange={updateLanguage}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
                     {languages.map((language) => (
                       <option key={language.code} value={language.code}>
@@ -330,7 +330,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
                 </div>
               </section>
               <section className="py-2">
@@ -354,7 +354,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                         onChange={toggleBackground}
                         className="peer sr-only"
                       />
-                      <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                      <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                     </label>
                   </div>
                 </div>
@@ -373,7 +373,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       onChange={toggleClearFont}
                       className="peer sr-only"
                     />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                   </label>
                 </div>
                 <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
@@ -390,7 +390,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       onChange={toggleCollapsibleHeading}
                       className="peer sr-only"
                     />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                   </label>
                 </div>
                 <div
@@ -411,7 +411,7 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       onChange={toggleScribbleCompatibility}
                       className="peer sr-only"
                     />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                   </label>
                 </div>
               </section>

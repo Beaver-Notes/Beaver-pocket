@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
@@ -8,19 +9,17 @@ import Find from "./Find";
 import "../../assets/css/editor.css";
 import extensions from "../../lib/tiptap/index";
 import CollapseHeading from "../../lib/tiptap/exts/collapse-heading";
-import { Link } from "react-router-dom";
-import { handleEditorTyping } from "../../utils/bubble-menu-util";
-import BubblemenuNoteLink from "./BubblemenuNoteLink";
-import BubblemenuLabel from "./BubblemenuLabel";
+import NoteLinkExtension from "../../lib/tiptap/exts/NoteLinkSuggestion";
+import NoteLabelSuggestion from "../../lib/tiptap/exts/NoteLabelSuggestion";
 import DOMPurify from "dompurify";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 
 // Icons
 import Icons from "../../lib/remixicon-react";
-import FloatingMenuComponent from "./Floatingmenu";
 import Mousetrap from "mousetrap";
 import { saveImageToFileSystem } from "../../utils/fileHandler";
+import { useExportDav } from "../../utils/Webdav/webDavUtil";
 
 type Props = {
   note: Note;
@@ -38,10 +37,6 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
 
   const [previousContent, setPreviousContent] = useState<JSONContent | null>(
     null
-  );
-
-  const uniqueLabels = Array.from(
-    new Set(Object.values(notesState).flatMap((note) => note.labels))
   );
 
   const [searchQuery] = useState<string>("");
@@ -84,24 +79,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const [wd, setWd] = useState<boolean>(
     localStorage.getItem("expand-editor") === "true"
   );
-  const [popupPosition, setPopupPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const [hashPopupPosition, setHashPopupPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const [slashPopupPosition, setSlashPopupPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-  const [hashPosition, setHashPosition] = useState<number | null>(null);
-  const [textAfterHash, setTextAfterHash] = useState<string | null>(null);
-  const [slashPosition, setSlashPosition] = useState<number | null>(null);
-  const [textAfterSlash, setTextAfterSlash] = useState<string | null>(null);
-  const [atPosition, setAtPosition] = useState<number | null>(null);
-  const [textAfterAt, setTextAfterAt] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const titleRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<any>(null);
@@ -110,12 +88,71 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     setActiveNoteId(note.id);
   }, [note.id, setActiveNoteId]);
 
-  const exts = [...extensions];
+  const handleClickNote = (note: Note) => {
+    const editorContent = editor?.getHTML() || "";
+    const atIndex = editorContent.lastIndexOf("@@");
+
+    if (atIndex !== -1) {
+      // Find the first whitespace or end of the string after @@ to determine the end of the text to be replaced
+      const endOfReplacementIndex = editorContent.indexOf(" ", atIndex + 2);
+      const endOfReplacement =
+        endOfReplacementIndex !== -1
+          ? endOfReplacementIndex
+          : editorContent.length;
+
+      const link = `<linkNote id="${note.id}" label="${note.title}"><a href="note://${note.id}" target="_blank" rel="noopener noreferrer nofollow">${note.title}</a></linkNote>`;
+
+      const newContent =
+        editorContent.substring(0, atIndex) +
+        link +
+        editorContent.substring(endOfReplacement);
+
+      editor?.commands.setContent(newContent, true);
+    }
+  };
+
+  const uniqueLabels = Array.from(
+    new Set(Object.values(notesState).flatMap((note) => note.labels))
+  );
+
+  document.addEventListener("updateLabel", (event: Event) => {
+    const customEvent = event as CustomEvent;
+    const labelToAdd = customEvent.detail.props;
+  
+    // Ensure existingLabels is initialized correctly
+    const existingLabels = note.labels || [];
+  
+    // Check if the label already exists
+    const labelExists = existingLabels.includes(labelToAdd);
+  
+    // Only add the label if it doesn't already exist
+    const updatedLabels = labelExists
+      ? existingLabels
+      : [...existingLabels, labelToAdd];
+  
+    const jsonContent = editor?.getJSON() || {};
+  
+    // Update the note content with the new list of labels
+    handleChangeNoteContent(jsonContent, note.title, updatedLabels);
+  });
+  
+  const exts = [
+    ...extensions,
+    NoteLinkExtension.configure({
+      notes: notesList,
+      onClickNote: handleClickNote,
+    }),
+    NoteLabelSuggestion.configure({
+      notes: notesList,
+      uniqueLabels: uniqueLabels,
+    }),
+  ];
 
   // Check collapsibleHeading from localStorage
   if (localStorage.getItem("collapsibleHeading") === "true") {
     exts.push(CollapseHeading);
   }
+
   const editor = useEditor(
     {
       extensions: exts,
@@ -195,69 +232,6 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     event.preventDefault();
     const text = event.clipboardData.getData("text/plain");
     document.execCommand("insertText", false, text);
-  };
-
-  const handleClickNote = (note: Note) => {
-    const editorContent = editor?.getHTML() || "";
-    const atIndex = editorContent.lastIndexOf("@@");
-
-    if (atIndex !== -1) {
-      // Find the first whitespace or end of the string after @@ to determine the end of the text to be replaced
-      const endOfReplacementIndex = editorContent.indexOf(" ", atIndex + 2);
-      const endOfReplacement =
-        endOfReplacementIndex !== -1
-          ? endOfReplacementIndex
-          : editorContent.length;
-
-      const link = `<linkNote id="${note.id}" label="${note.title}"><a href="note://${note.id}" target="_blank" rel="noopener noreferrer nofollow">${note.title}</a></linkNote>`;
-
-      const newContent =
-        editorContent.substring(0, atIndex) +
-        link +
-        editorContent.substring(endOfReplacement);
-
-      editor?.commands.setContent(newContent, true);
-      setPopupPosition(null);
-    }
-  };
-
-  const handleAddLabel = (labelToAdd: string) => {
-    const editorContent = editor?.getHTML() || "";
-    const atIndex = editorContent.lastIndexOf("#");
-
-    if (atIndex !== -1) {
-      // Find the end of the text following the hash
-      const endOfReplacementIndex = editorContent.indexOf(" ", atIndex + 1);
-      const endOfReplacement =
-        endOfReplacementIndex !== -1
-          ? endOfReplacementIndex
-          : editorContent.length;
-
-      // Construct new content with the label replacement
-      const newContent =
-        editorContent.substring(0, atIndex) +
-        `<noteLabel id="${labelToAdd}" label="${labelToAdd}"></noteLabel>` +
-        editorContent.substring(endOfReplacement);
-
-      // Update the editor content
-      editor?.commands.setContent(newContent, true);
-      setPopupPosition(null);
-
-      // Retrieve the existing labels from the note
-      const existingLabels = note.labels || [];
-
-      // Ensure the new label is added without duplicating
-      const updatedLabels = Array.from(
-        new Set([...existingLabels, labelToAdd])
-      ); // Use Set to avoid duplicates
-
-      // Update the note content and labels
-      const jsonContent = editor?.getJSON() || {};
-
-      console.log("JSON Content:", jsonContent);
-
-      handleChangeNoteContent(jsonContent, note.title, updatedLabels);
-    }
   };
 
   // Utility function to find all noteLabel objects in the JSON content
@@ -429,16 +403,16 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
     event.preventDefault(); // Prevent default paste behavior
     event.stopPropagation(); // Stop event bubbling to higher handlers
-  
+
     const items = event.clipboardData.items;
     let containsImage = false; // Flag to track if there's an image
-  
+
     // Add a space before pasting
     document.execCommand("insertText", false, " ");
-  
+
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-  
+
       // Handle pasted image files only
       if (item.kind === "file" && item.type.startsWith("image/")) {
         const file = item.getAsFile();
@@ -452,19 +426,19 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
           }
         }
       }
-  
+
       // Handle plain text, which may contain URLs, but ignore image URLs
       if (item.kind === "string" && item.type === "text/plain") {
         item.getAsString((text) => {
           // Regular expression to identify URLs that are image links (e.g., ending with image file extensions)
           const imageUrlPattern = /\.(jpeg|jpg|gif|png|svg|webp)$/i;
-  
+
           // Split the text by spaces and filter out any image URLs
           const filteredText = text
             .split(/\s+/)
             .filter((word) => !imageUrlPattern.test(word)) // Remove image URLs
             .join(" ");
-  
+
           // If no image was pasted, insert the filtered text
           if (!containsImage) {
             document.execCommand("insertText", false, filteredText);
@@ -473,8 +447,28 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
       }
     }
   };
-  
-  
+
+  const goBack = () => {
+    const syncValue = localStorage.getItem("sync");
+    if (syncValue === "dropbox") {
+      const dropboxExport = new CustomEvent("dropboxExport");
+      document.dispatchEvent(dropboxExport);
+    } else if (syncValue === "webdav") {
+      const { exportdata } = useExportDav();
+      exportdata();
+    } else if (syncValue === "iCloud") {
+      const iCloudExport = new CustomEvent("iCloudExport");
+      document.dispatchEvent(iCloudExport);
+    } else if (syncValue === "googledrive") {
+      const driveExport = new CustomEvent("driveExport");
+      document.dispatchEvent(driveExport);
+    } else if (syncValue === "onedrive") {
+      const onedriveExport = new CustomEvent("onedriveExport");
+      document.dispatchEvent(onedriveExport);
+    }
+    navigate("/");
+  };
+
   return (
     <div>
       <div
@@ -493,12 +487,12 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
         <div
           className={`sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] fixed inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between`}
         >
-          <Link
-            to="/"
+          <button
             className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
+            onClick={goBack}
           >
             <Icons.ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
-          </Link>
+          </button>
           <div className="flex">
             <button
               className="p-2 rounded-md text-white bg-transparent cursor-pointer"
@@ -548,71 +542,11 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
         />
         <div>
           <div className="py-2 h-full w-full" id="container">
-            {hashPopupPosition && (
-              <BubblemenuLabel
-                hashPopupPosition={hashPopupPosition}
-                note={note}
-                handleChangeNoteContent={handleChangeNoteContent}
-                editor={editor}
-                textAfterHash={textAfterHash}
-                uniqueLabels={uniqueLabels}
-                setHashPopupPosition={setHashPopupPosition}
-                setHashPosition={setHashPosition}
-                setTextAfterHash={setTextAfterHash}
-                onClickLabel={handleAddLabel}
-              />
-            )}
-            {popupPosition && (
-              <BubblemenuNoteLink
-                popupPosition={popupPosition}
-                notes={notesList}
-                onClickNote={handleClickNote}
-                textAfterAt={textAfterAt}
-              />
-            )}
-            {popupPosition && (
-              <BubblemenuNoteLink
-                popupPosition={popupPosition}
-                notes={notesList}
-                onClickNote={handleClickNote}
-                textAfterAt={textAfterAt}
-              />
-            )}
-            {slashPopupPosition && (
-              <FloatingMenuComponent
-                editor={editor}
-                noteId={note.id}
-                slashPopupPosition={slashPopupPosition}
-                slashPosition={slashPosition}
-                setSlashPopupPosition={setSlashPopupPosition}
-                setSlashPosition={setSlashPosition}
-              />
-            )}
             <EditorContent
               onPaste={handlePaste}
-              onKeyUp={(event) =>
-                handleEditorTyping(
-                  event,
-                  textAfterAt,
-                  textAfterHash,
-                  textAfterSlash,
-                  atPosition,
-                  hashPosition,
-                  slashPosition,
-                  setPopupPosition,
-                  setAtPosition,
-                  setTextAfterAt,
-                  setHashPopupPosition,
-                  setHashPosition,
-                  setTextAfterHash,
-                  setSlashPopupPosition,
-                  setSlashPosition,
-                  setTextAfterSlash
-                )
-              }
               editor={editor}
               onTouchStart={preventKeyboardToggle}
-              className="prose dark:text-gray-100 max-w-none prose-indigo mb-12"
+              className="prose dark:text-neutral-100 max-w-none prose-indigo mb-12"
             />
           </div>
         </div>

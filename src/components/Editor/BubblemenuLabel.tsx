@@ -1,41 +1,26 @@
 import { useEffect, useState } from "react";
-import { JSONContent } from "@tiptap/react";
-import { Note } from "../../store/types";
 import dayjs from "dayjs";
 import icons from "../../lib/remixicon-react"; // Adjust the import path as needed
 
 type Props = {
-  hashPopupPosition: { top: number; left: number } | any;
-  note: Note;
-  handleChangeNoteContent: (
-    content: JSONContent,
-    title?: string,
-    labels?: string[]
-  ) => void;
-  editor: any;
   textAfterHash: string | null;
-  setHashPosition: any;
-  setHashPopupPosition: any;
-  setTextAfterHash: any;
   uniqueLabels: string[];
   onClickLabel: (labelToAdd: string) => void;
 };
 
 function NoteLabels({
-  note,
-  hashPopupPosition,
   textAfterHash,
   uniqueLabels,
   onClickLabel,
 }: Props) {
   const [newLabel, setNewLabel] = useState("");
-
   const [translations, setTranslations] = useState({
     editor: {
       addLabel: "editor.addLabel",
     },
   });
 
+  // Load translations based on language setting
   useEffect(() => {
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
@@ -55,8 +40,9 @@ function NoteLabels({
     };
 
     loadTranslations();
-  }, [note]);
+  }, []);
 
+  // Set the new label based on the text after the hash (triggered suggestion)
   useEffect(() => {
     if (textAfterHash) {
       setNewLabel(textAfterHash);
@@ -65,8 +51,7 @@ function NoteLabels({
 
   return (
     <div
-      className="z-50 fixed bg-white dark:bg-[#232222] shadow border-2 shadow dark:border-neutral-600 rounded-lg min-w-12 min-h-14 p-2"
-      style={{ top: hashPopupPosition.top, left: hashPopupPosition.left }}
+      className="z-50 fixed bg-white dark:bg-[#232222] shadow-lg border border-neutral-300 dark:border-neutral-600 rounded-lg min-w-48 p-2"
     >
       <div className="flex items-center p-2">
         <icons.AddFillIcon />
@@ -76,7 +61,7 @@ function NoteLabels({
           readOnly
           onClick={() => onClickLabel(newLabel)}
           placeholder={translations.editor.addLabel || "-"}
-          className="flex-1 bg-transparent"
+          className="flex-1 bg-transparent outline-none"
         />
       </div>
       <div className="p-2">

@@ -169,7 +169,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
     <div>
       <div className="overflow-y mb-12">
         {!activeNoteId && (
-          <div className="w-full md:pt-4 py-2 flex flex-col border-gray-300 overflow-auto">
+          <div className="w-full md:pt-4 py-2 flex flex-col border-neutral-300 overflow-auto">
             <SearchBar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}

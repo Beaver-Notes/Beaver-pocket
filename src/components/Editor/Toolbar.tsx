@@ -7,7 +7,8 @@ import { Note } from "../../store/types";
 import FileUploadComponent from "./FileUpload";
 import AudioUploadComponent from "./AudioUpload";
 import VideoUploadComponent from "./VideoUpload";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useExportDav } from "../../utils/Webdav/webDavUtil";
 
 interface ToolbarProps {
   toolbarVisible: boolean;
@@ -26,8 +27,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
     top: number;
     left: number;
   }>({ top: 0, left: 0 });
-  const buttonRef = useRef<HTMLButtonElement>(null); // Reference to the trigger button
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const [translations, setTranslations] = useState({
     editor: {
       embedUrl: "editor.embedUrl",
@@ -210,9 +212,30 @@ const Toolbar: React.FC<ToolbarProps> = ({
     setDropdownOpen(false); // Close dropdown after color is selected
   };
 
+  const goBack = () => {
+    const syncValue = localStorage.getItem("sync");
+    if (syncValue === "dropbox") {
+      const dropboxExport = new CustomEvent("dropboxExport");
+      document.dispatchEvent(dropboxExport);
+    } else if (syncValue === "webdav") {
+      const { exportdata } = useExportDav();
+      exportdata();
+    } else if (syncValue === "iCloud") {
+      const iCloudExport = new CustomEvent("iCloudExport");
+      document.dispatchEvent(iCloudExport);
+    } else if (syncValue === "googledrive") {
+      const driveExport = new CustomEvent("driveExport");
+      document.dispatchEvent(driveExport);
+    } else if (syncValue === "onedrive") {
+      const onedriveExport = new CustomEvent("onedriveExport");
+      document.dispatchEvent(onedriveExport);
+    }
+    navigate("/");
+  };
+
   return (
     <div
-      className={`drawer hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] dark:text-gray-50 overflow-x-auto sm:overflow-x-none py-1 ${
+      className={`drawer hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] dark:text-neutral-50 overflow-x-auto sm:overflow-x-none py-1 ${
         wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
       }`}
     >
@@ -221,12 +244,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
           isTableActive ? "hidden" : "block"
         } ${isTextSelected ? "hidden" : "block"}`}
       >
-        <Link
-          to="/"
+        <button
+          onClick={goBack}
           className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
         >
           <icons.ArrowLeftLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-        </Link>
+        </button>
         <div className="sm:mx-auto flex overflow-y-hidden w-fit">
           <button
             className={
@@ -276,17 +299,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <icons.DoubleQuotesLIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
-          <button
-            className={
-              editor?.isActive("codeBlock")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-          >
-            <icons.CodeBoxLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
           {/* Media and File Upload Options */}
           <ImageUploadComponent
             onImageUpload={handleImageUpload}
@@ -301,7 +313,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
           >
-            <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
@@ -315,6 +327,18 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onAudioUpload={handleaudioUpload}
             noteId={noteId}
           />
+          <button
+            className={
+              editor?.isActive("paper")
+                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+            }
+            onMouseDown={handleMouseDown}
+            // @ts-ignore
+            onClick={() => editor?.chain().focus().insertPaper().run()}
+          >
+            <icons.Brush2Fill className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+          </button>
           {/* List and Table Options */}
           <button
             className={
@@ -354,18 +378,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onClick={() => editor?.chain().focus().toggleOrderedList().run()}
           >
             <icons.ListOrderedIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("paper")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            // @ts-ignore
-            onClick={() => editor?.chain().focus().insertPaper().run()}
-          >
-            <icons.Brush2Fill className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
           <button
             className={
@@ -461,7 +473,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
           >
-            <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
@@ -480,7 +492,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteTable().run()}
           >
-            <icons.DeleteBinLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.DeleteBinLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
         </div>
         <button
@@ -618,13 +630,19 @@ const Toolbar: React.FC<ToolbarProps> = ({
                     setDropdownOpen(false); // Close dropdown after removing highlight
                   }}
                 >
-                  <icons.CloseLineIcon className={editor?.isActive("highlight") ? "border-none text-amber-400 text-xl w-8 h-8" : "border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"} />
+                  <icons.CloseLineIcon
+                    className={
+                      editor?.isActive("highlight")
+                        ? "border-none text-amber-400 text-xl w-7 h-7"
+                        : "border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7"
+                    }
+                  />
                 </button>
                 {/* Color options */}
                 {colors.map((color, index) => (
                   <button
                     key={index}
-                    className={`w-8 h-8 cursor-pointer ${color}`}
+                    className={`w-7 h-7 cursor-pointer ${color}`}
                     onClick={() => setHighlightColor(color)}
                   />
                 ))}
@@ -640,7 +658,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBulletList().run()}
           >
-            <icons.ListUnorderedIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.ListUnorderedIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -651,7 +669,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleTaskList().run()}
           >
-            <icons.ListCheck2Icon className="border-none text-xl text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.ListCheck2Icon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -662,7 +680,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSubscript()}
           >
-            <icons.SubscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.SubscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -673,7 +691,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSuperscript()}
           >
-            <icons.SuperscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.SuperscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -684,7 +702,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onMouseDown={handleMouseDown}
             onClick={setLink}
           >
-            <icons.LinkIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.LinkIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
         </div>
         <button

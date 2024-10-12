@@ -42,6 +42,12 @@ const App: React.FC = () => {
     loadNotesFromStorage();
   });
 
+  document.addEventListener('notelink', (event: Event) => {
+    const customEvent = event as CustomEvent;
+    const noteId = customEvent.detail.noteId;
+    navigate(`/editor/${noteId}`);
+  });
+
   useEffect(() => {
     const loadNotesFromStorage = async () => {
       const notes = await loadNotes();

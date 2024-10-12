@@ -62,6 +62,13 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
   };
 
   const [translations, setTranslations] = useState({
+    accessibility: {
+      home: "accessibility.home",
+      editNote: "accessibility.home",
+      createNew: "accessibility.createNew",
+      archive: "accessibility.archive",
+      settings: "accessibility.archive"
+    },
     home: {
       title: "home.title",
     },
@@ -142,23 +149,47 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
       <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto">
         <div className="flex justify-between">
           <Link to="/">
-            <button className="p-2" onClick={() => buttonClicked()}>
+            <button
+              className="p-2"
+              onClick={() => buttonClicked()}
+              aria-label={translations.accessibility.home}
+              >
               <icons.HomeLineIcon className="text-white hover:text-amber-400 h-8 w-8" />
             </button>
           </Link>
-          <a onClick={handleEditNote} className="p-2">
+
+          <button
+            onClick={handleEditNote}
+            className="p-2"
+            aria-label={translations.accessibility.editNote}
+          >
             <icons.Edit2LineIcon className="text-white hover:text-amber-400 h-8 w-8" />
-          </a>
-          <a className="p-2" onClick={handleCreateNewNote}>
+          </button>
+
+          <button
+            className="p-2"
+            onClick={handleCreateNewNote}
+            aria-label={translations.accessibility.createNew}
+            >
             <icons.AddFillIcon className="text-white hover:text-amber-400 h-8 w-8" />
-          </a>
+          </button>
+
           <Link to="/archive">
-            <button className="p-2" onClick={() => buttonClicked()}>
+            <button
+              className="p-2"
+              onClick={() => buttonClicked()}
+              aria-label={translations.accessibility.archive}
+            >
               <icons.ArchiveDrawerLineIcon className="text-white hover:text-amber-400 h-8 w-8" />
             </button>
           </Link>
+
           <Link to="/settings">
-            <button className="p-2" onClick={() => buttonClicked()}>
+            <button
+              className="p-2"
+              onClick={() => buttonClicked()}
+              aria-label={translations.accessibility.settings}
+            >
               <icons.Settings4LineIcon className="text-white hover:text-amber-400 h-8 w-8" />
             </button>
           </Link>

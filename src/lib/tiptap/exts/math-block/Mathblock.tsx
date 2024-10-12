@@ -30,27 +30,34 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
 
   const renderContent = () => {
     let macros = {};
-
+  
     try {
       macros = JSON.parse(props.node.attrs.macros || "{}");
     } catch (error) {
-      // Handle JSON parse error
       console.error("Error parsing macros:", error);
     }
-
+  
     const mathContent = props.node.attrs.content || "Empty";
-
-    const mathML = katex.renderToString(mathContent, {
+  
+    // Automatically wrap in aligned environment for line breaks
+    const processedContent = `
+      \\begin{aligned}
+      ${mathContent.replace(/\\\\/g, "\\\\")}
+      \\end{aligned}
+    `;
+  
+    const mathML = katex.renderToString(processedContent, {
       macros,
       displayMode: true,
       throwOnError: false,
       output: "mathml",
     });
-
+  
     if (contentRef.current) {
       contentRef.current.innerHTML = mathML;
     }
   };
+  
 
   const updateContent = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
@@ -150,6 +157,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
           ref={contentRef}
           contentEditable={useKatexMacros}
           suppressContentEditableWarning
+          className="break-words whitespace-pre-wrap"
         />
       </div>
       <Transition show={showModal} as={React.Fragment}>

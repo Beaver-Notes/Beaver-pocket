@@ -1,4 +1,20 @@
 {
+  "accessibility": {
+    "home": "Go to home",
+    "editNote": "Open last edited note",
+    "createNew": "Create a new note",
+    "archive": "Go to archive",
+    "settings": "Go to settings",
+    "processing": "Processing recording",
+    "startRecording": "Start recording",
+    "stopRecording": "Stop recording",
+    "commandPrompt": "Command prompt",
+    "search": "Search notes",
+    "toggleTheme": "Toggle theme",
+    "openNote": "Open note",
+    "untitled": "Unitled note",
+    "lockedNote": "Locked note"
+  },
   "settings": {
     "title": "Settings",
     "apptheme": "App Theme",

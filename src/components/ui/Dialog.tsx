@@ -80,7 +80,7 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
             />
             <button
               onClick={toggleInputContentVisibility}
-              className="absolute right-0 py-1.5 text-sm dark:text-[color:var(--selected-dark-text)] text-gray-500 focus:outline-none"
+              className="absolute right-0 py-1.5 text-sm dark:text-[color:var(--selected-dark-text)] text-neutral-500 focus:outline-none"
             >
               {showInputContent ? (
                 <icons.EyeLineIcon className="w-8 h-8 mr-2" />
@@ -92,7 +92,7 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
           <div className="flex space-x-2 justify-end">
             <button
               onClick={handleCancel}
-              className="p-3 text-xl w-1/2 bg-gray-100 dark:bg-neutral-700 dark:text-[color:var(--selected-dark-text)] text-gray-700 rounded-lg hover:bg-gray-200"
+              className="p-3 text-xl w-1/2 bg-neutral-100 dark:bg-neutral-700 dark:text-[color:var(--selected-dark-text)] text-neutral-700 rounded-lg hover:bg-neutral-200"
             >
               {translations.home.cancel}
             </button>

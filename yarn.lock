@@ -2468,10 +2468,10 @@
     "@tiptap/extension-text" "^2.7.4"
     "@tiptap/pm" "^2.7.4"
 
-"@tiptap/suggestion@^2.1.16":
-  version "2.7.4"
-  resolved "https://registry.yarnpkg.com/@tiptap/suggestion/-/suggestion-2.7.4.tgz#2ba9c2727334801ab059dc2e51bfc22e689be867"
-  integrity sha512-5D6SSERsBTkSe7HiWIJm+Pd207r97dAOX/8xMPz0sgeBd7OIb2OV+qNYLCUA+h1JWrrh9cxzYSNHzSuCB44szA==
+"@tiptap/suggestion@^2.8.0":
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/@tiptap/suggestion/-/suggestion-2.8.0.tgz#e42e2326ab5e6b5c546414ab033877c5ee32a0bb"
+  integrity sha512-ENBgO7a92cZa4gESb0Da5e7PKnHiz77tZr226VLqEdMcp7Lve2jb3Q2uL+cWCJxs7P1l6ZhetUmUiJg+Ee7Wjg==
 
 "@tootallnate/quickjs-emscripten@^0.23.0":
   version "0.23.0"

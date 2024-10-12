@@ -210,7 +210,7 @@ const Welcome: React.FC = () => {
                 <select
                   value={selectedLanguage}
                   onChange={updateLanguage}
-                  className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                  className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                 >
                   {languages.map((language) => (
                     <option key={language.code} value={language.code}>
@@ -218,7 +218,7 @@ const Welcome: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
               </div>
               <button
                 className="w-full p-3 rounded-full bg-[#2D2C2C] hover:bg-[#3a3939] text-white"
@@ -247,7 +247,7 @@ const Welcome: React.FC = () => {
                   <select
                     value={selectedOption}
                     onChange={handleChangeMode}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
                     {modes.map((mode) => (
                       <option key={mode} value={mode}>
@@ -255,7 +255,7 @@ const Welcome: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
                 </div>
               </section>
               <section className="w-full relative">
@@ -266,7 +266,7 @@ const Welcome: React.FC = () => {
                   <select
                     value={selectedFont}
                     onChange={updateFont}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
                     {fonts.map((font) => (
                       <option key={font} value={font}>
@@ -274,7 +274,7 @@ const Welcome: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
                 </div>
               </section>
               <section className=" w-full relative">
@@ -285,7 +285,7 @@ const Welcome: React.FC = () => {
                   <select
                     value={selectedCodeFont}
                     onChange={updatCodeFont}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
                     {Codefonts.map((Codefonts) => (
                       <option key={Codefonts} value={Codefonts}>
@@ -293,7 +293,7 @@ const Welcome: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
                 </div>
               </section>
             </div>

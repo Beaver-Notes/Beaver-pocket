@@ -133,7 +133,7 @@ const Shortcuts: React.FC = () => {
             {shortcuts.map((shortcut) => (
               <section key={shortcut.title}>
                 <p className="mb-2">{shortcut.title}</p>
-                <div className="rounded-lg bg-gray-800 bg-opacity-5 dark:bg-gray-200 dark:bg-opacity-5">
+                <div className="rounded-lg bg-neutral-800 bg-opacity-5 dark:bg-neutral-200 dark:bg-opacity-5">
                   {shortcut.items.map((item) => (
                     <div key={item.name} className="flex items-center p-3">
                       <p className="flex-1">{item.name}</p>
