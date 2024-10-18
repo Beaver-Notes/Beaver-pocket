@@ -45,11 +45,9 @@ function Editor({notesState, setNotesState}: Props) {
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
-        console.time("Translation module import");
         const translationModule = await import(
           `./assets/locales/${selectedLanguage}.json`
         );
-        console.timeEnd("Translation module import");
 
         setTranslations({ ...translations, ...translationModule.default });
         dayjs.locale(selectedLanguage);

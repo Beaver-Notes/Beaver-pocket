@@ -2,12 +2,10 @@ import { Extension } from "@tiptap/core";
 import Suggestion from "@tiptap/suggestion";
 import tippy from "tippy.js";
 import { createRoot } from "react-dom/client";
-import NoteLabels from "../../../components/Editor/BubblemenuLabel"; // Adjust the path accordingly
-import { Note } from "../../../store/types";
+import NoteLabels from "../../../../components/Editor/BubblemenuLabel"; // Adjust the path accordingly
 import { PluginKey } from "prosemirror-state";
 
 interface LabelSuggestionOptions {
-  notes: Note[];
   uniqueLabels: string[];
 }
 
@@ -16,11 +14,10 @@ export default Extension.create<LabelSuggestionOptions>({
 
   addOptions() {
     return {
-      notes: [],
       uniqueLabels: [],
       handleAddLabel: () => {},
       suggestion: {
-        char: "#",  // Trigger character for suggestions
+        char: "#", // Trigger character for suggestions
         pluginKey: new PluginKey("label"),
       },
     };
@@ -30,33 +27,27 @@ export default Extension.create<LabelSuggestionOptions>({
     return [
       Suggestion({
         editor: this.editor,
-        pluginKey: new PluginKey('label-suggestion'),
-        char: '#',  // Listening for the '#' character
+        pluginKey: new PluginKey("label-suggestion"),
+        char: "#", // Listening for the '#' character
         items: ({ query }) => {
           console.log("Suggestion items called with query:", query);
-          
-          // Extract the query text by removing the '#' character
-          const queryText = query.startsWith("#") ? query.slice(1) : query;
+          const queryText = query.startsWith("@@") ? query.slice(2) : query;
 
-          // Filter notes based on the query for the '#' trigger
-          const filteredNotes = this.options.notes
-            .filter((note) =>
-              note.title.toLowerCase().includes(queryText.toLowerCase())
-            )
-            .slice(0, 5);
+          // Debugging: Check the availability of uniqueLabels
+          console.log('Unique Labels:', this.options.uniqueLabels);
+          console.log('Query Text:', queryText);
 
-          // Convert the filtered notes to an array of strings (titles)
-          const noteTitles = filteredNotes.map((note) => note.title);
-
-          // Filter unique labels based on the query
-          const filteredLabels = this.options.uniqueLabels
+          // Ensure uniqueLabels is an array and filter it
+          const filteredLabels = (Array.isArray(this.options.uniqueLabels) ? this.options.uniqueLabels : [])
             .filter((label) =>
-              label.toLowerCase().includes(queryText.toLowerCase())
+              typeof label === 'string' && label.toLowerCase().includes(queryText.toLowerCase())
             )
             .slice(0, 5);
 
-          // Return either the note titles or labels based on the query
-          return query.startsWith("#") ? noteTitles : filteredLabels;
+          // Debugging: Log the filtered results
+          console.log('Filtered labels:', filteredLabels);
+
+          return filteredLabels;
         },
         command: ({ editor, range, props }) => {
           console.log("Suggestion command called with props:", props);
@@ -92,12 +83,12 @@ export default Extension.create<LabelSuggestionOptions>({
                   // Render the NoteLabels component with the current query and unique labels
                   root.render(
                     <NoteLabels
-                      textAfterHash={props.query}
                       uniqueLabels={this.options.uniqueLabels}
                       onClickLabel={(label) => {
-                        props.command(label);  // Insert the selected label
-                        popup[0].hide();  // Hide the suggestion popup
+                        props.command(label); // Insert the selected label
+                        popup[0].hide(); // Hide the suggestion popup
                       }}
+                      textAfterHash={props.query}
                     />
                   );
 
@@ -116,12 +107,12 @@ export default Extension.create<LabelSuggestionOptions>({
                 // Update the NoteLabels component when the props change
                 root.render(
                   <NoteLabels
-                    textAfterHash={props.query}
                     uniqueLabels={this.options.uniqueLabels}
                     onClickLabel={(label) => {
-                      props.command(label);  // Insert the selected label
-                      popup[0].hide();  // Hide the suggestion popup
+                      props.command(label); // Insert the selected label
+                      popup[0].hide(); // Hide the suggestion popup
                     }}
+                    textAfterHash={props.query}
                   />
                 );
               }
@@ -129,7 +120,7 @@ export default Extension.create<LabelSuggestionOptions>({
             onKeyDown: (props: any) => {
               console.log("Render onKeyDown called with props:", props);
               if (props.event.key === "Escape") {
-                popup[0].hide();  // Hide the popup on Escape key
+                popup[0].hide(); // Hide the popup on Escape key
                 return true;
               }
               return false;
@@ -137,9 +128,9 @@ export default Extension.create<LabelSuggestionOptions>({
             onExit: () => {
               console.log("Render onExit called");
               if (root) {
-                root.unmount();  // Unmount the React component
+                root.unmount(); // Unmount the React component
               }
-              popup[0].destroy();  // Destroy the Tippy.js instance
+              popup[0].destroy(); // Destroy the Tippy.js instance
             },
           };
         },

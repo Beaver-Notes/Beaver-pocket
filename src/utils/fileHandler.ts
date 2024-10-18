@@ -1,4 +1,8 @@
-import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import {
+  Directory,
+  Filesystem,
+  FilesystemDirectory,
+} from "@capacitor/filesystem";
 
 export const saveImageToFileSystem = async (
   file: File,
@@ -6,8 +10,8 @@ export const saveImageToFileSystem = async (
 ): Promise<{ imageUrl: string; fileUri: string }> => {
   try {
     // Ensure the directory exists
-    await createDirectory(noteId);
-    
+    await createImageDirectory(noteId);
+
     // Construct the filename and path for the image
     const fileName = `${Date.now()}_${file.name}`;
     const relativeFilePath = `note-assets/${noteId}/${fileName}`;
@@ -41,7 +45,7 @@ export const saveImageToFileSystem = async (
     });
 
     console.log("Saved file URI:", uri);
-    
+
     // Return the relative path and full URI
     return { imageUrl: relativeFilePath, fileUri: uri };
   } catch (error) {
@@ -50,7 +54,59 @@ export const saveImageToFileSystem = async (
   }
 };
 
-const createDirectory = async (noteId: string) => {
+export const saveFileToFileSystem = async (
+  file: File,
+  noteId: string
+): Promise<{ fileUrl: string; fileName: string }> => {
+  try {
+    await createDirectory(noteId);
+    const fileName = `${Date.now()}_${file.name}`;
+
+    // Read file contents as data URL
+    const fileReader = new FileReader();
+    fileReader.readAsDataURL(file);
+
+    return new Promise((resolve, reject) => {
+      fileReader.onload = async () => {
+        const fileDataUrl = fileReader.result as string;
+
+        // Write file to filesystem under "note-assets/noteId" directory
+        const filePath = `file-assets/${noteId}/${fileName}`;
+        await Filesystem.writeFile({
+          path: filePath,
+          data: fileDataUrl, // Write the data URL instead of the file object
+          directory: FilesystemDirectory.Data,
+          recursive: true,
+        });
+
+        resolve({ fileUrl: filePath, fileName: file.name });
+      };
+
+      fileReader.onerror = (error) => {
+        reject(error);
+      };
+    });
+  } catch (error) {
+    console.error("Error saving file to file system:", error);
+    return { fileUrl: "", fileName: "" };
+  }
+};
+
+async function createDirectory(noteId: string): Promise<void> {
+  const directoryPath = `file-assets/${noteId}`;
+
+  try {
+    await Filesystem.mkdir({
+      path: directoryPath,
+      directory: Directory.Data,
+      recursive: true,
+    });
+  } catch (error: unknown) {
+    console.error("Error creating the directory:", error);
+  }
+}
+
+const createImageDirectory = async (noteId: string) => {
   try {
     await Filesystem.mkdir({
       path: `note-assets/${noteId}`,
@@ -58,6 +114,6 @@ const createDirectory = async (noteId: string) => {
       recursive: true,
     });
   } catch (e) {
-      console.error("Error creating directory:", e);
+    console.error("Error creating directory:", e);
   }
 };

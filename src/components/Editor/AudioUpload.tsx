@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Plugins } from "@capacitor/core";
 import { FilesystemDirectory } from "@capacitor/filesystem";
 import { VoiceRecorder } from "capacitor-voice-recorder";
@@ -9,39 +9,17 @@ const { Filesystem } = Plugins;
 interface FileUploadProps {
   onAudioUpload: (fileUrl: string, fileName: string) => void;
   noteId: string;
+  translations?: any;
 }
 
 const AudioUploadComponent: React.FC<FileUploadProps> = ({
   onAudioUpload,
   noteId,
+  translations,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [translations, setTranslations] = useState({
-    accessibility: {
-      processing: "accessibility.processing",
-      startRecording: "accessibility.startRecording",
-      stopRecording: "accessibility.stopRecording",
-    },
-  });
-
-  useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
-  }, []);
   
   const startRecording = async () => {
     if (hasPermission === null) {
