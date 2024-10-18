@@ -1,24 +1,77 @@
-import React, { useEffect, useRef, useState } from "react";
-import icons from "../../lib/remixicon-react";
-import FileUploadComponent from "./FileUpload";
-import VideoUploadComponent from "./VideoUpload";
-import ImageUploadComponent from "./ImageUpload";
+// SlashMenu.tsx
+import React, { useEffect, useState } from "react";
+import ImageUploadComponent from "../../../../components/Editor/ImageUpload"; // Adjust the path
+import FileUploadComponent from "../../../../components/Editor/FileUpload"; // Adjust the path
+import VideoUploadComponent from "../../../../components/Editor/VideoUpload"; // Adjust the path
+import icons from "../../../remixicon-react";
 
-interface FloatingMenuProps {
-  editor: any;
+interface SlashMenuProps {
   noteId: string;
-  command: (fn: () => void) => void;
+  editor: any;
+  query: string;
 }
-
-const FloatingMenuComponent: React.FC<FloatingMenuProps> = ({
-  editor,
+const SlashMenu: React.FC<SlashMenuProps> = ({
   noteId,
-  command,
+  editor,
+  query,
 }) => {
-  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../../../assets/locales/${selectedLanguage}.json`
+        );
+        setTranslations((prev) => ({ ...prev, ...translationModule.default }));
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+
+  const handlefileUpload = (fileUrl: string, fileName: string) => {
+      editor?.chain().setFileEmbed(fileUrl, fileName).run();
+  };
+
+  const handlevideoUpload = (fileUrl: string) => {
+      editor?.chain().setVideo(fileUrl).run();
+  };
+
+  const handleImageUpload = (imageUrl: string) => {
+      editor?.chain().setImage({ src: imageUrl }).run();
+  };
+
+  const handleAddIframe = () => {
+    const videoUrl = prompt(`${translations.editor.embedUrl}`);
+    if (!videoUrl || videoUrl.trim() === "") {
+      return;
+    }
+
+    let formattedUrl = videoUrl.trim();
+    if (formattedUrl.includes("youtube.com/watch?v=")) {
+      let videoId = formattedUrl.split("v=")[1];
+      const ampersandPosition = videoId.indexOf("&");
+      if (ampersandPosition !== -1) {
+        videoId = videoId.substring(0, ampersandPosition);
+      }
+      formattedUrl = `https://www.youtube.com/embed/${videoId}`;
+    } else if (formattedUrl.includes("youtu.be/")) {
+      let videoId = formattedUrl.split("youtu.be/")[1];
+      const ampersandPosition = videoId.indexOf("?");
+      if (ampersandPosition !== -1) {
+        videoId = videoId.substring(0, ampersandPosition);
+      }
+      formattedUrl = `https://www.youtube.com/embed/${videoId}`;
+    }
+
+    editor?.chain().focus().setIframe({ src: formattedUrl }).run();
+  };
+
   const [translations, setTranslations] = useState({
     editor: {
-      embedUrl: "editor.embedUrl",
+      embedUrl: "editorembedUrl",
     },
     menuItems: {
       fileLabel: "menuItems.fileLabel",
@@ -76,200 +129,152 @@ const FloatingMenuComponent: React.FC<FloatingMenuProps> = ({
     },
   });
 
-  useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-        setTranslations((prev) => ({ ...prev, ...translationModule.default }));
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
-  }, []);
-
-  const handleAddIframe = () => {
-    command(() => {
-      const videoUrl = prompt(`${translations.editor.embedUrl}`);
-      if (!videoUrl || videoUrl.trim() === "") {
-        return;
-      }
-
-      let formattedUrl = videoUrl.trim();
-      if (formattedUrl.includes("youtube.com/watch?v=")) {
-        let videoId = formattedUrl.split("v=")[1];
-        const ampersandPosition = videoId.indexOf("&");
-        if (ampersandPosition !== -1) {
-          videoId = videoId.substring(0, ampersandPosition);
-        }
-        formattedUrl = `https://www.youtube.com/embed/${videoId}`;
-      } else if (formattedUrl.includes("youtu.be/")) {
-        let videoId = formattedUrl.split("youtu.be/")[1];
-        const ampersandPosition = videoId.indexOf("?");
-        if (ampersandPosition !== -1) {
-          videoId = videoId.substring(0, ampersandPosition);
-        }
-        formattedUrl = `https://www.youtube.com/embed/${videoId}`;
-      }
-
-      editor?.chain().focus().setIframe({ src: formattedUrl }).run();
-    });
-  };
-
-  const handlefileUpload = (fileUrl: string, fileName: string) => {
-    command(() => {
-      editor?.chain().setFileEmbed(fileUrl, fileName).run();
-    });
-  };
-
-  const handlevideoUpload = (fileUrl: string) => {
-    command(() => {
-      editor?.chain().setVideo(fileUrl).run();
-    });
-  };
-
-  const handleImageUpload = (imageUrl: string) => {
-    command(() => {
-      editor?.chain().setImage({ src: imageUrl }).run();
-    });
-  };
-
   const menuItems = [
     {
       icon: icons.ParagraphIcon,
       label: translations.menuItems.paragraphLabel,
       description: translations.menuItems.paragraphDescription,
-      action: () => command(() => editor.chain().focus().setParagraph().run()),
+      action: () => editor.chain().focus().setParagraph().run(),
     },
     {
       icon: icons.Heading1Icon,
       label: translations.menuItems.heading1Label,
       description: translations.menuItems.heading1Description,
-      action: () => command(() => editor?.chain().focus().toggleHeading({ level: 1 }).run()),
+      action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
     },
     {
       icon: icons.Heading2Icon,
       label: translations.menuItems.heading2Label,
       description: translations.menuItems.heading2Description,
-      action: () => command(() => editor?.chain().focus().toggleHeading({ level: 2 }).run()),
+      action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
     },
     {
       icon: icons.Heading3Icon,
       label: translations.menuItems.heading3Label,
       description: translations.menuItems.heading3Description,
-      action: () => command(() => editor?.chain().focus().toggleHeading({ level: 3 }).run()),
+      action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
     },
     {
       icon: icons.Heading4Icon,
       label: translations.menuItems.heading4Label,
       description: translations.menuItems.heading4Description,
-      action: () => command(() => editor?.chain().focus().toggleHeading({ level: 4 }).run()),
+      action: () => editor.chain().focus().toggleHeading({ level: 4 }).run(),
     },
     {
       icon: icons.Heading5Icon,
       label: translations.menuItems.heading5Label,
       description: translations.menuItems.heading5Description,
-      action: () => command(() => editor?.chain().focus().toggleHeading({ level: 5 }).run()),
+      action: () => editor.chain().focus().toggleHeading({ level: 5 }).run(),
     },
     {
       icon: icons.Heading6Icon,
       label: translations.menuItems.heading6Label,
       description: translations.menuItems.heading6Description,
-      action: () => command(() => editor?.chain().focus().toggleHeading({ level: 6 }).run()),
+      action: () => editor.chain().focus().toggleHeading({ level: 6 }).run(),
     },
     {
       icon: icons.DoubleQuotesLIcon,
       label: translations.menuItems.quoteLabel,
       description: translations.menuItems.quoteDescription,
-      action: () => command(() => editor?.chain().focus().toggleBlockquote().run()),
+      action: () => editor.chain().focus().toggleBlockquote().run(),
     },
     {
       icon: icons.CodeBoxLineIcon,
       label: translations.menuItems.codeLabel,
       description: translations.menuItems.codeDescription,
-      action: () => command(() => editor?.chain().focus().toggleCodeBlock().run()),
+      action: () => editor.chain().focus().toggleCodeBlock().run(),
     },
     {
       icon: icons.Table2Icon,
       label: translations.menuItems.tableLabel,
       description: translations.menuItems.tableDescription,
-      action: () => command(() => editor?.commands.insertTable({ rows: 3, cols: 3, withHeaderRow: true })),
+      action: () =>
+        editor?.commands.insertTable({
+          rows: 3,
+          cols: 3,
+          withHeaderRow: true,
+        }),
     },
     {
       icon: icons.ListUnorderedIcon,
       label: translations.menuItems.bulletListLabel,
       description: translations.menuItems.bulletListDescription,
-      action: () => command(() => editor?.chain().focus().toggleBulletList().run()),
+      action: () => editor.chain().focus().toggleBulletList().run(),
     },
     {
       icon: icons.ListOrderedIcon,
       label: translations.menuItems.orderedListLabel,
       description: translations.menuItems.orderedListDescription,
-      action: () => command(() => editor?.chain().focus().toggleOrderedList().run()),
+      action: () => editor?.chain().focus().toggleOrderedList().run(),
     },
     {
       icon: icons.ListCheck2Icon,
       label: translations.menuItems.checklistLabel,
       description: translations.menuItems.checklistDescription,
-      action: () => command(() => editor?.chain().focus().toggleTaskList().run()),
+      action: () => editor?.chain().focus().toggleTaskList().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menuItems.blackCalloutLabel,
       description: translations.menuItems.blackCalloutDescription,
       className: "dark:text-neutral-400",
-      action: () => command(() => editor?.chain().focus().setBlackCallout().run()),
+      //@ts-ignore
+      action: () => editor?.chain().focus().setBlackCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menuItems.blueCalloutLabel,
       description: translations.menuItems.blueCalloutDescription,
       className: "text-blue-500 dark:text-blue-500",
-      action: () => command(() => editor?.chain().focus().setBlueCallout().run()),
+      //@ts-ignore
+      action: () => editor?.chain().focus().setBlueCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menuItems.greenCalloutLabel,
       description: translations.menuItems.greenCalloutDescription,
       className: "text-green-600 dark:text-green-600",
-      action: () => command(() => editor?.chain().focus().setGreenCallout().run()),
+      //@ts-ignore
+      action: () => editor?.chain().focus().setGreenCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menuItems.purpleCalloutLabel,
       description: translations.menuItems.purpleCalloutDescription,
       className: "text-purple-500 dark:text-purple-500",
-      action: () => command(() => editor?.chain().focus().setPurpleCallout().run()),
+      //@ts-ignore
+      action: () => editor?.chain().focus().setPurpleCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menuItems.redCalloutLabel,
       description: translations.menuItems.redCalloutDescription,
       className: "text-red-500 dark:text-red-500",
-      action: () => command(() => editor?.chain().focus().setRedCallout().run()),
+      //@ts-ignore
+      action: () => editor?.chain().focus().setRedCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menuItems.yellowCalloutLabel,
       description: translations.menuItems.yellowCalloutDescription,
       className: "text-yellow-500 dark:text-yellow-500",
-      action: () => command(() => editor?.chain().focus().setYellowCallout().run()),
+      //@ts-ignore
+
+      action: () => editor?.chain().focus().setYellowCallout().run(),
     },
     {
       icon: icons.CalculatorLineIcon,
       label: translations.menuItems.mathBlockLabel,
       description: translations.menuItems.mathBlockDescription,
-      action: () => command(() => editor?.chain().focus().setMathBlock().run()),
+      //@ts-ignore
+      action: () => editor?.chain().focus().setMathBlock().run(),
     },
     {
       icon: icons.PieChart2LineIcon,
       label: translations.menuItems.mermaidBlockLabel,
       description: translations.menuItems.mermaidBlockDescription,
-      action: () => command(() => editor?.chain().focus().setMermaidDiagram().run()),
+      //@ts-ignore
+      action: () => editor?.chain().focus().setMermaidDiagram().run(),
     },
     {
       icon: icons.PagesLineIcon,
@@ -281,58 +286,102 @@ const FloatingMenuComponent: React.FC<FloatingMenuProps> = ({
       icon: icons.BrushLineIcon,
       label: translations.menuItems.drawingBlockLabel,
       description: translations.menuItems.drawingBlockDescription,
-      action: () => command(() => editor?.chain().focus().insertPaper().run()),
+      //@ts-ignore
+      action: () => editor?.chain().focus().insertPaper().run(),
     },
   ];
 
-  return (
-    <div
-      ref={ref}
-      className="z-50 fixed bg-white dark:bg-[#232222] rounded-lg shadow-lg border-2 shadow dark:border-neutral-600 p-4"
-    >
-      <div className="max-h-40 overflow-y-auto flex flex-col space-y-2 no-scrollbar">
-        {menuItems.map((item, index) => (
-          <button
-            key={index}
-            onClick={item.action}
-            className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#353333] transition duration-200"
-          >
-            <item.icon
-              className={`text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-2 ${
-                item.className || ""
-              }`}
-            />
-            <div className="text-left">
-              <h3 className="font-medium text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
-                {item.label}
-              </h3>
-              <p className="text-sm text-neutral-500 dark:text-[color:var(--selected-dark-text)]">
-                {item.description}
-              </p>
-            </div>
-          </button>
-        ))}
+  // Filter menu items by query
+  const filteredMenuItems = menuItems.filter((item) =>
+    item.label.toLowerCase().includes(query.toLowerCase())
+  );
+
+  // Check if the query matches partial words for the upload components
+  const showImageUpload = translations.menuItems.imageLabel
+    .toLowerCase()
+    .includes(query.toLowerCase());
+  const showFileUpload = translations.menuItems.fileLabel
+    .toLowerCase()
+    .includes(query.toLowerCase());
+  const showVideoUpload = translations.menuItems.videoLabel
+    .toLowerCase()
+    .includes(query.toLowerCase());
+
+  // Prepare the list of upload components
+  const uploadComponents = [];
+  if (showImageUpload) {
+    uploadComponents.push({
+      component: (
         <ImageUploadComponent
+          key="imageUpload"
           onImageUpload={handleImageUpload}
           noteId={noteId}
           menu={true}
           translations={translations}
         />
+      ),
+    });
+  }
+  if (showFileUpload) {
+    uploadComponents.push({
+      component: (
         <FileUploadComponent
+          key="fileUpload"
           onFileUpload={handlefileUpload}
           noteId={noteId}
           menu={true}
           translations={translations}
         />
+      ),
+    });
+  }
+  if (showVideoUpload) {
+    uploadComponents.push({
+      component: (
         <VideoUploadComponent
+          key="videoUpload"
           onVideoUpload={handlevideoUpload}
           noteId={noteId}
           menu={true}
           translations={translations}
         />
-      </div>
+      ),
+    });
+  }
+
+  // Combine filtered menu items and upload components, respecting the 5-item limit
+  const combinedItems = [
+    ...filteredMenuItems.map((item, index) => ({
+      component: (
+        <button
+          key={index}
+          onClick={item.action}
+          className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#353333] transition duration-200"
+        >
+          <item.icon
+            className={`text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-2 ${
+              item.className || ""
+            }`}
+          />
+          <div className="text-left">
+            <h3 className="font-medium text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
+              {item.label}
+            </h3>
+            <p className="text-sm text-neutral-500 dark:text-[color:var(--selected-dark-text)]">
+              {item.description}
+            </p>
+          </div>
+        </button>
+      ),
+    })),
+    ...uploadComponents,
+  ].slice(0, 5);
+
+  return (
+    <div className="z-50 fixed bg-white dark:bg-[#232222] rounded-lg shadow-lg border-2 shadow dark:border-neutral-600 p-4">
+      {combinedItems.map((item) => item.component)}
     </div>
   );
 };
 
-export default FloatingMenuComponent;
+export default SlashMenu;

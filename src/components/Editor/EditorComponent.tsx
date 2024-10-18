@@ -9,16 +9,17 @@ import Find from "./Find";
 import "../../assets/css/editor.css";
 import extensions from "../../lib/tiptap/index";
 import CollapseHeading from "../../lib/tiptap/exts/collapse-heading";
-import NoteLinkExtension from "../../lib/tiptap/exts/NoteLinkSuggestion";
-import NoteLabelSuggestion from "../../lib/tiptap/exts/NoteLabelSuggestion";
+import EditorSuggestion from "../../lib/tiptap/exts/suggestions/EditorSuggestion";
+import NoteLinkExtension from "../../lib/tiptap/exts/suggestions/NoteLinkSuggestion";
+import NoteLabelSuggestion from "../../lib/tiptap/exts/suggestions/NoteLabelSuggestion";
 import DOMPurify from "dompurify";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
-
-// Icons
 import Icons from "../../lib/remixicon-react";
 import Mousetrap from "mousetrap";
+import getMimeType from "../../utils/mimetype";
 import { saveImageToFileSystem } from "../../utils/fileHandler";
+import { saveFileToFileSystem } from "../../utils/fileHandler";
 import { useExportDav } from "../../utils/Webdav/webDavUtil";
 
 type Props = {
@@ -34,11 +35,9 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     notesState,
     setNotesState
   );
-
   const [previousContent, setPreviousContent] = useState<JSONContent | null>(
     null
   );
-
   const [searchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
@@ -88,29 +87,6 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     setActiveNoteId(note.id);
   }, [note.id, setActiveNoteId]);
 
-  const handleClickNote = (note: Note) => {
-    const editorContent = editor?.getHTML() || "";
-    const atIndex = editorContent.lastIndexOf("@@");
-
-    if (atIndex !== -1) {
-      // Find the first whitespace or end of the string after @@ to determine the end of the text to be replaced
-      const endOfReplacementIndex = editorContent.indexOf(" ", atIndex + 2);
-      const endOfReplacement =
-        endOfReplacementIndex !== -1
-          ? endOfReplacementIndex
-          : editorContent.length;
-
-      const link = `<linkNote id="${note.id}" label="${note.title}"><a href="note://${note.id}" target="_blank" rel="noopener noreferrer nofollow">${note.title}</a></linkNote>`;
-
-      const newContent =
-        editorContent.substring(0, atIndex) +
-        link +
-        editorContent.substring(endOfReplacement);
-
-      editor?.commands.setContent(newContent, true);
-    }
-  };
-
   const uniqueLabels = Array.from(
     new Set(Object.values(notesState).flatMap((note) => note.labels))
   );
@@ -118,33 +94,34 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   document.addEventListener("updateLabel", (event: Event) => {
     const customEvent = event as CustomEvent;
     const labelToAdd = customEvent.detail.props;
-  
+
     // Ensure existingLabels is initialized correctly
     const existingLabels = note.labels || [];
-  
+
     // Check if the label already exists
     const labelExists = existingLabels.includes(labelToAdd);
-  
+
     // Only add the label if it doesn't already exist
     const updatedLabels = labelExists
       ? existingLabels
       : [...existingLabels, labelToAdd];
-  
+
     const jsonContent = editor?.getJSON() || {};
-  
+
     // Update the note content with the new list of labels
     handleChangeNoteContent(jsonContent, note.title, updatedLabels);
   });
-  
+
   const exts = [
     ...extensions,
     NoteLinkExtension.configure({
       notes: notesList,
-      onClickNote: handleClickNote,
     }),
     NoteLabelSuggestion.configure({
-      notes: notesList,
       uniqueLabels: uniqueLabels,
+    }),
+    EditorSuggestion.configure({
+      noteId: note.id,
     }),
   ];
 
@@ -168,6 +145,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
           const previousLabels = findNoteLabels(previousContent);
           const currentLabels = findNoteLabels(editorContent);
 
+          // Check for deleted labels
           previousLabels.forEach((label) => {
             if (
               !currentLabels.some(
@@ -378,73 +356,133 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   }, [editor, setLink]);
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault(); // Prevent default behavior of the drop event
-
+    event.preventDefault();
     const items = event.dataTransfer.items;
+    await processItems(items);
+  };
 
+  const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  
+    const items = event.clipboardData.items;
+    document.execCommand("insertText", false, " "); // Add space before pasting
+  
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-
-      // Handle image files
-      if (item.kind === "file" && item.type.startsWith("image/")) {
+  
+      if (item.kind === "file") {
+        // Handle pasted file (like from file manager)
         const file = item.getAsFile();
         if (file) {
-          // Save the image file to the filesystem
-          const { imageUrl } = await saveImageToFileSystem(file, note.id);
+          await handleFileByType(file); // Handle file processing as usual
+        }
+      } else if (item.kind === "string" && item.type === "text/html") {
+        // Handle HTML content (like pasting from a web page)
+        item.getAsString(async (htmlContent: string) => {
+          const imageUrl = extractImageUrlFromHtml(htmlContent);
           if (imageUrl) {
-            // Insert saved image URL into the editor
-            editor?.chain().setImage({ src: imageUrl }).run();
+            editor?.chain().setImage({ src: imageUrl }).run(); // Insert image from URL
+          } else {
+            // If no image URL, fallback to pasting the content as plain HTML/text
+            editor?.chain().insertContent(htmlContent).run();
+          }
+        });
+      } else if (item.kind === "string" && item.type === "text/plain") {
+        // Handle plain text or URLs
+        item.getAsString(async (textContent: string) => {
+          if (isBase64Image(textContent)) {
+            // If the content is a base64 image, insert it directly
+            editor?.chain().setImage({ src: textContent }).run();
+          } else if (isValidUrl(textContent)) {
+            // If it's a valid URL, check if it's an image URL
+            if (isImageUrl(textContent)) {
+              editor?.chain().setImage({ src: textContent }).run(); // Insert image
+            } else {
+              // If it's not an image URL, insert it as plain text or link
+              editor?.chain().insertContent(textContent).run();
+            }
+          } else {
+            // If neither base64 nor a valid URL, insert it as plain text
+            editor?.chain().insertContent(textContent).run();
+          }
+        });
+      }
+    }
+  };
+  
+  // Helper to check if the pasted content is a base64 image
+  const isBase64Image = (str: string): boolean => {
+    return str.startsWith("data:image/") && str.includes("base64,");
+  };
+  
+  // Helper to extract image URL from pasted HTML content
+  const extractImageUrlFromHtml = (htmlContent: string): string | null => {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = htmlContent;
+    const imgTag = tempDiv.querySelector("img");
+  
+    return imgTag ? imgTag.src : null;
+  };
+  
+  // Helper to validate if a string is a valid URL
+  const isValidUrl = (string: string): boolean => {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+  
+  // Helper to check if a URL is an image URL (jpg, png, gif, etc.)
+  const isImageUrl = (url: string): boolean => {
+    const imagePattern = /\.(jpeg|jpg|gif|png|bmp|webp)$/i;
+    return imagePattern.test(url);
+  };
+  
+
+  const processItems = async (items: DataTransferItemList) => {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        if (file) {
+          const fileType = getMimeType(file.name);
+          if (fileType) {
+            await handleFileByType(file);
+          } else {
+            console.warn(`Unsupported file type: ${file.type}`);
           }
         }
       }
     }
   };
 
-  const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
-    event.preventDefault(); // Prevent default paste behavior
-    event.stopPropagation(); // Stop event bubbling to higher handlers
+  const handleFileByType = async (file: File) => {
+    try {
+      let fileUrl = "",
+        fileName = "";
+      const mimeType = file.type;
 
-    const items = event.clipboardData.items;
-    let containsImage = false; // Flag to track if there's an image
-
-    // Add a space before pasting
-    document.execCommand("insertText", false, " ");
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-
-      // Handle pasted image files only
-      if (item.kind === "file" && item.type.startsWith("image/")) {
-        const file = item.getAsFile();
-        if (file) {
-          // Save the image file to the filesystem
-          const { imageUrl } = await saveImageToFileSystem(file, note.id);
-          if (imageUrl) {
-            // Insert the image and prevent the URL from being pasted
-            editor?.chain().setImage({ src: imageUrl }).run();
-            containsImage = true; // Mark that an image was processed
-          }
-        }
+      if (mimeType.startsWith("image/")) {
+        const { imageUrl } = await saveImageToFileSystem(file, note.id);
+        editor?.chain().setImage({ src: imageUrl }).run();
+      } else if (mimeType.startsWith("video/")) {
+        ({ fileUrl, fileName } = await saveFileToFileSystem(file, note.id));
+        //@ts-ignore
+        editor?.chain().setVideo({ src: fileUrl }).run();
+      } else if (mimeType.startsWith("audio/")) {
+        ({ fileUrl, fileName } = await saveFileToFileSystem(file, note.id));
+        //@ts-ignore
+        editor?.chain().setAudio({ src: fileUrl }).run();
+      } else {
+        ({ fileUrl, fileName } = await saveFileToFileSystem(file, note.id));
+        //@ts-ignore
+        editor?.chain().setFileEmbed(fileUrl, fileName).run();
       }
-
-      // Handle plain text, which may contain URLs, but ignore image URLs
-      if (item.kind === "string" && item.type === "text/plain") {
-        item.getAsString((text) => {
-          // Regular expression to identify URLs that are image links (e.g., ending with image file extensions)
-          const imageUrlPattern = /\.(jpeg|jpg|gif|png|svg|webp)$/i;
-
-          // Split the text by spaces and filter out any image URLs
-          const filteredText = text
-            .split(/\s+/)
-            .filter((word) => !imageUrlPattern.test(word)) // Remove image URLs
-            .join(" ");
-
-          // If no image was pasted, insert the filtered text
-          if (!containsImage) {
-            document.execCommand("insertText", false, filteredText);
-          }
-        });
-      }
+    } catch (error) {
+      console.error(`Error handling file: ${file.name}`, error);
     }
   };
 

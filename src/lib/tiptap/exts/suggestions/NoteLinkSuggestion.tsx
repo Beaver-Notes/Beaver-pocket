@@ -2,13 +2,12 @@ import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
 import tippy from 'tippy.js';
 import { createRoot } from 'react-dom/client';
-import BubblemenuNoteLink from '../../../components/Editor/BubblemenuNoteLink';
-import { Note } from '../../../store/types';
+import BubblemenuNoteLink from '../../../../components/Editor/BubblemenuNoteLink';
+import { Note } from '../../../../store/types';
 import { PluginKey } from 'prosemirror-state';
 
 interface NoteSuggestionOptions {
   notes: Note[];
-  onClickNote: (note: Note) => void;
 }
 
 export default Extension.create<NoteSuggestionOptions>({
@@ -17,7 +16,6 @@ export default Extension.create<NoteSuggestionOptions>({
   addOptions() {
     return {
       notes: [],
-      onClickNote: () => {},
       suggestion: {
         char: '@@',
       },
@@ -52,7 +50,6 @@ export default Extension.create<NoteSuggestionOptions>({
           // Use the linkNote command from the editor
           //@ts-ignore
           editor.commands.linkNote({ noteId, noteTitle });
-          this.options.onClickNote(props);
         },
         render: () => {
           let popup: any;

@@ -83,20 +83,30 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
     <div>
       {/* Conditionally render content based on `menu` value */}
       {menu ? (
-        <div className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200">
+        <div
+          className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
+          aria-label={translations.menuItems.fileLabel} // Aria label for context
+        >
           <label
             htmlFor="file-upload-input"
             className="flex items-center cursor-pointer"
+            aria-label={translations.menuItems.fileDescription}
           >
             {/* Icon */}
-            <icons.FileIcon className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3" />
+            <icons.FileIcon
+              className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3"
+              aria-hidden="true"
+            />
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
-              <h3 className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]">
+              <h3
+                className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]"
+                aria-hidden="true"
+              >
                 {translations.menuItems.fileLabel}
               </h3>
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-neutral-500" aria-hidden="true">
                 {translations.menuItems.fileDescription}
               </p>
             </div>
@@ -108,18 +118,29 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             onChange={handleFileChange}
             id="file-upload-input"
             className="hidden"
+            aria-label={translations.accessibility.fileUploadInput}
           />
         </div>
       ) : (
-        <div className="flex items-center justify-between sm:p-2 md:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-          <label htmlFor="file-upload-input">
-            <icons.FileIcon className="sm:text-white text-xl  border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7cursor-pointer" />
+        <div
+          className="flex items-center justify-between sm:p-2 md:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+          aria-label={translations.accessibility.fileUpload}
+        >
+          <label
+            htmlFor="file-upload-input"
+            aria-label={translations.menuItems.fileLabel}
+          >
+            <icons.FileIcon
+              className="sm:text-white text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer"
+              aria-hidden="true"
+            />
           </label>
           <input
             type="file"
             onChange={handleFileChange}
             id="file-upload-input"
             className="hidden"
+            aria-label={translations.accessibility.fileUploadInput}
           />
         </div>
       )}
