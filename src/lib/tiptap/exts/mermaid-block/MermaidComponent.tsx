@@ -93,6 +93,10 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
       editContent: "editor.editContent",
       close: "editor.console",
     },
+    accessibility: {
+      editMermaid: "accessibility.editMermaid",
+      close: "accessibility.close"
+    },
   });
 
   useEffect(() => {
@@ -122,12 +126,15 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
           }
           content={mermaidContent}
           onClick={openModal}
+          aria-label={translations.accessibility.editMermaid}
         />
         <Transition show={showModal} as={React.Fragment}>
           <Dialog
             open={showModal}
             onClose={closeModal}
             className="fixed inset-0 z-50 overflow-y-auto"
+            aria-labelledby="dialog-title"
+            aria-modal="true"
           >
             <DialogBackdrop className="fixed inset-0 bg-neutral-300 dark:bg-neutral-600 bg-opacity-75 dark:bg-opacity-75 transition-opacity" />
             <div className="fixed inset-0 flex items-center justify-center">
@@ -149,26 +156,36 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
                   style={{
                     transition: dragging ? "none" : "transform 0.3s ease",
                   }}
+                  aria-labelledby="dialog-title"
                 >
                   <div className="flex justify-between items-center bg-gray-100 dark:bg-[#2D2C2C] px-4 py-3">
-                    <DialogTitle as="h3" className="text-lg font-semibold">
-                      {translations.editor.editContent || "-"}
+                    <DialogTitle
+                      as="h3"
+                      id="dialog-title"
+                      className="text-lg font-semibold"
+                    >
+                      {translations.editor.editContent || "Edit Content"}
                     </DialogTitle>
                     <button
                       onClick={closeModal}
                       className="text-amber-400 hover:text-gray-700 focus:outline-none"
-                    >
-                      {translations.editor.close || "-"}
+                      aria-label={translations.accessibility.close}
+                      >
+                      {translations.editor.close || "Close"}
                     </button>
                   </div>
                   <div className="p-4 h-full flex flex-col">
                     <div className="flex-grow">
                       <textarea
+                        id="mermaid-content-textarea"
                         ref={inputRef}
                         value={mermaidContent}
                         onChange={updateContent}
                         className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"
-                        placeholder={translations.editor.mermaidContent || "-"}
+                        placeholder={
+                          translations.editor.mermaidContent ||
+                          "Enter mermaid diagram content"
+                        }
                       />
                     </div>
                   </div>

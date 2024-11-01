@@ -1,8 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-} from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 
@@ -49,8 +45,7 @@ const VideoComponent: React.FC<VideoPlayerProps> = ({ node }) => {
 
       const tempVideo = document.createElement("video");
       tempVideo.src = url;
-      tempVideo.addEventListener("loadedmetadata", () => {
-      });
+      tempVideo.addEventListener("loadedmetadata", () => {});
       tempVideo.addEventListener("error", (e) => {
         console.error("Error loading video metadata:", e);
       });
@@ -60,21 +55,21 @@ const VideoComponent: React.FC<VideoPlayerProps> = ({ node }) => {
   };
 
   return (
-<NodeViewWrapper>
-  <div className="bg-neutral-100 dark:bg-[#353333] rounded-lg flex flex-col w-full">
-    {/* Video Container */}
-    <div className="relative w-full">
-      <video
-        id="videoPlayer"
-        ref={videoPlayer}
-        src={videoSrc || undefined}
-        controls
-        className="w-full rounded-lg m-0"
-        onError={(e) => console.error("Error loading video metadata:", e)}
-      />
-    </div>
-  </div>
-</NodeViewWrapper>
+    <NodeViewWrapper>
+      <div className="bg-neutral-100 dark:bg-[#353333] rounded-lg flex flex-col w-full">
+        {/* Video Container */}
+        <div className="relative w-full">
+          <video
+            id="videoPlayer"
+            ref={videoPlayer}
+            src={videoSrc || undefined}
+            controls
+            className="w-full rounded-lg m-0"
+            onError={(e) => console.error("Error loading video metadata:", e)}
+          />
+        </div>
+      </div>
+    </NodeViewWrapper>
   );
 };
 
