@@ -20,7 +20,15 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
   const offset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
+    <div
+      className="relative"
+      style={{ width: size, height: size }}
+      role="progressbar"
+      aria-valuenow={progress}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={typeof children === "string" ? children : `Progress: ${progress}%`}
+    >
       <svg width={size} height={size} className="rotate-[-90deg]">
         <circle
           cx={size / 2}
@@ -36,7 +44,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
           r={radius}
           strokeWidth={strokeWidth}
           fill="none"
-          stroke='#fbbf24' // progress circle color (blue)
+          stroke='#fbbf24'
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"

@@ -176,10 +176,42 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ node }) => {
     return `${minutes}:${seconds}`;
   };
 
+  const [translations, setTranslations] = useState({
+    accessibility: {
+      pauseAudio: "accessibility.pauseAudio",
+      playAudio: "accessibility.playAudio",
+      currentTime: "accessibility.currentTime",
+      timeRemaining: "accessibility.timeRemaining",
+      unmute: "accessibility.unmute",
+      mute: "accessibility.mute",
+      playbackspeed: "accessibility.playbackSpeed",
+      setSpeed: "accessibility.setSpeed",
+    },
+  });
+
+  useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+
   return (
     <NodeViewWrapper>
-      <div className="mt-2 mb-2 bg-neutral-100 dark:bg-[#353333] p-3 rounded-lg flex flex-row items-center justify-between w-full">
-        {" "}
+      <div
+        className="mt-2 mb-2 bg-neutral-100 dark:bg-[#353333] p-3 rounded-lg flex flex-row items-center justify-between w-full"
+      >
         <audio
           id="audioPlayer"
           ref={audioPlayer}
@@ -188,15 +220,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ node }) => {
           onTimeUpdate={updateProgress}
           onLoadedMetadata={updateProgress}
           onEnded={audioEnded}
-          onError={(e) => console.error("Error loading audio metadata:", e)}
         />
         <button
           className="bg-amber-400 text-white p-2 rounded-full mr-2"
           onClick={togglePlay}
+          aria-label={isPlaying ? translations.accessibility.pauseAudio : translations.accessibility.pauseAudio}
         >
           {isPlaying ? <icons.PauseLineIcon /> : <icons.PlayLineIcon />}
         </button>
-        <span className="mr-2 text-sm text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+        <span
+          className="mr-2 text-sm text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+          aria-live="polite"
+          aria-label={`${translations.accessibility.currentTime} ${formatTime(currentTime)}`}
+        >
           {formatTime(currentTime)}
         </span>
         <div
@@ -219,17 +255,29 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ node }) => {
             onTouchStart={startDrag}
           />
         </div>
-        <span className="ml-2 text-sm text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+        <span
+          className="ml-2 text-sm text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+          aria-live="polite"
+          aria-label={`${translations.accessibility.timeRemaining} ${formatTime(duration - currentTime)}`}
+        >
           {formatTime(duration - currentTime)}
         </span>
-        <button className="ml-2" onClick={toggleMute}>
+        <button
+          className="ml-2"
+          onClick={toggleMute}
+          aria-label={isMuted ? translations.accessibility.unmute : translations.accessibility.mute}
+        >
           {isMuted ? (
             <icons.VolumeMuteLineIcon className="w-6 h-6" />
           ) : (
             <VolumeUpLineIcon className="w-6 h-6" />
           )}
         </button>
-        <button className="ml-2" onClick={toggleSpeedOptions}>
+        <button
+          className="ml-2"
+          onClick={toggleSpeedOptions}
+          aria-label={translations.accessibility.playbackspeed}
+        >
           <icons.SpeedLineIcon className="w-6 h-6" />
         </button>
       </div>
@@ -240,6 +288,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ node }) => {
               key={rate}
               className="block px-4 py-2 text-gray-800 dark:text-[color:var(--selected-dark-text)]"
               onClick={() => setPlaybackRate(rate)}
+              aria-label={`${translations.accessibility.setSpeed} ${rate}x`}
             >
               {rate}x
             </button>
@@ -247,7 +296,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ node }) => {
         </div>
       )}
     </NodeViewWrapper>
-  );
+  );  
 };
 
 export default AudioPlayer;

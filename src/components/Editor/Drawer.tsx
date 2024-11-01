@@ -39,6 +39,8 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       embedLabel: "menuItems.embedLabel",
       tableLabel: "menuItems.tableLabel",
       drawingBlockLabel: "menuItems.drawingBlockLabel",
+      imageLabel: "menuItems.imageLabel",
+      imageDescription: "menuItems.imageDescription",
     },
     accessibility: {
       insertRowAfter: "accessibility.insertRowAfter",
@@ -71,6 +73,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       processing: "accessibility.processing",
       startRecording: "accessibility.startRecording",
       stopRecording: "accessibility.stopRecording",
+      videoUpload: "accessibility.videoUpload"
     },
   });
 
@@ -456,6 +459,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
               onClick={() => item.action(editor)}
+              aria-label={item.label}
             >
               {item.icon}
             </button>
@@ -735,6 +739,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
               onClick={() => item.action(editor)}
+              aria-label={item.label}
             >
               {item.icon}
             </button>

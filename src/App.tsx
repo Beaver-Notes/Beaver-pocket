@@ -25,6 +25,8 @@ import CommandPrompt from "./components/App/CommandPrompt";
 import { loadNotes } from "./store/notes";
 import { useNotesState } from "./store/Activenote";
 import Mousetrap from "mousetrap";
+import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
+import { isPlatform } from "@ionic/react";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -32,6 +34,8 @@ const App: React.FC = () => {
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { notesState, setNotesState } = useNotesState();
   const [isSwipe, setIsSwipe] = useState(false);
+
+  const isIpad = isPlatform("ipad");
 
   document.addEventListener("reload", () => {
     const loadNotesFromStorage = async () => {
@@ -42,7 +46,7 @@ const App: React.FC = () => {
     loadNotesFromStorage();
   });
 
-  document.addEventListener('notelink', (event: Event) => {
+  document.addEventListener("notelink", (event: Event) => {
     const customEvent = event as CustomEvent;
     const noteId = customEvent.detail.noteId;
     navigate(`/editor/${noteId}`);
@@ -170,6 +174,11 @@ const App: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
+  if (isIpad) {
+    Keyboard.setResizeMode({ mode: KeyboardResize.None });
+  } else {
+    Keyboard.setResizeMode({ mode: KeyboardResize.Native });
+  }
   return (
     <div>
       <div className="safe-area"></div>

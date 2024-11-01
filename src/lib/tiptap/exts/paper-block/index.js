@@ -14,7 +14,7 @@ export default Node.create({
         default: [],
       },
       height: {
-        default: 400, // Default height
+        default: 600, // Default height
       },
       paperType: {
         default: 'plain',
@@ -51,7 +51,7 @@ export default Node.create({
         ({ commands }) => {
           return commands.insertContent({
             type: 'paper',
-            attrs: { lines: [], height: 250 }, // Ensure default height is set
+            attrs: { lines: [], height: 600 }, // Ensure default height is set
           });
         },
     };

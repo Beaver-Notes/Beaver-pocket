@@ -671,10 +671,15 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">
-            <p className="text-4xl text-center font-bold p-4">
+            <p
+              className="text-4xl text-center font-bold p-4"
+              aria-label={translations.onedrive.title || "-"}
+            >
               {translations.onedrive.title || "-"}
             </p>
-            <div className="flex justify-center items-center">
+            <div
+              className="flex justify-center items-center"
+            >
               <CircularProgress
                 progress={progress}
                 color={progressColor}
@@ -682,11 +687,15 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                 strokeWidth={8}
               >
                 {progress ? (
-                  <span className="text-amber-400 text-xl font-semibold">
+                  <span
+                    className="text-amber-400 text-xl font-semibold"
+                  >
                     {progress}%
                   </span>
                 ) : (
-                  <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
+                  <div
+                    className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center"
+                  >
                     <icons.OneDrive className="w-32 h-32 text-neutral-800 dark:text-neutral-200 p-1" />
                   </div>
                 )}
@@ -696,26 +705,35 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
         </div>
         {accessToken ? (
           <>
-            <section>
+            <section
+            >
               <div className="flex flex-col">
                 <div className="space-y-2">
-                  {" "}
-                  {/* Adjusted margin */}
                   <button
                     className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
                     onClick={importData}
+                    aria-label={
+                      translations.onedrive.import ||
+                      "Import data from OneDrive"
+                    }
                   >
                     {translations.onedrive.import || "-"}
                   </button>
                   <button
                     className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                     onClick={exportData}
+                    aria-label={
+                      translations.onedrive.export || "Export data to OneDrive"
+                    }
                   >
                     {translations.onedrive.export || "-"}
                   </button>
                   <button
                     className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                     onClick={logout}
+                    aria-label={
+                      translations.onedrive.logout || "Logout from OneDrive"
+                    }
                   >
                     {translations.onedrive.logout || "-"}
                   </button>
@@ -723,17 +741,27 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
               </div>
               <div className="flex items-center py-2 justify-between">
                 <div>
-                  <p className="block text-lg align-left">
+                  <p
+                    className="block text-lg align-left"
+                    aria-label={translations.onedrive.autoSync || "Auto Sync"}
+                  >
                     {translations.onedrive.autoSync || "-"}
                   </p>
                 </div>
-                <label className="relative inline-flex cursor-pointer items-center">
+                <label
+                  className="relative inline-flex cursor-pointer items-center"
+                  aria-label={
+                    translations.onedrive.autoSync || "Toggle auto sync"
+                  }
+                >
                   <input
                     id="switch"
                     type="checkbox"
                     checked={autoSync}
                     onChange={handleSyncToggle}
                     className="peer sr-only"
+                    aria-checked={autoSync}
+                    aria-labelledby="Auto sync"
                   />
                   <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                 </label>
@@ -748,6 +776,9 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                   <button
                     className="bg-amber-400 w-full text-white p-3 text-xl font-bold rounded-xl"
                     onClick={login}
+                    aria-label={
+                      translations.onedrive.login || "Login to OneDrive"
+                    }
                   >
                     {translations.onedrive.login || "-"}
                   </button>

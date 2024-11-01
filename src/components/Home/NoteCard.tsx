@@ -22,7 +22,7 @@ import { JSONContent } from "@tiptap/react";
 import dayjs from "dayjs";
 import "dayjs/locale/en";
 import "dayjs/locale/de";
-import "dayjs/locale/zh-cn"; 
+import "dayjs/locale/zh-cn";
 
 interface BookmarkedProps {
   note: Note;
@@ -30,7 +30,11 @@ interface BookmarkedProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }) => {
+const NoteCard: React.FC<BookmarkedProps> = ({
+  note,
+  setNotesState,
+  notesState,
+}) => {
   const { activeNoteId } = useNotesState();
 
   const STORAGE_PATH = "notes/data.json";
@@ -200,7 +204,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
       lockerror: "card.lockerror",
       enterpasswd: "card.enterpasswd",
       biometricReason: "card.biometricReason",
-      biometricTitle: "card.biometricTitle"
+      biometricTitle: "card.biometricTitle",
     },
   });
 
@@ -305,7 +309,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
     content: JSONContent | string | JSONContent[]
   ) {
     let text = "";
-  
+
     if (typeof content === "string") {
       text = content;
     } else if (Array.isArray(content)) {
@@ -315,33 +319,37 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
       const { title, ...contentWithoutTitle } = content;
       text = extractParagraphTextFromContent(contentWithoutTitle);
     }
-  
+
     // Handle long URLs or continuous text
-    text = text.replace(/(\S{30,})/g, '$1 '); // Add space after long continuous strings
-  
+    text = text.replace(/(\S{30,})/g, "$1 "); // Add space after long continuous strings
+
     if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
       return text;
     } else {
       return text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "...";
     }
   }
-  
 
   return (
     <div
       key={note.id}
-      role="button"
-      tabIndex={0}
-      className={
+      className={`p-3 rounded-xl ${
         note.id === activeNoteId
-          ? "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
-          : "p-3 cursor-pointer rounded-xl bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
-      }
+          ? "bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] cursor-pointer"
+          : "bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
+      }`}
       onClick={() => handleClickNote(note)}
+      aria-label={`Open note ${note.title}`}
     >
       <div className="h-40 overflow-hidden">
         <div className="flex flex-col h-full overflow-hidden">
-          <div className="text-xl font-bold">{note.title}</div>
+          <div
+            className="text-xl font-bold"
+            aria-label={`Title: ${note.title}`}
+          >
+            {note.title}
+          </div>
+
           {note.isLocked ? (
             <div>
               <p></p>
@@ -355,6 +363,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
                       <span
                         key={label}
                         className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                        aria-label={`Label: ${label}`}
                       >
                         #{label}
                       </span>
@@ -364,9 +373,17 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
               )}
             </div>
           )}
+
           {note.isLocked ? (
             <div className="flex flex-col items-center">
-              <button className="flex items-center justify-center">
+              <button
+                className="flex items-center justify-center"
+                aria-label="Unlock note"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering parent click event
+                  handleToggleLock(note.id, e);
+                }}
+              >
                 <Icons.LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
               </button>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -374,17 +391,28 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
               </p>
             </div>
           ) : (
-            <div className="text-lg">
+            <div
+              className="text-lg"
+              aria-label={`Content: ${
+                note.content && truncateContentPreview(note.content)
+              }`}
+            >
               {note.content && truncateContentPreview(note.content)}
             </div>
           )}
         </div>
       </div>
+
       <div className="flex items-center justify-between pt-2">
         <div className="flex items-center">
           <button
             className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-            onClick={(e) => handleToggleBookmark(note.id, e)}
+            aria-pressed={note.isBookmarked}
+            aria-label={`Bookmark note ${note.isBookmarked ? "Remove" : "Add"}`}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering parent click event
+              handleToggleBookmark(note.id, e);
+            }}
           >
             {note.isBookmarked ? (
               <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2" />
@@ -392,9 +420,17 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
               <Icons.Bookmark3LineIcon className="w-8 h-8 mr-2" />
             )}
           </button>
+
           <button
             className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-            onClick={(e) => handleToggleArchive(note.id, e)} // Pass the event
+            aria-pressed={note.isArchived}
+            aria-label={`Archive note ${
+              note.isArchived ? "Unarchive" : "Archive"
+            }`}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering parent click event
+              handleToggleArchive(note.id, e);
+            }}
           >
             {note.isArchived ? (
               <Icons.ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
@@ -402,9 +438,15 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
               <Icons.ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
             )}
           </button>
+
           <button
             className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
-            onClick={(e) => handleToggleLock(note.id, e)}
+            aria-pressed={note.isLocked}
+            aria-label={`Lock note ${note.isLocked ? "Unlock" : "Lock"}`}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering parent click event
+              handleToggleLock(note.id, e);
+            }}
           >
             {note.isLocked ? (
               <Icons.LockClosedIcon className="w-8 h-8 mr-2" />
@@ -412,14 +454,22 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, setNotesState, notesState }
               <Icons.LockOpenIcon className="w-8 h-8 mr-2" />
             )}
           </button>
+
           <button
             className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
-            onClick={(e) => handleDeleteNote(note.id, e)}
+            aria-label="Delete note"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering parent click event
+              handleDeleteNote(note.id, e);
+            }}
           >
             <Icons.DeleteBinLineIcon className="w-8 h-8 mr-2" />
           </button>
         </div>
-        <div className="text-lg text-neutral-500 dark:text-neutral-400 overflow-hidden whitespace-nowrap overflow-ellipsis">
+        <div
+          className="text-lg text-neutral-500 dark:text-neutral-400 overflow-hidden whitespace-nowrap overflow-ellipsis"
+          aria-label={`Created ${dayjs(note.createdAt).fromNow()}`}
+        >
           {dayjs(note.createdAt).fromNow()}
         </div>
       </div>

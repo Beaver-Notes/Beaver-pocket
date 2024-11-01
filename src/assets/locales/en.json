@@ -43,7 +43,19 @@
     "superscript": "Superscript",
     "link": "Link",
     "fileUploadInput": "Upload a file",
-    "fileUpload": "File upload section"
+    "fileUpload": "File upload section",
+    "searchContent": "Search content",
+    "back": "Back",
+    "videoUpload": "Upload video",
+    "pauseAudio": "Pause audio",
+    "playAudio": "Play audio",
+    "currentTime": "Current time",
+    "timeRemaining:": "Time remaining",
+    "unmute": "Unmute",
+    "mute": "Mute",
+    "playbackSpeed": "Playback speed",
+    "setSpeed": "Set playback speed to",
+    "selectcodeLanguage": "Select code language"
   },
   "settings": {
     "title": "Settings",
@@ -86,7 +98,8 @@
     "getToken": "Get Access Token",
     "autoSync": "Auto Sync",
     "logout": "Logout",
-    "placeholder": "Paste authorization code here"
+    "placeholder": "Paste authorization code here",
+    "icon": "Dropbox icon"
   },
   "gdrive": {
     "title": "Sync with Google Drive",
