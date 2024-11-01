@@ -28,6 +28,7 @@ import InformationLineIcon from "remixicon-react/InformationLineIcon";
 import SyncLineIcon from "remixicon-react/RefreshLineIcon";
 import LockLineIcon from "remixicon-react/LockLineIcon";
 import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
+import Focus3FillIcon from "remixicon-react/Focus3FillIcon";
 import Search2LineIcon from "remixicon-react/Search2LineIcon";
 import FileIcon from "remixicon-react/FileLineIcon";
 import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
@@ -263,6 +264,7 @@ const Icons = {
   SyncLineIcon,
   LockLineIcon,
   Focus3LineIcon,
+  Focus3FillIcon,
   Search2LineIcon,
   ListUnorderedIcon,
   ArrowLeftLineIcon,

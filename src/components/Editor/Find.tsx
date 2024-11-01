@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import icons from "../../lib/remixicon-react";
+import Icons from "../../lib/remixicon-react";
 
 interface FindProps {
-  editor: any; // Adjust the type of editor according to your setup
+  editor: any;
+  setShowFind: any;
 }
 
-const Find: React.FC<FindProps> = ({ editor }) => {
+const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [replaceTerm, setReplaceTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -30,19 +32,6 @@ const Find: React.FC<FindProps> = ({ editor }) => {
         .setReplaceTerm(replaceTerm)
         .resetIndex()
         .replace()
-        .run();
-      focusEditor();
-    }
-  };
-
-  const handleReplaceAll = () => {
-    if (searchTerm && replaceTerm) {
-      editor
-        ?.chain()
-        .setSearchTerm(searchTerm)
-        .setReplaceTerm(replaceTerm)
-        .resetIndex()
-        .replaceAll()
         .run();
       focusEditor();
     }
@@ -81,8 +70,12 @@ const Find: React.FC<FindProps> = ({ editor }) => {
     loadTranslations();
   }, []);
 
+  const handleClose = () => {
+    setShowFind(false);
+  }
+
   return (
-    <div className="pt-4 bg-white dark:bg-[#232222] overflow-enabled h-auto w-full bg-transparent z-50 no-scrollbar">
+    <div className="pt-4 bg-white dark:bg-[#232222] overflow-enabled h-auto w-full bg-transparent z-30 no-scrollbar">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 w-full">
         {/* Search Input and Button */}
         <div className="flex items-center sm:col-span-1 w-full space-x-2">
@@ -103,6 +96,14 @@ const Find: React.FC<FindProps> = ({ editor }) => {
           >
             <icons.Search2LineIcon />
           </button>
+          <button
+            className="p-3 sm:hidden hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] rounded-lg text-lg bg-[#F8F8F7] dark:bg-[#353333]"
+            onClick={handleClose}
+          >
+            <Icons.CloseLineIcon
+              className={`border-none text-red-500 text-xl w-7 h-7`}
+            />
+          </button>
         </div>
 
         {/* Replace Input */}
@@ -121,22 +122,24 @@ const Find: React.FC<FindProps> = ({ editor }) => {
         {/* Action Buttons */}
         <div className="hidden sm:flex items-center sm:col-span-1 w-full space-x-2">
           <button
-            className="flex-grow sm:flex-grow-0 px-3 py-2.5 w-full sm:w-auto hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] rounded-lg text-lg bg-[#F8F8F7] dark:bg-[#353333]"
+            className="flex-grow sm:flex-grow-0 p-3 w-full sm:w-auto hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] rounded-lg text-lg bg-[#F8F8F7] dark:bg-[#353333]"
             onClick={handleSearch}
           >
             {translations.editor.find || "-"}
           </button>
           <button
-            className="flex-grow sm:flex-grow-0 px-3 py-2.5 w-full sm:w-auto rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
+            className="flex-grow sm:flex-grow-0 p-3 w-full sm:w-auto rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
             onClick={handleReplace}
           >
             {translations.editor.replace || "-"}
           </button>
           <button
-            className="flex-grow sm:flex-grow-0 px-3 py-2.5 w-full sm:w-auto rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
-            onClick={handleReplaceAll}
+            className="flex-grow sm:flex-grow-0 p-3 w-full sm:w-auto rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
+            onClick={handleClose}
           >
-            {translations.editor.replaceAll || "-"}
+            <Icons.CloseLineIcon
+              className={`border-none text-red-500 text-xl w-7 h-7`}
+            />
           </button>
         </div>
       </div>

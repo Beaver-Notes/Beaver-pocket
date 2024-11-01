@@ -44,7 +44,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
       logout: "dropbox.logout",
       existingFolder: "dropbox.existingFolder",
       refreshingToken: "dropbox.refreshingToken",
-      placeholder: "dropbox.placeholder"
+      placeholder: "dropbox.placeholder",
     },
   });
 
@@ -499,28 +499,28 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
     if (accessToken) {
       try {
         setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-  
+
         const dbx = new Dropbox({ accessToken });
-  
+
         // Function to format date to YYYY-MM-DD
         const formatDate = (date: Date) => {
           return date.toISOString().slice(0, 10);
         };
-  
+
         // Function to go back 1 day
         const goBackOneDay = (date: Date) => {
           const newDate = new Date(date);
           newDate.setDate(newDate.getDate() - 1);
           return newDate;
         };
-  
+
         // Try to find a viable folder, going back 1 day at a time (max 30 days)
         let currentDate = new Date();
         let mainFolderPath = `/Beaver Notes ${formatDate(currentDate)}`;
         let folderFound = false;
         const maxAttempts = 30; // Stop after 30 attempts (30 days)
         let attempts = 0;
-  
+
         while (!folderFound && attempts < maxAttempts) {
           try {
             // Check if the folder exists in Dropbox
@@ -537,56 +537,69 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
             }
           }
         }
-  
+
         if (!folderFound) {
           throw new Error("No viable folder found in the last 30 days.");
         }
-  
+
         // Create the folder structure locally
         await Filesystem.mkdir({
           path: `export/Beaver Notes ${formatDate(currentDate)}`,
           directory: FilesystemDirectory.Data,
         });
-  
+
         // Step 1: Calculate the total number of entries (files + folders)
-        const calculateTotalEntries = async (folderPath: string): Promise<number> => {
+        const calculateTotalEntries = async (
+          folderPath: string
+        ): Promise<number> => {
           const response = await dbx.filesListFolder({ path: folderPath });
           let totalEntries = response.result.entries.length;
-  
+
           for (const entry of response.result.entries) {
             if (entry[".tag"] === "folder") {
               // Recursively count subfolders and files
-              totalEntries += await calculateTotalEntries(`${folderPath}/${entry.name}`);
+              totalEntries += await calculateTotalEntries(
+                `${folderPath}/${entry.name}`
+              );
             }
           }
-  
+
           return totalEntries;
         };
-  
+
         const totalEntries = await calculateTotalEntries(mainFolderPath); // Calculate total files + folders
         let processedEntries = 0;
-  
+
         // Step 2: Create folders recursively and track progress globally
-        const createFoldersRecursively = async (folderPath: string, parentPath = "") => {
+        const createFoldersRecursively = async (
+          folderPath: string,
+          parentPath = ""
+        ) => {
           const response = await dbx.filesListFolder({ path: folderPath });
-  
+
           for (const entry of response.result.entries) {
             if (entry[".tag"] === "folder") {
-              const folderFullPath = `${parentPath}/${entry.name}`.replace(/^\/+/, ""); // Remove leading slash
-  
+              const folderFullPath = `${parentPath}/${entry.name}`.replace(
+                /^\/+/,
+                ""
+              ); // Remove leading slash
+
               await Filesystem.mkdir({
                 path: `export/${mainFolderPath}/${folderFullPath}`,
                 directory: FilesystemDirectory.Data,
               });
-  
+
               processedEntries++;
               setProgress(Math.round((processedEntries / totalEntries) * 100)); // Global progress
-  
+
               const subFolderPath = `${folderPath}/${entry.name}`;
               await createFoldersRecursively(subFolderPath, folderFullPath);
             } else if (entry[".tag"] === "file") {
-              const fileFullPath = `${parentPath}/${entry.name}`.replace(/^\/+/, ""); // Remove leading slash
-  
+              const fileFullPath = `${parentPath}/${entry.name}`.replace(
+                /^\/+/,
+                ""
+              ); // Remove leading slash
+
               await Filesystem.downloadFile({
                 url: `https://content.dropboxapi.com/2/files/download`,
                 path: `export/${mainFolderPath}/${fileFullPath}`,
@@ -596,24 +609,24 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
                   "Dropbox-API-Arg": JSON.stringify({ path: entry.path_lower }),
                 },
               });
-  
+
               processedEntries++;
               setProgress(Math.round((processedEntries / totalEntries) * 100)); // Global progress
             }
           }
         };
-  
+
         // Start importing from the found folder
         await createFoldersRecursively(mainFolderPath);
         await importUtils(setNotesState, loadNotes);
-  
+
         await Filesystem.rmdir({
           path: `export/Beaver Notes ${formatDate(currentDate)}`,
           directory: FilesystemDirectory.Data,
           recursive: true,
         });
         setProgress(100); // Complete progress
-  
+
         console.log("Folder deleted successfully!");
       } catch (error) {
         console.error("Error during import or folder deletion:", error);
@@ -624,7 +637,6 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
       console.error("Access token not found!");
     }
   };
-  
 
   document.addEventListener("dropboxExport", handleDropboxExport);
 
@@ -710,7 +722,10 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">
-            <p className="text-4xl text-center font-bold p-4">
+            <p
+              className="text-4xl text-center font-bold p-4"
+              aria-label={translations.dropbox.title || "-"}
+            >
               {translations.dropbox.title || "-"}
             </p>
             <div className="flex justify-center items-center">
@@ -725,7 +740,9 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
                     {progress}%
                   </span>
                 ) : (
-                  <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
+                  <div
+                    className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center"
+                  >
                     <icons.DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
                   </div>
                 )}
@@ -737,23 +754,30 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
           <section>
             <div className="flex flex-col">
               <div className="space-y-2">
-                {" "}
-                {/* Adjusted margin */}
                 <button
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
                   onClick={importData}
+                  aria-label={
+                    translations.dropbox.import || "Import data from Dropbox"
+                  }
                 >
                   {translations.dropbox.import || "-"}
                 </button>
                 <button
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                   onClick={exportdata}
+                  aria-label={
+                    translations.dropbox.export || "Export data to Dropbox"
+                  }
                 >
                   {translations.dropbox.export || "-"}
                 </button>
                 <button
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                   onClick={Logout}
+                  aria-label={
+                    translations.dropbox.logout || "Logout from Dropbox"
+                  }
                 >
                   {translations.dropbox.logout || "-"}
                 </button>
@@ -761,17 +785,25 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
             </div>
             <div className="flex items-center py-2 justify-between">
               <div>
-                <p className="block text-lg align-left">
+                <p
+                  className="block text-lg align-left"
+                  aria-label={translations.dropbox.autoSync || "Auto Sync"}
+                >
                   {translations.dropbox.autoSync || "-"}
                 </p>
               </div>
-              <label className="relative inline-flex cursor-pointer items-center">
+              <label
+                className="relative inline-flex cursor-pointer items-center"
+                aria-label={translations.dropbox.autoSync || "Toggle auto sync"}
+              >
                 <input
                   id="switch"
                   type="checkbox"
                   checked={autoSync}
                   onChange={handleSyncToggle}
                   className="peer sr-only"
+                  aria-checked={autoSync}
+                  aria-labelledby="Auto sync"
                 />
                 <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
               </label>
@@ -788,16 +820,23 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
                     placeholder={translations.dropbox.placeholder || "-"}
                     value={authorizationCode}
                     onChange={(e) => setAuthorizationCode(e.target.value)}
+                    aria-label={translations.dropbox.placeholder}
                   />
                   <button
                     className="bg-neutral-200 dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] bg-opacity-40 w-full text-black p-3 text-xl font-bold rounded-xl"
                     onClick={handleExchange}
+                    aria-label={
+                      translations.dropbox.submit || "Submit authorization code"
+                    }
                   >
                     {translations.dropbox.submit || "-"}
                   </button>
                   <button
                     className="bg-amber-400 w-full text-white p-3 text-xl font-bold rounded-xl"
                     onClick={handleLogin}
+                    aria-label={
+                      translations.dropbox.getToken || "Get Dropbox token"
+                    }
                   >
                     {translations.dropbox.getToken || "-"}
                   </button>

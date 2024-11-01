@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import icons from "../../lib/remixicon-react"
+import icons from "../../lib/remixicon-react";
 import "../../assets/css/Modal.css"; // Import your CSS file for modal styles
 import dayjs from "dayjs";
 
@@ -42,7 +42,9 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
     home: {
       enterpasswd: "home.enterpasswd",
       confirm: "home.confirm",
-      cancel: "home.cancel"
+      cancel: "home.cancel",
+      showPassword: "home.showPassword",
+      hidePassword: "home.hidePassword",
     },
   });
 
@@ -66,21 +68,42 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
   }, []);
 
   return (
-    <div className={`modal-container ${isVisible ? "show" : "hide"}`}>
+    <div
+      className={`modal-container ${isVisible ? "show" : "hide"}`}
+      role="dialog"
+      aria-labelledby="modal-title"
+      aria-modal="true"
+    >
       <div className="fixed inset-0 z-40 flex justify-center items-center bg-black bg-opacity-20">
         <div className="bg-white dark:bg-[#2D2C2C] w-2/3 sm:w-2/5 p-4 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-semibold dark:text-[color:var(--selected-dark-text)] mb-4">{title}</h2>
+          {/* Modal Title */}
+          <h2
+            id="modal-title"
+            className="text-2xl font-semibold dark:text-[color:var(--selected-dark-text)] mb-4"
+          >
+            {title}
+          </h2>
+
+          {/* Input Field */}
           <div className="relative">
+            <label htmlFor="password-input" className="sr-only">
+              {translations.home.enterpasswd}
+            </label>
             <input
+              id="password-input"
               type={showInputContent ? "text" : "password"}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               className="w-full dark:bg-neutral-800 border-amber-300 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 mb-4 rounded-lg pr-10"
-              placeholder= {translations.home.enterpasswd}
+              placeholder={translations.home.enterpasswd}
+              aria-labelledby="modal-title"
             />
+
+            {/* Toggle Password Visibility Button */}
             <button
               onClick={toggleInputContentVisibility}
               className="absolute right-0 py-1.5 text-sm dark:text-[color:var(--selected-dark-text)] text-neutral-500 focus:outline-none"
+              aria-label={showInputContent ? translations.home.hidePassword : translations.home.showPassword}
             >
               {showInputContent ? (
                 <icons.EyeLineIcon className="w-8 h-8 mr-2" />
@@ -89,16 +112,20 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
               )}
             </button>
           </div>
+
+          {/* Action Buttons */}
           <div className="flex space-x-2 justify-end">
             <button
               onClick={handleCancel}
               className="p-3 text-xl w-1/2 bg-neutral-100 dark:bg-neutral-700 dark:text-[color:var(--selected-dark-text)] text-neutral-700 rounded-lg hover:bg-neutral-200"
+              aria-label={translations.home.cancel}
             >
               {translations.home.cancel}
             </button>
             <button
               onClick={handleConfirm}
               className="p-3 w-1/2 text-xl bg-amber-400 text-white rounded-lg hover:bg-amber-300 mr-2"
+              aria-label={translations.home.confirm}
             >
               {translations.home.confirm}
             </button>

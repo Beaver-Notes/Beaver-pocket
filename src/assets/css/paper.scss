@@ -1,9 +1,6 @@
 .draw {
   .drawing-container {
     @apply rounded-xl;
-    position: relative;
-    display: flex;
-    flex-direction: column;
 
     svg {
       @apply bg-neutral-100 dark:bg-neutral-800 rounded-t-xl;

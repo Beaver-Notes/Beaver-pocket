@@ -7,11 +7,12 @@ import { Note } from "../../store/types";
 import FileUploadComponent from "./FileUpload";
 import AudioUploadComponent from "./AudioUpload";
 import VideoUploadComponent from "./VideoUpload";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import Mousetrap from "mousetrap";
 import { useExportDav } from "../../utils/Webdav/webDavUtil";
+import Find from "./Find";
 
 interface ToolbarProps {
-  toolbarVisible: boolean;
   note: Note;
   noteId: string;
   editor: Editor | null;
@@ -19,20 +20,77 @@ interface ToolbarProps {
 
 const Toolbar: React.FC<ToolbarProps> = ({
   editor,
-  toolbarVisible,
   noteId,
 }) => {
   const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const [showFind, setShowFind] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{
     top: number;
     left: number;
   }>({ top: 0, left: 0 });
+  const [FindPosition, setFindPosition] = useState<{
+    top: number;
+    left: number;
+  }>({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const searchRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const FindRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [translations, setTranslations] = useState({
     editor: {
       embedUrl: "editor.embedUrl",
+    },
+    menuItems: {
+      paragraphLabel: "menuItems.paragraphLabel",
+      heading1Label: "menuItems.heading1Label",
+      heading2Label: "menuItems.heading2Label",
+      bulletListLabel: "menuItems.bulletListLabel",
+      orderedListLabel: "menuItems.orderedListLabel",
+      checklistLabel: "menuItems.checklistLabel",
+      quoteLabel: "menuItems.quoteLabel",
+      codeLabel: "menuItems.codeLabel",
+      embedLabel: "menuItems.embedLabel",
+      tableLabel: "menuItems.tableLabel",
+      drawLabel: "menuItems.drawLabel",
+      drawingBlockLabel: "menuItems.drawingBlockLabel",
+      imageLabel: "menuItems.imageLabel",
+      imageDescription: "menuItems.imageDescription",
+    },
+    accessibility: {
+      insertRowAfter: "accessibility.insertRowAfter",
+      insertRowBefore: "accessibility.insertRowBefore",
+      deleteRow: "accessibility.deleteRow",
+      insertColumnLeft: "accessibility.insertColumnLeft",
+      insertColumnRight: "accessibility.insertColumnRight",
+      deleteColumn: "accessibility.deleteColumn",
+      deleteTable: "accessibility.deleteTable",
+      bold: "accessibility.bold",
+      italic: "accessibility.italic",
+      underline: "accessibility.underline",
+      strikethrough: "accessibility.strikethrough",
+      highlight: "accessibility.highlight",
+      highlightOptions: "accessibility.highlightOptions",
+      removehighlight: "accessibility.removeHighlight",
+      orange: "accessibility.orange",
+      yellow: "accessibility.yellow",
+      green: "accessibility.green",
+      blue: "accessibility.blue",
+      purple: "accessibility.purple",
+      pink: "accessibility.pink",
+      red: "accessibility.red",
+      setColor: "accessibility.setColor",
+      subscript: "accessibility.subscript",
+      superscript: "accessibility.superscript",
+      link: "accessibility.link",
+      fileUploadInput: "accessibility.fileUploadInput",
+      fileUpload: "accessibility.fileUpload",
+      processing: "accessibility.processing",
+      startRecording: "accessibility.startRecording",
+      stopRecording: "accessibility.stopRecording",
+      searchContent: "accessibility.searchContent",
+      back: "accessibility.back",
+      videoUpload: "accessibility.videoUpload"
     },
   });
 
@@ -154,18 +212,50 @@ const Toolbar: React.FC<ToolbarProps> = ({
       .run();
   }, [editor]);
 
-  if (!toolbarVisible) return null;
-
   const handleMouseDown = (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     event.preventDefault();
   };
 
-  const showFind = () => {
-    const event = new CustomEvent("showFind");
-    document.dispatchEvent(event);
+  const handleshowFind = () => {
+    if (searchRef.current) {
+      const rect = searchRef.current.getBoundingClientRect();
+      const dropdownHeight = 120;
+      let top = rect.top + window.scrollY - dropdownHeight;
+
+      if (top < 0) {
+        top = rect.bottom + window.scrollY;
+      }
+
+      // Check for right overflow
+      let left = rect.left + window.scrollX;
+      const dropdownWidth = 200;
+
+      if (left + dropdownWidth > window.innerWidth) {
+        left = window.innerWidth - dropdownWidth;
+      }
+
+      setFindPosition({ top, left });
+    }
+    setShowFind(!isDropdownOpen);
   };
+
+  useEffect(() => {
+    Mousetrap.bind("esc", (e) => {
+      e.preventDefault();
+      setShowFind(false);
+    });
+
+    Mousetrap.bind("mod+backspace", (e) => {
+      e.preventDefault();
+      setShowFind(false);
+    });
+    return () => {
+      Mousetrap.unbind("esc");
+      Mousetrap.unbind("mod+backspace");
+    };
+  }, []);
 
   const colors = [
     "bg-orange-200 dark:bg-orange-40",
@@ -175,6 +265,16 @@ const Toolbar: React.FC<ToolbarProps> = ({
     "bg-purple-200 dark:bg-purple-100",
     "bg-pink-200 dark:bg-pink-100",
     "bg-red-200 dark:bg-red-100",
+  ];
+
+  const colorsTranslations = [
+    translations.accessibility.orange,
+    translations.accessibility.yellow,
+    translations.accessibility.green,
+    translations.accessibility.blue,
+    translations.accessibility.purple,
+    translations.accessibility.pink,
+    translations.accessibility.red,
   ];
 
   // Toggle dropdown visibility
@@ -233,6 +333,96 @@ const Toolbar: React.FC<ToolbarProps> = ({
     navigate("/");
   };
 
+  const formatting = [
+    {
+      label: translations.menuItems.paragraphLabel,
+      active: "Pragraph",
+      icon: (
+        <icons.ParagraphIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: (editor: any) => editor?.chain().focus().setParagraph().run(),
+    },
+    {
+      label: translations.menuItems.heading1Label,
+      active: "heading",
+      level: 1,
+      icon: (
+        <icons.Heading1Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: (editor: any) =>
+        editor?.chain().focus().toggleHeading({ level: 1 }).run(),
+    },
+    {
+      label: translations.menuItems.heading2Label,
+      active: "heading",
+      level: 2,
+      icon: (
+        <icons.Heading2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: (editor: any) =>
+        editor?.chain().focus().toggleHeading({ level: 2 }).run(),
+    },
+  ];
+
+  const lists = [
+    {
+      active: "bulletList",
+      label: translations.menuItems.bulletListLabel,
+      icon: (
+        <icons.ListUnorderedIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: (editor: any) => editor?.chain().focus().toggleBulletList().run(),
+    },
+    {
+      active: "orderedList",
+      label: translations.menuItems.orderedListLabel,
+      icon: (
+        <icons.ListOrderedIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: (editor: any) =>
+        editor?.chain().focus().toggleOrderedList().run(),
+    },
+    {
+      active: "TaskList",
+      label: translations.menuItems.bulletListLabel,
+      icon: (
+        <icons.ListCheck2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: (editor: any) => editor?.chain().focus().toggleTaskList().run(),
+    },
+  ];
+
+  const draw = [
+    {
+      label: translations.menuItems.drawLabel,
+      active: "paper",
+      icon: (
+        <icons.Brush2Fill className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: (editor: any) => editor?.chain().focus().insertPaper().run(),
+    },
+  ];
+
+  const search = [
+    {
+      label: translations.accessibility.searchContent,
+      icon: (
+        <icons.Search2LineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: handleshowFind,
+    },
+  ];
+
+  const back = [
+    {
+      label: translations.accessibility.back,
+      icon: (
+        <icons.ArrowLeftLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: goBack,
+    },
+  ];
+
   return (
     <div
       className={`drawer hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] dark:text-neutral-50 overflow-x-auto sm:overflow-x-none py-1 ${
@@ -244,50 +434,31 @@ const Toolbar: React.FC<ToolbarProps> = ({
           isTableActive ? "hidden" : "block"
         } ${isTextSelected ? "hidden" : "block"}`}
       >
-        <button
-          onClick={goBack}
-          className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-        >
-          <icons.ArrowLeftLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-        </button>
+        {back.map((item) => (
+          <button
+            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onClick={() => item.action()}
+            aria-label={item.label}
+          >
+            {item.icon}
+          </button>
+        ))}
         <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-          <button
-            className={
-              editor?.isActive("paragraph")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().setParagraph().run()}
-          >
-            <icons.ParagraphIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("heading", { level: 1 })
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() =>
-              editor?.chain().focus().toggleHeading({ level: 1 }).run()
-            }
-          >
-            <icons.Heading1Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("heading", { level: 2 })
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() =>
-              editor?.chain().focus().toggleHeading({ level: 2 }).run()
-            }
-          >
-            <icons.Heading2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
+          {formatting.map((item) => (
+            <button
+              className={
+                editor?.isActive(item.active.toLowerCase(), item.level)
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+              }
+              onMouseDown={handleMouseDown}
+              onClick={() => item.action(editor)}
+              aria-label={item.label}
+            >
+              {item.icon}
+            </button>
+          ))}
           <button
             className={
               editor?.isActive("blockquote")
@@ -296,6 +467,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             }
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+            aria-label={translations.menuItems.quoteLabel}
           >
             <icons.DoubleQuotesLIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -303,6 +475,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <ImageUploadComponent
             onImageUpload={handleImageUpload}
             noteId={noteId}
+            translations={translations}
           />
           <button
             className={`p-1 ${
@@ -312,33 +485,39 @@ const Toolbar: React.FC<ToolbarProps> = ({
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
+            aria-label={translations.menuItems.embedLabel}
           >
             <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
             noteId={noteId}
+            translations={translations}
           />
           <VideoUploadComponent
             onVideoUpload={handlevideoUpload}
             noteId={noteId}
+            translations={translations}
           />
           <AudioUploadComponent
             onAudioUpload={handleaudioUpload}
             noteId={noteId}
+            translations={translations}
           />
-          <button
-            className={
-              editor?.isActive("paper")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            // @ts-ignore
-            onClick={() => editor?.chain().focus().insertPaper().run()}
-          >
-            <icons.Brush2Fill className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
+          {draw.map((item) => (
+            <button
+              className={
+                editor?.isActive(item.active.toLowerCase())
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+              }
+              onMouseDown={handleMouseDown}
+              onClick={() => item.action(editor)}
+              aria-label={item.label}
+            >
+              {item.icon}
+            </button>
+          ))}
           {/* List and Table Options */}
           <button
             className={
@@ -354,66 +533,58 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 withHeaderRow: true,
               })
             }
+            aria-label={translations.menuItems.tableLabel}
           >
             <icons.Table2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
-          <button
-            className={
-              editor?.isActive("bulletList")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          >
-            <icons.ListUnorderedIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("orderedList")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          >
-            <icons.ListOrderedIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("Tasklist")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleTaskList().run()}
-          >
-            <icons.ListCheck2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
+          {lists.map((item) => (
+            <button
+              className={
+                editor?.isActive(item.active.toLowerCase())
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+              }
+              onMouseDown={handleMouseDown}
+              onClick={() => item.action(editor)}
+              aria-label={item.label}
+            >
+              {item.icon}
+            </button>
+          ))}
         </div>
-        <button
-          className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-          onClick={showFind}
-        >
-          <icons.Search2LineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-        </button>
+        {search.map((item) => (
+          <button
+            ref={searchRef}
+            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onClick={() => item.action()}
+            aria-label={item.label}
+          >
+            {item.icon}
+          </button>
+        ))}
       </div>
       <div
         className={`w-full h-full flex items-center justify-between bg-[#2D2C2C] rounded-full  ${
           isTableActive ? "block" : "hidden"
         } ${isTextSelected ? "hidden" : "block"}`}
       >
-        <Link
-          to="/"
-          className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-        >
-          <icons.ArrowLeftLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-        </Link>
+        {back.map((item) => (
+          <button
+            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onClick={() => item.action()}
+            aria-label={item.label}
+          >
+            {item.icon}
+          </button>
+        ))}
         <div className="sm:mx-auto flex overflow-y-hidden w-fit">
           <button
             className="p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addRowAfter().run()}
+            aria-label={translations.accessibility.insertRowAfter}
           >
             <icons.InsertRowBottomIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -421,6 +592,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addRowBefore().run()}
+            aria-label={translations.accessibility.insertRowBefore}
           >
             <icons.InsertRowTopIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -428,6 +600,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteRow().run()}
+            aria-label={translations.accessibility.deleteRow}
           >
             <icons.DeleteRow className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -435,6 +608,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnBefore().run()}
+            aria-label={translations.accessibility.insertColumnLeft}
           >
             <icons.InsertColumnLeftIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -442,6 +616,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnAfter().run()}
+            aria-label={translations.accessibility.insertColumnRight}
           >
             <icons.InsertColumnRightIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -449,20 +624,29 @@ const Toolbar: React.FC<ToolbarProps> = ({
             className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteColumn().run()}
+            aria-label={translations.accessibility.deleteColumn}
           >
             <icons.DeleteColumn className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleHeaderCell().run()}
-          >
-            <icons.Brush2Fill className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
+          {draw.map((item) => (
+            <button
+              className={
+                editor?.isActive(item.active.toLowerCase())
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+              }
+              onMouseDown={handleMouseDown}
+              onClick={() => item.action(editor)}
+              aria-label={item.label}
+            >
+              {item.icon}
+            </button>
+          ))}
           {/* Media and File Upload Options */}
           <ImageUploadComponent
             onImageUpload={handleImageUpload}
             noteId={noteId}
+            translations={translations}
           />
           <button
             className={`p-1 ${
@@ -472,16 +656,19 @@ const Toolbar: React.FC<ToolbarProps> = ({
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
+            aria-label={translations.menuItems.embedLabel}
           >
             <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
             noteId={noteId}
+            translations={translations}
           />
           <VideoUploadComponent
             onVideoUpload={handlevideoUpload}
             noteId={noteId}
+            translations={translations}
           />
           <button
             className={`p-1 ${
@@ -491,66 +678,53 @@ const Toolbar: React.FC<ToolbarProps> = ({
             } cursor-pointer flex-1 pr-6`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteTable().run()}
+            aria-label={translations.accessibility.deleteTable}
           >
             <icons.DeleteBinLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
         </div>
-        <button
-          className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-          onClick={showFind}
-        >
-          <icons.Search2LineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-        </button>
+        {search.map((item) => (
+          <button
+            ref={searchRef}
+            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onClick={() => item.action()}
+            aria-label={item.label}
+          >
+            {item.icon}
+          </button>
+        ))}
       </div>
       <div
         className={`w-full h-full flex items-center justify-between bg-[#2D2C2C] rounded-full  ${
           isTextSelected ? "block" : "hidden"
         }`}
       >
-        <Link
-          to="/"
-          className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-        >
-          <icons.ArrowLeftLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-        </Link>
+        {back.map((item) => (
+          <button
+            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onClick={() => item.action()}
+            aria-label={item.label}
+          >
+            {item.icon}
+          </button>
+        ))}
         <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-          <button
-            className={
-              editor?.isActive("paragraph")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().setParagraph().run()}
-          >
-            <icons.ParagraphIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("heading", { level: 1 })
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() =>
-              editor?.chain().focus().toggleHeading({ level: 1 }).run()
-            }
-          >
-            <icons.Heading1Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("heading", { level: 2 })
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() =>
-              editor?.chain().focus().toggleHeading({ level: 2 }).run()
-            }
-          >
-            <icons.Heading2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
+          {formatting.map((item) => (
+            <button
+              className={
+                editor?.isActive(item.active.toLowerCase(), item.level)
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+              }
+              onMouseDown={handleMouseDown}
+              onClick={() => item.action(editor)}
+              aria-label={item.label}
+            >
+              {item.icon}
+            </button>
+          ))}
           <button
             className={
               editor?.isActive("bold")
@@ -559,6 +733,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             }
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBold().run()}
+            aria-label={translations.accessibility.bold}
           >
             <icons.BoldIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -570,6 +745,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             }
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleItalic().run()}
+            aria-label={translations.accessibility.italic}
           >
             <icons.ItalicIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -581,6 +757,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             }
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
+            aria-label={translations.accessibility.underline}
           >
             <icons.UnderlineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -592,6 +769,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             }
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleStrike().run()}
+            aria-label={translations.accessibility.strikethrough}
           >
             <icons.StrikethroughIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -604,6 +782,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             }
             onMouseDown={handleMouseDown}
             onClick={toggleDropdown}
+            aria-label={translations.accessibility.highlight}
           >
             <icons.MarkPenLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
@@ -642,35 +821,38 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 {colors.map((color, index) => (
                   <button
                     key={index}
-                    className={`w-7 h-7 cursor-pointer ${color}`}
-                    onClick={() => setHighlightColor(color)}
+                    role="menuitem"
+                    aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
+                    className={`w-8 h-8 cursor-pointer ${color}`}
+                    onClick={() => {
+                      setHighlightColor(color);
+                      setDropdownOpen(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        setHighlightColor(color);
+                        setDropdownOpen(false);
+                      }
+                    }}
                   />
                 ))}
               </div>,
               document.body // Mount the dropdown in the document body
             )}
-          <button
-            className={`p-1 ${
-              editor?.isActive("bulletList")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          >
-            <icons.ListUnorderedIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
-          <button
-            className={`p-1 ${
-              editor?.isActive("Tasklist")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleTaskList().run()}
-          >
-            <icons.ListCheck2Icon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
+          {lists.map((item) => (
+            <button
+              className={
+                editor?.isActive(item.active.toLowerCase())
+                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+              }
+              onMouseDown={handleMouseDown}
+              onClick={() => item.action(editor)}
+              aria-label={item.label}
+            >
+              {item.icon}
+            </button>
+          ))}
           <button
             className={`p-1 ${
               editor?.isActive("subscript")
@@ -679,6 +861,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSubscript()}
+            aria-label={translations.accessibility.subscript}
           >
             <icons.SubscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
@@ -690,6 +873,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSuperscript()}
+            aria-label={translations.accessibility.superscript}
           >
             <icons.SuperscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
@@ -701,17 +885,42 @@ const Toolbar: React.FC<ToolbarProps> = ({
             } cursor-pointer flex-1 pr-6`}
             onMouseDown={handleMouseDown}
             onClick={setLink}
+            aria-label={translations.accessibility.link}
           >
             <icons.LinkIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
           </button>
         </div>
-        <button
-          className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-          onClick={showFind}
-        >
-          <icons.Search2LineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-        </button>
+        {search.map((item) => (
+          <button
+            ref={searchRef}
+            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onClick={() => item.action()}
+            aria-label={item.label}
+          >
+            {item.icon}
+          </button>
+        ))}
       </div>
+      {showFind &&
+        createPortal(
+          <div
+            ref={FindRef}
+            className="absolute p-2"
+            style={{
+              top: FindPosition.top,
+              left: FindPosition.left,
+              zIndex: 1000,
+            }}
+          >
+            <div className="fixed inset-x-0 flex justify-center">
+              <div className="w-full px-4 sm:px-10 md:px-20 lg:px-60">
+                {showFind && <Find editor={editor} setShowFind={setShowFind} />}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

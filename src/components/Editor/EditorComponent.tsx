@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
+import { createPortal } from "react-dom";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
 import { isPlatform } from "@ionic/react";
@@ -29,7 +30,10 @@ type Props = {
 };
 
 function EditorComponent({ note, notesState, setNotesState }: Props) {
+  const FindRef = useRef<HTMLDivElement>(null);
   const { activeNoteId, setActiveNoteId } = useNotesState();
+  const buttonRef = useRef(null);
+  const [FindPosition, setFindPosition] = useState({ top: 0, left: 0 });
   const { title, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
     notesState,
@@ -73,7 +77,6 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   });
 
   const [focusMode, setFocusMode] = useState(false);
-  const [toolbarVisible, setToolbarVisible] = useState(true);
   const [showFind, setShowFind] = useState(false);
   const [wd, setWd] = useState<boolean>(
     localStorage.getItem("expand-editor") === "true"
@@ -227,8 +230,14 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     return labels;
   };
 
-  const handleSearch = () => {
-    setShowFind((prevShowFind) => !prevShowFind);
+  const handleshowFind = () => {
+    //@ts-ignore
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+    setFindPosition({
+      top: buttonRect.top + window.scrollY,
+      left: buttonRect.left + window.scrollX,
+    });
+    setShowFind(true);
   };
 
   const handleKeyDownTitle = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -364,13 +373,13 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-  
+
     const items = event.clipboardData.items;
     document.execCommand("insertText", false, " "); // Add space before pasting
-  
+
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-  
+
       if (item.kind === "file") {
         // Handle pasted file (like from file manager)
         const file = item.getAsFile();
@@ -410,21 +419,21 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
       }
     }
   };
-  
+
   // Helper to check if the pasted content is a base64 image
   const isBase64Image = (str: string): boolean => {
     return str.startsWith("data:image/") && str.includes("base64,");
   };
-  
+
   // Helper to extract image URL from pasted HTML content
   const extractImageUrlFromHtml = (htmlContent: string): string | null => {
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = htmlContent;
     const imgTag = tempDiv.querySelector("img");
-  
+
     return imgTag ? imgTag.src : null;
   };
-  
+
   // Helper to validate if a string is a valid URL
   const isValidUrl = (string: string): boolean => {
     try {
@@ -434,13 +443,12 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
       return false;
     }
   };
-  
+
   // Helper to check if a URL is an image URL (jpg, png, gif, etc.)
   const isImageUrl = (url: string): boolean => {
     const imagePattern = /\.(jpeg|jpg|gif|png|bmp|webp)$/i;
     return imagePattern.test(url);
   };
-  
 
   const processItems = async (items: DataTransferItemList) => {
     for (let i = 0; i < items.length; i++) {
@@ -516,12 +524,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
       >
-        <Toolbar
-          toolbarVisible={toolbarVisible}
-          note={note}
-          noteId={note.id}
-          editor={editor}
-        />
+        <Toolbar note={note} noteId={note.id} editor={editor} />
         <div
           className={`sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] fixed inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between`}
         >
@@ -534,10 +537,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
           <div className="flex">
             <button
               className="p-2 rounded-md text-white bg-transparent cursor-pointer"
-              onClick={() => {
-                setFocusMode((prevFocusMode) => !prevFocusMode);
-                setToolbarVisible((prevToolbarVisible) => !prevToolbarVisible);
-              }}
+              onClick={() => setFocusMode((prevFocusMode) => !prevFocusMode)}
             >
               <Icons.Focus3LineIcon
                 className={`border-none ${
@@ -545,26 +545,41 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
                 } dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
               />
             </button>
+
             <button
               className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
-              onClick={handleSearch}
+              onClick={handleshowFind}
+              ref={buttonRef}
             >
-              {showFind ? (
-                <Icons.CloseLineIcon
-                  className={`border-none ${
-                    focusMode ? "hidden" : "block"
-                  } text-red-500 text-xl w-7 h-7`}
-                />
-              ) : (
-                <Icons.Search2LineIcon
-                  className={`border-none ${
-                    focusMode ? "hidden" : "block"
-                  } dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
-                />
-              )}
+              <Icons.Search2LineIcon
+                className={`border-none ${
+                  focusMode ? "hidden" : "block"
+                } dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
+              />
             </button>
           </div>
+          {/* Portal appears below the button */}
+          {showFind &&
+            createPortal(
+              <div
+                ref={FindRef}
+                className="absolute"
+                style={{
+                  top: FindPosition.top,
+                  left: FindPosition.left,
+                  zIndex: 1000,
+                }}
+              >
+                <div className="fixed inset-x-0 flex justify-center">
+                  <div className="w-full bg-white px-4 sm:px-10 md:px-20 lg:px-60">
+                    <Find editor={editor} setShowFind={setShowFind} />
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )}
         </div>
+
         <div
           contentEditable
           onPaste={handleTitlePaste}
@@ -586,15 +601,6 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
               onTouchStart={preventKeyboardToggle}
               className="prose dark:text-neutral-100 max-w-none prose-indigo mb-12"
             />
-          </div>
-        </div>
-        <div
-          className={`${
-            showFind ? "show" : "hidden"
-          } fixed inset-x-0 sm:bottom-6 md:bottom-6 flex justify-center`}
-        >
-          <div className="w-full px-4 sm:px-10 md:px-20 lg:px-60">
-            {showFind && <Find editor={editor} />}
           </div>
         </div>
 
