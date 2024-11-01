@@ -91,7 +91,7 @@ const Welcome: React.FC = () => {
       welcomeTitle: "welcome.welcomeTitle",
       welcomeParagraph: "welcome.welcomeParagraph",
       getStarted: "welcome.getStarted",
-      startTitle: "welcome.startTitle"
+      startTitle: "welcome.startTitle",
     },
     settings: {
       apptheme: "settings.appTheme",
@@ -99,7 +99,7 @@ const Welcome: React.FC = () => {
       codeFont: "settings.codeFont",
       light: "settings.light",
       dark: "settings.dark",
-      system: "settings.system"
+      system: "settings.system",
     },
   });
 
@@ -172,9 +172,12 @@ const Welcome: React.FC = () => {
         break;
     }
   };
-  
-  const modes = [translations.settings.light, translations.settings.dark, translations.settings.system];
-  
+
+  const modes = [
+    translations.settings.light,
+    translations.settings.dark,
+    translations.settings.system,
+  ];
 
   useEffect(() => {
     if (currentView === "view3") {
@@ -198,10 +201,16 @@ const Welcome: React.FC = () => {
               />
             </div>
             <div className="flex flex-col items-center justify-center flex-grow">
-              <h3 className="text-center">
+              <h3
+                className="text-center"
+                aria-label={translations.welcome.welcomeTitle || "-"}
+              >
                 {translations.welcome.welcomeTitle || "-"}
               </h3>
-              <p className="text-center sm:mx-10">
+              <p
+                className="text-center sm:mx-10"
+                aria-label={translations.welcome.welcomeMessage || "-"}
+              >
                 {translations.welcome.welcomeMessage || "-"}
               </p>
             </div>
@@ -218,11 +227,15 @@ const Welcome: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+                <Icons.ArrowDownSLineIcon
+                  className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  aria-hidden="true"
+                />
               </div>
               <button
                 className="w-full p-3 rounded-full bg-[#2D2C2C] hover:bg-[#3a3939] text-white"
                 onClick={() => handleViewChange("view2")}
+                aria-label={translations.welcome.getStarted || "-"}
               >
                 {translations.welcome.getStarted || "-"}
               </button>
@@ -235,11 +248,22 @@ const Welcome: React.FC = () => {
         <div className="flex view items-center justify-center">
           <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between h-full">
             <div className="mt-5 flex justify-center">
-              <Icons.FontSizeIcon className="w-12 h-12 mx-auto rounded-xl" />
+              <Icons.FontSizeIcon
+                className="w-12 h-12 mx-auto rounded-xl"
+                aria-hidden="true"
+              />
             </div>
             <div className="flex flex-col w-full items-center justify-center flex-grow">
-              <h3 className="text-center">{translations.welcome.themeTitle || "-"}</h3>
-              <section className="w-full relative">
+              <h3
+                className="text-center"
+                aria-label={translations.welcome.themeTitle || "-"}
+              >
+                {translations.welcome.themeTitle || "-"}
+              </h3>
+              <section
+                className="w-full relative"
+                aria-label={translations.settings.apptheme || "-"}
+              >
                 <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                   {translations.settings.apptheme || "-"}
                 </p>
@@ -255,10 +279,16 @@ const Welcome: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </section>
-              <section className="w-full relative">
+              <section
+                className="w-full relative"
+                aria-label={translations.settings.selectfont || "-"}
+              >
                 <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
                   {translations.settings.selectfont || "-"}
                 </p>
@@ -274,12 +304,18 @@ const Welcome: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </section>
-              <section className=" w-full relative">
+              <section
+                className=" w-full relative"
+                aria-label={translations.settings.codeFont || "-"}
+              >
                 <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
-                {translations.settings.codeFont || "-"}
+                  {translations.settings.codeFont || "-"}
                 </p>
                 <div className="relative">
                   <select
@@ -293,7 +329,10 @@ const Welcome: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </section>
             </div>
@@ -301,12 +340,14 @@ const Welcome: React.FC = () => {
               <button
                 className="w-full p-3 rounded-full bg-[#2D2C2C] hover:bg-[#3a3939] text-white"
                 onClick={() => handleViewChange("view1")}
+                aria-label={translations.welcome.back || "-"}
               >
                 {translations.welcome.back || "-"}
               </button>
               <button
                 className="w-full p-3 rounded-full bg-[#2D2C2C] hover:bg-[#3a3939] text-white"
                 onClick={() => handleViewChange("view3")}
+                aria-label={translations.welcome.next || "-"}
               >
                 {translations.welcome.next || "-"}
               </button>
@@ -319,12 +360,18 @@ const Welcome: React.FC = () => {
         <div className="flex view items-center justify-center">
           <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between h-full">
             <div className="flex flex-col w-full items-center justify-center flex-grow">
-              <h3 className="text-center">{translations.welcome.startTitle || "-"}</h3>
+              <h3
+                className="text-center"
+                aria-label={translations.welcome.startTitle || "-"}
+              >
+                {translations.welcome.startTitle || "-"}
+              </h3>
             </div>
             <div className="flex flex-col w-full items-center mb-5 gap-2">
               <button
                 className="w-full p-3 rounded-full bg-[#2D2C2C] hover:bg-[#3a3939] text-white"
                 onClick={() => handleViewChange("view2")}
+                aria-label={translations.welcome.back || "-"}
               >
                 {translations.welcome.back || "-"}
               </button>
@@ -332,6 +379,7 @@ const Welcome: React.FC = () => {
                 to="/"
                 className="w-full text-center p-3 rounded-full bg-[#2D2C2C] hover:bg-[#3a3939] text-white"
                 onClick={() => handleViewChange("view3")}
+                aria-label={translations.welcome.next || "-"}
               >
                 {translations.welcome.next || "-"}
               </Link>

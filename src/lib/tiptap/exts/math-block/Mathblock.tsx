@@ -30,34 +30,33 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
 
   const renderContent = () => {
     let macros = {};
-  
+
     try {
       macros = JSON.parse(props.node.attrs.macros || "{}");
     } catch (error) {
       console.error("Error parsing macros:", error);
     }
-  
+
     const mathContent = props.node.attrs.content || "Empty";
-  
+
     // Automatically wrap in aligned environment for line breaks
     const processedContent = `
       \\begin{aligned}
       ${mathContent.replace(/\\\\/g, "\\\\")}
       \\end{aligned}
     `;
-  
+
     const mathML = katex.renderToString(processedContent, {
       macros,
       displayMode: true,
       throwOnError: false,
       output: "mathml",
     });
-  
+
     if (contentRef.current) {
       contentRef.current.innerHTML = mathML;
     }
   };
-  
 
   const updateContent = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
@@ -130,6 +129,12 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
       mathContent: "editor.mathContent",
       katexMacros: "editor.katexMacros",
     },
+    accessibility: {
+      editMath: "accessibility.editMath",
+      disableKatex: "accessibility.disableKatex",
+      enableKatex: "accessibility.enableKatex",
+      close: "accessibility.close",
+    }
   });
 
   useEffect(() => {
@@ -152,7 +157,11 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
 
   return (
     <NodeViewWrapper className="math-block-node-view">
-      <div onClick={handleContentClick}>
+      <div
+        onClick={handleContentClick}
+        role="button"
+        aria-label={translations.accessibility.editMath}
+      >
         <p
           ref={contentRef}
           contentEditable={useKatexMacros}
@@ -165,6 +174,8 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
           open={showModal}
           onClose={closeModal}
           className="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="dialog-title"
+          aria-modal="true"
         >
           <DialogBackdrop className="fixed inset-0 bg-neutral-300 dark:bg-neutral-600 bg-opacity-75 dark:bg-opacity-75 transition-opacity" />
           <div className="fixed inset-0 flex items-center justify-center">
@@ -186,14 +197,24 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                 style={{
                   transition: dragging ? "none" : "transform 0.3s ease",
                 }}
+                aria-labelledby="dialog-title"
               >
                 <div className="flex justify-between items-center bg-gray-100 dark:bg-[#2D2C2C] px-4 py-3">
-                  <DialogTitle as="h3" className="text-lg font-semibold">
+                  <DialogTitle
+                    as="h3"
+                    id="dialog-title"
+                    className="text-lg font-semibold"
+                  >
                     {translations.editor.editContent || "-"}
                   </DialogTitle>
                   <div className="flex space-x-4">
                     <button
                       title="Toggle KaTeX Macros"
+                      aria-label={
+                        useKatexMacros
+                          ? `${translations.accessibility.disableKatex}`
+                          : `${translations.accessibility.enableKatex}`
+                      }
                       className={`cursor-pointer ${
                         useKatexMacros ? "text-primary" : ""
                       } ${
@@ -203,20 +224,28 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                       }`}
                       onClick={toggleSecondTextarea}
                     >
-                      <Settings4LineIcon className="active:text-amber-500" />
+                      <Settings4LineIcon
+                        className="active:text-amber-500"
+                        aria-hidden="true"
+                      />
                     </button>
                     <button
                       onClick={closeModal}
                       className="text-amber-400 hover:text-gray-700 focus:outline-none"
+                      aria-label={translations.accessibility.close}
                     >
                       {translations.editor.close || "-"}
                     </button>
                   </div>
                 </div>
 
-                <div className="p-4 h-[80vh] flex flex-col">
+                <div
+                  className="p-4 h-[80vh] flex flex-col"
+                  aria-labelledby="textarea-label"
+                >
                   <div className="flex-grow">
                     <textarea
+                      id="content-textarea"
                       value={props.node.attrs.content}
                       onChange={(e) => updateContent(e, "content")}
                       className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"
@@ -226,6 +255,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                   {showSecondTextarea && (
                     <div className="flex-grow">
                       <textarea
+                        id="macros-textarea"
                         value={props.node.attrs.macros}
                         onChange={(e) => updateContent(e, "macros")}
                         className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"

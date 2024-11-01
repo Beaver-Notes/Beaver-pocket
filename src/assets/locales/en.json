@@ -55,7 +55,16 @@
     "mute": "Mute",
     "playbackSpeed": "Playback speed",
     "setSpeed": "Set playback speed to",
-    "selectcodeLanguage": "Select code language"
+    "selectcodeLanguage": "Select code language",
+    "open": "Open",
+    "editMath": "Edith Math Block",
+    "disableKatex": "Disable KaTeX Macros",
+    "enableKatex": "Enable KaTeX Macros",
+    "close": "Close",
+    "editMermaid": "Edit Mermaid Block",
+    "webdavUrl": "Webdav URL",
+    "hidePasswd": "Hide Password",
+    "showPasswd": "Show Password"
   },
   "settings": {
     "title": "Settings",
@@ -250,7 +259,8 @@
     "copyright": "Copyright © 2023 - 2024. All rights reserved.",
     "termsConditions": "Terms and Conditions",
     "privacyPolicy": "Privacy Policy",
-    "license": "License"
+    "license": "License",
+    "legal": "Legal"
   },
   "menuItems": {
     "fileLabel": "File",

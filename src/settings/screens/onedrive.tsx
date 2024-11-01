@@ -677,9 +677,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
             >
               {translations.onedrive.title || "-"}
             </p>
-            <div
-              className="flex justify-center items-center"
-            >
+            <div className="flex justify-center items-center">
               <CircularProgress
                 progress={progress}
                 color={progressColor}
@@ -705,8 +703,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
         </div>
         {accessToken ? (
           <>
-            <section
-            >
+            <section>
               <div className="flex flex-col">
                 <div className="space-y-2">
                   <button
@@ -761,7 +758,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                     onChange={handleSyncToggle}
                     className="peer sr-only"
                     aria-checked={autoSync}
-                    aria-labelledby="Auto sync"
+                    aria-labelledby="auto-sync-toggle"
                   />
                   <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                 </label>

@@ -1,12 +1,11 @@
-import { Link } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import enTranslations from "./assets/locales/en.json";
 import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
+import { useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
 import { Note } from "./store/types";
 import { loadNotes } from "./store/notes";
-import { isPlatform } from "@ionic/react";
 
 interface SettingsProps {
   notesState: Record<string, Note>;
@@ -14,10 +13,10 @@ interface SettingsProps {
 }
 
 const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
+  const navigate = useNavigate();
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
   );
-
   const [selectedCodeFont, setSelectedCodeFont] = useState<string>(
     localStorage.getItem("selected-font-code") || "JetBrains Mono"
   );
@@ -201,19 +200,6 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
     setNotesState(notes);
   };
 
-  const [scribbleCompatibility, setScribbleCompatibility] = useState(() => {
-    const storedValue = localStorage.getItem("scribbleCompatibility");
-    return storedValue !== null ? storedValue === "true" : true; // Default to true
-  });
-
-  const toggleScribbleCompatibility = async () => {
-    setScribbleCompatibility((prevValue) => {
-      const newValue = !prevValue;
-      localStorage.setItem("scribbleCompatibility", newValue.toString());
-      return newValue;
-    });
-  };
-  
   const [selectedOption, setSelectedOption] = useState(
     themeMode === "auto" ? "System" : darkMode ? "Dark" : "Light"
   );
@@ -247,19 +233,26 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
         <div className="overflow-y-hidden mb-12">
           <div className="py-2 w-full flex flex-col border-neutral-300 overflow-auto">
             <div className="mx-6 md:px-24 pb-8 overflow-y-auto flex-grow">
-              <section>
-                <p className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
-                  {" "}
+              <section aria-labelledby="settings-title">
+                <p
+                  id="settings-title"
+                  className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]"
+                >
                   {translations.settings.title || "-"}
                 </p>
               </section>
+
               {/* App Theme */}
-              <section>
-                <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+              <section aria-labelledby="app-theme-label">
+                <p
+                  id="app-theme-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
                   {translations.settings.apptheme || "-"}
                 </p>
                 <div className="relative">
                   <select
+                    aria-labelledby="app-theme-label"
                     value={selectedOption}
                     onChange={handleChangeMode}
                     className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
@@ -270,16 +263,24 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon
+                    aria-hidden="true"
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  />
                 </div>
               </section>
+
               {/* Select Font */}
-              <section>
-                <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+              <section aria-labelledby="select-font-label">
+                <p
+                  id="select-font-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
                   {translations.settings.selectfont || "-"}
                 </p>
                 <div className="relative">
                   <select
+                    aria-labelledby="select-font-label"
                     value={selectedFont}
                     onChange={updateFont}
                     className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
@@ -290,36 +291,52 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon
+                    aria-hidden="true"
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  />
                 </div>
               </section>
+
               {/* Code Font */}
-              <section>
-                <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+              <section aria-labelledby="code-font-label">
+                <p
+                  id="code-font-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
                   {translations.settings.codeFont || "-"}
                 </p>
                 <div className="relative">
                   <select
+                    aria-labelledby="code-font-label"
                     value={selectedCodeFont}
                     onChange={updatCodeFont}
                     className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
-                    {Codefonts.map((Codefonts) => (
-                      <option key={Codefonts} value={Codefonts}>
-                        {Codefonts}
+                    {Codefonts.map((Codefont) => (
+                      <option key={Codefont} value={Codefont}>
+                        {Codefont}
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon
+                    aria-hidden="true"
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  />
                 </div>
               </section>
+
               {/* Select Language */}
-              <section>
-                <p className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+              <section aria-labelledby="select-language-label">
+                <p
+                  id="select-language-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
                   {translations.settings.selectlanguage || "-"}
                 </p>
                 <div className="relative">
                   <select
+                    aria-labelledby="select-language-label"
                     value={selectedLanguage}
                     onChange={updateLanguage}
                     className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
@@ -330,116 +347,120 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+                  <Icons.ArrowDownSLineIcon
+                    aria-hidden="true"
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  />
                 </div>
               </section>
-              <section className="py-2">
-                {/* Interface Options */}
-                <p className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+
+              {/* Interface Options */}
+              <section aria-labelledby="interface-options-label">
+                <p
+                  id="interface-options-label"
+                  className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
                   {translations.settings.interfaceOptions || "-"}
                 </p>
-                <div className="hidden sm:block">
-                  <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
-                    <div>
-                      <p className="block text-lg align-left">
-                        {" "}
-                        {translations.settings.expandPage || "-"}
-                      </p>
-                    </div>
-                    <label className="relative inline-flex cursor-pointer items-center">
-                      <input
-                        id="switch"
-                        type="checkbox"
-                        checked={wd}
-                        onChange={toggleBackground}
-                        className="peer sr-only"
-                      />
-                      <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                    </label>
-                  </div>
-                </div>
+
+                {/* Toggle Expand Page */}
                 <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
-                  <div>
-                    <p className="block text-lg align-left">
-                      {" "}
-                      {translations.settings.clearFont || "-"}
-                    </p>
-                  </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
+                  <p
+                    id="expand-page-label"
+                    className="block text-lg align-left"
+                  >
+                    {translations.settings.expandPage || "-"}
+                  </p>
+                  <label
+                    className="relative inline-flex cursor-pointer items-center"
+                    aria-labelledby="expand-page-label"
+                  >
                     <input
-                      id="switch"
+                      type="checkbox"
+                      checked={wd}
+                      onChange={toggleBackground}
+                      className="peer sr-only"
+                      aria-checked={wd}
+                    />
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  </label>
+                </div>
+
+                {/* Toggle Clear Font */}
+                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                  <p id="clear-font-label" className="block text-lg align-left">
+                    {translations.settings.clearFont || "-"}
+                  </p>
+                  <label
+                    className="relative inline-flex cursor-pointer items-center"
+                    aria-labelledby="clear-font-label"
+                  >
+                    <input
                       type="checkbox"
                       checked={ClearFontChecked}
                       onChange={toggleClearFont}
                       className="peer sr-only"
+                      aria-checked={ClearFontChecked}
                     />
                     <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                   </label>
                 </div>
+
+                {/* Toggle Collapsible Heading */}
                 <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
-                  <div>
-                    <p className="block text-lg align-left">
-                      {translations.settings.CollapsibleHeading || "-"}
-                    </p>
-                  </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
+                  <p
+                    id="collapsible-heading-label"
+                    className="block text-lg align-left"
+                  >
+                    {translations.settings.CollapsibleHeading || "-"}
+                  </p>
+                  <label
+                    className="relative inline-flex cursor-pointer items-center"
+                    aria-labelledby="collapsible-heading-label"
+                  >
                     <input
-                      id="switch"
                       type="checkbox"
                       checked={collapsibleHeading}
                       onChange={toggleCollapsibleHeading}
                       className="peer sr-only"
+                      aria-checked={collapsibleHeading}
                     />
                     <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                   </label>
                 </div>
-                <div
-                  className={`flex items-center py-2 dark:border-neutral-600 justify-between ${
-                    isPlatform("ipad") ? "show" : "hide"
-                  }`}
-                >
-                  <div>
-                    <p className="block text-lg align-left">
-                      {translations.settings.scribbleCompatibility || "-"}
-                    </p>
+
+                {/* Links */}
+                <div className="pb-4">
+                  <div className="flex flex-col gap-2 pt-2">
+                    <button
+                      onClick={() => navigate("/Sync")}
+                      aria-label={translations.settings.Sync || "-"}
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    >
+                      <Icons.SyncLineIcon className="w-6 h-6 mr-2" />
+                      {translations.settings.Sync || "-"}
+                    </button>
+
+                    <button
+                      onClick={() => navigate("/about")}
+                      aria-label={translations.settings.About || "-"}
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    >
+                      <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
+                      {translations.settings.About || "-"}
+                    </button>
+
+                    <button
+                      onClick={() => navigate("/shortcuts")}
+                      aria-label={translations.settings.Shortcuts || "-"}
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    >
+                      <Icons.KeyboardLineIcon className="w-6 h-6 mr-2" />
+                      {translations.settings.Shortcuts || "-"}
+                    </button>
                   </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
-                    <input
-                      id="switch"
-                      type="checkbox"
-                      checked={scribbleCompatibility}
-                      onChange={toggleScribbleCompatibility}
-                      className="peer sr-only"
-                    />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                  </label>
                 </div>
               </section>
-              <div className="pb-4">
-                <div className="flex flex-col gap-2 pt-2">
-                  <Link
-                    to="/Sync"
-                    className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                  >
-                    <Icons.SyncLineIcon className="w-6 h-6 mr-2" />
-                    {translations.settings.Sync || "-"}
-                  </Link>
-                  <Link
-                    to="/about"
-                    className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                  >
-                    <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
-                    {translations.settings.About || "-"}
-                  </Link>
-                  <Link
-                    to="/shortcuts"
-                    className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                  >
-                    <Icons.KeyboardLineIcon className="w-6 h-6 mr-2" />
-                    {translations.settings.Shortcuts || "-"}
-                  </Link>
-                </div>
-              </div>
             </div>
           </div>
         </div>

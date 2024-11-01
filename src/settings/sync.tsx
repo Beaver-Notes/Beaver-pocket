@@ -4,7 +4,7 @@ import { Note } from "../store/types";
 import dayjs from "dayjs";
 import { useExportData } from "../utils/exportUtils";
 import { useHandleImportData } from "../utils/importUtils";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import icons from "../lib/remixicon-react";
 import { loadNotes } from "../store/notes";
 
@@ -17,6 +17,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
   // Correctly destructuring props
   const { exportUtils } = useExportData();
   const { importUtils } = useHandleImportData();
+  const navigate = useNavigate();
 
   const [themeMode] = useState(() => {
     const storedThemeMode = localStorage.getItem("themeMode");
@@ -90,48 +91,63 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
             <div className="general py-2 space-y-8 w-full">
               <div className="general space-y-3 w-full">
                 <p className="text-4xl font-bold">
-                  {" "}
                   {translations.sync.Sync || "-"}
                 </p>
                 <div className="flex flex-col gap-2 pt-2">
-                  <Link
+                  <button
                     className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    to="/dropbox"
+                    onClick={() => navigate("/dropbox")}
+                    aria-label="Dropbox"
                   >
-                    <icons.DropboxFillIcon className="w-10 h-10" />
+                    <icons.DropboxFillIcon
+                      className="w-10 h-10"
+                      aria-hidden="true"
+                    />
                     <p className="text-2xl pl-2 py-1 font-bold">Dropbox</p>
-                  </Link>
-                  <Link
+                  </button>
+
+                  <button
                     className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    to="/webdav"
+                    onClick={() => navigate("/webdav")}
+                    aria-label="Webdav"
                   >
-                    <icons.ServerLineIcon className="w-10 h-10" />
+                    <icons.ServerLineIcon
+                      className="w-10 h-10"
+                      aria-hidden="true"
+                    />
                     <p className="text-2xl pl-2 py-1 font-bold">Webdav</p>
-                  </Link>
-                  <Link
+                  </button>
+
+                  <button
                     className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center ${
                       isPlatform("android") ? "hidden" : ""
                     }`}
-                    to="/icloud"
+                    onClick={() => navigate("/icloud")}
+                    aria-label="iCloud"
                   >
-                    <icons.iCloud className="w-10 h-10" />
+                    <icons.iCloud className="w-10 h-10" aria-hidden="true" />
                     <p className="text-2xl pl-2 py-1 font-bold">iCloud</p>
-                  </Link>
-                  <Link
+                  </button>
+
+                  <button
                     className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    to="/gdrive"
+                    onClick={() => navigate("/gdrive")}
+                    aria-label="Google Drive"
                   >
-                    <icons.GDrive className="w-10 h-10" />
+                    <icons.GDrive className="w-10 h-10" aria-hidden="true" />
                     <p className="text-2xl pl-2 py-1 font-bold">Google Drive</p>
-                  </Link>
-                  <Link
+                  </button>
+
+                  <button
                     className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    to="/onedrive"
+                    onClick={() => navigate("/onedrive")}
+                    aria-label="OneDrive"
                   >
-                    <icons.OneDrive className="w-10 h-10" />
+                    <icons.OneDrive className="w-10 h-10" aria-hidden="true" />
                     <p className="text-2xl pl-2 py-1 font-bold">OneDrive</p>
-                  </Link>
+                  </button>
                 </div>
+
                 <div className="relative pt-2 gap-1 flex flex-col sm:flex-row">
                   <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
                     <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
@@ -141,6 +157,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                       <button
                         className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]"
                         onClick={handleImportData}
+                        aria-label={translations.sync.importData || "-"}
                       >
                         {translations.sync.importData || "-"}
                       </button>
@@ -157,10 +174,10 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                         {translations.sync.encryptwPasswd || "-"}
                       </span>
                     </div>
-
                     <button
                       className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]"
                       onClick={exportData}
+                      aria-label={translations.sync.exportData || "-"}
                     >
                       {translations.sync.exportData || "-"}
                     </button>

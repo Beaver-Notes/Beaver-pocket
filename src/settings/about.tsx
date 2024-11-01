@@ -21,6 +21,7 @@ const Shortcuts: React.FC = () => {
       termsConditions: "about.termsConditions",
       privacyPolicy: "about.privacyPolicy",
       license: "about.license",
+      legal: "about.legal",
     },
   });
 
@@ -70,74 +71,114 @@ const Shortcuts: React.FC = () => {
                 src="./imgs/icon.png"
                 alt="Beaver Notes Icon"
                 className="w-36 h-36 rounded-full"
+                role="img"
+                aria-label={translations.about.app}
               />
             </div>
-            <p className="text-xl mt-4 font-bold text-center">
-              {" "}
+            <p
+              className="text-xl mt-4 font-bold text-center"
+              aria-label={translations.about.app}
+            >
               {translations.about.app}
             </p>
-            <p className="text-center">{version}</p>
-            <p className="text-center">{translations.about.description}</p>
+            <p className="text-center" aria-label={`${version}`}>
+              {version}
+            </p>
+            <p
+              className="text-center"
+              aria-label={translations.about.description}
+            >
+              {translations.about.description}
+            </p>
             <div className="flex flex-col gap-2 pt-2">
-              <a
-                href="https://beavernotes.com"
+              <button
+                onClick={() => window.open("https://beavernotes.com", "_blank")}
                 className="w-full p-3 text-lg bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                aria-label={`${translations.about.website}`}
               >
-                <icons.GlobalLineIcon className="w-8 h-8" />
+                <icons.GlobalLineIcon className="w-8 h-8" aria-hidden="true" />
                 <p className="text-lg pl-2 py-1 font-bold">
-                  {" "}
                   {translations.about.website}
                 </p>
-              </a>
-              <a
-                href="https://github.com/Daniele-rolli/Beaver-notes-pocket"
+              </button>
+              <button
+                onClick={() =>
+                  window.open(
+                    "https://github.com/Daniele-rolli/Beaver-notes-pocket",
+                    "_blank"
+                  )
+                }
                 className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                aria-label={`${translations.about.github}`}
               >
-                <icons.GithubFillIcon className="w-8 h-8" />
+                <icons.GithubFillIcon className="w-8 h-8" aria-hidden="true" />
                 <p className="text-lg pl-2 py-1 font-bold">
-                  {" "}
                   {translations.about.github}
                 </p>
-              </a>
-              <a
-                href="https://www.buymeacoffee.com/beavernotes"
+              </button>
+              <button
+                onClick={() =>
+                  window.open(
+                    "https://www.buymeacoffee.com/beavernotes",
+                    "_blank"
+                  )
+                }
                 className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                aria-label={`${translations.about.donate}`}
               >
-                <icons.CupLineIcon className="w-8 h-8" />
+                <icons.CupLineIcon className="w-8 h-8" aria-hidden="true" />
                 <p className="text-lg pl-2 py-1 font-bold">
-                  {" "}
                   {translations.about.donate}
                 </p>
-              </a>
+              </button>
             </div>
             <div className="flex flex-col gap-2 pt-2">
-              <p className="text-2xl font-bold">Legal</p>
-              <a
-                href="https://beavernotes.com/#/Terms"
+              <p className="text-2xl font-bold" aria-label={`${translations.about.legal}`}>
+              {translations.about.legal}
+              </p>
+              <button
+                onClick={() =>
+                  window.open("https://beavernotes.com/#/Terms", "_blank")
+                }
                 className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                aria-label={`${translations.about.termsConditions}`}
               >
                 <p className="text-lg pl-2 py-1 font-bold">
                   {translations.about.termsConditions}
                 </p>
-              </a>
-              <a
-                href="https://beavernotes.com/#/Privacy"
+              </button>
+              <button
+                onClick={() =>
+                  window.open("https://beavernotes.com/#/Privacy", "_blank")
+                }
                 className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                aria-label={`${translations.about.privacyPolicy}`}
               >
                 <p className="text-lg pl-2 py-1 font-bold">
                   {translations.about.privacyPolicy}
                 </p>
-              </a>
-              <a
-                href="https://raw.githubusercontent.com/Beaver-Notes/Beaver-pocket/main/LICENSE.txt"
+              </button>
+              <button
+                onClick={() =>
+                  window.open(
+                    "https://raw.githubusercontent.com/Beaver-Notes/Beaver-pocket/main/LICENSE.txt",
+                    "_blank"
+                  )
+                }
                 className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                aria-label={`${translations.about.license}`}
               >
                 <p className="text-lg pl-2 py-1 font-bold">
                   {translations.about.license}
                 </p>
-              </a>
+              </button>
             </div>
-            <p className="pt-2 text-center">{translations.about.copyright}</p>
+            <p
+              className="pt-2 text-center"
+              aria-label={translations.about.copyright}
+            >
+              {translations.about.copyright}
+            </p>
           </div>
         </div>
       </div>
