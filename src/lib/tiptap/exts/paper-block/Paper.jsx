@@ -11,17 +11,7 @@ const PREVIEW_HEIGHT = 500;
 const OverlayPortal = ({ children, onClose }) => {
   return createPortal(
     <div className="absolute inset-0 z-50" >
-      <div className="min-h-screen bg-white dark:bg-neutral-900">
-        <div className="sticky top-4 right-4 z-50 flex justify-end px-4">
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
-          >
-            <Icons.CloseLineIcon className="w-6 h-6" />
-          </button>
-        </div>
         {children}
-      </div>
     </div>,
     document.body
   );
@@ -63,7 +53,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
             />
           ))}
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
+        <div className="rounded absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
           <span className="text-white text-lg font-medium">Click to Draw</span>
         </div>
       </div>
@@ -76,7 +66,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
       style={{ touchAction: "none" }}
     >
       {isDrawMode ? (
-        <OverlayPortal onClose={closeDrawMode}>
+        <OverlayPortal>
           <DrawMode
             onClose={closeDrawMode}
             updateAttributes={updateAttributes}

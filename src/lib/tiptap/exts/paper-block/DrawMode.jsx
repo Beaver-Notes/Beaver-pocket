@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import * as d3 from "d3";
 import { v4 as uuid } from "uuid";
-import { Keyboard } from '@capacitor/keyboard';
+import { Keyboard } from "@capacitor/keyboard";
 import Icons from "../../../remixicon-react";
 
 const thicknessOptions = {
-  thin: 2,
-  medium: 3,
-  thick: 4,
-  thicker: 5,
-  thickest: 6,
+  thin: 1,
+  medium: 2,
+  thick: 3,
+  thicker: 4,
+  thickest: 5,
 };
 
 const backgroundStyles = {
@@ -24,6 +24,7 @@ const INCREMENT_HEIGHT = 200;
 const PREVIEW_HEIGHT = 500;
 
 const DrawMode = ({ onClose, updateAttributes, node }) => {
+  const isDarkMode = document.documentElement.classList.contains("dark");
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingPath, setDrawingPath] = useState("");
   const [lines, setLines] = useState([]);
@@ -31,7 +32,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
   const historyRef = useRef([]);
   const redoStackRef = useRef([]);
   const svgRef = useRef(null);
-  const [color, setColor] = useState("#000000");
+  const [color, setColor] = useState(isDarkMode ? "#FFFFFF" : "#000000");
   const [size, setSize] = useState(thicknessOptions.thin);
   const [drawing, setDrawing] = useState(false);
   const [points, setPoints] = useState([]);
@@ -48,7 +49,6 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
   const [background, setBackground] = useState(
     node.attrs.paperType || backgroundStyles.none
   );
-  const isDarkMode = document.documentElement.classList.contains("dark");
 
   const linesRef = useRef(node.attrs.lines || []);
 
@@ -404,7 +404,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
       </div>
 
       {/* Toolbar */}
-      <div className="sticky bottom-4 rounded-full mx-4 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800">
+      <div className="sticky top-4 rounded-full mx-4 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800">
         {/* Left side controls */}
         <div className="flex items-center space-x-2">
           <button
@@ -562,6 +562,12 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
             onChange={(e) => setColor(e.target.value)}
             className="border-0 rounded-full p-1 cursor-pointer"
           />
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
+          >
+            <Icons.CloseLineIcon className="w-6 h-6" />
+          </button>
         </div>
       </div>
     </div>
