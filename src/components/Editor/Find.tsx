@@ -12,6 +12,9 @@ const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
   const [replaceTerm, setReplaceTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  console.log(searchTerm);
+  console.log(searchInputRef);
+
   const handleSearch = () => {
     if (searchTerm) {
       editor
@@ -72,7 +75,20 @@ const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
 
   const handleClose = () => {
     setShowFind(false);
-  }
+    setSearchTerm('');  // Clear the search term when closing
+    editor?.chain().resetIndex().run();  // Reset the search index and highlights
+  };
+  
+  useEffect(() => {
+    if (searchTerm) {
+      editor?.chain()
+        .setSearchTerm(searchTerm)
+        .resetIndex()  // Reset any previous search index before starting a new search
+        .run();
+    } else {
+      editor?.chain().resetIndex().run();  // If no search term, reset the index
+    }
+  }, [searchTerm, editor]);
 
   return (
     <div className="pt-4 bg-white dark:bg-[#232222] overflow-enabled h-auto w-full bg-transparent z-30 no-scrollbar">

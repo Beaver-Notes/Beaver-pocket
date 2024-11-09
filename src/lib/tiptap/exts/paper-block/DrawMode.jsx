@@ -65,11 +65,11 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     let isErasing = false;
 
     const handlePointerEvent = (event) => {
-      // Only process single-touch for drawing and erasing
+      event.preventDefault();
+      event.stopPropagation();
       if (event.pointerType === "pen") {
-        // For two-finger gestures, allow scrolling and exit drawing mode
         if (event.touches && event.touches.length > 1) {
-          setDrawing(false); // Stop drawing if two fingers are detected
+          setDrawing(false);
           return;
         }
 
@@ -167,6 +167,34 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
   const handleMouseDown = (event) => {
     event.preventDefault();
   };
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    
+    const preventContextMenu = (event) => event.preventDefault();
+    
+    svg.addEventListener("contextmenu", preventContextMenu);
+  
+    return () => {
+      svg.removeEventListener("contextmenu", preventContextMenu);
+    };
+  }, []);
+  
+  useEffect(() => {
+    const disableScroll = (event) => {
+      if (isDrawing) {
+        event.preventDefault();
+      }
+    };
+  
+    document.addEventListener("touchmove", disableScroll, { passive: false });
+    document.addEventListener("wheel", disableScroll, { passive: false });
+  
+    return () => {
+      document.removeEventListener("touchmove", disableScroll);
+      document.removeEventListener("wheel", disableScroll);
+    };
+  }, [isDrawing]);  
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -404,7 +432,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
       </div>
 
       {/* Toolbar */}
-      <div className="sticky top-4 rounded-full mx-4 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800">
+      <div className="sticky bottom-4 rounded-full mx-4 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800">
         {/* Left side controls */}
         <div className="flex items-center space-x-2">
           <button
