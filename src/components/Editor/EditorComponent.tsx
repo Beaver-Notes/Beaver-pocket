@@ -30,9 +30,9 @@ type Props = {
 };
 
 function EditorComponent({ note, notesState, setNotesState }: Props) {
-  const FindRef = useRef<HTMLDivElement>(null);
   const { activeNoteId, setActiveNoteId } = useNotesState();
-  const buttonRef = useRef(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const findRef = useRef<HTMLDivElement | null>(null);
   const [FindPosition, setFindPosition] = useState({ top: 0, left: 0 });
   const { title, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
@@ -231,14 +231,35 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   };
 
   const handleshowFind = () => {
-    //@ts-ignore
-    const buttonRect = buttonRef.current.getBoundingClientRect();
-    setFindPosition({
-      top: buttonRect.top + window.scrollY,
-      left: buttonRect.left + window.scrollX,
-    });
-    setShowFind(true);
+    if (buttonRef.current) {
+      // Check for null to avoid TypeScript error
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      setFindPosition({
+        top: buttonRect.top + window.scrollY,
+        left: buttonRect.left + window.scrollX,
+      });
+      setShowFind(true);
+    }
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (showFind && buttonRef.current) {
+        const buttonRect = buttonRef.current.getBoundingClientRect();
+        setFindPosition({
+          top: buttonRect.top + window.scrollY,
+          left: buttonRect.left + window.scrollX,
+        });
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [showFind]);
 
   const handleKeyDownTitle = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter") {
@@ -559,25 +580,21 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
             </button>
           </div>
           {/* Portal appears below the button */}
-          {showFind &&
-            createPortal(
-              <div
-                ref={FindRef}
-                className="absolute"
-                style={{
-                  top: FindPosition.top,
-                  left: FindPosition.left,
-                  zIndex: 1000,
-                }}
-              >
-                <div className="fixed inset-x-0 flex justify-center">
-                  <div className="w-full bg-white px-4 sm:px-10 md:px-20 lg:px-60">
-                    <Find editor={editor} setShowFind={setShowFind} />
-                  </div>
+          {showFind && (
+            <div
+              ref={findRef}
+              className={`fixed ${showFind ? "block" : "hidden"}`}
+              style={{
+                zIndex: 80,
+              }}
+            >
+              <div className="fixed inset-x-0 flex justify-center">
+                <div className="w-full bg-white px-4 sm:px-10 md:px-20 lg:px-60">
+                  <Find editor={editor} setShowFind={setShowFind} />
                 </div>
-              </div>,
-              document.body
-            )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div
