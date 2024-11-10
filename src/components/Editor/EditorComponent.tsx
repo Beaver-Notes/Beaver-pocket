@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
-import { createPortal } from "react-dom";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
 import { isPlatform } from "@ionic/react";
@@ -33,7 +32,6 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const { activeNoteId, setActiveNoteId } = useNotesState();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const findRef = useRef<HTMLDivElement | null>(null);
-  const [FindPosition, setFindPosition] = useState({ top: 0, left: 0 });
   const { title, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
     notesState,
@@ -232,34 +230,9 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
 
   const handleshowFind = () => {
     if (buttonRef.current) {
-      // Check for null to avoid TypeScript error
-      const buttonRect = buttonRef.current.getBoundingClientRect();
-      setFindPosition({
-        top: buttonRect.top + window.scrollY,
-        left: buttonRect.left + window.scrollX,
-      });
       setShowFind(true);
     }
   };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (showFind && buttonRef.current) {
-        const buttonRect = buttonRef.current.getBoundingClientRect();
-        setFindPosition({
-          top: buttonRect.top + window.scrollY,
-          left: buttonRect.left + window.scrollX,
-        });
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    // Clean up the event listener on component unmount
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [showFind]);
 
   const handleKeyDownTitle = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter") {

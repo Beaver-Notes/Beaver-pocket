@@ -41,6 +41,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       drawingBlockLabel: "menuItems.drawingBlockLabel",
       imageLabel: "menuItems.imageLabel",
       imageDescription: "menuItems.imageDescription",
+      drawLabel: "menuItems.drawLabel",
     },
     accessibility: {
       insertRowAfter: "accessibility.insertRowAfter",
@@ -73,7 +74,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       processing: "accessibility.processing",
       startRecording: "accessibility.startRecording",
       stopRecording: "accessibility.stopRecording",
-      videoUpload: "accessibility.videoUpload"
+      videoUpload: "accessibility.videoUpload",
     },
   });
 
@@ -384,6 +385,20 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             aria-label={translations.menuItems.quoteLabel}
           >
             <icons.DoubleQuotesLIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+          </button>
+          <button
+            className={
+              editor?.isActive("paper")
+                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+            }
+            onMouseDown={handleMouseDown}
+            onClick={(editor: any) =>
+              editor?.chain().focus().insertPaper().run()
+            }
+            aria-label={translations.menuItems.drawLabel}
+          >
+            <icons.Brush2Fill className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
           </button>
           <button
             className={`p-1 ${
