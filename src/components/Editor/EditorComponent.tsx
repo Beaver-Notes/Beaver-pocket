@@ -282,7 +282,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     });
     Mousetrap.bind("mod+shift+h", (e) => {
       e.preventDefault();
-      editor?.chain().focus().toggleHighlight().run();
+      editor?.chain().focus().setHighlight({color: "bg-yellow-200 dark:bg-yellow-100"}).run();
     });
     Mousetrap.bind("mod+.", (e) => {
       e.preventDefault();

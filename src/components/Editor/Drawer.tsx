@@ -393,12 +393,11 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
             }
             onMouseDown={handleMouseDown}
-            onClick={(editor: any) =>
-              editor?.chain().focus().insertPaper().run()
-            }
+            //@ts-ignore
+            onClick={() => editor?.chain().focus().insertPaper().run()}
             aria-label={translations.menuItems.drawLabel}
           >
-            <icons.Brush2Fill className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+            <icons.Brush2Fill className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${

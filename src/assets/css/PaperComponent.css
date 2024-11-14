@@ -16,11 +16,6 @@
   @apply ring-2 ring-blue-500;
 }
 
-input[type="color"],
-input[type="range"] {
-  @apply appearance-none bg-gray-200 border border-gray-400 rounded-md py-1 px-2 leading-tight focus:outline-none focus:bg-white focus:border-blue-500;
-}
-
 .drawing-container {
   touch-action: none; /* Disable zooming and panning gestures */
   -webkit-user-select: none; /* Prevent text selection on touch */

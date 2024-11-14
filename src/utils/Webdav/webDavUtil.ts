@@ -332,7 +332,6 @@ export const useImportDav = (
       // Attempt to find a folder
       const folderPath = await findValidFolderPath();
       if (!folderPath) {
-        alert("No valid 'Beaver Notes' folder found in the past 30 days.");
         return;
       }
       setProgress(10);

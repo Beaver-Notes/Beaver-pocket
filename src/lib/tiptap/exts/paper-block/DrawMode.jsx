@@ -1,15 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import * as d3 from "d3";
 import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
 import Icons from "../../../remixicon-react";
 
 const thicknessOptions = {
-  thin: 1,
-  medium: 2,
-  thick: 3,
-  thicker: 4,
-  thickest: 5,
+  thin: 2,
+  medium: 3,
+  thick: 4,
+  thicker: 5,
+  thickest: 6,
 };
 
 const backgroundStyles = {
@@ -60,40 +60,45 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
-
-    const eraseRadius = 5; // Defines the size of the eraser's area
+    const eraseRadius = 5;
     let isErasing = false;
+    let penActive = false;
+    let penTimeout = null;
+
+    const PEN_TIMEOUT_DURATION = 700;
 
     const handlePointerEvent = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
       if (event.pointerType === "pen") {
-        if (event.touches && event.touches.length > 1) {
-          setDrawing(false);
-          return;
-        }
+        penActive = true;
+        clearTimeout(penTimeout);
+        event.preventDefault(); // Prevent touch interaction when pen is active
+        event.stopPropagation();
 
         const [x, y] = getPointerCoordinates(event);
 
         if (event.type === "pointerdown") {
           if (tool === "erase") {
             isErasing = true;
-            eraseOverlappingPaths(x, y); // Start erasing immediately
+            eraseOverlappingPaths(x, y);
           } else {
             startDrawing(x, y);
           }
         } else if (event.type === "pointermove") {
           if (tool === "erase" && isErasing) {
-            eraseOverlappingPaths(x, y); // Continuously erase during movement
+            eraseOverlappingPaths(x, y);
           } else if (tool !== "erase") {
             draw(x, y);
           }
         } else if (event.type === "pointerup") {
           if (tool === "erase") {
-            isErasing = false; // Stop erasing after pointer is lifted
+            isErasing = false;
           } else {
             stopDrawing();
           }
+
+          penTimeout = setTimeout(() => {
+            penActive = false;
+          }, PEN_TIMEOUT_DURATION);
         }
       }
     };
@@ -109,37 +114,58 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
       svg.selectAll("path").each(function () {
         const path = d3.select(this);
         const pathNode = path.node();
-        const pathBBox = pathNode.getBBox(); // Get the bounding box of the path
+        const pathBBox = pathNode.getBBox();
 
-        // Check if the path overlaps the eraser area
         if (
           pathBBox.x < eraserArea.x + eraserArea.width &&
           pathBBox.x + pathBBox.width > eraserArea.x &&
           pathBBox.y < eraserArea.y + eraserArea.height &&
           pathBBox.y + pathBBox.height > eraserArea.y
         ) {
-          deletePath(pathNode); // Delete the path if it intersects with the eraser area
+          deletePath(pathNode);
         }
       });
     };
 
-    // Use pointer events for unified handling of mouse, touch, and pen input
+    // Prevent scrolling when the pencil (pen) is active
+    const preventScrolling = (event) => {
+      if (penActive) {
+        event.preventDefault(); // Prevent scrolling
+        event.stopPropagation();
+      }
+    };
+
+    // Attach pen input handlers on SVG
     svg
       .on("pointerdown", handlePointerEvent)
       .on("pointermove", handlePointerEvent)
       .on("pointerup", handlePointerEvent);
 
-    // Prevent Scribble interference during touchmove
-    const preventTouchMove = (event) => {
-      if (event.touches.length === 1) {
-        event.preventDefault(); // Prevent default only for single-touch to allow scrolling with two fingers
-      }
-    };
+    // Block touch interactions (scrolling) when pen is active
+    document.body.addEventListener("touchstart", preventScrolling, {
+      passive: false,
+    });
+    document.body.addEventListener("touchmove", preventScrolling, {
+      passive: false,
+    });
+    document.body.addEventListener("touchend", preventScrolling, {
+      passive: false,
+    });
 
-    svg
-      .on("touchmove", preventTouchMove, { passive: false })
-      .on("touchstart", preventTouchMove, { passive: false })
-      .on("touchend", preventTouchMove, { passive: false });
+    // Suppress context menu (e.g., copy/paste menu) on pen input
+    svg.on("contextmenu", (event) => {
+      if (penActive) {
+        event.preventDefault();
+      }
+    });
+
+    // Cleanup on component unmount
+    return () => {
+      clearTimeout(penTimeout);
+      document.body.removeEventListener("touchstart", preventScrolling);
+      document.body.removeEventListener("touchmove", preventScrolling);
+      document.body.removeEventListener("touchend", preventScrolling);
+    };
   }, [tool, color, size, points]);
 
   const deletePath = (pathElement) => {
@@ -170,31 +196,31 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
 
   useEffect(() => {
     const svg = svgRef.current;
-    
+
     const preventContextMenu = (event) => event.preventDefault();
-    
+
     svg.addEventListener("contextmenu", preventContextMenu);
-  
+
     return () => {
       svg.removeEventListener("contextmenu", preventContextMenu);
     };
   }, []);
-  
+
   useEffect(() => {
     const disableScroll = (event) => {
       if (isDrawing) {
         event.preventDefault();
       }
     };
-  
+
     document.addEventListener("touchmove", disableScroll, { passive: false });
     document.addEventListener("wheel", disableScroll, { passive: false });
-  
+
     return () => {
       document.removeEventListener("touchmove", disableScroll);
       document.removeEventListener("wheel", disableScroll);
     };
-  }, [isDrawing]);  
+  }, [isDrawing]);
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -267,13 +293,6 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
 
     const newPoints = [...points, { x, y }];
     setPoints(newPoints);
-
-    const lineGenerator = d3
-      .line()
-      .x((d) => d.x)
-      .y((d) => d.y)
-      .curve(d3.curveBasis);
-
     const newPath = lineGenerator(newPoints);
     setPath(newPath);
     if (y > svgHeight - BUFFER_ZONE) {
@@ -314,25 +333,6 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
 
   const openColorPicker = () => {
     colorInputRef.current.click();
-  };
-
-  const saveDrawing = () => {
-    const newLine = { id: uuid(), path, color, size, tool };
-    linesRef.current = [...linesRef.current, newLine];
-
-    // Save the action as adding this specific line, not the entire drawing
-    setHistory((prevHistory) => [
-      ...prevHistory,
-      { action: "add", line: newLine },
-    ]);
-
-    // Clear the redo stack since a new action was taken
-    setRedoStack([]);
-
-    updateAttributes({
-      lines: linesRef.current,
-      id: id,
-    });
   };
 
   // Store only actions in history (add or delete)
@@ -394,51 +394,138 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     };
   }, []);
 
+  const pathsGroupRef = useRef(null);
+  const activePathRef = useRef(null);
+  const throttleRef = useRef(null);
+  const batchUpdateTimeoutRef = useRef(null);
+
+  // Memoize the line generator to prevent recreation
+  const lineGenerator = useMemo(
+    () =>
+      d3
+        .line()
+        .x((d) => d.x)
+        .y((d) => d.y)
+        .curve(d3.curveBasis), // Adjusted alpha for more smoothness
+    []
+  );
+
+  const smoothPoints = (points) => {
+    if (points.length < 3) return points;
+    return points.map((point, i, arr) => {
+      if (i === 0 || i === arr.length - 1) return point; // Keep endpoints
+      const prev = arr[i - 1];
+      const next = arr[i + 1];
+      return {
+        x: (prev.x + point.x + next.x) / 3,
+        y: (prev.y + point.y + next.y) / 3,
+      };
+    });
+  };
+
+  // Batch update function for paths
+  const batchUpdatePaths = () => {
+    if (batchUpdateTimeoutRef.current) {
+      clearTimeout(batchUpdateTimeoutRef.current);
+    }
+
+    batchUpdateTimeoutRef.current = setTimeout(() => {
+      updateAttributes({
+        lines: linesRef.current,
+      });
+    }, 500); // Adjust timeout as needed
+  };
+
+  // Throttle draw function
+  const throttledDraw = (x, y) => {
+    if (!throttleRef.current) {
+      throttleRef.current = setTimeout(() => {
+        throttleRef.current = null;
+      }, 16); // ~60fps
+
+      if (!drawing) return;
+
+      const newPoints = [...points, { x, y }];
+      setPoints(newPoints);
+
+      const newPath = lineGenerator(smoothPoints(newPoints));
+      setPath(newPath);
+
+      // Update active path directly in DOM for better performance
+      if (activePathRef.current) {
+        activePathRef.current.setAttribute("d", newPath);
+      }
+
+      // Check for canvas expansion
+      if (y > svgHeight - BUFFER_ZONE) {
+        const newHeight = svgHeight + INCREMENT_HEIGHT;
+        setSvgHeight(newHeight);
+        updateAttributes({ height: newHeight });
+      }
+    }
+  };
+
+  // Split paths into chunks for better rendering
+  const chunkedLines = useMemo(() => {
+    const chunkSize = 100; // Adjust based on performance needs
+    const chunks = [];
+    for (let i = 0; i < linesRef.current.length; i += chunkSize) {
+      chunks.push(linesRef.current.slice(i, i + chunkSize));
+    }
+    return chunks;
+  }, [linesRef.current.length]);
+
+  // Optimize path rendering
+  const renderPaths = () =>
+    chunkedLines.map((chunk, chunkIndex) => (
+      <g key={`chunk-${chunkIndex}`}>
+        {chunk.map((item) => (
+          <path
+            key={`${item.id}-${item.color}-${item.size}`}
+            d={item.path}
+            stroke={
+              isDarkMode
+                ? item.color === "#000000"
+                  ? "#FFFFFF" // White text for dark mode
+                  : item.color // Keep original color
+                : item.color === "#FFFFFF"
+                ? "#000000"
+                : item.color // Keep original color
+            }
+            strokeWidth={item.size}
+            opacity={item.tool === "highlighter" ? 0.3 : 1}
+            fill="none"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+      </g>
+    ));
+
+  // Optimize save drawing function
+  const saveDrawing = () => {
+    if (!path) return;
+
+    const newLine = { id: uuid(), path, color, size, tool };
+    linesRef.current = [...linesRef.current, newLine];
+
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      { action: "add", line: newLine },
+    ]);
+
+    setRedoStack([]);
+    batchUpdatePaths();
+  };
+
   return (
     <div className="draw w-full min-h-screen flex flex-col">
-      <div className="relative flex-grow drawing-container">
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          preserveAspectRatio="xMidYMid meet"
-          className={`w-full h-auto border border-gray-300 dark:border-neutral-600 ${background}`}
-        >
-          {linesRef.current.map((item) => (
-            <path
-              key={`${item.id}-${item.color}-${item.size}-${Date.now()}`}
-              d={item.path}
-              stroke={
-                isDarkMode
-                  ? item.color === "#000000"
-                    ? "#FFFFFF"
-                    : item.color
-                  : item.color
-              }
-              strokeWidth={item.size}
-              opacity={item.tool === "highlighter" ? 0.3 : 1}
-              fill="none"
-            />
-          ))}
-          {path && (
-            <path
-              d={path}
-              stroke={color}
-              strokeWidth={size}
-              opacity={tool === "highlighter" ? 0.3 : 1}
-              fill="none"
-            />
-          )}
-        </svg>
-      </div>
-
-      {/* Toolbar */}
-      <div className="sticky bottom-4 rounded-full mx-4 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800">
+      {/* Top Toolbar */}
+      <div className="mt-2 sticky top-0 z-10 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800 rounded-none shadow-md">
         {/* Left side controls */}
         <div className="flex items-center space-x-2">
           <button
             onClick={() => {
               setTool("pencil");
-              setColor("#000000");
             }}
             onMouseDown={(e) => e.preventDefault()}
             className={`flex items-center justify-center p-2 border ${
@@ -514,9 +601,9 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
             } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
             <svg
-              width="15"
-              height="2"
-              className="rounded"
+              width="3"
+              height="3"
+              className="rounded-full"
               style={{ backgroundColor: color }}
             />
           </button>
@@ -530,9 +617,9 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
             } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
             <svg
-              width="15"
-              height="3"
-              className="rounded"
+              width="4"
+              height="4"
+              className="rounded-full"
               style={{ backgroundColor: color }}
             />
           </button>
@@ -546,9 +633,9 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
             } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
             <svg
-              width="15"
-              height="4"
-              className="rounded"
+              width="5"
+              height="5"
+              className="rounded-full"
               style={{ backgroundColor: color }}
             />
           </button>
@@ -562,9 +649,9 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
             } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
             <svg
-              width="15"
-              height="5"
-              className="rounded"
+              width="6"
+              height="6"
+              className="rounded-full"
               style={{ backgroundColor: color }}
             />
           </button>
@@ -578,18 +665,28 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
             } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
           >
             <svg
-              width="15"
-              height="6"
-              className="rounded"
+              width="7"
+              height="7"
+              className="rounded-full"
               style={{ backgroundColor: color }}
             />
           </button>
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="border-0 rounded-full p-1 cursor-pointer"
-          />
+          <div className="relative inline-block">
+            {/* Hidden color input */}
+            <input
+              type="color"
+              value={color}
+              onChange={handleColorChange}
+              ref={colorInputRef}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+            />
+            {/* Custom button */}
+            <button
+              onClick={openColorPicker}
+              style={{ backgroundColor: color }}
+              className={`flex items-center justify-center p-1 h-10 w-10 rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
+            />
+          </div>
           <button
             onClick={onClose}
             className="p-2 rounded-full bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
@@ -597,6 +694,29 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
             <Icons.CloseLineIcon className="w-6 h-6" />
           </button>
         </div>
+      </div>
+
+      {/* SVG Container */}
+      <div className="relative flex-grow drawing-container">
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          preserveAspectRatio="xMidYMid meet"
+          className={`w-full h-auto ${background}`}
+        >
+          <g ref={pathsGroupRef}>{renderPaths()}</g>
+          {path && (
+            <path
+              ref={activePathRef}
+              d={path}
+              stroke={color}
+              strokeWidth={size}
+              opacity={tool === "highlighter" ? 0.3 : 1}
+              fill="none"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+        </svg>
       </div>
     </div>
   );
