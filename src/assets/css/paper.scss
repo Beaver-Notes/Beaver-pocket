@@ -1,7 +1,5 @@
 .draw {
   .drawing-container {
-    @apply rounded-xl;
-
     svg {
       @apply bg-neutral-100 dark:bg-neutral-800 rounded-t-xl;
       cursor: crosshair;

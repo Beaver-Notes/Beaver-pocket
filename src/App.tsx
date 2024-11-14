@@ -90,25 +90,31 @@ const App: React.FC = () => {
     }
   }, [checkedFirstTime, history]);
 
+  const { HandleImportData } = useImportDav(setNotesState);
+
   useEffect(() => {
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      const dropboxImport = new CustomEvent("dropboxImport");
-      document.dispatchEvent(dropboxImport);
-    } else if (syncValue === "webdav") {
-      const { HandleImportData } = useImportDav(setNotesState);
-      HandleImportData();
-    } else if (syncValue === "iCloud") {
-      const iCloudImport = new CustomEvent("iCloudImport");
-      document.dispatchEvent(iCloudImport);
-    } else if (syncValue === "googledrive") {
-      const driveImport = new CustomEvent("driveImport");
-      document.dispatchEvent(driveImport);
-    } else if (syncValue === "onedrive") {
-      const onedriveImport = new CustomEvent("onedriveImport");
-      document.dispatchEvent(onedriveImport);
-    }
-  });
+    const handleSync = () => {
+      const syncValue = localStorage.getItem("sync");
+  
+      if (syncValue === "dropbox") {
+        const dropboxImport = new CustomEvent("dropboxImport");
+        document.dispatchEvent(dropboxImport);
+      } else if (syncValue === "webdav") {
+        HandleImportData(); // now safely called
+      } else if (syncValue === "iCloud") {
+        const iCloudImport = new CustomEvent("iCloudImport");
+        document.dispatchEvent(iCloudImport);
+      } else if (syncValue === "googledrive") {
+        const driveImport = new CustomEvent("driveImport");
+        document.dispatchEvent(driveImport);
+      } else if (syncValue === "onedrive") {
+        const onedriveImport = new CustomEvent("onedriveImport");
+        document.dispatchEvent(onedriveImport);
+      }
+    };
+  
+    handleSync();
+  }, [HandleImportData]);
 
   const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
 

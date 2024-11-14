@@ -70,6 +70,7 @@
     "@tiptap/react": "^2.4.0",
     "@tiptap/starter-kit": "^2.1.13",
     "@tiptap/suggestion": "^2.8.0",
+    "@tldraw/tldraw": "^3.4.1",
     "@types/crypto-js": "^4.2.1",
     "@types/d3": "^7.4.3",
     "@types/dompurify": "^3.0.5",

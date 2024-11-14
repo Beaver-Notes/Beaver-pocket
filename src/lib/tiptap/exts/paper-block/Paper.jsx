@@ -53,7 +53,7 @@ const CustomNodeView = ({ node, updateAttributes }) => {
             />
           ))}
         </svg>
-        <div className="rounded absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
           <span className="text-white text-lg font-medium">Click to Draw</span>
         </div>
       </div>
