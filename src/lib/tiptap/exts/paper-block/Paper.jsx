@@ -10,7 +10,7 @@ const PREVIEW_HEIGHT = 500;
 
 const OverlayPortal = ({ children, onClose }) => {
   return createPortal(
-    <div className="absolute inset-0 z-50" >
+    <div className="bg-neutral-100 dark:bg-neutral-800 absolute inset-0 z-50" >
         {children}
     </div>,
     document.body

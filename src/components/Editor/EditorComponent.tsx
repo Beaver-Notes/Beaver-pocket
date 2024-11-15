@@ -8,7 +8,6 @@ import Drawer from "./Drawer";
 import Find from "./Find";
 import "../../assets/css/editor.css";
 import extensions from "../../lib/tiptap/index";
-import CollapseHeading from "../../lib/tiptap/exts/collapse-heading";
 import EditorSuggestion from "../../lib/tiptap/exts/suggestions/EditorSuggestion";
 import NoteLinkExtension from "../../lib/tiptap/exts/suggestions/NoteLinkSuggestion";
 import NoteLabelSuggestion from "../../lib/tiptap/exts/suggestions/NoteLabelSuggestion";
@@ -125,11 +124,6 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
       noteId: note.id,
     }),
   ];
-
-  // Check collapsibleHeading from localStorage
-  if (localStorage.getItem("collapsibleHeading") === "true") {
-    exts.push(CollapseHeading);
-  }
 
   const editor = useEditor(
     {

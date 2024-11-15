@@ -51,7 +51,7 @@ export default Node.create({
         ({ commands }) => {
           return commands.insertContent({
             type: 'paper',
-            attrs: { lines: [], height: 250 }, // Ensure default height is set
+            attrs: { lines: [], height: 800 }, // Ensure default height is set
           });
         },
     };

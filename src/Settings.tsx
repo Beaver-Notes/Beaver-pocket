@@ -5,14 +5,13 @@ import deTranslations from "./assets/locales/de.json";
 import { useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
 import { Note } from "./store/types";
-import { loadNotes } from "./store/notes";
 
 interface SettingsProps {
   notesState: Record<string, Note>;
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
+const Archive: React.FC<SettingsProps> = () => {
   const navigate = useNavigate();
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
@@ -114,7 +113,6 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
       clearFont: "settings.clearFont",
       Sync: "settings.Sync",
       expandPage: "settings.expandPage",
-      CollapsibleHeading: "settings.CollapsibleHeading",
       scribbleCompatibility: "settings.scribbleCompatibility",
     },
   });
@@ -180,24 +178,6 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
       newValue ? "#CCCCCC" : "white"
     );
     window.location.reload();
-  };
-
-  const [collapsibleHeading, setCollapsibleHeading] = useState(() => {
-    const storedValue = localStorage.getItem("collapsibleHeading");
-    return storedValue === "true"; // Convert stored string to boolean
-  });
-
-  // Function to toggle collapsibleHeading
-  const toggleCollapsibleHeading = async () => {
-    // Toggle collapsibleHeading synchronously
-    setCollapsibleHeading((prevValue) => {
-      const newValue = !prevValue;
-      localStorage.setItem("collapsibleHeading", newValue.toString()); // Store as string
-      return newValue;
-    });
-    // Load notes asynchronously
-    const notes = await loadNotes();
-    setNotesState(notes);
   };
 
   const [selectedOption, setSelectedOption] = useState(
@@ -401,29 +381,6 @@ const Archive: React.FC<SettingsProps> = ({ setNotesState }) => {
                       onChange={toggleClearFont}
                       className="peer sr-only"
                       aria-checked={ClearFontChecked}
-                    />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                  </label>
-                </div>
-
-                {/* Toggle Collapsible Heading */}
-                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
-                  <p
-                    id="collapsible-heading-label"
-                    className="block text-lg align-left"
-                  >
-                    {translations.settings.CollapsibleHeading || "-"}
-                  </p>
-                  <label
-                    className="relative inline-flex cursor-pointer items-center"
-                    aria-labelledby="collapsible-heading-label"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={collapsibleHeading}
-                      onChange={toggleCollapsibleHeading}
-                      className="peer sr-only"
-                      aria-checked={collapsibleHeading}
                     />
                     <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                   </label>

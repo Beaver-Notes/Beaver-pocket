@@ -1,7 +1,6 @@
 .draw {
   .drawing-container {
     svg {
-      @apply bg-neutral-100 dark:bg-neutral-800 rounded-t-xl;
       cursor: crosshair;
       overflow: hidden;
 
