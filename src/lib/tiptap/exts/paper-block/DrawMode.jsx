@@ -475,6 +475,16 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     return chunks;
   }, [linesRef.current.length]);
 
+  const adjustColorForMode = (color) => {
+    if (isDarkMode) {
+      // Dark mode: Black turns to white; other colors unchanged
+      return color === "#000000" ? "#FFFFFF" : color;
+    } else {
+      // Light mode: White turns to black; other colors unchanged
+      return color === "#FFFFFF" ? "#000000" : color;
+    }
+  };
+
   // Optimize path rendering
   const renderPaths = () =>
     chunkedLines.map((chunk, chunkIndex) => (
@@ -483,15 +493,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           <path
             key={`${item.id}-${item.color}-${item.size}`}
             d={item.path}
-            stroke={
-              isDarkMode
-                ? item.color === "#000000"
-                  ? "#FFFFFF" // White text for dark mode
-                  : item.color // Keep original color
-                : item.color === "#FFFFFF"
-                ? "#000000"
-                : item.color // Keep original color
-            }
+            stroke={adjustColorForMode(item.color)}
             strokeWidth={item.size}
             opacity={item.tool === "highlighter" ? 0.3 : 1}
             fill="none"
@@ -526,6 +528,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           <button
             onClick={() => {
               setTool("pencil");
+              setColor(isDarkMode ? "#FFFFFF" : "#000000");
             }}
             onMouseDown={(e) => e.preventDefault()}
             className={`flex items-center justify-center p-2 border ${
@@ -702,14 +705,14 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           ref={svgRef}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           preserveAspectRatio="xMidYMid meet"
-          className={`w-full h-auto ${background}`}
+          className={`w-full h-auto ${background} bg-neutral-100 dark:bg-neutral-800`}
         >
           <g ref={pathsGroupRef}>{renderPaths()}</g>
           {path && (
             <path
               ref={activePathRef}
               d={path}
-              stroke={color}
+              stroke={adjustColorForMode(color)}
               strokeWidth={size}
               opacity={tool === "highlighter" ? 0.3 : 1}
               fill="none"

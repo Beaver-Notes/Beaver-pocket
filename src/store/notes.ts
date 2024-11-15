@@ -54,7 +54,9 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
       path: "",
     });
     setStoreRemotePath(Capacitor.convertFileSrc(uri));
-    await createNotesDirectory(); // Create the directory before reading/writing
+
+    // Check if the file exists before creating the directory
+    let fileExists = true;
 
     try {
       await Filesystem.stat({
@@ -62,7 +64,14 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
         directory: Directory.Data,
       });
     } catch {
-      console.log("The file doesn't exist. Returning an empty object.");
+      console.log("The file doesn't exist. Marking as not found.");
+      fileExists = false;
+    }
+
+    if (!fileExists) {
+      // Create the notes directory only if the file is missing
+      await createNotesDirectory();
+      console.log("Notes directory created because no file was found.");
       return {};
     }
 
@@ -82,7 +91,7 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
         const filteredNotes = Object.keys(notes).reduce((acc, noteId) => {
           const note = notes[noteId];
 
-          // If the title is missing or empty, assign an empty string as the title
+          // Ensure the title is not missing
           note.title = note.title || "";
 
           // If collapsible headings are disabled, uncollapse all headings

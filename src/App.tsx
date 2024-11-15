@@ -181,7 +181,7 @@ const App: React.FC = () => {
   }, [darkMode, themeMode]);
 
   if (isIpad) {
-    Keyboard.setResizeMode({ mode: KeyboardResize.None });
+    Keyboard.setResizeMode({ mode: KeyboardResize.Native });
   } else {
     Keyboard.setResizeMode({ mode: KeyboardResize.Native });
   }
