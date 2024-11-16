@@ -39,6 +39,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const [previousContent, setPreviousContent] = useState<JSONContent | null>(
     null
   );
+  const { exportdata } = useExportDav();
   const [searchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
@@ -276,7 +277,11 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     });
     Mousetrap.bind("mod+shift+h", (e) => {
       e.preventDefault();
-      editor?.chain().focus().setHighlight({color: "bg-yellow-200 dark:bg-yellow-100"}).run();
+      editor
+        ?.chain()
+        .focus()
+        .setHighlight({ color: "bg-yellow-200 dark:bg-yellow-100" })
+        .run();
     });
     Mousetrap.bind("mod+.", (e) => {
       e.preventDefault();
@@ -484,23 +489,28 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
 
   const goBack = () => {
     const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
-    } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
-    } else if (syncValue === "iCloud") {
-      const iCloudExport = new CustomEvent("iCloudExport");
-      document.dispatchEvent(iCloudExport);
-    } else if (syncValue === "googledrive") {
-      const driveExport = new CustomEvent("driveExport");
-      document.dispatchEvent(driveExport);
-    } else if (syncValue === "onedrive") {
-      const onedriveExport = new CustomEvent("onedriveExport");
-      document.dispatchEvent(onedriveExport);
+
+    try {
+      if (syncValue === "dropbox") {
+        const dropboxExport = new CustomEvent("dropboxExport");
+        document.dispatchEvent(dropboxExport);
+      } else if (syncValue === "webdav") {
+        exportdata(); // Safe hook usage
+      } else if (syncValue === "iCloud") {
+        const iCloudExport = new CustomEvent("iCloudExport");
+        document.dispatchEvent(iCloudExport);
+      } else if (syncValue === "googledrive") {
+        const driveExport = new CustomEvent("driveExport");
+        document.dispatchEvent(driveExport);
+      } else if (syncValue === "onedrive") {
+        const onedriveExport = new CustomEvent("onedriveExport");
+        document.dispatchEvent(onedriveExport);
+      }
+    } catch (error) {
+      console.error("An error occurred during export:", error);
+    } finally {
+      navigate("/"); // Always navigate back, even if an error occurs
     }
-    navigate("/");
   };
 
   return (
