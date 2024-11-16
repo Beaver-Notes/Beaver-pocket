@@ -95,7 +95,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleSync = () => {
       const syncValue = localStorage.getItem("sync");
-  
+
       if (syncValue === "dropbox") {
         const dropboxImport = new CustomEvent("dropboxImport");
         document.dispatchEvent(dropboxImport);
@@ -112,11 +112,26 @@ const App: React.FC = () => {
         document.dispatchEvent(onedriveImport);
       }
     };
-  
+
     handleSync();
   }, [HandleImportData]);
 
   const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
+
+  useEffect(() => {
+    // Add back button listener for Android
+    CapacitorApp.addListener("backButton", ({ canGoBack }) => {
+      if (!canGoBack) {
+        CapacitorApp.exitApp(); // Exit app if no history to go back
+      } else {
+        navigate(-1); // Navigate back in the browser history
+      }
+    });
+
+    return () => {
+      CapacitorApp.removeAllListeners(); // Clean up listeners
+    };
+  }, [navigate]);
 
   useEffect(() => {
     Mousetrap.bind("mod+shift+p", (e) => {
