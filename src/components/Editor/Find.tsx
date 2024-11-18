@@ -75,9 +75,11 @@ const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
 
   const handleClose = () => {
     setShowFind(false);
-    setSearchTerm('');  // Clear the search term when closing
-    editor?.chain().resetIndex().run();  // Reset the search index and highlights
-  };
+    setSearchTerm("");  // Clear the search term
+    setReplaceTerm(""); // Clear the replace term
+    editor?.chain().setSearchTerm("").resetIndex().clea().run(); // Clear highlights
+    editor.commands.clearSearch();
+  };  
   
   useEffect(() => {
     if (searchTerm) {
