@@ -26,6 +26,10 @@ const config: CapacitorConfig = {
       serverClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID,
       forceCodeForRefreshToken: true,
     },
+    Keyboard: {
+      //@ts-ignore
+      resize: "none",
+    },
     CapacitorHttp: {
       enabled: true,
     },
