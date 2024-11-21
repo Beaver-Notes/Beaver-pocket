@@ -196,10 +196,11 @@ const App: React.FC = () => {
   }, [darkMode, themeMode]);
 
   if (isIpad) {
-    Keyboard.setResizeMode({ mode: KeyboardResize.Native });
+    Keyboard.setResizeMode({ mode: KeyboardResize.None });
   } else {
     Keyboard.setResizeMode({ mode: KeyboardResize.Native });
   }
+  
   return (
     <div>
       <div className="safe-area"></div>

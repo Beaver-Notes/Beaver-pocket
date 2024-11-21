@@ -3,11 +3,23 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 3,
             "patches": [
                 {
                     "date": 1731752449192,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1732122124615,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -94,9 +94,9 @@\n \n   useEffect(() => {\n     const handleSync = () => {\n       const syncValue = localStorage.getItem(\"sync\");\n-  \n+\n       if (syncValue === \"dropbox\") {\n         const dropboxImport = new CustomEvent(\"dropboxImport\");\n         document.dispatchEvent(dropboxImport);\n       } else if (syncValue === \"webdav\") {\n@@ -111,9 +111,9 @@\n         const onedriveImport = new CustomEvent(\"onedriveImport\");\n         document.dispatchEvent(onedriveImport);\n       }\n     };\n-  \n+\n     handleSync();\n   }, [HandleImportData]);\n \n   const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);\n@@ -126,15 +126,14 @@\n       } else {\n         navigate(-1); // Navigate back in the browser history\n       }\n     });\n-  \n+\n     return () => {\n       CapacitorApp.removeAllListeners(); // Clean up listeners\n     };\n   }, [navigate]);\n \n-  \n   useEffect(() => {\n     Mousetrap.bind(\"mod+shift+p\", (e) => {\n       e.preventDefault();\n       setIsCommandPromptOpen(true);\n@@ -200,8 +199,9 @@\n     Keyboard.setResizeMode({ mode: KeyboardResize.Native });\n   } else {\n     Keyboard.setResizeMode({ mode: KeyboardResize.Native });\n   }\n+  \n   return (\n     <div>\n       <div className=\"safe-area\"></div>\n       <Auth0Provider\n"
+                },
+                {
+                    "date": 1732122130330,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -195,13 +195,13 @@\n     localStorage.setItem(\"themeMode\", themeMode);\n   }, [darkMode, themeMode]);\n \n   if (isIpad) {\n-    Keyboard.setResizeMode({ mode: KeyboardResize.Native });\n+    Keyboard.setResizeMode({ mode: KeyboardResize.None });\n   } else {\n     Keyboard.setResizeMode({ mode: KeyboardResize.Native });\n   }\n-  \n+\n   return (\n     <div>\n       <div className=\"safe-area\"></div>\n       <Auth0Provider\n"
+                },
+                {
+                    "date": 1732122189625,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -199,9 +199,9 @@\n     Keyboard.setResizeMode({ mode: KeyboardResize.None });\n   } else {\n     Keyboard.setResizeMode({ mode: KeyboardResize.Native });\n   }\n-\n+  \n   return (\n     <div>\n       <div className=\"safe-area\"></div>\n       <Auth0Provider\n"
                 }
             ],
             "date": 1731752449192,

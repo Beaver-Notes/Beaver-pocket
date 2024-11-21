@@ -1,58 +1,65 @@
-import React, { useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import * as d3 from "d3";
+import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
 import Icons from "../../../remixicon-react";
-import { useDrawing, thicknessOptions, backgroundStyles } from "./useDrawing";
+
+const thicknessOptions = {
+  thin: 2,
+  medium: 3,
+  thick: 4,
+  thicker: 5,
+  thickest: 6,
+};
+
+const backgroundStyles = {
+  none: "",
+  grid: "grid",
+  ruled: "ruled",
+  dotted: "dotted",
+};
+
+const BUFFER_ZONE = 50;
+const INCREMENT_HEIGHT = 200;
+const PREVIEW_HEIGHT = 500;
 
 const DrawMode = ({ onClose, updateAttributes, node }) => {
-  const colorInputRef = useRef(null);
-
-  const {
-    drawing,
-    path,
-    svgHeight,
-    tool,
-    color,
-    size,
-    background,
-    svgRef,
-    linesRef,
-    pathsGroupRef,
-    activePathRef,
-    setTool,
-    setColor,
-    setSize,
-    setBackground,
-    startDrawing,
-    draw,
-    stopDrawing,
-    undo,
-    redo,
-    deletePath,
-    getPointerCoordinates,
-    adjustColorForMode,
-  } = useDrawing({
-    initialHeight: node.attrs.height || 400,
-    initialLines: node.attrs.lines || [],
-    onUpdateAttributes: updateAttributes,
-  });
-
-  const svgWidth = 500;
   const isDarkMode = document.documentElement.classList.contains("dark");
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawingPath, setDrawingPath] = useState("");
+  const [lines, setLines] = useState([]);
+  const pointsRef = useRef([]);
+  const historyRef = useRef([]);
+  const redoStackRef = useRef([]);
+  const svgRef = useRef(null);
+  const [color, setColor] = useState(isDarkMode ? "#FFFFFF" : "#000000");
+  const [size, setSize] = useState(thicknessOptions.thin);
+  const [drawing, setDrawing] = useState(false);
+  const [points, setPoints] = useState([]);
+  const [path, setPath] = useState("");
+  const [svgHeight, setSvgHeight] = useState(node.attrs.height || 400);
+  const [svgWidth] = useState(500);
+  const [tool, setTool] = useState("pencil");
+  const [history, setHistory] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+  const [isResizing, setIsResizing] = useState(false);
+  const [startY, setStartY] = useState(0);
+  const [id] = useState(() => node.attrs.id || uuid());
+  const colorInputRef = useRef(null);
+  const [background, setBackground] = useState(
+    node.attrs.paperType || backgroundStyles.none
+  );
+
+  const linesRef = useRef(node.attrs.lines || []);
+
+  const handleBackgroundChange = (event) => {
+    const newBackground = event.target.value;
+    setBackground(newBackground);
+    updateAttributes({ paperType: newBackground });
+  };
 
   useEffect(() => {
-    const showListener = Keyboard.addListener("keyboardWillShow", () => {
-      Keyboard.hide();
-    });
-
-    return () => {
-      showListener.remove();
-    };
-  }, []);
-
-  useEffect(() => {
-    const svg = svgRef.current;
-    if (!svg) return; // Exit if ref is not set
-
+    const svg = d3.select(svgRef.current);
     const eraseRadius = 5;
     let isErasing = false;
     let penActive = false;
@@ -64,7 +71,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
       if (event.pointerType === "pen") {
         penActive = true;
         clearTimeout(penTimeout);
-        event.preventDefault();
+        event.preventDefault(); // Prevent touch interaction when pen is active
         event.stopPropagation();
 
         const [x, y] = getPointerCoordinates(event);
@@ -104,7 +111,9 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
         height: eraseRadius * 2,
       };
 
-      svg.querySelectorAll("path").forEach((pathNode) => {
+      svg.selectAll("path").each(function () {
+        const path = d3.select(this);
+        const pathNode = path.node();
         const pathBBox = pathNode.getBBox();
 
         if (
@@ -118,16 +127,21 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
       });
     };
 
+    // Prevent scrolling when the pencil (pen) is active
     const preventScrolling = (event) => {
       if (penActive) {
-        event.preventDefault();
+        event.preventDefault(); // Prevent scrolling
         event.stopPropagation();
       }
     };
 
-    svg.addEventListener("pointerdown", handlePointerEvent);
-    svg.addEventListener("pointermove", handlePointerEvent);
-    svg.addEventListener("pointerup", handlePointerEvent);
+    // Attach pen input handlers on SVG
+    svg
+      .on("pointerdown", handlePointerEvent)
+      .on("pointermove", handlePointerEvent)
+      .on("pointerup", handlePointerEvent);
+
+    // Block touch interactions (scrolling) when pen is active
     document.body.addEventListener("touchstart", preventScrolling, {
       passive: false,
     });
@@ -138,28 +152,117 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
       passive: false,
     });
 
+    // Cleanup on component unmount
     return () => {
       clearTimeout(penTimeout);
-      svg.removeEventListener("pointerdown", handlePointerEvent);
-      svg.removeEventListener("pointermove", handlePointerEvent);
-      svg.removeEventListener("pointerup", handlePointerEvent);
       document.body.removeEventListener("touchstart", preventScrolling);
       document.body.removeEventListener("touchmove", preventScrolling);
       document.body.removeEventListener("touchend", preventScrolling);
     };
-  }, [
-    tool,
-    deletePath,
-    draw,
-    startDrawing,
-    stopDrawing,
-    getPointerCoordinates,
-  ]);
+  }, [tool, color, size, points]);
 
-  const handleBackgroundChange = (event) => {
-    const newBackground = event.target.value;
-    setBackground(newBackground);
-    updateAttributes({ paperType: newBackground });
+  const deletePath = (pathElement) => {
+    const clickedPathData = pathElement.getAttribute("d");
+    const pathIndex = linesRef.current.findIndex(
+      (line) => line.path === clickedPathData
+    );
+
+    if (pathIndex !== -1) {
+      const removedLine = linesRef.current[pathIndex];
+
+      // Save the deletion action
+      setHistory((prevHistory) => [
+        ...prevHistory,
+        { action: "delete", line: removedLine },
+      ]);
+
+      linesRef.current.splice(pathIndex, 1);
+      updateAttributes({
+        lines: linesRef.current,
+      });
+    }
+  };
+
+  const handleMouseDown = (event) => {
+    event.preventDefault();
+  };
+
+  useEffect(() => {
+    const disableScroll = (event) => {
+      if (isDrawing) {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener("touchmove", disableScroll, { passive: false });
+    document.addEventListener("wheel", disableScroll, { passive: false });
+
+    return () => {
+      document.removeEventListener("touchmove", disableScroll);
+      document.removeEventListener("wheel", disableScroll);
+    };
+  }, [isDrawing]);
+
+  const getPointerCoordinates = (event) => {
+    const svg = svgRef.current;
+    const rect = svg.getBoundingClientRect();
+
+    // Get the correct pointer position, including page scroll and scale
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+
+    // Calculate the mouse position relative to the SVG
+    const scaleX = svg.viewBox.baseVal.width / rect.width;
+    const scaleY = svg.viewBox.baseVal.height / rect.height;
+
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+
+    return [x, y];
+  };
+
+  const startDrawing = (x, y) => {
+    setDrawing(true);
+    setPoints([{ x, y }]);
+  };
+
+  const draw = (x, y) => {
+    if (!drawing) return;
+
+    const newPoints = [...points, { x, y }];
+    setPoints(newPoints);
+    const newPath = lineGenerator(newPoints);
+    setPath(newPath);
+    if (y > svgHeight - BUFFER_ZONE) {
+      const newHeight = svgHeight + INCREMENT_HEIGHT;
+      setSvgHeight(newHeight);
+      updateAttributes({ height: newHeight });
+
+      // Adjust scroll position to keep the drawing point in view
+      const container = containerRef.current;
+      if (container) {
+        const scrollContainer = container.closest(".drawing-component");
+        if (scrollContainer) {
+          scrollContainer.scrollTo({
+            top: scrollContainer.scrollHeight,
+            behavior: "smooth",
+          });
+        }
+      }
+    }
+  };
+
+  const stopDrawing = () => {
+    if (drawing) {
+      setDrawing(false);
+      saveDrawing();
+      setHistory((prevHistory) => [
+        ...prevHistory,
+        { id, path, color, size, tool },
+      ]);
+      setPath("");
+      setPoints([]);
+    }
   };
 
   const handleColorChange = (e) => {
@@ -170,8 +273,139 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     colorInputRef.current.click();
   };
 
-  const chunkedLines = React.useMemo(() => {
-    const chunkSize = 100;
+  // Store only actions in history (add or delete)
+  const undo = () => {
+    if (history.length > 0) {
+      const lastAction = history[history.length - 1];
+      setHistory((prevHistory) => prevHistory.slice(0, -1));
+      setRedoStack((prevStack) => [...prevStack, lastAction]);
+
+      if (lastAction.action === "add") {
+        // Undo adding a line by removing it
+        linesRef.current = linesRef.current.filter(
+          (line) => line.id !== lastAction.line.id
+        );
+      } else if (lastAction.action === "delete") {
+        // Undo deleting a line by adding it back
+        linesRef.current = [...linesRef.current, lastAction.line];
+      }
+
+      updateAttributes({
+        lines: linesRef.current,
+      });
+    }
+  };
+
+  const redo = () => {
+    if (redoStack.length > 0) {
+      const lastRedo = redoStack[redoStack.length - 1];
+      setRedoStack((prevStack) => prevStack.slice(0, -1));
+      setHistory((prevHistory) => [...prevHistory, lastRedo]);
+
+      if (lastRedo.action === "add") {
+        // Redo adding a line by adding it back
+        linesRef.current = [...linesRef.current, lastRedo.line];
+      } else if (lastRedo.action === "delete") {
+        // Redo deleting a line by removing it again
+        linesRef.current = linesRef.current.filter(
+          (line) => line.id !== lastRedo.line.id
+        );
+      }
+
+      updateAttributes({
+        lines: linesRef.current,
+      });
+    }
+  };
+
+  const saveHeight = () => {
+    updateAttributes({ height: svgHeight });
+  };
+
+  useEffect(() => {
+    const showListener = Keyboard.addListener("keyboardWillShow", () => {
+      Keyboard.hide();
+    });
+
+    return () => {
+      showListener.remove();
+    };
+  }, []);
+
+  const pathsGroupRef = useRef(null);
+  const activePathRef = useRef(null);
+  const throttleRef = useRef(null);
+  const batchUpdateTimeoutRef = useRef(null);
+
+  // Memoize the line generator to prevent recreation
+  const lineGenerator = useMemo(
+    () =>
+      d3
+        .line()
+        .x((d) => d.x)
+        .y((d) => d.y)
+        .curve(d3.curveBasis), // Adjusted alpha for more smoothness
+    []
+  );
+
+  const smoothPoints = (points) => {
+    if (points.length < 3) return points;
+    return points.map((point, i, arr) => {
+      if (i === 0 || i === arr.length - 1) return point; // Keep endpoints
+      const prev = arr[i - 1];
+      const next = arr[i + 1];
+      return {
+        x: (prev.x + point.x + next.x) / 3,
+        y: (prev.y + point.y + next.y) / 3,
+      };
+    });
+  };
+
+  // Batch update function for paths
+  const batchUpdatePaths = () => {
+    if (batchUpdateTimeoutRef.current) {
+      clearTimeout(batchUpdateTimeoutRef.current);
+    }
+
+    batchUpdateTimeoutRef.current = setTimeout(() => {
+      updateAttributes({
+        lines: linesRef.current,
+      });
+    }, 500); // Adjust timeout as needed
+  };
+
+  // Throttle draw function
+  const throttledDraw = (x, y) => {
+    if (!throttleRef.current) {
+      throttleRef.current = setTimeout(() => {
+        throttleRef.current = null;
+      }, 16); // ~60fps
+
+      if (!drawing) return;
+
+      const newPoints = [...points, { x, y }];
+      setPoints(newPoints);
+
+      const newPath = lineGenerator(smoothPoints(newPoints));
+      setPath(newPath);
+
+      // Update active path directly in DOM for better performance
+      if (activePathRef.current) {
+        activePathRef.current.setAttribute("d", newPath);
+      }
+
+      // Check for canvas expansion
+      if (y > svgHeight - BUFFER_ZONE) {
+        const newHeight = svgHeight + INCREMENT_HEIGHT;
+        setSvgHeight(newHeight);
+        updateAttributes({ height: newHeight });
+      }
+    }
+  };
+
+  // Split paths into chunks for better rendering
+  const chunkedLines = useMemo(() => {
+    const chunkSize = 100; // Adjust based on performance needs
     const chunks = [];
     for (let i = 0; i < linesRef.current.length; i += chunkSize) {
       chunks.push(linesRef.current.slice(i, i + chunkSize));
@@ -179,6 +413,17 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     return chunks;
   }, [linesRef.current.length]);
 
+  const adjustColorForMode = (color) => {
+    if (isDarkMode) {
+      // Dark mode: Black turns to white; other colors unchanged
+      return color === "#000000" ? "#FFFFFF" : color;
+    } else {
+      // Light mode: White turns to black; other colors unchanged
+      return color === "#FFFFFF" ? "#000000" : color;
+    }
+  };
+
+  // Optimize path rendering
   const renderPaths = () =>
     chunkedLines.map((chunk, chunkIndex) => (
       <g key={`chunk-${chunkIndex}`}>
@@ -196,7 +441,22 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
       </g>
     ));
 
-  // Rest of your JSX remains the same, just update the references to use the hook's values and methods
+  // Optimize save drawing function
+  const saveDrawing = () => {
+    if (!path) return;
+
+    const newLine = { id: uuid(), path, color, size, tool };
+    linesRef.current = [...linesRef.current, newLine];
+
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      { action: "add", line: newLine },
+    ]);
+
+    setRedoStack([]);
+    batchUpdatePaths();
+  };
+
   return (
     <div className="draw w-full min-h-screen flex flex-col">
       {/* Top Toolbar */}
