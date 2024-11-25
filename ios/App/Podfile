@@ -2,8 +2,7 @@ require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
 platform :ios, '13.0'
 use_frameworks!
-
-# workaround to avoid Xcode caching of Pods that requires
+# workaround to avoid Xcode caching of Pods that requiresx
 # Product -> Clean Build Folder after new Cordova plugins installed
 # Requires CocoaPods 1.6 or newer
 install! 'cocoapods', :disable_input_output_paths => true
@@ -11,15 +10,22 @@ install! 'cocoapods', :disable_input_output_paths => true
 def capacitor_pods
   pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
+  pod 'AashuDubeyCapacitorStatusbarSafeArea', :path => '../../node_modules/@aashu-dubey/capacitor-statusbar-safe-area'
   pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
+  pod 'CapacitorBrowser', :path => '../../node_modules/@capacitor/browser'
   pod 'CapacitorDevice', :path => '../../node_modules/@capacitor/device'
   pod 'CapacitorFilesystem', :path => '../../node_modules/@capacitor/filesystem'
   pod 'CapacitorHaptics', :path => '../../node_modules/@capacitor/haptics'
   pod 'CapacitorKeyboard', :path => '../../node_modules/@capacitor/keyboard'
+  pod 'CapacitorPreferences', :path => '../../node_modules/@capacitor/preferences'
   pod 'CapacitorShare', :path => '../../node_modules/@capacitor/share'
   pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
+  pod 'CodetrixStudioCapacitorGoogleAuth', :path => '../../node_modules/@codetrix-studio/capacitor-google-auth'
+  pod 'RecognizebvCapacitorPluginMsauth', :path => '../../node_modules/@recognizebv/capacitor-plugin-msauth'
   pod 'CapacitorNativeBiometric', :path => '../../node_modules/capacitor-native-biometric'
+  pod 'CapacitorSecureStoragePlugin', :path => '../../node_modules/capacitor-secure-storage-plugin'
+  pod 'CapacitorVoiceRecorder', :path => '../../node_modules/capacitor-voice-recorder'
 end
 
 target 'App' do

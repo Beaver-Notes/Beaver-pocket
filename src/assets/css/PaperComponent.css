@@ -1,0 +1,23 @@
+.btn-clear,
+.btn-save,
+.btn-toggle {
+  @apply bg-blue-500 text-white px-3 py-2 rounded-md cursor-pointer flex items-center;
+}
+
+.btn-clear:hover,
+.btn-save:hover,
+.btn-toggle:hover {
+  @apply bg-blue-600;
+}
+
+.btn-clear:focus,
+.btn-save:focus,
+.btn-toggle:focus {
+  @apply ring-2 ring-blue-500;
+}
+
+.drawing-container {
+  touch-action: none; /* Disable zooming and panning gestures */
+  -webkit-user-select: none; /* Prevent text selection on touch */
+  user-select: none;
+}

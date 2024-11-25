@@ -1,0 +1,13 @@
+.modal-container {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .modal-container.show {
+    opacity: 1;
+  }
+  
+  .modal-container.hide {
+    opacity: 0;
+  }
+  

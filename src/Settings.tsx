@@ -1,73 +1,41 @@
-import { Link, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
-import { v4 as uuid } from "uuid";
-import { Note } from "./store/types";
-import NoteEditor from "./NoteEditor";
-import { JSONContent } from "@tiptap/react";
-import Sidebar from "./components/Home/Sidebar";
-import BottomNavBar from "./components/Home/BottomNavBar";
-import "./css/main.css";
-import "./css/fonts.css";
-import {
-  Filesystem,
-  Directory,
-  FilesystemEncoding,
-} from "@capacitor/filesystem";
 import enTranslations from "./assets/locales/en.json";
 import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
-import * as CryptoJS from "crypto-js";
+import { useNavigate } from "react-router-dom";
+import Icons from "./lib/remixicon-react";
+import { Note } from "./store/types";
 
-import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
-import InformationLineIcon from "remixicon-react/InformationLineIcon";
-import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
-import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
-import { useSwipeable } from "react-swipeable";
-
-async function createNotesDirectory() {
-  const directoryPath = "notes";
-
-  try {
-    await Filesystem.mkdir({
-      path: directoryPath,
-      directory: Directory.Documents,
-      recursive: true,
-    });
-  } catch (error: any) {
-    console.error("Error creating the directory:", error);
-  }
+interface SettingsProps {
+  notesState: Record<string, Note>;
+  setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const Settings: React.FC = () => {
+const Archive: React.FC<SettingsProps> = () => {
+  const navigate = useNavigate();
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
   );
+  const [selectedCodeFont, setSelectedCodeFont] = useState<string>(
+    localStorage.getItem("selected-font-code") || "JetBrains Mono"
+  );
+
+  const Codefonts = [
+    "Anonymous Pro",
+    "Hack",
+    "JetBrains Mono",
+    "Source Code Pro",
+  ];
 
   const fonts = [
     "Arimo",
     "Avenir",
-    "Helvetica",
     "EB Garamond",
+    "Helvetica",
     "OpenDyslexic",
+    "Roboto Mono",
     "Ubuntu",
   ];
-
-  const navigate = useNavigate();
-
-  const handleSwipe = (eventData: any) => {
-    const isRightSwipe = eventData.dir === "Right";
-    const isSmallSwipe = Math.abs(eventData.deltaX) < 250;
-
-    if (isRightSwipe && isSmallSwipe) {
-      eventData.event.preventDefault();
-    } else if (isRightSwipe) {
-      navigate(-1); // Navigate back
-    }
-  };
-
-  const handlers = useSwipeable({
-    onSwiped: handleSwipe,
-  });
 
   useEffect(() => {
     document.documentElement.style.setProperty("--selected-font", selectedFont);
@@ -78,45 +46,16 @@ const Settings: React.FC = () => {
     setSelectedFont(e.target.value);
   };
 
-  const loadNotes = async () => {
-    try {
-      await createNotesDirectory(); // Create the directory before reading/writing
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--selected-font-code",
+      selectedCodeFont
+    );
+    localStorage.setItem("selected-font-code", selectedCodeFont);
+  }, [selectedCodeFont]);
 
-      const fileExists = await Filesystem.stat({
-        path: STORAGE_PATH,
-        directory: Directory.Documents,
-      });
-
-      if (fileExists) {
-        const data = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: Directory.Documents,
-          encoding: FilesystemEncoding.UTF8,
-        });
-
-        if (data.data) {
-          const parsedData = JSON.parse(data.data as string);
-
-          if (parsedData?.data?.notes) {
-            return parsedData.data.notes;
-          } else {
-            console.log(
-              "The file is missing the 'notes' data. Returning an empty object."
-            );
-            return {};
-          }
-        } else {
-          console.log("The file is empty. Returning an empty object.");
-          return {};
-        }
-      } else {
-        console.log("The file doesn't exist. Returning an empty object.");
-        return {};
-      }
-    } catch (error) {
-      console.error("Error loading notes:", error);
-      return {};
-    }
+  const updatCodeFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCodeFont(e.target.value);
   };
 
   const [themeMode, setThemeMode] = useState(() => {
@@ -144,6 +83,7 @@ const Settings: React.FC = () => {
   ) => {
     setDarkMode(newMode);
     setThemeMode(newMode ? "dark" : "light");
+    setSelectedOption(newMode ? "Dark" : "Light");
   };
 
   // Function to set theme mode to auto based on device preference
@@ -153,389 +93,43 @@ const Settings: React.FC = () => {
     ).matches;
     setDarkMode(prefersDarkMode);
     setThemeMode("auto");
+    setSelectedOption("System");
   };
-
-  const STORAGE_PATH = "notes/data.json";
-
-  const saveNote = React.useCallback(
-    async (note: unknown) => {
-      try {
-        const notes = await loadNotes();
-
-        if (typeof note === "object" && note !== null) {
-          const typedNote = note as Note;
-
-          // Use getTime() to get the Unix timestamp in milliseconds
-          const createdAtTimestamp =
-            typedNote.createdAt instanceof Date
-              ? typedNote.createdAt.getTime()
-              : Date.now();
-
-          const updatedAtTimestamp =
-            typedNote.updatedAt instanceof Date
-              ? typedNote.updatedAt.getTime()
-              : Date.now();
-
-          notes[typedNote.id] = {
-            ...typedNote,
-            createdAt: createdAtTimestamp,
-            updatedAt: updatedAtTimestamp,
-          };
-
-          const data = {
-            data: {
-              notes,
-            },
-          };
-
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify(data),
-            directory: Directory.Documents,
-            encoding: FilesystemEncoding.UTF8,
-          });
-        } else {
-          console.error("Invalid note object:", note);
-        }
-      } catch (error) {
-        console.error("Error saving note:", error);
-      }
-    },
-    [loadNotes]
-  );
-
-  const [notesState, setNotesState] = useState<Record<string, Note>>({});
-
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
-  const [searchQuery] = useState<string>("");
-  const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
-
-  useEffect(() => {
-    const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
-      setNotesState(notes);
-    };
-
-    loadNotesFromStorage();
-  }, []);
-
-  useEffect(() => {
-    const filtered = Object.values(notesState).filter((note) => {
-      const titleMatch = note.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const contentMatch = JSON.stringify(note.content)
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch || contentMatch;
-    });
-
-    setFilteredNotes(
-      Object.fromEntries(filtered.map((note) => [note.id, note]))
-    );
-  }, [searchQuery, notesState]);
-
-  const handleCloseEditor = () => {
-    setActiveNoteId(null);
-  };
-
-  const [withPassword, setWithPassword] = useState(false);
-
-  const exportData = async () => {
-    try {
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-
-      // Create the parent export folder
-      const parentExportFolderPath = `export`;
-      await Filesystem.mkdir({
-        path: parentExportFolderPath,
-        directory: Directory.Documents,
-        recursive: true,
-      });
-
-      // Create the export folder structure
-      const exportFolderName = `Beaver Notes ${formattedDate}`;
-      const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
-
-      // Create the export folder
-      await Filesystem.mkdir({
-        path: exportFolderPath,
-        directory: Directory.Documents,
-        recursive: true,
-      });
-
-      // Export data.json
-      let exportedData: any = {
-        data: {
-          notes: {},
-        },
-      };
-
-      Object.values(notesState).forEach((note) => {
-        const createdAtTimestamp =
-          note.createdAt instanceof Date ? note.createdAt.getTime() : 0;
-        const updatedAtTimestamp =
-          note.updatedAt instanceof Date ? note.updatedAt.getTime() : 0;
-
-        exportedData.data.notes[note.id] = {
-          id: note.id,
-          title: note.title,
-          content: note.content,
-          labels: note.labels,
-          createdAt: createdAtTimestamp,
-          updatedAt: updatedAtTimestamp,
-          isBookmarked: note.isBookmarked,
-          isArchived: note.isArchived,
-          lastCursorPosition: note.lastCursorPosition,
-        };
-      });
-
-      let jsonData = JSON.stringify(exportedData, null, 2);
-
-      // Check if password protection is enabled
-      if (withPassword) {
-        // Prompt the user for a password
-        const passwordPrompt =
-          translations.settings.Inputpassword || "Enter password for export:";
-        const password = prompt(passwordPrompt);
-
-        // Check if the user provided a password
-        if (password !== null) {
-          // Encrypt the data using CryptoJS and the user's password
-          jsonData = CryptoJS.AES.encrypt(jsonData, password).toString();
-        } else {
-          // User canceled password input, abort export
-          console.log("Export canceled.");
-          return;
-        }
-      }
-
-      const jsonFilePath = `${exportFolderPath}/data.json`;
-
-      // Save data.json
-      await Filesystem.writeFile({
-        path: jsonFilePath,
-        data: jsonData,
-        directory: Directory.Documents,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      // Check if the images folder exists
-      const imagesFolderPath = `images`;
-      let imagesFolderExists = false;
-
-      try {
-        const imagesFolderInfo = await (Filesystem as any).getInfo({
-          path: imagesFolderPath,
-          directory: Directory.Documents,
-        });
-        imagesFolderExists = imagesFolderInfo.type === "directory";
-      } catch (error) {
-        console.error("Error checking images folder:", error);
-      }
-
-      if (imagesFolderExists) {
-        // Export images folder
-        const exportImagesFolderPath = `${exportFolderPath}/${imagesFolderPath}`;
-
-        // Create the images folder in the export directory
-        await Filesystem.mkdir({
-          path: exportImagesFolderPath,
-          directory: Directory.Documents,
-          recursive: true,
-        });
-
-        // Copy images folder to export folder
-        await Filesystem.copy({
-          from: imagesFolderPath,
-          to: exportImagesFolderPath,
-          directory: Directory.Documents,
-        });
-      }
-
-      alert(translations.home.exportSuccess);
-    } catch (error) {
-      alert(translations.home.exportError + (error as any).message);
-    }
-  };
-
-  const handleImportData = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-      try {
-        const importedData = e.target?.result as string;
-
-        let jsonData: string;
-
-        try {
-          // Try parsing the data as JSON
-          JSON.parse(importedData);
-          // If successful, it's JSON, no need for password
-          jsonData = importedData;
-        } catch (jsonError) {
-          // Parsing as JSON failed, assume it's encrypted and ask for password
-          const password = prompt("Enter password for import:");
-
-          // Check if the user provided a password
-          if (password !== null) {
-            // Decrypt the data using CryptoJS and the user's password
-            jsonData = CryptoJS.AES.decrypt(importedData, password).toString(
-              CryptoJS.enc.Utf8
-            );
-          } else {
-            // User canceled password input, abort import
-            console.log("Import canceled.");
-            return;
-          }
-        }
-
-        const parsedData = JSON.parse(jsonData);
-
-        if (parsedData && parsedData.data && parsedData.data.notes) {
-          const importedNotes: Record<string, Note> = parsedData.data.notes;
-
-          // Load existing notes from data.json
-          const existingNotes = await loadNotes();
-
-          // Merge the imported notes with the existing notes
-          const mergedNotes: Record<string, Note> = {
-            ...existingNotes,
-            ...importedNotes,
-          };
-
-          // Update the notesState with the merged notes
-          setNotesState(mergedNotes);
-
-          // Update the filteredNotes based on the search query
-          const filtered = Object.values(mergedNotes).filter((note) => {
-            const titleMatch = note.title
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-            const contentMatch = JSON.stringify(note.content)
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-            return titleMatch || contentMatch;
-          });
-
-          setFilteredNotes(
-            Object.fromEntries(filtered.map((note) => [note.id, note]))
-          );
-
-          Object.values(importedNotes).forEach((note) => {
-            note.createdAt = new Date(note.createdAt);
-            note.updatedAt = new Date(note.updatedAt);
-          });
-
-          // Save the merged notes to the data.json file
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes: mergedNotes } }),
-            directory: Directory.Documents,
-            encoding: FilesystemEncoding.UTF8,
-          });
-
-          alert(translations.home.importSuccess);
-        } else {
-          alert(translations.home.importInvalid);
-        }
-      } catch (error) {
-        alert(translations.home.importError);
-      }
-    };
-
-    reader.readAsText(file);
-  };
-
-  const activeNote = activeNoteId ? notesState[activeNoteId] : null;
-
-  const [title, setTitle] = useState(
-    activeNoteId ? notesState[activeNoteId].title : ""
-  );
-  const handleChangeNoteContent = (content: JSONContent, newTitle?: string) => {
-    if (activeNoteId) {
-      const existingNote = notesState[activeNoteId];
-      const updatedTitle =
-        newTitle !== undefined && newTitle.trim() !== ""
-          ? newTitle
-          : existingNote.title;
-
-      const updateNote = {
-        ...existingNote,
-        updatedAt: new Date(),
-        content,
-        title: updatedTitle,
-      };
-
-      setNotesState((prevNotes) => ({
-        ...prevNotes,
-        [activeNoteId]: updateNote,
-      }));
-
-      saveNote(updateNote);
-    }
-  };
-
-  const handleCreateNewNote = () => {
-    const newNote = {
-      id: uuid(),
-      title: "New Note",
-      content: { type: "doc", content: [] },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
-    setNotesState((prevNotes) => ({
-      ...prevNotes,
-      [newNote.id]: newNote,
-    }));
-    setActiveNoteId(newNote.id);
-    saveNote(newNote);
-  };
-
-  const [isArchiveVisible, setIsArchiveVisible] = useState(false);
 
   // Translations
   const [translations, setTranslations] = useState({
     settings: {
+      title: "settings.title",
       apptheme: "settings.apptheme",
       light: "settings.light",
       dark: "settings.dark",
       system: "settings.system",
       selectlanguage: "settings.selectlanguage",
-      encryptwpasswd: "settings.encryptwpasswd",
       selectfont: "settings.selectfont",
-      iedata: "settings.iedata",
-      importdata: "settings.importdata",
-      exportdata: "settings.exportdata",
       About: "settings.About",
       Shortcuts: "settings.Shortcuts",
-      title: "settings.title",
-      Inputpassword: "settings.Inputpassword",
-    },
-    home: {
-      exportSuccess: "home.exportSuccess",
-      exportError: "home.exportError",
-      shareTitle: "home.shareTitle",
-      shareError: "home.shareError",
-      importSuccess: "home.importSuccess",
-      importError: "home.importError",
-      importInvalid: "home.importInvalid",
+      codeFont: "settings.codeFont",
+      interfaceOptions: "settings.interfaceOptions",
+      clearFont: "settings.clearFont",
+      Sync: "settings.Sync",
+      expandPage: "settings.expandPage",
+      scribbleCompatibility: "settings.scribbleCompatibility",
     },
   });
+
+  const [wd, setwd] = useState<boolean>(
+    localStorage.getItem("expand-editor") === "true"
+  );
+
+  useEffect(() => {
+    setwd(localStorage.getItem("expand-editor") === "true");
+  }, []);
+
+  const toggleBackground = () => {
+    const newValue = !wd;
+    localStorage.setItem("expand-editor", newValue.toString());
+    setwd(newValue);
+  };
 
   useEffect(() => {
     // Load translations
@@ -571,111 +165,105 @@ const Settings: React.FC = () => {
     window.location.reload(); // Reload the page
   };
 
-  return (
-    <div {...handlers}>
-      <div className="grid sm:grid-cols-[auto,1fr]">
-        <Sidebar
-          onCreateNewNote={handleCreateNewNote}
-          isDarkMode={darkMode}
-          toggleTheme={() => toggleTheme(!darkMode)}
-          exportData={exportData}
-          handleImportData={handleImportData}
-        />
+  const [ClearFontChecked, setClearFontChecked] = useState(
+    localStorage.getItem("selected-dark-text") === "#CCCCCC"
+  );
 
-        <div className="overflow-y-hidden">
-          {!activeNoteId && (
-            <div className="py-2 w-full flex flex-col border-gray-300 overflow-auto">
-              <div className="mx-6 md:px-24 overflow-y-auto flex-grow">
-                <p className="text-4xl font-bold">
-                  {" "}
+  const toggleClearFont = () => {
+    const newValue = !ClearFontChecked;
+    setClearFontChecked(newValue);
+    localStorage.setItem("selected-dark-text", newValue ? "#CCCCCC" : "white");
+    document.documentElement.style.setProperty(
+      "selected-dark-text",
+      newValue ? "#CCCCCC" : "white"
+    );
+    window.location.reload();
+  };
+
+  const [selectedOption, setSelectedOption] = useState(
+    themeMode === "auto" ? "System" : darkMode ? "Dark" : "Light"
+  );
+
+  const handleChangeMode = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedOption(event.target.value);
+    switch (event.target.value) {
+      case translations.settings.light:
+        toggleTheme(false);
+        break;
+      case translations.settings.dark:
+        toggleTheme(true);
+        break;
+      case translations.settings.system:
+        setAutoMode();
+        break;
+      default:
+        break;
+    }
+  };
+
+  const modes = [
+    translations.settings.light,
+    translations.settings.dark,
+    translations.settings.system,
+  ];
+
+  return (
+    <div>
+      <div className="grid sm:grid-cols-[auto]">
+        <div className="overflow-y-hidden mb-12">
+          <div className="py-2 w-full flex flex-col border-neutral-300 overflow-auto">
+            <div className="mx-6 md:px-24 pb-8 overflow-y-auto flex-grow">
+              <section aria-labelledby="settings-title">
+                <p
+                  id="settings-title"
+                  className="text-4xl font-bold text-neutral-800 dark:text-[color:var(--selected-dark-text)]"
+                >
                   {translations.settings.title || "-"}
                 </p>
-                <div className="w-full sm:order-2 order-1">
-                  <p className="text-xl pt-4 text-neutral-700 dark:text-white">
-                    {translations.settings.apptheme || "-"}
-                  </p>
-                  <div className="grid py-2 w-full h-full grid-cols-3 gap-8 cursor-pointer rounded-md items-center justify-center">
-                    <button
-                      className="bg-transparent rounded-xl"
-                      onClick={() => toggleTheme(false)}
-                    >
-                      <div className="w-auto mt-4 object-fit">
-                        <svg
-                          className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
-                          viewBox="0 0 512 512"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            width="512"
-                            height="512"
-                            rx="256"
-                            fill="#FFFFFF"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-center py-2">
-                        {translations.settings.light || "-"}
-                      </p>
-                    </button>
-                    <button
-                      onClick={() => toggleTheme(true)}
-                      className="bg-transparent rounded-xl"
-                    >
-                      <div className="w-auto mt-4 object-fit">
-                        <svg
-                          className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
-                          viewBox="0 0 512 512"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            width="512"
-                            height="512"
-                            rx="256"
-                            fill="#282727"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-center py-2">
-                        {translations.settings.dark || "-"}
-                      </p>
-                    </button>
-                    <button
-                      onClick={setAutoMode}
-                      className="bg-transparent rounded-xl"
-                    >
-                      <div className="w-auto mt-4 object-contain">
-                        <svg
-                          className="mx-auto my-auto w-auto sm:w-16 md:w-24 rounded-full border-2 dark:border-neutral-800"
-                          viewBox="0 0 511 512"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M0 256C0 114.615 114.615 0 256 0V0V512V512C114.615 512 0 397.385 0 256V256Z"
-                            fill="white"
-                          />
-                          <path
-                            d="M256 0V0C396.833 0 511 115.167 511 256V256C511 396.833 396.833 512 256 512V512V0Z"
-                            fill="#282727"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-center py-2">
-                        {translations.settings.system || "-"}
-                      </p>
-                    </button>
-                  </div>
+              </section>
+
+              {/* App Theme */}
+              <section aria-labelledby="app-theme-label">
+                <p
+                  id="app-theme-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
+                  {translations.settings.apptheme || "-"}
+                </p>
+                <div className="relative">
+                  <select
+                    aria-labelledby="app-theme-label"
+                    value={selectedOption}
+                    onChange={handleChangeMode}
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                  >
+                    {modes.map((mode) => (
+                      <option key={mode} value={mode}>
+                        {mode}
+                      </option>
+                    ))}
+                  </select>
+                  <Icons.ArrowDownSLineIcon
+                    aria-hidden="true"
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  />
                 </div>
-                <p className="text-xl pt-4 text-neutral-700 dark:text-white">
+              </section>
+
+              {/* Select Font */}
+              <section aria-labelledby="select-font-label">
+                <p
+                  id="select-font-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
                   {translations.settings.selectfont || "-"}
                 </p>
-                <div className="relative pt-2">
+                <div className="relative">
                   <select
+                    aria-labelledby="select-font-label"
                     value={selectedFont}
                     onChange={updateFont}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
                     {fonts.map((font) => (
                       <option key={font} value={font}>
@@ -683,31 +271,55 @@ const Settings: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
-                    <svg
-                      className="h-4 w-4 text-gray-500 dark:text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
+                  <Icons.ArrowDownSLineIcon
+                    aria-hidden="true"
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  />
                 </div>
-                <p className="text-xl pt-4 text-neutral-700 dark:text-white">
+              </section>
+
+              {/* Code Font */}
+              <section aria-labelledby="code-font-label">
+                <p
+                  id="code-font-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
+                  {translations.settings.codeFont || "-"}
+                </p>
+                <div className="relative">
+                  <select
+                    aria-labelledby="code-font-label"
+                    value={selectedCodeFont}
+                    onChange={updatCodeFont}
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
+                  >
+                    {Codefonts.map((Codefont) => (
+                      <option key={Codefont} value={Codefont}>
+                        {Codefont}
+                      </option>
+                    ))}
+                  </select>
+                  <Icons.ArrowDownSLineIcon
+                    aria-hidden="true"
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  />
+                </div>
+              </section>
+
+              {/* Select Language */}
+              <section aria-labelledby="select-language-label">
+                <p
+                  id="select-language-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
                   {translations.settings.selectlanguage || "-"}
                 </p>
-                <div className="relative pt-2">
+                <div className="relative">
                   <select
+                    aria-labelledby="select-language-label"
                     value={selectedLanguage}
                     onChange={updateLanguage}
-                    className="rounded-full w-full p-3 text-gray-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-white outline-none appearance-none"
+                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
                   >
                     {languages.map((language) => (
                       <option key={language.code} value={language.code}>
@@ -715,114 +327,103 @@ const Settings: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <div className="absolute inset-y-0 right-0 mt-2 flex items-center px-3 pointer-events-none">
-                    <svg
-                      className="h-4 w-4 text-gray-500 dark:text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
+                  <Icons.ArrowDownSLineIcon
+                    aria-hidden="true"
+                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  />
                 </div>
-                <p className="text-xl pt-4 text-neutral-700 dark:text-white">
-                  {translations.settings.iedata || "-"}
-                </p>
-                <div className="relative pt-2 gap-4 flex flex-col sm:flex-row">
-                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
-                    <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                      <FileDownloadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
-                    </div>
-                    <div className="w-full mt-11 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]">
-                      <label
-                        htmlFor="file"
-                        className="w-full flex items-center justify-center"
-                      >
-                        {translations.settings.importdata || "-"}
-                      </label>
-                      <input
-                        className="hidden"
-                        type="file"
-                        onChange={handleImportData}
-                        id="file"
-                        // @ts-ignore
-                        directory=""
-                        webkitdirectory=""
-                      />
-                    </div>
-                  </div>
+              </section>
 
-                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
-                    <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                      <FileUploadLineIcon className="w-12 h-12 text-gray-800 dark:text-gray-300" />
-                    </div>
-                    <div className="flex items-center pt-2">
-                      <input
-                        type="checkbox"
-                        checked={withPassword}
-                        onChange={() => setWithPassword(!withPassword)}
-                        className="mr-2 mb-"
-                      />
-                      <span>{translations.settings.encryptwpasswd || "-"}</span>
-                    </div>
+              {/* Interface Options */}
+              <section aria-labelledby="interface-options-label">
+                <p
+                  id="interface-options-label"
+                  className="text-xl py-4 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
+                  {translations.settings.interfaceOptions || "-"}
+                </p>
+
+                {/* Toggle Expand Page */}
+                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                  <p
+                    id="expand-page-label"
+                    className="block text-lg align-left"
+                  >
+                    {translations.settings.expandPage || "-"}
+                  </p>
+                  <label
+                    className="relative inline-flex cursor-pointer items-center"
+                    aria-labelledby="expand-page-label"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={wd}
+                      onChange={toggleBackground}
+                      className="peer sr-only"
+                      aria-checked={wd}
+                    />
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  </label>
+                </div>
+
+                {/* Toggle Clear Font */}
+                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                  <p id="clear-font-label" className="block text-lg align-left">
+                    {translations.settings.clearFont || "-"}
+                  </p>
+                  <label
+                    className="relative inline-flex cursor-pointer items-center"
+                    aria-labelledby="clear-font-label"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={ClearFontChecked}
+                      onChange={toggleClearFont}
+                      className="peer sr-only"
+                      aria-checked={ClearFontChecked}
+                    />
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  </label>
+                </div>
+
+                {/* Links */}
+                <div className="pb-4">
+                  <div className="flex flex-col gap-2 pt-2">
+                    <button
+                      onClick={() => navigate("/Sync")}
+                      aria-label={translations.settings.Sync || "-"}
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    >
+                      <Icons.SyncLineIcon className="w-6 h-6 mr-2" />
+                      {translations.settings.Sync || "-"}
+                    </button>
 
                     <button
-                      className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]"
-                      onClick={exportData}
+                      onClick={() => navigate("/about")}
+                      aria-label={translations.settings.About || "-"}
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      {translations.settings.exportdata || "-"}
+                      <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
+                      {translations.settings.About || "-"}
+                    </button>
+
+                    <button
+                      onClick={() => navigate("/shortcuts")}
+                      aria-label={translations.settings.Shortcuts || "-"}
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    >
+                      <Icons.KeyboardLineIcon className="w-6 h-6 mr-2" />
+                      {translations.settings.Shortcuts || "-"}
                     </button>
                   </div>
                 </div>
-                <div>
-                  <div className="flex gap-4 py-4">
-                    <Link
-                      to="/about"
-                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    >
-                      <InformationLineIcon className="w-6 h-6 mr-2" />
-                      {translations.settings.About || "-"}
-                    </Link>
-                    <Link
-                      to="/shortcuts"
-                      className="w-1/2 p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    >
-                      <KeyboardLineIcon className="w-6 h-6 mr-2" />
-                      {translations.settings.Shortcuts || "-"}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              <BottomNavBar
-                onCreateNewNote={handleCreateNewNote}
-                onToggleArchiveVisibility={() =>
-                  setIsArchiveVisible(!isArchiveVisible)
-                }
-              />
+              </section>
             </div>
-          )}
+          </div>
         </div>
-      </div>
-      <div>
-        {activeNote && (
-          <NoteEditor
-            note={activeNote}
-            title={title}
-            onTitleChange={setTitle}
-            onChange={handleChangeNoteContent}
-            onCloseEditor={handleCloseEditor}
-          />
-        )}
       </div>
     </div>
   );
 };
 
-export default Settings;
+export default Archive;

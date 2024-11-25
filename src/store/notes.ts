@@ -2,21 +2,42 @@ import {
   Directory,
   Filesystem,
   FilesystemEncoding,
+  FilesystemDirectory,
 } from "@capacitor/filesystem";
-import React, { useState } from "react";
+import React from "react";
 import { Note } from "./types";
+import { Capacitor } from "@capacitor/core";
+import { setStoreRemotePath } from "./useDataPath";
 
 const STORAGE_PATH = "notes/data.json";
 
 // Create Directory
 
 async function createNotesDirectory() {
-  const directoryPath = "notes";
+  const notesPath = "notes";
+  const exportPath = "export";
+  const assetsPath = "note-assets";
+  const fileAssetsPath = "file-assets";
 
   try {
     await Filesystem.mkdir({
-      path: directoryPath,
-      directory: Directory.Documents,
+      path: fileAssetsPath,
+      directory: Directory.Data,
+      recursive: true,
+    });
+    await Filesystem.mkdir({
+      path: assetsPath,
+      directory: Directory.Data,
+      recursive: true,
+    });
+    await Filesystem.mkdir({
+      path: exportPath,
+      directory: Directory.Data,
+      recursive: true,
+    });
+    await Filesystem.mkdir({
+      path: notesPath,
+      directory: Directory.Data,
       recursive: true,
     });
   } catch (error: any) {
@@ -26,39 +47,73 @@ async function createNotesDirectory() {
 
 // Load
 
-export const loadNotes = async () => {
+export const loadNotes = async (): Promise<Record<string, Note>> => {
   try {
-    await createNotesDirectory(); // Create the directory before reading/writing
+    const { uri } = await Filesystem.getUri({
+      directory: FilesystemDirectory.Data,
+      path: "",
+    });
+    setStoreRemotePath(Capacitor.convertFileSrc(uri));
 
-    const fileExists = await Filesystem.stat({
+    // Check if the file exists before creating the directory
+    let fileExists = true;
+
+    try {
+      await Filesystem.stat({
+        path: STORAGE_PATH,
+        directory: Directory.Data,
+      });
+    } catch {
+      console.log("The file doesn't exist. Marking as not found.");
+      fileExists = false;
+    }
+
+    if (!fileExists) {
+      // Create the notes directory only if the file is missing
+      await createNotesDirectory();
+      console.log("Notes directory created because no file was found.");
+      return {};
+    }
+
+    const data = await Filesystem.readFile({
       path: STORAGE_PATH,
-      directory: Directory.Documents,
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
     });
 
-    if (fileExists) {
-      const data = await Filesystem.readFile({
-        path: STORAGE_PATH,
-        directory: Directory.Documents,
-        encoding: FilesystemEncoding.UTF8,
-      });
+    if (data.data) {
+      const parsedData = JSON.parse(data.data as string);
 
-      if (data.data) {
-        const parsedData = JSON.parse(data.data as string);
+      if (parsedData?.data?.notes) {
+        const notes = parsedData.data.notes;
+        const collapsibleSetting = localStorage.getItem("collapsibleHeading");
 
-        if (parsedData?.data?.notes) {
-          return parsedData.data.notes;
-        } else {
-          console.log(
-            "The file is missing the 'notes' data. Returning an empty object."
-          );
-          return {};
-        }
+        const filteredNotes = Object.keys(notes).reduce((acc, noteId) => {
+          const note = notes[noteId];
+
+          // Ensure the title is not missing
+          note.title = note.title || "";
+
+          // If collapsible headings are disabled, uncollapse all headings
+          if (collapsibleSetting === "false" && note.content?.content) {
+            note.content.content = uncollapseHeading(note.content.content);
+          }
+
+          // Add the note to the accumulator
+          acc[noteId] = note;
+
+          return acc;
+        }, {} as Record<string, Note>);
+
+        return filteredNotes;
       } else {
-        console.log("The file is empty. Returning an empty object.");
+        console.log(
+          "The file is missing the 'notes' data. Returning an empty object."
+        );
         return {};
       }
     } else {
-      console.log("The file doesn't exist. Returning an empty object.");
+      console.log("The file is empty. Returning an empty object.");
       return {};
     }
   } catch (error) {
@@ -69,7 +124,9 @@ export const loadNotes = async () => {
 
 // Save
 
-export const useSaveNote = () => {
+export const useSaveNote = (
+  setNotesState: (notes: Record<string, Note>) => void
+) => {
   const saveNote = React.useCallback(
     async (note: unknown) => {
       try {
@@ -78,35 +135,45 @@ export const useSaveNote = () => {
         if (typeof note === "object" && note !== null) {
           const typedNote = note as Note;
 
-          // Use getTime() to get the Unix timestamp in milliseconds
+          // Ensure createdAt and updatedAt are timestamps
           const createdAtTimestamp =
-            typedNote.createdAt instanceof Date
-              ? typedNote.createdAt.getTime()
+            typeof typedNote.createdAt === "number"
+              ? typedNote.createdAt
               : Date.now();
 
           const updatedAtTimestamp =
-            typedNote.updatedAt instanceof Date
-              ? typedNote.updatedAt.getTime()
+            typeof typedNote.updatedAt === "number"
+              ? typedNote.updatedAt
               : Date.now();
 
-          notes[typedNote.id] = {
+          const updatedNote: Note = {
             ...typedNote,
             createdAt: createdAtTimestamp,
             updatedAt: updatedAtTimestamp,
           };
 
+          // Update the notes object with the new/updated note
+          const updatedNotes: Record<string, Note> = {
+            ...notes,
+            [typedNote.id]: updatedNote,
+          };
+
           const data = {
             data: {
-              notes,
+              notes: updatedNotes,
             },
           };
 
+          // Write updated notes to file
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify(data),
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
+
+          // Update the state directly
+          setNotesState(updatedNotes);
         } else {
           console.error("Invalid note object:", note);
         }
@@ -114,7 +181,7 @@ export const useSaveNote = () => {
         console.error("Error saving note:", error);
       }
     },
-    [loadNotes]
+    [setNotesState]
   );
 
   return { saveNote };
@@ -122,35 +189,53 @@ export const useSaveNote = () => {
 
 // Delete
 
-export const useDeleteNote = () => {
-  const [, setNotesState] = useState<Record<string, Note>>({});
-
+export const useDeleteNote = (
+  setNotesState: (notes: Record<string, Note>) => void,
+  notesState: Record<string, Note>
+) => {
   const deleteNote = React.useCallback(
     async (noteId: string) => {
       try {
-        const notes = await loadNotes();
+        const notes = { ...notesState }; // Create a copy of notesState
+        delete notes[noteId]; // Delete the note with the given noteId
 
-        if (notes[noteId]) {
-          delete notes[noteId];
+        // Define paths for the folders
+        const fileAssetsPath = `file-assets/${noteId}`;
+        const noteAssetsPath = `note-assets/${noteId}`;
 
-          await Filesystem.writeFile({
-            path: STORAGE_PATH,
-            data: JSON.stringify({ data: { notes } }),
-            directory: Directory.Documents,
-            encoding: FilesystemEncoding.UTF8,
-          });
+        // Attempt to delete the folders if they exist
+        await Filesystem.rmdir({
+          path: fileAssetsPath,
+          directory: Directory.Data,
+          recursive: true, // This will ensure the directory is deleted even if it contains files
+        }).catch((error) => {
+          console.warn(`Error deleting file-assets for note ${noteId}:`, error);
+        });
 
-          setNotesState(notes);
-          window.location.reload();
-        } else {
-          console.log(`Note with id ${noteId} not found.`);
-        }
+        await Filesystem.rmdir({
+          path: noteAssetsPath,
+          directory: Directory.Data,
+          recursive: true,
+        }).catch((error) => {
+          console.warn(`Error deleting note-assets for note ${noteId}:`, error);
+        });
+
+        // Update the storage after deletion
+        await Filesystem.writeFile({
+          path: STORAGE_PATH,
+          data: JSON.stringify({ data: { notes } }),
+          directory: Directory.Data,
+          encoding: FilesystemEncoding.UTF8,
+        });
+
+        // Update the state with the new notes object
+        setNotesState(notes);
       } catch (error) {
         console.error("Error deleting note:", error);
         alert("Error deleting note: " + (error as any).message);
       }
     },
-    [loadNotes, setNotesState]
+    [notesState, setNotesState]
   );
 
   return { deleteNote };
@@ -173,7 +258,7 @@ export const useToggleBookmark = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -203,7 +288,7 @@ export const useToggleArchive = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
@@ -216,3 +301,35 @@ export const useToggleArchive = () => {
 
   return { toggleArchive };
 };
+
+// Function to uncollapse headings
+function uncollapseHeading(contents: any[] = []): any[] {
+  if (contents.length === 0) {
+    return contents;
+  }
+
+  let newContents = [];
+  for (let i = 0; i < contents.length; i++) {
+    const content = contents[i];
+    newContents.push(content);
+
+    if (content.type === "heading") {
+      let collapsedContent = content.attrs.collapsedContent ?? [];
+
+      if (typeof collapsedContent === "string") {
+        collapsedContent = collapsedContent ? JSON.parse(collapsedContent) : [];
+      }
+
+      // Mark the heading as open and remove collapsed content
+      content.attrs.open = true;
+      content.attrs.collapsedContent = null;
+
+      // Recursively uncollapse any nested collapsed content
+      if (collapsedContent.length > 0) {
+        newContents = [...newContents, ...uncollapseHeading(collapsedContent)];
+      }
+    }
+  }
+
+  return newContents;
+}
