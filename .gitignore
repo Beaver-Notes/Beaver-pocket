@@ -2,3 +2,13 @@ node_modules
 
 resources/ios/**/*
 resources/android/**/*
+.env
+.DS_Store
+.DS_Store
+ios/App/.DS_Store
+ios/.DS_Store
+.DS_Store
+android/app/gradle.properties
+ios/App/App/Keys/Secrets.xcconfig
+/ios/App/App/Keys
+dist/
