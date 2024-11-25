@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
+ /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+}
+}
+
+.hoverable {
+  @apply hover:bg-neutral-800 hover:bg-opacity-5 dark:hover:bg-neutral-200 dark:hover:bg-opacity-5;
+}
+.bg-input {
+  @apply bg-black bg-opacity-5 hover:bg-opacity-10 dark:bg-neutral-200 dark:bg-opacity-5 dark:hover:bg-opacity-10 focus:ring-2;
+}
+
+kbd {
+  font-family: inherit;
+  display: inline-block;
+  min-width: 28px;
+  @apply p-1 text-center text-sm rounded-md text-neutral-600 ml-1 dark:text-[color:var(--selected-dark-text)] bg-neutral-100 dark:bg-neutral-600 border;
+}
+
+:root {
+  --selected-font: "Arimo", sans-serif;
+  --selected-font-code: "JetBrains Mono", monospace;
+  -webkit-tap-highlight-color: transparent;
+  --selected-dark-text: white;
+  @apply dark:text-[color:var(--selected-dark-text)];
+  padding-top: constant(safe-area-inset-top) !important;
+  padding-top: env(safe-area-inset-top) !important;
+}
+
+.safe-area {
+  padding-top: constant(safe-area-inset-top) !important;
+  padding-top: env(safe-area-inset-top) !important;
+  @apply bg-white bg-opacity-95 dark:bg-opacity-95 dark:bg-[#232222] z-40;
+  /* background-color: red; */
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+body {
+  @apply dark:text-[color:var(--selected-dark-text)] bg-white dark:bg-[#232222];
+  font-family: var(--selected-font);
+  height: 100%;
+  width: 100%;
+}
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+input[type="checkbox"]:checked {
+  border-color: #fbbf24;
+  background-color: #fbbf24;
+}
+
+/* Optional: You can add a custom background or other styles for the checked state */
+input[type="checkbox"]:checked::before {
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(255, 255, 255, 0.8)'%3E%3C/path%3E%3C/svg%3E");
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  line-height: 20px;
+  text-align: center;
+  color: #fbbf24;
+}
+
+.view {
+  height: 80vh;
+}
