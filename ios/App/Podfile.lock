@@ -1,5 +1,5 @@
 PODS:
-  - AashuDubeyCapacitorStatusbarSafeArea (2.1.2):
+  - AashuDubeyCapacitorStatusbarSafeArea (3.0.0):
     - Capacitor
   - AppAuth (1.7.5):
     - AppAuth/Core (= 1.7.5)
@@ -35,7 +35,7 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (6.0.1):
     - Capacitor
-  - CapacitorVoiceRecorder (5.0.0):
+  - CapacitorVoiceRecorder (6.0.3):
     - Capacitor
   - CodetrixStudioCapacitorGoogleAuth (0.0.1):
     - Capacitor
@@ -124,7 +124,7 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@recognizebv/capacitor-plugin-msauth"
 
 SPEC CHECKSUMS:
-  AashuDubeyCapacitorStatusbarSafeArea: e62fcce2cbd8e1b9ea953cad1831687d8791c3a2
+  AashuDubeyCapacitorStatusbarSafeArea: b32e282503c277e7e6bd2b030feef16658476b5b
   AppAuth: 501c04eda8a8d11f179dbe8637b7a91bb7e5d2fa
   Capacitor: 559d073c4ca6c27f8e7002c807eea94c3ba435a9
   CapacitorApp: 0bc633b4eae40a1f32cd2834788fad3bc42da6a1
@@ -140,7 +140,7 @@ SPEC CHECKSUMS:
   CapacitorShare: 591ae4693d85686ceb590db8e8b44aa014ec6490
   CapacitorSplashScreen: 250df9ef8014fac5c7c1fd231f0f8b1d8f0b5624
   CapacitorStatusBar: b81d4fb5d4e0064c712018071b3ab4b810b39a63
-  CapacitorVoiceRecorder: 872ea857b497ce2c71afe3e4eb5de0a74290c0db
+  CapacitorVoiceRecorder: d44c1da901cc3918eb9c92c24834d8dc90f071f4
   CodetrixStudioCapacitorGoogleAuth: fcce058390347c1ce5d8ac4764bdf1f5c1ee233b
   GoogleSignIn: 5651ce3a61e56ca864160e79b484cd9ed3f49b7a
   GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
