@@ -288,7 +288,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
   const formatting = [
     {
       label: translations.menuItems.paragraphLabel,
-      active: "Pragraph",
+      active: "paragraph",
       icon: (
         <icons.ParagraphIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
@@ -364,7 +364,11 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           {formatting.map((item) => (
             <button
               className={`p-1 ${
-                editor?.isActive(item.active.toLowerCase(), item.level)
+                item.level
+                  ? editor?.isActive("heading", { level: item.level }) // Strictly check both type and level for headings
+                    ? "text-amber-400"
+                    : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                  : editor?.isActive(item.active.toLowerCase()) // For non-headings, check only the type
                   ? "text-amber-400"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
@@ -625,7 +629,11 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           {formatting.map((item) => (
             <button
               className={`p-1 ${
-                editor?.isActive(item.active.toLowerCase(), item.level)
+                item.level
+                  ? editor?.isActive("heading", { level: item.level }) // Strictly check both type and level for headings
+                    ? "text-amber-400"
+                    : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                  : editor?.isActive(item.active.toLowerCase()) // For non-headings, check only the type
                   ? "text-amber-400"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
