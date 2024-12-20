@@ -107,9 +107,6 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
               <h3 className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]">
                 {translations.menuItems.videoLabel}
               </h3>
-              <p className="text-sm text-neutral-500">
-                {translations.menuItems.videoDescription}
-              </p>
             </div>
           </button>
 
@@ -123,7 +120,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
           />
         </div>
       ) : (
-        <div className="flex items-center justify-between sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+        <div className="flex items-center justify-between p-2 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
           <button
             onClick={() => {
               const inputElement = document.getElementById(

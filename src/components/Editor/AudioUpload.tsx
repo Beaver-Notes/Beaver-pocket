@@ -20,7 +20,7 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  
+
   const startRecording = async () => {
     if (hasPermission === null) {
       const permission = await VoiceRecorder.requestAudioRecordingPermission();
@@ -71,12 +71,16 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between md:p-2 sm:p-2 p-1 rounded-md sm:text-white bg-transparent text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+      <div className="flex items-center justify-between p-2 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
         {!isRecording ? (
           <button
             onClick={startRecording}
             disabled={isProcessing}
-            aria-label={isProcessing ? translations.accessibility.processing : translations.accessibility.startRecording} 
+            aria-label={
+              isProcessing
+                ? translations.accessibility.processing
+                : translations.accessibility.startRecording
+            }
             aria-disabled={isProcessing}
           >
             {isProcessing ? (
@@ -89,7 +93,11 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
           <button
             onClick={stopRecording}
             disabled={isProcessing}
-            aria-label={isProcessing ? translations.accessibility.processing : translations.accessibility.stopRecording} 
+            aria-label={
+              isProcessing
+                ? translations.accessibility.processing
+                : translations.accessibility.stopRecording
+            }
             aria-disabled={isProcessing}
           >
             {isProcessing ? (

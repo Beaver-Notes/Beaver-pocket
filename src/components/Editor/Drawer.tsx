@@ -75,6 +75,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       startRecording: "accessibility.startRecording",
       stopRecording: "accessibility.stopRecording",
       videoUpload: "accessibility.videoUpload",
+      mergeorSplit: "accessibility.mergeorSplit",
     },
   });
 
@@ -289,7 +290,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       label: translations.menuItems.paragraphLabel,
       active: "Pragraph",
       icon: (
-        <icons.ParagraphIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.ParagraphIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) => editor?.chain().focus().setParagraph().run(),
     },
@@ -298,7 +299,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       active: "heading",
       level: 1,
       icon: (
-        <icons.Heading1Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.Heading1Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) =>
         editor?.chain().focus().toggleHeading({ level: 1 }).run(),
@@ -308,7 +309,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       active: "heading",
       level: 2,
       icon: (
-        <icons.Heading2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.Heading2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) =>
         editor?.chain().focus().toggleHeading({ level: 2 }).run(),
@@ -320,7 +321,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       active: "bulletList",
       label: translations.menuItems.bulletListLabel,
       icon: (
-        <icons.ListUnorderedIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.ListUnorderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) => editor?.chain().focus().toggleBulletList().run(),
     },
@@ -328,16 +329,16 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       active: "orderedList",
       label: translations.menuItems.orderedListLabel,
       icon: (
-        <icons.ListOrderedIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.ListOrderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) =>
         editor?.chain().focus().toggleOrderedList().run(),
     },
     {
-      active: "TaskList",
+      active: "tasklist",
       label: translations.menuItems.bulletListLabel,
       icon: (
-        <icons.ListCheck2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.ListCheck2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) => editor?.chain().focus().toggleTaskList().run(),
     },
@@ -384,20 +385,16 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
             aria-label={translations.menuItems.quoteLabel}
           >
-            <icons.DoubleQuotesLIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.DoubleQuotesLIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
-            className={
-              editor?.isActive("paper")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
+            className="text-neutral-700 dark:text-[color:var(--selected-dark-text)] "
             onMouseDown={handleMouseDown}
             //@ts-ignore
             onClick={() => editor?.chain().focus().insertPaper().run()}
             aria-label={translations.menuItems.drawLabel}
           >
-            <icons.Brush2Fill className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.Brush2Fill className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -409,7 +406,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
             aria-label={translations.menuItems.codeLabel}
           >
-            <icons.CodeBoxLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.CodeBoxLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
 
           {/* Media and File Upload Options */}
@@ -428,7 +425,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={handleAddIframe}
             aria-label={translations.menuItems.embedLabel}
           >
-            <icons.PagesLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
@@ -462,7 +459,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             }
             aria-label={translations.menuItems.tableLabel}
           >
-            <icons.Table2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.Table2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           {lists.map((item) => (
             <button
@@ -492,7 +489,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().addRowAfter().run()}
             aria-label={translations.accessibility.insertRowAfter}
           >
-            <icons.InsertRowBottomIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.InsertRowBottomIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -504,7 +501,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().addRowBefore().run()}
             aria-label={translations.accessibility.insertRowBefore}
           >
-            <icons.InsertRowTopIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.InsertRowTopIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -516,7 +513,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().deleteRow().run()}
             aria-label={translations.accessibility.deleteRow}
           >
-            <icons.DeleteRow className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.DeleteRow className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -528,7 +525,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().addColumnBefore().run()}
             aria-label={translations.accessibility.insertColumnLeft}
           >
-            <icons.InsertColumnLeftIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.InsertColumnLeftIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -540,7 +537,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().addColumnAfter().run()}
             aria-label={translations.accessibility.insertColumnRight}
           >
-            <icons.InsertColumnRightIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.InsertColumnRightIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -552,7 +549,19 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().deleteColumn().run()}
             aria-label={translations.accessibility.deleteColumn}
           >
-            <icons.DeleteColumn className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.DeleteColumn className="border-none text-xl w-8 h-8 cursor-pointer" />
+          </button>
+          <button
+            className={`p-1 ${
+              editor?.isActive("codeBlock")
+                ? "text-amber-400"
+                : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+            } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
+            onClick={() => editor?.chain().focus().mergeOrSplit().run()}
+            aria-label={translations.accessibility.mergeorSplit}
+          >
+            <icons.SplitCellsHorizontalIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -564,7 +573,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().toggleHeaderCell().run()}
             aria-label={translations.menuItems.drawingBlockLabel}
           >
-            <icons.Brush2Fill className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.Brush2Fill className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           {/* Media and File Upload Options */}
           <ImageUploadComponent
@@ -582,7 +591,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={handleAddIframe}
             aria-label={translations.menuItems.embedLabel}
           >
-            <icons.PagesLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
@@ -604,7 +613,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().deleteTable().run()}
             aria-label={translations.accessibility.deleteTable}
           >
-            <icons.DeleteBinLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.DeleteBinLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
         </div>
         <div
@@ -637,7 +646,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().toggleBold().run()}
             aria-label={translations.accessibility.bold}
           >
-            <icons.BoldIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.BoldIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -649,7 +658,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().toggleItalic().run()}
             aria-label={translations.accessibility.italic}
           >
-            <icons.ItalicIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.ItalicIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -661,7 +670,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
             aria-label={translations.accessibility.underline}
           >
-            <icons.UnderlineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.UnderlineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -673,7 +682,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().toggleStrike().run()}
             aria-label={translations.accessibility.strikethrough}
           >
-            <icons.StrikethroughIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.StrikethroughIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             ref={buttonRef}
@@ -686,7 +695,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={toggleDropdown}
             aria-label={translations.accessibility.highlight}
           >
-            <icons.MarkPenLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.MarkPenLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           {isDropdownOpen &&
             createPortal(
@@ -768,7 +777,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.commands.toggleSubscript()}
             aria-label={translations.accessibility.subscript}
           >
-            <icons.SubscriptIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.SubscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -780,7 +789,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.commands.toggleSuperscript()}
             aria-label={translations.accessibility.superscript}
           >
-            <icons.SuperscriptIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.SuperscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
@@ -792,7 +801,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={setLink}
             aria-label={translations.accessibility.link}
           >
-            <icons.LinkIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.LinkIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
         </div>
       </div>

@@ -10,11 +10,7 @@ interface SlashMenuProps {
   editor: any;
   query: string;
 }
-const SlashMenu: React.FC<SlashMenuProps> = ({
-  noteId,
-  editor,
-  query,
-}) => {
+const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
   useEffect(() => {
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
@@ -32,15 +28,15 @@ const SlashMenu: React.FC<SlashMenuProps> = ({
   }, []);
 
   const handlefileUpload = (fileUrl: string, fileName: string) => {
-      editor?.chain().setFileEmbed(fileUrl, fileName).run();
+    editor?.chain().setFileEmbed(fileUrl, fileName).run();
   };
 
   const handlevideoUpload = (fileUrl: string) => {
-      editor?.chain().setVideo(fileUrl).run();
+    editor?.chain().setVideo(fileUrl).run();
   };
 
   const handleImageUpload = (imageUrl: string) => {
-      editor?.chain().setImage({ src: imageUrl }).run();
+    editor?.chain().setImage({ src: imageUrl }).run();
   };
 
   const handleAddIframe = () => {
@@ -73,121 +69,85 @@ const SlashMenu: React.FC<SlashMenuProps> = ({
     editor: {
       embedUrl: "editorembedUrl",
     },
-    menuItems: {
-      fileLabel: "menuItems.fileLabel",
-      fileDescription: "menuItems.fileDescription",
-      imageLabel: "menuItems.imageLabel",
-      imageDescription: "menuItems.imageDescription",
-      videoLabel: "menuItems.videoLabel",
-      videoDescription: "menuItems.videoDescription",
-      paragraphLabel: "menuItems.paragraphLabel",
-      paragraphDescription: "menuItems.paragraphDescription",
-      heading1Label: "menuItems.heading1Label",
-      heading1Description: "menuItems.heading1Description",
-      heading2Label: "menuItems.heading2Label",
-      heading2Description: "menuItems.heading2Description",
-      heading3Label: "menuItems.heading3Label",
-      heading3Description: "menuItems.heading3Description",
-      heading4Label: "menuItems.heading4Label",
-      heading4Description: "menuItems.heading4Description",
-      heading5Label: "menuItems.heading5Label",
-      heading5Description: "menuItems.heading5Description",
-      heading6Label: "menuItems.heading6Label",
-      heading6Description: "menuItems.heading6Description",
-      quoteLabel: "menuItems.quoteLabel",
-      quoteDescription: "menuItems.quoteDescription",
-      codeLabel: "menuItems.codeLabel",
-      codeDescription: "menuItems.codeDescription",
-      tableLabel: "menuItems.tableLabel",
-      tableDescription: "menuItems.tableDescription",
-      bulletListLabel: "menuItems.bulletListLabel",
-      bulletListDescription: "menuItems.bulletListDescription",
-      orderedListLabel: "menuItems.orderedListLabel",
-      orderedListDescription: "menuItems.orderedListDescription",
-      checklistLabel: "menuItems.checklistLabel",
-      checklistDescription: "menuItems.checklistDescription",
-      blackCalloutLabel: "menuItems.blackCalloutLabel",
-      blackCalloutDescription: "menuItems.blackCalloutDescription",
-      blueCalloutLabel: "menuItems.blueCalloutLabel",
-      blueCalloutDescription: "menuItems.blueCalloutDescription",
-      greenCalloutLabel: "menuItems.greenCalloutLabel",
-      greenCalloutDescription: "menuItems.greenCalloutDescription",
-      purpleCalloutLabel: "menuItems.purpleCalloutLabel",
-      purpleCalloutDescription: "menuItems.purpleCalloutDescription",
-      redCalloutLabel: "menuItems.redCalloutLabel",
-      redCalloutDescription: "menuItems.redCalloutDescription",
-      yellowCalloutLabel: "menuItems.yellowCalloutLabel",
-      yellowCalloutDescription: "menuItems.yellowCalloutDescription",
-      mathBlockLabel: "menuItems.mathBlockLabel",
-      mathBlockDescription: "menuItems.mathBlockDescription",
-      mermaidBlockLabel: "menuItems.mermaidBlockLabel",
-      mermaidBlockDescription: "menuItems.mermaidBlockDescription",
-      embedLabel: "menuItems.embedLabel",
-      embedDescription: "menuItems.embedDescription",
-      drawingBlockLabel: "menuItems.drawingBlockLabel",
-      drawingBlockDescription: "menuItems.drawingBlockDescription",
+    menu: {
+      file: "menuItems.file",
+      image: "menuItems.image",
+      video: "menuItems.video",
+      paragraph: "menuItems.paragraph",
+      heading1: "menuItems.heading1",
+      heading2: "menuItems.heading2",
+      heading3: "menuItems.heading3",
+      heading4: "menuItems.heading4",
+      heading5: "menuItems.heading5",
+      heading6: "menuItems.heading6",
+      quote: "menuItems.quote",
+      code: "menuItems.code",
+      table: "menuItems.table",
+      bulletList: "menuItems.bulletList",
+      orderedList: "menuItems.orderedList",
+      checklist: "menuItems.checklist",
+      blackCallout: "menuItems.blackCallout",
+      blueCallout: "menuItems.blueCallout",
+      greenCallout: "menuItems.greenCallout",
+      purpleCallout: "menuItems.purpleCallout",
+      redCallout: "menuItems.redCallout",
+      yellowCallout: "menuItems.yellowCallout",
+      mathBlock: "menuItems.mathBlock",
+      mermaidBlock: "menuItems.mermaidBlock",
+      embed: "menuItems.embed",
+      drawingBlock: "menuItems.drawingBlock",
     },
   });
 
   const menuItems = [
     {
       icon: icons.ParagraphIcon,
-      label: translations.menuItems.paragraphLabel,
-      description: translations.menuItems.paragraphDescription,
+      label: translations.menu.paragraph,
       action: () => editor.chain().focus().setParagraph().run(),
     },
     {
       icon: icons.Heading1Icon,
-      label: translations.menuItems.heading1Label,
-      description: translations.menuItems.heading1Description,
+      label: translations.menu.heading1,
       action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
     },
     {
       icon: icons.Heading2Icon,
-      label: translations.menuItems.heading2Label,
-      description: translations.menuItems.heading2Description,
+      label: translations.menu.heading2,
       action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
     },
     {
       icon: icons.Heading3Icon,
-      label: translations.menuItems.heading3Label,
-      description: translations.menuItems.heading3Description,
+      label: translations.menu.heading3,
       action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
     },
     {
       icon: icons.Heading4Icon,
-      label: translations.menuItems.heading4Label,
-      description: translations.menuItems.heading4Description,
+      label: translations.menu.heading4,
       action: () => editor.chain().focus().toggleHeading({ level: 4 }).run(),
     },
     {
       icon: icons.Heading5Icon,
-      label: translations.menuItems.heading5Label,
-      description: translations.menuItems.heading5Description,
+      label: translations.menu.heading5,
       action: () => editor.chain().focus().toggleHeading({ level: 5 }).run(),
     },
     {
       icon: icons.Heading6Icon,
-      label: translations.menuItems.heading6Label,
-      description: translations.menuItems.heading6Description,
+      label: translations.menu.heading6,
       action: () => editor.chain().focus().toggleHeading({ level: 6 }).run(),
     },
     {
       icon: icons.DoubleQuotesLIcon,
-      label: translations.menuItems.quoteLabel,
-      description: translations.menuItems.quoteDescription,
+      label: translations.menu.quote,
       action: () => editor.chain().focus().toggleBlockquote().run(),
     },
     {
       icon: icons.CodeBoxLineIcon,
-      label: translations.menuItems.codeLabel,
-      description: translations.menuItems.codeDescription,
+      label: translations.menu.code,
       action: () => editor.chain().focus().toggleCodeBlock().run(),
     },
     {
       icon: icons.Table2Icon,
-      label: translations.menuItems.tableLabel,
-      description: translations.menuItems.tableDescription,
+      label: translations.menu.table,
       action: () =>
         editor?.commands.insertTable({
           rows: 3,
@@ -197,66 +157,59 @@ const SlashMenu: React.FC<SlashMenuProps> = ({
     },
     {
       icon: icons.ListUnorderedIcon,
-      label: translations.menuItems.bulletListLabel,
-      description: translations.menuItems.bulletListDescription,
+      label: translations.menu.bulletList,
       action: () => editor.chain().focus().toggleBulletList().run(),
     },
     {
       icon: icons.ListOrderedIcon,
-      label: translations.menuItems.orderedListLabel,
-      description: translations.menuItems.orderedListDescription,
+      label: translations.menu.orderedList,
       action: () => editor?.chain().focus().toggleOrderedList().run(),
     },
     {
       icon: icons.ListCheck2Icon,
-      label: translations.menuItems.checklistLabel,
-      description: translations.menuItems.checklistDescription,
+      label: translations.menu.checklist,
       action: () => editor?.chain().focus().toggleTaskList().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
-      label: translations.menuItems.blackCalloutLabel,
-      description: translations.menuItems.blackCalloutDescription,
+      label: translations.menu.blackCallout,
       className: "dark:text-neutral-400",
       //@ts-ignore
       action: () => editor?.chain().focus().setBlackCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
-      label: translations.menuItems.blueCalloutLabel,
-      description: translations.menuItems.blueCalloutDescription,
+      label: translations.menu.blueCallout,
       className: "text-blue-500 dark:text-blue-500",
       //@ts-ignore
       action: () => editor?.chain().focus().setBlueCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
-      label: translations.menuItems.greenCalloutLabel,
-      description: translations.menuItems.greenCalloutDescription,
+      label: translations.menu.greenCallout,
       className: "text-green-600 dark:text-green-600",
       //@ts-ignore
       action: () => editor?.chain().focus().setGreenCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
-      label: translations.menuItems.purpleCalloutLabel,
-      description: translations.menuItems.purpleCalloutDescription,
+      label: translations.menu.purpleCallout,
       className: "text-purple-500 dark:text-purple-500",
       //@ts-ignore
       action: () => editor?.chain().focus().setPurpleCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
-      label: translations.menuItems.redCalloutLabel,
-      description: translations.menuItems.redCalloutDescription,
+      label: translations.menu.redCallout,
+
       className: "text-red-500 dark:text-red-500",
       //@ts-ignore
       action: () => editor?.chain().focus().setRedCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
-      label: translations.menuItems.yellowCalloutLabel,
-      description: translations.menuItems.yellowCalloutDescription,
+      label: translations.menu.yellowCallout,
+
       className: "text-yellow-500 dark:text-yellow-500",
       //@ts-ignore
 
@@ -264,28 +217,28 @@ const SlashMenu: React.FC<SlashMenuProps> = ({
     },
     {
       icon: icons.CalculatorLineIcon,
-      label: translations.menuItems.mathBlockLabel,
-      description: translations.menuItems.mathBlockDescription,
+      label: translations.menu.mathBlock,
+
       //@ts-ignore
       action: () => editor?.chain().focus().setMathBlock().run(),
     },
     {
       icon: icons.PieChart2LineIcon,
-      label: translations.menuItems.mermaidBlockLabel,
-      description: translations.menuItems.mermaidBlockDescription,
+      label: translations.menu.mermaidBlock,
+
       //@ts-ignore
       action: () => editor?.chain().focus().setMermaidDiagram().run(),
     },
     {
       icon: icons.PagesLineIcon,
-      label: translations.menuItems.embedLabel,
-      description: translations.menuItems.embedDescription,
+      label: translations.menu.embed,
+
       action: handleAddIframe,
     },
     {
       icon: icons.BrushLineIcon,
-      label: translations.menuItems.drawingBlockLabel,
-      description: translations.menuItems.drawingBlockDescription,
+      label: translations.menu.drawingBlock,
+
       //@ts-ignore
       action: () => editor?.chain().focus().insertPaper().run(),
     },
@@ -297,13 +250,13 @@ const SlashMenu: React.FC<SlashMenuProps> = ({
   );
 
   // Check if the query matches partial words for the upload components
-  const showImageUpload = translations.menuItems.imageLabel
+  const showImageUpload = translations.menu.image
     .toLowerCase()
     .includes(query.toLowerCase());
-  const showFileUpload = translations.menuItems.fileLabel
+  const showFileUpload = translations.menu.file
     .toLowerCase()
     .includes(query.toLowerCase());
-  const showVideoUpload = translations.menuItems.videoLabel
+  const showVideoUpload = translations.menu.video
     .toLowerCase()
     .includes(query.toLowerCase());
 
@@ -367,9 +320,6 @@ const SlashMenu: React.FC<SlashMenuProps> = ({
             <h3 className="font-medium text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
               {item.label}
             </h3>
-            <p className="text-sm text-neutral-500 dark:text-[color:var(--selected-dark-text)]">
-              {item.description}
-            </p>
           </div>
         </button>
       ),

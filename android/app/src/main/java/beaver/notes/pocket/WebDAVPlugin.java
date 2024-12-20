@@ -194,7 +194,7 @@ public class WebDAVPlugin extends Plugin {
                     // Add parsed contents to JSArray
                     JSObject result = new JSObject();
                     result.put("contents", contents);
-                    pluginCall.resolve(result);
+                    pluginCall.resolve("contents", result);
                 } else {
                     String responseBody = response.body() != null ? response.body().string() : "No response body";
                     Log.e("WebDAVPlugin", "Error listing contents: " + responseBody);
@@ -266,7 +266,7 @@ public class WebDAVPlugin extends Plugin {
                     String fileContent = response.body().string();
                     JSObject result = new JSObject();
                     result.put("fileContent", fileContent);
-                    pluginCall.resolve(result);
+                    pluginCall.resolve("contents", result);
                 } else {
                     String responseBody = response.body() != null ? response.body().string() : "No response body";
                     Log.e("WebDAVPlugin", "Error getting file content: " + responseBody);

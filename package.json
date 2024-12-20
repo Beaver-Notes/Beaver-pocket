@@ -12,9 +12,10 @@
     "ionic:serve": "vite"
   },
   "dependencies": {
-    "@aashu-dubey/capacitor-statusbar-safe-area": "^2.1.1",
+    "@aashu-dubey/capacitor-statusbar-safe-area": "^3.0.0",
     "@auth0/auth0-react": "^2.2.4",
     "@benrbray/prosemirror-math": "0.2.2",
+    "@capacitor-community/app-icon": "^5.0.0",
     "@capacitor/android": "6.0.0",
     "@capacitor/app": "^6.0.0",
     "@capacitor/browser": "^6.0.0",
@@ -85,6 +86,7 @@
     "capacitor-native-biometric": "^4.2.2",
     "capacitor-secure-storage-plugin": "^0.10.0",
     "capacitor-voice-recorder": "^5.0.0",
+    "capacitor-webview-print": "^6.0.1",
     "crypto-es": "^2.1.0",
     "crypto-js": "^4.2.0",
     "d3": "^7.9.0",
@@ -116,6 +118,7 @@
     "remixicon": "3.7.0",
     "remixicon-react": "^1.0.0",
     "sass": "^1.77.2",
+    "send-intent": "^6.0.2",
     "simple-oauth2": "^5.0.0",
     "tiptap": "^1.32.2",
     "tiptap-commands": "^1.17.1",

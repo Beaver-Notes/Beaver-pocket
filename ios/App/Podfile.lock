@@ -13,6 +13,8 @@ PODS:
     - Capacitor
   - CapacitorBrowser (6.0.3):
     - Capacitor
+  - CapacitorCommunityAppIcon (5.0.0):
+    - Capacitor
   - CapacitorCordova (6.0.0)
   - CapacitorDevice (6.0.1):
     - Capacitor
@@ -35,7 +37,9 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (6.0.1):
     - Capacitor
-  - CapacitorVoiceRecorder (6.0.3):
+  - CapacitorVoiceRecorder (5.0.0):
+    - Capacitor
+  - CapacitorWebviewPrint (6.0.1):
     - Capacitor
   - CodetrixStudioCapacitorGoogleAuth (0.0.1):
     - Capacitor
@@ -54,6 +58,8 @@ PODS:
   - RecognizebvCapacitorPluginMsauth (3.6.0):
     - Capacitor
     - MSAL (~> 1.1)
+  - SendIntent (6.0.2):
+    - Capacitor
   - SwiftKeychainWrapper (4.0.1)
 
 DEPENDENCIES:
@@ -61,6 +67,7 @@ DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorBrowser (from `../../node_modules/@capacitor/browser`)"
+  - "CapacitorCommunityAppIcon (from `../../node_modules/@capacitor-community/app-icon`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorDevice (from `../../node_modules/@capacitor/device`)"
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
@@ -73,8 +80,10 @@ DEPENDENCIES:
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - CapacitorVoiceRecorder (from `../../node_modules/capacitor-voice-recorder`)
+  - CapacitorWebviewPrint (from `../../node_modules/capacitor-webview-print`)
   - "CodetrixStudioCapacitorGoogleAuth (from `../../node_modules/@codetrix-studio/capacitor-google-auth`)"
   - "RecognizebvCapacitorPluginMsauth (from `../../node_modules/@recognizebv/capacitor-plugin-msauth`)"
+  - SendIntent (from `../../node_modules/send-intent`)
 
 SPEC REPOS:
   trunk:
@@ -94,6 +103,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/app"
   CapacitorBrowser:
     :path: "../../node_modules/@capacitor/browser"
+  CapacitorCommunityAppIcon:
+    :path: "../../node_modules/@capacitor-community/app-icon"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorDevice:
@@ -118,10 +129,14 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/status-bar"
   CapacitorVoiceRecorder:
     :path: "../../node_modules/capacitor-voice-recorder"
+  CapacitorWebviewPrint:
+    :path: "../../node_modules/capacitor-webview-print"
   CodetrixStudioCapacitorGoogleAuth:
     :path: "../../node_modules/@codetrix-studio/capacitor-google-auth"
   RecognizebvCapacitorPluginMsauth:
     :path: "../../node_modules/@recognizebv/capacitor-plugin-msauth"
+  SendIntent:
+    :path: "../../node_modules/send-intent"
 
 SPEC CHECKSUMS:
   AashuDubeyCapacitorStatusbarSafeArea: b32e282503c277e7e6bd2b030feef16658476b5b
@@ -129,6 +144,7 @@ SPEC CHECKSUMS:
   Capacitor: 559d073c4ca6c27f8e7002c807eea94c3ba435a9
   CapacitorApp: 0bc633b4eae40a1f32cd2834788fad3bc42da6a1
   CapacitorBrowser: aab1ed943b01c0365c4810538a8b3477e2d9f72e
+  CapacitorCommunityAppIcon: 4873c7de4cd50e68a36e08fe93f88f479e7b16a2
   CapacitorCordova: 8c4bfdf69368512e85b1d8b724dd7546abeb30af
   CapacitorDevice: 7097a1deb4224b77fd13a6e60a355d0062a5d772
   CapacitorFilesystem: 37fb3aa5c945b4539ab11c74a5c57925a302bf24
@@ -140,15 +156,17 @@ SPEC CHECKSUMS:
   CapacitorShare: 591ae4693d85686ceb590db8e8b44aa014ec6490
   CapacitorSplashScreen: 250df9ef8014fac5c7c1fd231f0f8b1d8f0b5624
   CapacitorStatusBar: b81d4fb5d4e0064c712018071b3ab4b810b39a63
-  CapacitorVoiceRecorder: d44c1da901cc3918eb9c92c24834d8dc90f071f4
+  CapacitorVoiceRecorder: 872ea857b497ce2c71afe3e4eb5de0a74290c0db
+  CapacitorWebviewPrint: 9a4b47f840d6c474f6331f466ea84cbede901e19
   CodetrixStudioCapacitorGoogleAuth: fcce058390347c1ce5d8ac4764bdf1f5c1ee233b
   GoogleSignIn: 5651ce3a61e56ca864160e79b484cd9ed3f49b7a
   GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
   GTMSessionFetcher: 3a63d75eecd6aa32c2fc79f578064e1214dfdec2
   MSAL: 5149daaa19228c2c27d81987634da15b50981cef
   RecognizebvCapacitorPluginMsauth: 10ee32ab10281f811dff2e3cbb925c60b27551df
+  SendIntent: 4e2c74ca3e147bce2b4a8ae49813e74e9e3b1161
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
 
-PODFILE CHECKSUM: 9338130e870049178b62da68066fe527240ace5d
+PODFILE CHECKSUM: cbf547d581cd0c6d5c0511b57d638a313c506aea
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2

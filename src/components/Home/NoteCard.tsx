@@ -1,7 +1,7 @@
 import { Note } from "../../store/types";
 import Icons from "../../lib/remixicon-react";
 import { useNotesState } from "../../store/Activenote";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import ModularPrompt from "../ui/Dialog";
 import * as CryptoJS from "crypto-js";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
@@ -164,26 +164,28 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 
   // Helper function to prompt the user for a password
   const promptForPassword = async (): Promise<string | null> => {
-    // Define a div where the prompt will be rendered
     const promptRoot = document.createElement("div");
     document.body.appendChild(promptRoot);
 
     return new Promise<string | null>((resolve) => {
       const handleConfirm = (value: string | null) => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
+        root.unmount(); // Unmount with new API
+        document.body.removeChild(promptRoot); // Clean up DOM
         resolve(value);
       };
       const handleCancel = () => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        resolve(null); // Resolving with null for cancel action
+        root.unmount(); // Unmount with new API
+        document.body.removeChild(promptRoot); // Clean up DOM
+        resolve(null);
       };
-      ReactDOM.render(
+
+      const root = ReactDOM.createRoot(promptRoot); // Create root
+      root.render(
         <ModularPrompt
           title={translations.card.enterpasswd}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
-        />,
-        promptRoot
+        />
       );
     });
   };

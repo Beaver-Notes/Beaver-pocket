@@ -1,6 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+} from "@headlessui/react";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
 import { isPlatform } from "@ionic/react";
@@ -20,6 +27,8 @@ import getMimeType from "../../utils/mimetype";
 import { saveImageToFileSystem } from "../../utils/fileHandler";
 import { saveFileToFileSystem } from "../../utils/fileHandler";
 import { useExportDav } from "../../utils/Webdav/webDavUtil";
+import { WebviewPrint } from "capacitor-webview-print";
+import { shareNote } from "../../utils/share";
 
 type Props = {
   note: Note;
@@ -31,6 +40,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const { activeNoteId, setActiveNoteId } = useNotesState();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const findRef = useRef<HTMLDivElement | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const { title, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
     notesState,
@@ -73,6 +83,16 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
         return updatedAtA - updatedAtB;
     }
   });
+
+  // Function to handle opening the dialog
+  const openDialog = () => {
+    setIsOpen(true);
+  };
+
+  // Function to handle closing the dialog
+  const closeDialog = () => {
+    setIsOpen(false);
+  };
 
   const [focusMode, setFocusMode] = useState(false);
   const [showFind, setShowFind] = useState(false);
@@ -487,6 +507,30 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     }
   };
 
+  const handlePrint = async (fileName: string) => {
+    const html = document.documentElement;
+    const darkModeActive = html.classList.contains("dark");
+
+    // Temporarily force light mode by removing the "dark" class
+    if (darkModeActive) html.classList.remove("dark");
+
+    const restoreClass = () => {
+      if (darkModeActive) html.classList.add("dark");
+      window.removeEventListener("afterprint", restoreClass); // Clean up listener
+    };
+
+    // Restore dark mode after printing is done
+    window.addEventListener("afterprint", restoreClass);
+
+    try {
+      await WebviewPrint.print({ name: fileName });
+      console.log("Print triggered for file:", fileName);
+    } catch (error) {
+      console.error("Error printing webview:", error);
+      restoreClass(); // Restore immediately on error
+    }
+  };
+
   const goBack = () => {
     const syncValue = localStorage.getItem("sync");
 
@@ -513,6 +557,25 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     }
   };
 
+  function toggleFocusMode() {
+    try {
+      if (!focusMode) {
+        // Enable focus mode
+        editor?.setOptions({ editable: false });
+        editor?.view.update(editor.view.props);
+        setFocusMode(true);
+      } else {
+        // Disable focus mode
+        editor?.setOptions({ editable: true });
+        editor?.view.update(editor.view.props);
+        setFocusMode(false);
+      }
+    } catch (error) {
+      // Log the error with a message
+      console.error("Error while toggling focus mode:", error);
+    }
+  }
+
   return (
     <div>
       <div
@@ -524,7 +587,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
       >
         <Toolbar note={note} noteId={note.id} editor={editor} />
         <div
-          className={`sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] fixed inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between`}
+          className={`sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] fixed inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between print:hidden`}
         >
           <button
             className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
@@ -532,15 +595,95 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
           >
             <Icons.ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
           </button>
+
           <div className="flex">
             <button
+              aria-label="Open dialog"
               className="p-2 rounded-md text-white bg-transparent cursor-pointer"
-              onClick={() => setFocusMode((prevFocusMode) => !prevFocusMode)}
+              onClick={openDialog}
             >
-              <Icons.Focus3LineIcon
+              <Icons.ShareLineIcon
+                className={`border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
+              />
+            </button>
+
+            <Transition show={isOpen} as={React.Fragment}>
+              <Dialog
+                as="div"
+                className="fixed inset-0 z-[1000] flex justify-center items-end print:hidden"
+                onClose={closeDialog}
+              >
+                <DialogBackdrop className="fixed inset-0 bg-neutral-300 dark:bg-neutral-800 bg-opacity-75 dark:bg-opacity-75 transition-opacity" />
+                <div className="fixed inset-0 flex items-end justify-end">
+                  {" "}
+                  <Transition.Child
+                    as={React.Fragment}
+                    enter="ease-out duration-300"
+                    enterFrom="opacity-0 translate-y-full"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="ease-in duration-200"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-full"
+                  >
+                    <DialogPanel className="bg-white dark:bg-[#2D2C2C] p-6 rounded-2xl w-full mx-4 mb-8">
+                      <div className="flex justify-between items-center dark:bg-[#2D2C2C] px-2">
+                        <DialogTitle as="h2" className="text-xl font-semibold">
+                          Export As
+                        </DialogTitle>
+                        <button
+                          onClick={closeDialog}
+                          className="text-white dark:text-[color:var(--selected-dark-text)] bg-neutral-300 dark:bg-neutral-700 rounded-full hover:text-neutral-100 focus:outline-none"
+                        >
+                          <Icons.CloseLineIcon />
+                        </button>
+                      </div>
+                      <div className="p-1 border-b dark:border-neutral-500"></div>
+                      <div className="mt-4 space-y-2 p-2 bg-[#F8F8F7] dark:bg-neutral-800 rounded-xl">
+                        {/* Button for File Text */}
+                        <div className="flex items-center w-full">
+                          <button
+                            className="w-full bg-[#F8F8F7] dark:bg-neutral-800 p-2 text-xl rounded-xl inline-flex justify-between items-center"
+                            aria-label="BEA"
+                            onClick={() => shareNote(note.id, notesState)}
+                          >
+                            <p className="text-base pl-2 py-1 font-bold">BEA</p>
+                            <Icons.FileTextLineIcon
+                              className="w-8 h-8"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </div>
+                        {/* Button for File PDF */}
+                        <div className="flex items-center w-full">
+                          <button
+                            className="w-full bg-[#F8F8F7] dark:bg-neutral-800 p-2 text-xl rounded-xl inline-flex justify-between items-center"
+                            onClick={() => handlePrint(`${note.title}.pdf`)}
+                            aria-label="PDF"
+                          >
+                            <p className="text-base pl-2 py-1 font-bold">PDF</p>
+                            <Icons.FileArticleLine
+                              className="w-8 h-8"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </DialogPanel>
+                  </Transition.Child>
+                </div>
+              </Dialog>
+            </Transition>
+
+            <button
+              className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+              onClick={toggleFocusMode}
+            >
+              <Icons.FileArticleLine
                 className={`border-none ${
-                  focusMode ? "text-amber-400" : "text-neutral-800"
-                } dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
+                  focusMode
+                    ? "text-amber-400"
+                    : "text-neutral-800 dark:text-[color:var(--selected-dark-text)]"
+                }  text-xl w-7 h-7`}
               />
             </button>
 
@@ -566,7 +709,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
               }}
             >
               <div className="fixed inset-x-0 flex justify-center">
-                <div className="w-full bg-white px-4 sm:px-10 md:px-20 lg:px-60">
+                <div className="w-full bg-white dark:bg-[#232222] px-4 sm:px-10 md:px-20 lg:px-60">
                   <Find editor={editor} setShowFind={setShowFind} />
                 </div>
               </div>
@@ -574,31 +717,35 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
           )}
         </div>
 
-        <div
-          contentEditable
-          onPaste={handleTitlePaste}
-          suppressContentEditableWarning
-          onTouchStart={preventKeyboardToggle}
-          className={`text-3xl font-bold overflow-y-scroll outline-none ${
-            isPlatform("android") ? "mt-10 sm:pt-14" : "md:pt-14"
-          } ${isPlatform("ios") ? "mt-10 sm:pt-14" : "md:pt-14"}`}
-          onBlur={handleTitleChange}
-          onKeyDown={handleKeyDownTitle} // Add onKeyDown to handle Enter key
-          dangerouslySetInnerHTML={{ __html: note.title }}
-          ref={titleRef} // Attach ref to title field
-        />
-        <div>
-          <div className="py-2 h-full w-full" id="container">
-            <EditorContent
-              onPaste={handlePaste}
-              editor={editor}
-              onTouchStart={preventKeyboardToggle}
-              className="prose dark:text-neutral-100 max-w-none prose-indigo mb-12"
-            />
+        <div id="content">
+          <div
+            contentEditable
+            onPaste={handleTitlePaste}
+            suppressContentEditableWarning
+            onTouchStart={preventKeyboardToggle}
+            className={`text-3xl font-bold overflow-y-scroll outline-none ${
+              isPlatform("android") ? "mt-10 sm:pt-14" : "md:pt-14"
+            } ${isPlatform("ios") ? "mt-10 sm:pt-14" : "md:pt-14"}`}
+            onBlur={handleTitleChange}
+            onKeyDown={handleKeyDownTitle} // Add onKeyDown to handle Enter key
+            dangerouslySetInnerHTML={{ __html: note.title }}
+            ref={titleRef} // Attach ref to title field
+          />
+          <div>
+            <div className="py-2 h-full w-full" id="container">
+              <EditorContent
+                onPaste={handlePaste}
+                editor={editor}
+                onTouchStart={preventKeyboardToggle}
+                className="prose dark:text-neutral-100 max-w-none prose-indigo mb-12"
+              />
+            </div>
           </div>
         </div>
 
-        <div className={`${focusMode ? "hidden" : "block"} sm:hidden`}>
+        <div
+          className={`${focusMode ? "hidden" : "block"} sm:hidden print:hidden`}
+        >
           <Drawer noteId={note.id} note={note} editor={editor} />
         </div>
       </div>

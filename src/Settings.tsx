@@ -4,6 +4,7 @@ import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
 import { useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
+import { isPlatform } from "@ionic/react";
 import { Note } from "./store/types";
 
 interface SettingsProps {
@@ -114,6 +115,7 @@ const Archive: React.FC<SettingsProps> = () => {
       Sync: "settings.Sync",
       expandPage: "settings.expandPage",
       scribbleCompatibility: "settings.scribbleCompatibility",
+      appIcon: "settings.appIcon",
     },
   });
 
@@ -399,12 +401,14 @@ const Archive: React.FC<SettingsProps> = () => {
                     </button>
 
                     <button
-                      onClick={() => navigate("/about")}
-                      aria-label={translations.settings.About || "-"}
-                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      onClick={() => navigate("/icons")}
+                      aria-label={translations.settings.Shortcuts || "-"}
+                      className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center ${
+                        isPlatform("android") ? "hidden" : ""
+                      }`}
                     >
-                      <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
-                      {translations.settings.About || "-"}
+                      <Icons.Brush2Fill className="w-6 h-6 mr-2" />
+                      {translations.settings.appIcon || "-"}
                     </button>
 
                     <button
@@ -414,6 +418,15 @@ const Archive: React.FC<SettingsProps> = () => {
                     >
                       <Icons.KeyboardLineIcon className="w-6 h-6 mr-2" />
                       {translations.settings.Shortcuts || "-"}
+                    </button>
+
+                    <button
+                      onClick={() => navigate("/about")}
+                      aria-label={translations.settings.About || "-"}
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    >
+                      <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
+                      {translations.settings.About || "-"}
                     </button>
                   </div>
                 </div>
