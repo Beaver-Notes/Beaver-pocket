@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "./store/types";
-import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import "dayjs/locale/it";
@@ -8,6 +8,9 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import SearchBar from "./components/Home/Search";
 import { useNotesState } from "./store/Activenote";
 import Icons from "./lib/remixicon-react";
+import { SendIntent } from "send-intent";
+import { useImportBea } from "./utils/share";
+import { loadNotes } from "./store/notes";
 
 // Import Remix icons
 import NoteCard from "./components/Home/NoteCard";
@@ -18,6 +21,7 @@ interface HomeProps {
 }
 
 const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
+  const { importUtils } = useImportBea();
   const { activeNoteId, setActiveNoteId } = useNotesState();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedLabel, setSelectedLabel] = useState<string>("");
@@ -31,6 +35,17 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
         const labelMatch = selectedLabel
           ? note.labels.includes(selectedLabel)
           : true;
+
+        // Check if the searchQuery starts with "#"
+        if (searchQuery.startsWith("#")) {
+          const labelQuery = searchQuery.slice(1).toLowerCase(); // Remove the "#" for comparison
+          return (
+            labelMatch &&
+            note.labels.some((label) =>
+              label.toLowerCase().includes(labelQuery)
+            )
+          );
+        }
 
         // Search query filter
         const titleMatch = note.title
@@ -163,6 +178,89 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
     };
 
     loadTranslations();
+  }, []);
+
+  function normalizeFilePath(encodedUrl: any) {
+    try {
+      // Decode the URL
+      let decodedUrl = decodeURIComponent(encodedUrl);
+
+      // Replace specific URL encoding for 'file://'
+      if (decodedUrl.startsWith("file%3A%2F%2F")) {
+        decodedUrl = decodedUrl.replace("file%3A%2F%2F", "file://");
+      }
+
+      return decodedUrl;
+    } catch (err) {
+      console.error("Error normalizing file path:", err);
+      return ""; // Return empty string or handle gracefully
+    }
+  }
+  const handleSendIntent = () => {
+    SendIntent.checkSendIntentReceived()
+      .then((result) => {
+        if (result) {
+          console.log("SendIntent Result:", result);
+
+          if (result.url) {
+            const normalizedUrl = normalizeFilePath(result.url);
+            console.log("Normalized URL:", normalizedUrl);
+
+            // Read the file and decode its content
+            Filesystem.readFile({
+              path: normalizedUrl,
+              encoding: Encoding.UTF8, // Explicitly specify UTF-8 encoding
+            })
+              .then((content) => {
+                if (typeof content.data === "string") {
+                  // Safe to use as a string
+                  importUtils(setNotesState, loadNotes, content.data);
+                } else if (content.data instanceof Blob) {
+                  // Convert Blob to a string
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    const textContent = event.target?.result as string;
+                    importUtils(setNotesState, loadNotes, textContent);
+                  };
+                  reader.onerror = (error) => {
+                    console.error("Error reading Blob content:", error);
+                    alert("Failed to process file content.");
+                  };
+                  reader.readAsText(content.data);
+                } else {
+                  console.error(
+                    "Unexpected content.data type:",
+                    typeof content.data
+                  );
+                  alert("Unexpected file format. Please try another file.");
+                }
+              })
+              .catch((readError) => {
+                console.error("Error reading file:", readError);
+                alert("Failed to read the file. Please check the file path.");
+              });
+          } else {
+            console.error("Result does not contain 'url'.");
+            alert("No file URL found in the intent result.");
+          }
+        } else {
+          console.warn("No SendIntent result received.");
+        }
+      })
+      .catch((intentError) => {
+        console.error("Error checking send intent:", intentError);
+        alert("Failed to check the send intent. Please try again.");
+      });
+  };
+
+  useEffect(() => {
+    // Attach event listener for SendIntent
+    window.addEventListener("sendIntentReceived", handleSendIntent);
+
+    return () => {
+      // Cleanup listener
+      window.removeEventListener("sendIntentReceived", handleSendIntent);
+    };
   }, []);
 
   return (

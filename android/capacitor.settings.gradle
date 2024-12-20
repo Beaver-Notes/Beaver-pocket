@@ -5,6 +5,9 @@ project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/
 include ':aashu-dubey-capacitor-statusbar-safe-area'
 project(':aashu-dubey-capacitor-statusbar-safe-area').projectDir = new File('../node_modules/@aashu-dubey/capacitor-statusbar-safe-area/android')
 
+include ':capacitor-community-app-icon'
+project(':capacitor-community-app-icon').projectDir = new File('../node_modules/@capacitor-community/app-icon/android')
+
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('../node_modules/@capacitor/app/android')
 
@@ -49,3 +52,9 @@ project(':capacitor-secure-storage-plugin').projectDir = new File('../node_modul
 
 include ':capacitor-voice-recorder'
 project(':capacitor-voice-recorder').projectDir = new File('../node_modules/capacitor-voice-recorder/android')
+
+include ':capacitor-webview-print'
+project(':capacitor-webview-print').projectDir = new File('../node_modules/capacitor-webview-print/android')
+
+include ':send-intent'
+project(':send-intent').projectDir = new File('../node_modules/send-intent/android')

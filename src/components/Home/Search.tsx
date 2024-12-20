@@ -1,4 +1,4 @@
-import icons from "../../lib/remixicon-react"
+import icons from "../../lib/remixicon-react";
 import { useEffect, useState } from "react";
 
 interface SearchBarProps {
@@ -38,6 +38,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
     loadTranslations();
   }, []);
 
+  const handleClearInput = () => {
+    setSearchQuery("");
+  };
+
   return (
     <div className="bg-transparent px-6">
       <div className="flex justify-center">
@@ -52,6 +56,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              onClick={handleClearInput}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-800 dark:text-[color:var(--selected-dark-text)]"
+            >
+              <icons.DeleteBackLineIcon className="h-6 w-6" />
+            </button>
+          )}
         </div>
         <div className="sm:block hidden relative inline-flex items-center">
           <div>

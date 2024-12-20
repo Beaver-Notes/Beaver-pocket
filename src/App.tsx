@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { CSSTransition, TransitionGroup } from "react-transition-group";
 import Home from "./Home";
 import Archive from "./Archive";
 import Settings from "./Settings";
@@ -27,13 +26,13 @@ import { useNotesState } from "./store/Activenote";
 import Mousetrap from "mousetrap";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { isPlatform } from "@ionic/react";
+import Icons from "./settings/icons";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { notesState, setNotesState } = useNotesState();
-  const [isSwipe, setIsSwipe] = useState(false);
 
   const isIpad = isPlatform("ipad");
 
@@ -200,7 +199,7 @@ const App: React.FC = () => {
   } else {
     Keyboard.setResizeMode({ mode: KeyboardResize.Native });
   }
-  
+
   return (
     <div>
       <div className="safe-area"></div>
@@ -211,96 +210,69 @@ const App: React.FC = () => {
           redirect_uri: window.location.origin,
         }}
       >
-        <TransitionGroup>
-          <CSSTransition
-            key={location.pathname}
-            timeout={0}
-            classNames={isSwipe ? "fade" : ""}
-            onExited={() => setIsSwipe(false)}
-            unmountOnExit
-          >
-            <Routes location={location}>
-              <Route
-                path="/"
-                element={
-                  <Home notesState={notesState} setNotesState={setNotesState} />
-                }
-              />
-              <Route
-                path="/archive"
-                element={
-                  <Archive
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <Settings
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-              <Route path="/about" element={<About />} />
-              <Route
-                path="/dropbox"
-                element={
-                  <Dropbox
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-              <Route
-                path="/onedrive"
-                element={<Onedrive setNotesState={setNotesState} />}
-              />
-              <Route
-                path="/webdav"
-                element={
-                  <Webdav
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-              <Route
-                path="/icloud"
-                element={
-                  <Icloud
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-              <Route
-                path="/gdrive"
-                element={<Gdrive setNotesState={setNotesState} />}
-              />
-              <Route path="/onedrive" element={<Welcome />} />
-              <Route path="/shortcuts" element={<Shortcuts />} />
-              <Route path="/welcome" element={<Welcome />} />
-              <Route
-                path="/sync"
-                element={
-                  <Sync notesState={notesState} setNotesState={setNotesState} />
-                }
-              />
-              <Route
-                path="/editor/:note"
-                element={
-                  <Editor
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-            </Routes>
-          </CSSTransition>
-        </TransitionGroup>
+        <Routes location={location}>
+          <Route
+            path="/"
+            element={
+              <Home notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/archive"
+            element={
+              <Archive notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <Settings notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route path="/about" element={<About />} />
+          <Route
+            path="/dropbox"
+            element={
+              <Dropbox notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/onedrive"
+            element={<Onedrive setNotesState={setNotesState} />}
+          />
+          <Route
+            path="/webdav"
+            element={
+              <Webdav notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/icloud"
+            element={
+              <Icloud notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/gdrive"
+            element={<Gdrive setNotesState={setNotesState} />}
+          />
+          <Route path="/onedrive" element={<Welcome />} />
+          <Route path="/shortcuts" element={<Shortcuts />} />
+          <Route path="/icons" element={<Icons />} />
+          <Route path="/welcome" element={<Welcome />} />
+          <Route
+            path="/sync"
+            element={
+              <Sync notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/editor/:note"
+            element={
+              <Editor notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+        </Routes>
       </Auth0Provider>
       <CommandPrompt
         setIsCommandPromptOpen={setIsCommandPromptOpen}

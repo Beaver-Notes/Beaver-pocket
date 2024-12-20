@@ -11,6 +11,7 @@ def capacitor_pods
   pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
   pod 'AashuDubeyCapacitorStatusbarSafeArea', :path => '../../node_modules/@aashu-dubey/capacitor-statusbar-safe-area'
+  pod 'CapacitorCommunityAppIcon', :path => '../../node_modules/@capacitor-community/app-icon'
   pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
   pod 'CapacitorBrowser', :path => '../../node_modules/@capacitor/browser'
   pod 'CapacitorDevice', :path => '../../node_modules/@capacitor/device'
@@ -26,6 +27,8 @@ def capacitor_pods
   pod 'CapacitorNativeBiometric', :path => '../../node_modules/capacitor-native-biometric'
   pod 'CapacitorSecureStoragePlugin', :path => '../../node_modules/capacitor-secure-storage-plugin'
   pod 'CapacitorVoiceRecorder', :path => '../../node_modules/capacitor-voice-recorder'
+  pod 'CapacitorWebviewPrint', :path => '../../node_modules/capacitor-webview-print'
+  pod 'SendIntent', :path => '../../node_modules/send-intent'
 end
 
 target 'App' do

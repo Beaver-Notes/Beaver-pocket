@@ -8,6 +8,7 @@ import {
   DialogTitle,
   Transition,
 } from "@headlessui/react";
+import Icons from "../../../remixicon-react";
 
 const MermaidNodeView: React.FC<NodeViewProps> = ({
   node,
@@ -149,7 +150,7 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
               >
                 <DialogPanel
                   ref={dialogPanelRef}
-                  className="relative w-full landscape:w-2/4 portrait:w-4/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
+                  className="relative w-full landscape:w-2/4 portrait:w-5/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
@@ -168,10 +169,10 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
                     </DialogTitle>
                     <button
                       onClick={closeModal}
-                      className="text-amber-400 hover:text-gray-700 focus:outline-none"
+                      className="text-neutral-800 dark:text-[color:var(--selected-dark-text)]  bg-neutral-200 rounded-full hover:text-gray-700 focus:outline-none"
                       aria-label={translations.accessibility.close}
                       >
-                      {translations.editor.close || "Close"}
+                      <Icons.CloseLineIcon />
                     </button>
                   </div>
                   <div className="p-4 h-full flex flex-col">

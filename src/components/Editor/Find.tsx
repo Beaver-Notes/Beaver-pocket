@@ -73,27 +73,34 @@ const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
     loadTranslations();
   }, []);
 
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus(); // Automatically focus the search input
+    }
+  }, []);
+
   const handleClose = () => {
     setShowFind(false);
-    setSearchTerm("");  // Clear the search term
+    setSearchTerm(""); // Clear the search term
     setReplaceTerm(""); // Clear the replace term
     editor?.chain().setSearchTerm("").resetIndex().clea().run(); // Clear highlights
     editor.commands.clearSearch();
-  };  
-  
+  };
+
   useEffect(() => {
     if (searchTerm) {
-      editor?.chain()
+      editor
+        ?.chain()
         .setSearchTerm(searchTerm)
-        .resetIndex()  // Reset any previous search index before starting a new search
+        .resetIndex() // Reset any previous search index before starting a new search
         .run();
     } else {
-      editor?.chain().resetIndex().run();  // If no search term, reset the index
+      editor?.chain().resetIndex().run(); // If no search term, reset the index
     }
   }, [searchTerm, editor]);
 
   return (
-    <div className="pt-4 bg-white dark:bg-[#232222] overflow-enabled h-auto w-full bg-transparent z-30 no-scrollbar">
+    <div className="pt-4 overflow-enabled h-auto w-full bg-transparent z-30 no-scrollbar">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 w-full">
         {/* Search Input and Button */}
         <div className="flex items-center sm:col-span-1 w-full space-x-2">

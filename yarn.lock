@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@aashu-dubey/capacitor-statusbar-safe-area@^2.1.1":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@aashu-dubey/capacitor-statusbar-safe-area/-/capacitor-statusbar-safe-area-2.1.2.tgz#af9d976e9d79eaa1343dcdadfb1108ea46debf73"
-  integrity sha512-yqpfPPYeaRybRmoiMXhTR2YUrsMiu5pKTEeIxhr1hzMAQFfOiCXGJktqWUr9448oO0gbCLy5v/toHiMXH66Ghg==
+"@aashu-dubey/capacitor-statusbar-safe-area@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@aashu-dubey/capacitor-statusbar-safe-area/-/capacitor-statusbar-safe-area-3.0.0.tgz#c0fddd8f3e5df3370c8c0bf8d76e67b9e951518b"
+  integrity sha512-/az4LZo1YDdV8lZjNecKp7ghBLgGX5MXYeHxtUDqxJbNC0OMoBHYkub70Ps1R417xhMZlC/FiEs7aPFskZ35Vg==
 
 "@alloc/quick-lru@^5.2.0":
   version "5.2.0"
@@ -1084,6 +1084,11 @@
   version "6.0.4"
   resolved "https://registry.yarnpkg.com/@braintree/sanitize-url/-/sanitize-url-6.0.4.tgz#923ca57e173c6b232bbbb07347b1be982f03e783"
   integrity sha512-s3jaWicZd0pkP0jf5ysyHUI/RE7MHos6qlToFcGWXVp+ykHOy77OUMrfbgJ9it2C5bow7OIQwYYaHjk9XlBQ2A==
+
+"@capacitor-community/app-icon@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@capacitor-community/app-icon/-/app-icon-5.0.0.tgz#9a70cace5560c239b1befd01ee1f7e9c7ee2aaea"
+  integrity sha512-DH1NcFGQnulkeAXALqg1gfc9Vga2og1i0tcByT1yc/q9woF0wfSpwv9n6eapqxWpQMQYI9FmqLle++likphjaA==
 
 "@capacitor/android@6.0.0":
   version "6.0.0"
@@ -4227,6 +4232,11 @@ capacitor-voice-recorder@^5.0.0:
   integrity sha512-rCZgbmdmj9eXlotziRnIXWoo+7/aGKM1dSeSrgaEmayu9aTs8xkwhpx9eeVe24VDC6sfMHTnwMl5311Ryr/yFA==
   dependencies:
     get-blob-duration "^1.2.0"
+
+capacitor-webview-print@^6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/capacitor-webview-print/-/capacitor-webview-print-6.0.1.tgz#966582714bf7d0adfdda27e4a9665ac8bcaf9b3f"
+  integrity sha512-MAcFxouTDjOexg1hsMpgXuOS28jnhR28hO7jjovHcHUvfAn8k0tvPrNX4pE9XMZFplT03NCUyBUfDRZfqWa/7w==
 
 chalk@^2.4.2:
   version "2.4.2"
@@ -8484,6 +8494,11 @@ semver@^7.1.1, semver@^7.3.2, semver@^7.3.7, semver@^7.3.8, semver@^7.5.4:
   version "7.6.3"
   resolved "https://registry.yarnpkg.com/semver/-/semver-7.6.3.tgz#980f7b5550bc175fb4dc09403085627f9eb33143"
   integrity sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==
+
+send-intent@^6.0.2:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/send-intent/-/send-intent-6.0.2.tgz#0c35f903b38eb2524b1384453a099d41221e579f"
+  integrity sha512-flab+kgIutFLYfNgs6HIXkGJ7ELO+c10KGvNvYwHYlPfjglJwrqsqKZW1jSgws1h1iF+B8wXI/Ab5sbA5TTZeA==
 
 set-function-length@^1.2.1:
   version "1.2.2"

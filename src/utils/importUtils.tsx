@@ -1,6 +1,4 @@
 import { Note } from "../store/types";
-import dayjs from "dayjs";
-import { useEffect, useState } from "react";
 import {
   Directory,
   Filesystem,
@@ -10,32 +8,6 @@ import {
 const STORAGE_PATH = "notes/data.json";
 
 export const useHandleImportData = () => {
-  const [translations, setTranslations] = useState({
-    home: {
-      importSuccess: "home.importSuccess",
-      importInvalid: "home.importInvalid",
-      importError: "home.importError",
-    },
-  });
-
-  useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
-  }, []);
-
   const readJsonFile = async (path: string): Promise<any> => {
     try {
       const fileContents = await Filesystem.readFile({
@@ -61,36 +33,38 @@ export const useHandleImportData = () => {
 
   const importUtils = async (
     setNotesState: (notes: Record<string, Note>) => void,
-    loadNotes: () => Promise<Record<string, Note>>,
+    loadNotes: () => Promise<Record<string, Note>>
   ) => {
     try {
       const currentDate = new Date();
       const oneDayInMs = 24 * 60 * 60 * 1000; // milliseconds in a day
       let foundViableFolder = false;
-      let importFolderPath = '';
-  
+      let importFolderPath = "";
+
       // Check back for 30 days
       for (let i = 0; i < 30; i++) {
         const checkDate = new Date(currentDate.getTime() - i * oneDayInMs);
         const formattedDate = checkDate.toISOString().split("T")[0];
         importFolderPath = `/export/Beaver Notes ${formattedDate}`;
-        
+
         // Check if the folder exists
         const folderExists = await Filesystem.readdir({
           path: importFolderPath,
           directory: Directory.Data,
-        }).then(() => true).catch(() => false);
-  
+        })
+          .then(() => true)
+          .catch(() => false);
+
         if (folderExists) {
           foundViableFolder = true;
           break; // Exit the loop if a viable folder is found
         }
       }
-  
+
       if (!foundViableFolder) {
-        throw new Error('No viable folder found for the past 30 days.');
+        throw new Error("No viable folder found for the past 30 days.");
       }
-  
+
       const importDataPath = `${importFolderPath}/data.json`;
       const importAssetsPath = `${importFolderPath}/assets`;
       const importFileAssetsPath = `${importFolderPath}/file-assets`;
@@ -175,7 +149,13 @@ export const useHandleImportData = () => {
             }
             if (note.content.content) {
               const updatedContent = note.content.content.map((node: any) => {
-                if (node.type === "fileEmbed" && node.attrs && node.attrs.src) {
+                if (
+                  (node.type === "fileEmbed" ||
+                    node.type === "Audio" ||
+                    node.type === "Video") &&
+                  node.attrs &&
+                  node.attrs.src
+                ) {
                   node.attrs.src = node.attrs.src.replace(
                     "file-assets://",
                     "file-assets/"
@@ -193,7 +173,6 @@ export const useHandleImportData = () => {
           ...existingNotes,
           ...importedNotes,
         };
-   
 
         await Filesystem.writeFile({
           path: STORAGE_PATH,
@@ -207,8 +186,8 @@ export const useHandleImportData = () => {
           const event = new Event("reload");
           document.dispatchEvent(event);
         };
-        
-        triggerReload();    
+
+        triggerReload();
       }
     } catch (error: any) {
       alert(error);
