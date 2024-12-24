@@ -33,6 +33,10 @@ const App: React.FC = () => {
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { notesState, setNotesState } = useNotesState();
+  const [themeMode, setThemeMode] = useState(() => {
+    const storedThemeMode = localStorage.getItem("themeMode");
+    return storedThemeMode || "auto";
+  });
 
   const isIpad = isPlatform("ipad");
 
@@ -177,23 +181,6 @@ const App: React.FC = () => {
     location.pathname.startsWith(path)
   );
 
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
   if (isIpad) {
     Keyboard.setResizeMode({ mode: KeyboardResize.None });
   } else {
@@ -226,7 +213,7 @@ const App: React.FC = () => {
           <Route
             path="/settings"
             element={
-              <Settings notesState={notesState} setNotesState={setNotesState} />
+              <Settings themeMode={themeMode} setThemeMode={setThemeMode}/>
             }
           />
           <Route path="/about" element={<About />} />

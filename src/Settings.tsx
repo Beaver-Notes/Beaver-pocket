@@ -5,14 +5,13 @@ import deTranslations from "./assets/locales/de.json";
 import { useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
 import { isPlatform } from "@ionic/react";
-import { Note } from "./store/types";
 
 interface SettingsProps {
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
+  themeMode: string;
+  setThemeMode: (mode: any) => void;
 }
 
-const Archive: React.FC<SettingsProps> = () => {
+const Archive: React.FC<SettingsProps> = ({ themeMode, setThemeMode }) => {
   const navigate = useNavigate();
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
@@ -58,11 +57,6 @@ const Archive: React.FC<SettingsProps> = () => {
   const updatCodeFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCodeFont(e.target.value);
   };
-
-  const [themeMode, setThemeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
 
   // State to manage dark mode
   const [darkMode, setDarkMode] = useState(() => {
