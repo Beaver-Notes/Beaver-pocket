@@ -71,8 +71,20 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
   );
   const renderPaths = useRenderPaths(chunkedLines);
   const lineGenerator = useLineGenerator();
-  const redo = useRedo(redoStack, setRedoStack, setHistory, updateAttributes, linesRef);
-  const undo = useUndo(history, setHistory, setRedoStack, updateAttributes, linesRef);
+  const redo = useRedo(
+    redoStack,
+    setRedoStack,
+    setHistory,
+    updateAttributes,
+    linesRef
+  );
+  const undo = useUndo(
+    history,
+    setHistory,
+    setRedoStack,
+    updateAttributes,
+    linesRef
+  );
 
   const handleBackgroundChange = (event) => {
     const newBackground = event.target.value;
@@ -169,14 +181,14 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
         event.preventDefault();
       }
     };
-  
+
     const showListener = Keyboard.addListener("keyboardWillShow", () => {
       Keyboard.hide();
     });
-  
+
     document.addEventListener("touchmove", disableScroll, { passive: false });
     document.addEventListener("wheel", disableScroll, { passive: false });
-  
+
     return () => {
       document.removeEventListener("touchmove", disableScroll);
       document.removeEventListener("wheel", disableScroll);
@@ -187,6 +199,32 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
   const startDrawing = (x, y) => {
     setDrawing(true);
     setPoints([{ x, y }]);
+  };
+
+  const draw = (x, y) => {
+    if (!drawing) return;
+
+    const newPoints = [...points, { x, y }];
+    setPoints(newPoints);
+    const newPath = lineGenerator(newPoints);
+    setPath(newPath);
+    if (y > svgHeight - BUFFER_ZONE) {
+      const newHeight = svgHeight + INCREMENT_HEIGHT;
+      setSvgHeight(newHeight);
+      updateAttributes({ height: newHeight });
+
+      // Adjust scroll position to keep the drawing point in view
+      const container = containerRef.current;
+      if (container) {
+        const scrollContainer = container.closest(".drawing-component");
+        if (scrollContainer) {
+          scrollContainer.scrollTo({
+            top: scrollContainer.scrollHeight,
+            behavior: "smooth",
+          });
+        }
+      }
+    }
   };
 
   const stopDrawing = () => {
