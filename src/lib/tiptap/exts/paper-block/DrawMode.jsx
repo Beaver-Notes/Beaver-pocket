@@ -16,6 +16,7 @@ import {
   useRedo,
   useUndo,
 } from "./drawingUtils";
+import paperBlock from ".";
 
 const BUFFER_ZONE = 50;
 const INCREMENT_HEIGHT = 200;
@@ -262,6 +263,45 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     }
   };
 
+  const [translations, setTranslations] = useState({
+    paperBlock: {
+      thin: "paperBlock.thin",
+      medium: "paperBlock.medium",
+      thick: "paperBlock.thick",
+      thicker: "paperBlock.thicker",
+      none: "paperBlock.none",
+      grid: "paperBlock.grid",
+      ruled: "paperBlock.ruled",
+      dotted: "paperBlock.dotted",
+      pencil: "paperBlock.pencil",
+      highlighter: "paperBlock.highlighter",
+      eraser: "paperBlock.eraser",
+      undo: "paperBlock.undo",
+      redo: "paperBlock.redo",
+    },
+    accessibility: {
+      close: "accessibility.close",
+    },
+  });
+
+  useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+
   return (
     <div className="draw w-full min-h-screen flex flex-col">
       {/* Top Toolbar */}
@@ -271,9 +311,11 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           <button
             onClick={() => {
               setTool("pencil");
+              setSize(2);
               setColor(isDarkMode ? "#FFFFFF" : "#000000");
             }}
             onMouseDown={(e) => e.preventDefault()}
+            aria-label={translations.paperBlock.pencil}
             className={`flex items-center justify-center p-2 border ${
               tool === "pencil"
                 ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
@@ -285,9 +327,11 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           <button
             onClick={() => {
               setTool("highlighter");
+              setSize(8);
               setColor("#FFFF00");
             }}
             onMouseDown={(e) => e.preventDefault()}
+            aria-label={translations.paperBlock.highlighter}
             className={`flex items-center justify-center p-2 border ${
               tool === "highlighter"
                 ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
@@ -298,6 +342,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           </button>
           <button
             onClick={() => setTool("erase")}
+            aria-label={translations.paperBlock.eraser}
             onMouseDown={(e) => e.preventDefault()}
             className={`flex items-center justify-center p-2 border ${
               tool === "erase"
@@ -313,110 +358,24 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
               value={background}
               onChange={handleBackgroundChange}
             >
-              <option value="none">None</option>
-              <option value="grid">Grid</option>
-              <option value="ruled">Ruled</option>
-              <option value="dotted">Dotted</option>
+              <option value="none">
+                {translations.paperBlock.none || "-"}
+              </option>
+              <option value="grid">
+                {translations.paperBlock.grid || "-"}
+              </option>
+              <option value="ruled">
+                {translations.paperBlock.ruled || "-"}
+              </option>
+              <option value="dotted">
+                {translations.paperBlock.dotted || "-"}
+              </option>
             </select>
             <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
           </div>
         </div>
         {/* Right side controls */}
         <div className="flex items-center space-x-2">
-          <button
-            onClick={undo}
-            onMouseDown={(e) => e.preventDefault()}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
-          >
-            <Icons.ArrowGoBackLineIcon className="w-6 h-6" />
-          </button>
-          <button
-            onClick={redo}
-            onMouseDown={(e) => e.preventDefault()}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
-          >
-            <Icons.ArrowGoForwardLineIcon className="w-6 h-6" />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.thin)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.thin
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="3"
-              height="3"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.medium)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.medium
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="4"
-              height="4"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.thick)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.thick
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="5"
-              height="5"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.thicker)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.thicker
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="6"
-              height="6"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.thickest)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.thickest
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="7"
-              height="7"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
           <div className="relative inline-block">
             {/* Hidden color input */}
             <input
@@ -433,8 +392,50 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
               className={`flex items-center justify-center p-1 h-10 w-10 rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
             />
           </div>
+          <div className="relative">
+            <select
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              className="border border-neutral-300 dark:border-neutral-600 rounded w-full p-2 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none mr-6"
+            >
+              {tool === "pencil" && (
+                <>
+                  <option value={2}>{translations.paperBlock.thin}</option>
+                  <option value={3}>{translations.paperBlock.medium}</option>
+                  <option value={4}>{translations.paperBlock.thick}</option>
+                  <option value={5}>{translations.paperBlock.thicker}</option>
+                </>
+              )}
+              {tool === "highlighter" && (
+                <>
+                  <option value={8}>{translations.paperBlock.thin}</option>
+                  <option value={9}>{translations.paperBlock.medium}</option>
+                  <option value={10}>{translations.paperBlock.thick}</option>
+                  <option value={11}>{translations.paperBlock.thicker}</option>
+                </>
+              )}
+            </select>
+            <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+          </div>
+          <button
+            onClick={undo}
+            aria-label={translations.paperBlock.undo}
+            onMouseDown={(e) => e.preventDefault()}
+            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+          >
+            <Icons.ArrowGoBackLineIcon className="w-6 h-6" />
+          </button>
+          <button
+            onClick={redo}
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label={translations.paperBlock.redo}
+            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+          >
+            <Icons.ArrowGoForwardLineIcon className="w-6 h-6" />
+          </button>
           <button
             onClick={onClose}
+            aria-label={translations.accessibility.close}
             className="p-2 rounded-full bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
           >
             <Icons.CloseLineIcon className="w-6 h-6" />

@@ -215,7 +215,8 @@
     "select": "Select ",
     "lastUpdated": "Last Updated",
     "creationDate": "Creation Date",
-    "alphabetical": "Alphabetical"
+    "alphabetical": "Alphabetical",
+    "selectlabel": "Select label"
   },
   "shortcuts": {
     "General": "General shortcuts",
@@ -294,5 +295,21 @@
   },
   "tiptap": {
     "placeholder": "Write something... or type \"/\" for commands."
+  },
+  "paperBlock": {
+    "thin": "Thin",
+    "medium": "Medium",
+    "thick": "Thick",
+    "thicker": "Thicker",
+    "none": "None",
+    "grid": "Grid",
+    "ruled": "Ruled",
+    "dotted": "Dotted",
+    "pencil": "Pencil",
+    "highlighter": "Highlighter",
+    "eraser": "Eraser",
+    "undo": "Undo",
+    "redo": "Redo",
+    "clicktoDraw": "Click to draw"
   }
 }

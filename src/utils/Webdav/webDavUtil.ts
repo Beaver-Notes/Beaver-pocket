@@ -22,7 +22,6 @@ export const useExportDav = () => {
     () => localStorage.getItem("password") || ""
   );
   const STORAGE_PATH = "notes/data.json";
-  const syncLimit = parseInt(localStorage.getItem("synclimit") || "5", 10); // Get syncLimit from localStorage or default to 5
   const [webDavService] = useState(
     new WebDavService({ baseUrl, username, password })
   );
@@ -59,9 +58,6 @@ export const useExportDav = () => {
         // If the folder doesn't exist, create it
         await webDavService.createFolder("Beaver-Pocket");
       }
-
-      // Manage folder limit: Delete old folders if syncLimit is exceeded
-      await manageFolderLimit();
 
       const exportFolderExists = await webDavService.folderExists(
         `Beaver-Pocket/Beaver Notes ${formattedDate}`
@@ -106,74 +102,6 @@ export const useExportDav = () => {
     } catch (error) {
       // Handle error
       console.error("Error uploading note assets:", error);
-    }
-  };
-
-  // Manage folder limit and delete old folders if needed
-  const manageFolderLimit = async () => {
-    try {
-      // Fetch directory content from WebDAV for the "Beaver-Pocket" folder
-      const directoryContent = await webDavService.getDirectoryContent(
-        "Beaver-Pocket"
-      );
-
-      // Parse the XML response
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
-
-      // Extract file and folder names from the XML
-      const responses = xmlDoc.getElementsByTagName("d:response");
-      const beaverNoteFolders: any[] = [];
-
-      for (let i = 0; i < responses.length; i++) {
-        const hrefElement = responses[i].getElementsByTagName("d:href")[0];
-        const propStatElement =
-          responses[i].getElementsByTagName("d:propstat")[0];
-        const propElement = propStatElement?.getElementsByTagName("d:prop")[0];
-        const resourceTypeElement =
-          propElement?.getElementsByTagName("d:resourcetype")[0];
-        const isCollection =
-          resourceTypeElement?.getElementsByTagName("d:collection").length > 0;
-
-        const href = hrefElement?.textContent;
-        if (href && isCollection) {
-          // Decode the URL to handle special characters and spaces
-          const decodedHref = decodeURIComponent(href);
-          const folderName = decodedHref
-            .split("/")
-            .filter((part) => part !== "")
-            .pop();
-
-          // Check if the folder starts with "Beaver Notes"
-          if (folderName && folderName.startsWith("Beaver Notes")) {
-            beaverNoteFolders.push({ name: folderName });
-          }
-        }
-      }
-
-      // If the number of Beaver Notes folders exceeds the limit
-      if (beaverNoteFolders.length > syncLimit) {
-        // Sort the folders by date (oldest first)
-        const sortedFolders = beaverNoteFolders.sort(
-          (a: any, b: any) =>
-            new Date(a.name.replace("Beaver Notes ", "")).getTime() -
-            new Date(b.name.replace("Beaver Notes ", "")).getTime()
-        );
-
-        // Calculate the number of folders to delete
-        const foldersToDelete = sortedFolders.slice(
-          0,
-          beaverNoteFolders.length - syncLimit
-        );
-
-        await Promise.all(
-          foldersToDelete.map(async (folder: any) => {
-            await webDavService.deleteFolder(`Beaver-Pocket/${folder.name}`);
-          })
-        );
-      }
-    } catch (error) {
-      console.error("Error managing folder limit:", error);
     }
   };
 
@@ -340,54 +268,33 @@ export const useImportDav = (
     () => localStorage.getItem("password") || ""
   );
   const [webDavService] = useState(
-    new WebDavService({
-      baseUrl: baseUrl,
-      username: username,
-      password: password,
-    })
+    new WebDavService({ baseUrl, username, password })
   );
 
   const { importUtils } = useHandleImportData();
-
   const [progress, setProgress] = useState<number>(0);
-  const [progressColor, setProgressColor] = useState("#e6e6e6");
-
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
+  const [themeMode] = useState(
+    () => localStorage.getItem("themeMode") || "auto"
+  );
+  const darkMode =
+    themeMode === "auto"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : themeMode === "dark";
+  const [progressColor, setProgressColor] = useState(darkMode ? "#444444" : "#e6e6e6");
 
   const HandleImportData = async (): Promise<void> => {
     try {
       setProgress(0);
-      setProgressColor(darkMode ? "#444444" : "#e6e6e6");
 
-      // Attempt to find a folder
-      const folderPath = await findValidFolderPath();
-      if (!folderPath) {
-        return;
-      }
-      setProgress(10);
+      const formattedDate = new Date().toISOString().slice(0, 10);
+      const folderPath = `Beaver-Pocket/Beaver Notes ${formattedDate}`;
 
-      await downloadAssets(folderPath);
-      setProgress(50);
-
-      await downloadFileAssets(folderPath);
-      setProgress(75);
-
-      await downloadData(folderPath);
+      console.log(`Starting download from WebDAV folder: ${folderPath}`);
+      await downloadFolder(folderPath, `export/Beaver Notes ${formattedDate}`);
       setProgress(100);
 
-      // If everything went well, delete the export folder
       await importUtils(setNotesState, loadNotes);
-      await deleteFolder(folderPath);
+      await deleteFolder(`export/Beaver Notes ${formattedDate}`);
     } catch (error) {
       alert(error);
       setProgressColor("#ff3333");
@@ -395,326 +302,87 @@ export const useImportDav = (
     }
   };
 
-  // Function to find a valid "Beaver Notes" folder path
-  const findValidFolderPath = async (): Promise<string | null> => {
-    const currentDate = new Date();
-    const folderDate = new Date(currentDate);
-
-    for (let i = 0; i < 30; i++) {
-      const formattedDate = folderDate.toISOString().slice(0, 10);
-      const testFolderPath = `Beaver-Pocket/Beaver Notes ${formattedDate}/`;
-
-      try {
-        const directoryContent = await webDavService.getDirectoryContent(
-          testFolderPath
-        );
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
-        const responses = xmlDoc.getElementsByTagName("d:response");
-
-        if (responses.length > 0) {
-          // Check if the folder matches today's date before returning
-          if (i === 0) {
-            console.log(`Found today's folder: ${testFolderPath}`);
-          } else {
-            console.warn(
-              `Found older folder (${formattedDate}): ${testFolderPath}`
-            );
-          }
-          return testFolderPath;
-        }
-      } catch (error) {
-        console.error(`Error checking folder ${testFolderPath}:`, error);
-      }
-
-      folderDate.setDate(folderDate.getDate() - 1);
-    }
-
-    console.error("No valid folder found in the last 30 days.");
-    return null; // No valid folder found after 30 days
-  };
-
   const deleteFolder = async (path: string) => {
     try {
       await Filesystem.rmdir({
-        path: path,
+        path,
         directory: FilesystemDirectory.Data,
-        recursive: true, // Delete all contents of the directory
+        recursive: true,
       });
-      console.log("Folder deleted:", path);
+      console.log(`Deleted folder: ${path}`);
     } catch (error) {
       console.error("Error deleting folder:", path, error);
     }
   };
 
-  const downloadFileAssets = async (folderPath: string): Promise<void> => {
+  const downloadFolder = async (
+    webDavPath: string,
+    localPath: string
+  ): Promise<void> => {
     try {
-      // Get current date for folder name
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().slice(0, 10);
+      const content = await webDavService.getDirectoryContent(webDavPath);
+      console.log("WebDAV Content:", content);  // Log the WebDAV response content
 
-      // Base directory for file-assets in WebDAV and local export path
-      const baseWebDavPath = `${folderPath}/file-assets`;
-      const baseLocalPath = `export/Beaver Notes ${formattedDate}/file-assets`;
-
-      // Function to recursively download files and directories
-      const downloadDirectory = async (
-        webDavPath: string,
-        localPath: string
-      ) => {
-        // Fetch directory content from WebDAV
-        const directoryContent = await webDavService.getDirectoryContent(
-          webDavPath
-        );
-
-        // Parse the XML response
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
-
-        // Extract file and folder names from the XML
-        const responses = xmlDoc.getElementsByTagName("d:response");
-
-        for (let i = 0; i < responses.length; i++) {
-          const hrefElement = responses[i].getElementsByTagName("d:href")[0];
-          const propStatElement =
-            responses[i].getElementsByTagName("d:propstat")[0];
-          const propElement =
-            propStatElement?.getElementsByTagName("d:prop")[0];
-          const resourceTypeElement =
-            propElement?.getElementsByTagName("d:resourcetype")[0];
-
-          const href = hrefElement?.textContent;
-          const isCollection =
-            resourceTypeElement?.getElementsByTagName("d:collection").length >
-            0;
-
-          if (href) {
-            // Decode URL to handle spaces and special characters
-            const decodedHref = decodeURIComponent(href);
-            const name = decodedHref
-              .split("/")
-              .filter((part) => part !== "")
-              .pop();
-
-            if (name === webDavPath.split("/").pop()) {
-              continue; // Skip the base directory itself
-            }
-
-            const fullWebDavPath = `${webDavPath}/${name}`;
-            const fullLocalPath = `${localPath}/${name}`;
-
-            console.log(`Processing: ${decodedHref}`);
-            console.log(`Full WebDAV Path: ${fullWebDavPath}`);
-            console.log(`Full Local Path: ${fullLocalPath}`);
-
-            if (isCollection) {
-              // Create the folder locally
-              await Filesystem.mkdir({
-                path: fullLocalPath,
-                directory: FilesystemDirectory.Data,
-                recursive: true, // Ensure parent folders are created
-              });
-              console.log("Folder created:", fullLocalPath);
-
-              // Recursively download the contents of the folder
-              await downloadDirectory(fullWebDavPath, fullLocalPath);
-            } else {
-              // Download the file to the local path
-              const authToken = btoa(`${username}:${password}`);
-              try {
-                const file = await Filesystem.downloadFile({
-                  url: `${baseUrl}/${fullWebDavPath}`,
-                  path: fullLocalPath,
-                  directory: FilesystemDirectory.Data, // Choose the appropriate directory
-                  headers: {
-                    Authorization: `Basic ${authToken}`,
-                    "Content-Type": "application/octet-stream", // Set appropriate content type
-                  },
-                });
-                console.log("File downloaded:", file);
-              } catch (fileError) {
-                console.error(
-                  "Error downloading file:",
-                  `${baseUrl}/${fullWebDavPath}`,
-                  fileError
-                );
-              }
-            }
-          }
-        }
-      };
-
-      // Start downloading from the base directory
-      await downloadDirectory(baseWebDavPath, baseLocalPath);
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const downloadData = async (folderPath: string): Promise<void> => {
-    try {
-      // Get current date for folder name
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().slice(0, 10);
-
-      // Fetch directory content from WebDAV
-      const directoryContent = await webDavService.getDirectoryContent(
-        `${folderPath}`
-      );
-
-      // Parse the XML response
       const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
+      const xmlDoc = parser.parseFromString(content, "text/xml");
+      console.log("Parsed XML Document:", xmlDoc);  // Log the parsed XML document
 
-      // Extract file and folder names from the XML
-      const responses = xmlDoc.getElementsByTagName("d:response");
-      for (let i = 0; i < responses.length; i++) {
-        const hrefElement = responses[i].getElementsByTagName("d:href")[0];
-        const propStatElement =
-          responses[i].getElementsByTagName("d:propstat")[0];
-        const propElement = propStatElement?.getElementsByTagName("d:prop")[0];
-        const resourceTypeElement =
-          propElement?.getElementsByTagName("d:resourcetype")[0];
+      const responses = Array.from(xmlDoc.getElementsByTagName("d:response"));
+      if (responses.length === 0) {
+        console.log("No responses found in WebDAV directory.");
+      }
 
-        const href = hrefElement?.textContent;
+      for (const response of responses) {
+        const href = response.getElementsByTagName("d:href")[0]?.textContent;
         const isCollection =
-          resourceTypeElement?.getElementsByTagName("d:collection").length > 0;
+          response.getElementsByTagName("d:collection").length > 0;
 
-        if (href && !isCollection) {
-          // Decode URL to handle spaces and special characters
-          const decodedHref = decodeURIComponent(href);
-          const name = decodedHref
-            .split("/")
-            .filter((part) => part !== "")
-            .pop();
+        if (!href) continue;
 
-          // Check if the file is data.json
-          if (name === "data.json") {
-            console.log("Name:", name);
-            console.log("Type: File");
+        const decodedHref = decodeURIComponent(href);
+        const name = decodedHref.split("/").filter(Boolean).pop();
+        if (!name || name === webDavPath.split("/").pop()) continue;
 
-            const relpathIndex = decodedHref.indexOf("Beaver-Pocket/");
-            if (relpathIndex !== -1) {
-              const relpathHref = decodedHref.substring(relpathIndex);
-              console.log("relpath:", relpathHref);
-              const fullpath = `${baseUrl}/${relpathHref}`;
-              console.log("Full path:", fullpath);
+        const fullWebDavPath = `${webDavPath}/${name}`;
+        const fullLocalPath = `${localPath}/${name}`;
 
-              // Determine path to save file
-              const folderPath = `export/Beaver Notes ${formattedDate}`;
+        console.log(`Processing ${fullWebDavPath} to ${fullLocalPath}`);
 
-              // Download the file
-              const authToken = btoa(`${username}:${password}`);
-              const file = await Filesystem.downloadFile({
-                url: fullpath,
-                path: `${folderPath}/${name}`,
-                directory: FilesystemDirectory.Data, // Choose the appropriate directory
-                headers: {
-                  Authorization: `Basic ${authToken}`,
-                  "Content-Type": "application/xml",
-                },
-              });
-              console.log("File downloaded:", file);
-
-              // Exit loop since we only need to download data.json
-              break;
-            }
-          }
+        if (isCollection) {
+          console.log(`Creating directory at: ${fullLocalPath}`);
+          await Filesystem.mkdir({
+            path: fullLocalPath,
+            directory: FilesystemDirectory.Data,
+            recursive: true,
+          });
+          await downloadFolder(fullWebDavPath, fullLocalPath);
+        } else {
+          await downloadFile(fullWebDavPath, fullLocalPath);
         }
       }
     } catch (error) {
-      throw error;
+      console.error("Error in downloadFolder:", error);
     }
   };
 
-  const downloadAssets = async (folderPath: string): Promise<void> => {
+  const downloadFile = async (
+    webDavPath: string,
+    localPath: string
+  ): Promise<void> => {
     try {
-      // Get current date for folder name
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().slice(0, 10);
-
-      // Fetch directory content from WebDAV
-      const directoryContent = await webDavService.getDirectoryContent(
-        `${folderPath}`
-      );
-
-      // Parse the XML response
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(directoryContent, "text/xml");
-
-      // Extract file and folder names from the XML
-      const responses = xmlDoc.getElementsByTagName("d:response");
-      for (let i = 0; i < responses.length; i++) {
-        const hrefElement = responses[i].getElementsByTagName("d:href")[0];
-        const propStatElement =
-          responses[i].getElementsByTagName("d:propstat")[0];
-        const propElement = propStatElement?.getElementsByTagName("d:prop")[0];
-        const resourceTypeElement =
-          propElement?.getElementsByTagName("d:resourcetype")[0];
-
-        const href = hrefElement?.textContent;
-        const isCollection =
-          resourceTypeElement?.getElementsByTagName("d:collection").length > 0;
-
-        if (href) {
-          // Decode URL to handle spaces and special characters
-          const decodedHref = decodeURIComponent(href);
-          const name = decodedHref
-            .split("/")
-            .filter((part) => part !== "")
-            .pop();
-          const type = isCollection ? "Folder" : "File";
-          console.log("Name:", name);
-          console.log("Type:", type);
-
-          const relpathIndex = decodedHref.indexOf("Beaver-Pocket/");
-          if (relpathIndex !== -1) {
-            const relpathHref = decodedHref.substring(relpathIndex);
-            console.log("relpath:", relpathHref);
-            const fullpath = `${baseUrl}/${relpathHref}`;
-            console.log("Full path:", fullpath);
-
-            if (isCollection) {
-              // Handle folder creation logic (if any)
-              const folderPath = `export/assets/${name}`;
-              console.log("Folder created:", folderPath);
-              // Add any necessary logic to handle folders
-            } else {
-              // Extract folder name if any
-              const folderNameMatch = decodedHref.match(/\/([^/]+)\/[^/]+$/);
-              const folderName = folderNameMatch ? folderNameMatch[1] : "";
-
-              // Determine path to save file
-              const folderPath = folderName
-                ? `export/Beaver Notes ${formattedDate}/assets/${folderName}`
-                : `export/Beaver Notes ${formattedDate}/assets`;
-
-              // Create folder if it does not exist
-              await Filesystem.mkdir({
-                path: folderPath,
-                directory: FilesystemDirectory.Data,
-                recursive: true, // Create parent folders if they don't exist
-              });
-
-              // Download the file
-              const authToken = btoa(`${username}:${password}`);
-              const file = await Filesystem.downloadFile({
-                url: fullpath,
-                path: `${folderPath}/${name}`,
-                directory: FilesystemDirectory.Data, // Choose the appropriate directory
-                headers: {
-                  Authorization: `Basic ${authToken}`,
-                  "Content-Type": "application/xml",
-                },
-              });
-              console.log("File downloaded:", file);
-            }
-          }
-        }
-      }
+      console.log(`Downloading file from WebDAV: ${webDavPath} to ${localPath}`);
+      const authToken = btoa(`${username}:${password}`);
+      await Filesystem.downloadFile({
+        url: `${baseUrl}/${webDavPath}`,
+        path: localPath,
+        directory: FilesystemDirectory.Data,
+        headers: { Authorization: `Basic ${authToken}` },
+      });
+      console.log(`File downloaded: ${localPath}`);
     } catch (error) {
-      throw error;
+      console.error(`Error downloading file ${webDavPath} to ${localPath}:`, error);
     }
   };
+
   return { HandleImportData, progress, progressColor };
 };

@@ -1,53 +1,35 @@
 import { registerPlugin } from "@capacitor/core";
 
+// Define the interface for the WebDAV plugin
 export interface WebDAVPlugin {
   createFolder(options: {
     url: string;
     username: string;
     password: string;
-  }): Promise<void>;
+  }): Promise<{
+    message: string;
+  }>;
+
   checkFolderExists(options: {
     url: string;
     username: string;
     password: string;
-  }): Promise<void>;
-  deleteFolder(options: {
-    url: string;
-    username: string;
-    password: string;
-  }): Promise<void>;
-  uploadFile(options: {
-    url: string;
-    username: string;
-    password: string;
-    fileName: string;
-    content: string | Blob;
-  }): Promise<void>;
+  }): Promise<{
+    message: string;
+  }>;
+
   listContents(options: {
     url: string;
     username: string;
     password: string;
   }): Promise<{
-    contents: Array<{
-      name: string;
-      isDirectory: boolean;
-      contentLength: number;
-      lastModified: string;
-    }>;
+    xml: string;  // Expect the raw XML response from the native code
+    message: string;
   }>;
-  downloadFile(options: {
-    url: string;
-    username: string;
-    password: string;
-    destinationPath: string;
-  }): Promise<void>;
-  getFileContent(options: {
-    url: string;
-    username: string;
-    password: string;
-  }): Promise<{ fileContent: string }>;
 }
 
+
+// Register the WebDAV plugin with Capacitor
 const WebDAV = registerPlugin<WebDAVPlugin>("WebDAV");
 
 export default WebDAV;
