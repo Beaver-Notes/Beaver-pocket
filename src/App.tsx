@@ -10,7 +10,7 @@ import Welcome from "./Welcome";
 import Dropbox from "./settings/screens/dropbox";
 import Onedrive from "./settings/screens/onedrive";
 import Gdrive from "./settings/screens/gdrive";
-import Webdav from "./settings/screens/webdav";
+import Dav from "./settings/screens/dav";
 import Icloud from "./settings/screens/icloud";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
@@ -37,6 +37,33 @@ const App: React.FC = () => {
     const storedThemeMode = localStorage.getItem("themeMode");
     return storedThemeMode || "auto";
   });
+
+  const [darkMode, setDarkMode] = useState(() => {
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
+  });
+
+  useEffect(() => {
+    const handleThemeChange = (e: MediaQueryListEvent) => {
+      if (themeMode === "auto") {
+        setDarkMode(e.matches);
+      }
+    };
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    mediaQuery.addEventListener("change", handleThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleThemeChange);
+    };
+  }, [themeMode]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("themeMode", themeMode);
+  }, [darkMode, themeMode]);
 
   const isIpad = isPlatform("ipad");
 
@@ -213,7 +240,7 @@ const App: React.FC = () => {
           <Route
             path="/settings"
             element={
-              <Settings themeMode={themeMode} setThemeMode={setThemeMode}/>
+              <Settings themeMode={themeMode} setThemeMode={setThemeMode} />
             }
           />
           <Route path="/about" element={<About />} />
@@ -228,9 +255,9 @@ const App: React.FC = () => {
             element={<Onedrive setNotesState={setNotesState} />}
           />
           <Route
-            path="/webdav"
+            path="/dav"
             element={
-              <Webdav notesState={notesState} setNotesState={setNotesState} />
+              <Dav notesState={notesState} setNotesState={setNotesState} />
             }
           />
           <Route

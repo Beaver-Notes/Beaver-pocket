@@ -129,18 +129,8 @@ export class WebDavService {
           username: this.options.username,
           password: this.options.password,
         });
-  
-        // Check if result contains the XML response
-        if (result && result.xml) {
-          console.log("Received XML response: ", result.xml);
-          alert(result.xml); // This will show the XML response in an alert
-          // You can now parse this XML and display folder contents
-        } else {
-          console.log("No XML response received.");
-          alert("No XML response received.");
-        }
-  
-        return result;
+        console.log("xml", result.data)
+        return result.data;
       } catch (error) {
         console.error("Error getting directory contents on Android:", error);
         alert(`Failed to get directory content on Android: ${error}`); // Error message

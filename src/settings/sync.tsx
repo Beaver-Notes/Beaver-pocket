@@ -108,7 +108,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
 
                   <button
                     className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    onClick={() => navigate("/webdav")}
+                    onClick={() => navigate("/dav")}
                     aria-label="Webdav"
                   >
                     <icons.ServerLineIcon

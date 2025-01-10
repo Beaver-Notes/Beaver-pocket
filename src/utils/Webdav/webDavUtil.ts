@@ -321,7 +321,7 @@ export const useImportDav = (
   ): Promise<void> => {
     try {
       const content = await webDavService.getDirectoryContent(webDavPath);
-      console.log("WebDAV Content:", content);  // Log the WebDAV response content
+      console.log("WebDAV Content:", content);
 
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(content, "text/xml");

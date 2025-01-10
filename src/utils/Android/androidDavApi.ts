@@ -23,8 +23,7 @@ export interface WebDAVPlugin {
     username: string;
     password: string;
   }): Promise<{
-    xml: string;  // Expect the raw XML response from the native code
-    message: string;
+    data: string;
   }>;
 }
 

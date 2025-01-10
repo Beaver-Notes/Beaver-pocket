@@ -22,11 +22,12 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
     () => localStorage.getItem("password") || ""
   );
   const [] = useState(
-    new WebDavService({
-      baseUrl: baseUrl,
-      username: username,
-      password: password,
-    })
+    () =>
+      new WebDavService({
+        baseUrl: baseUrl,
+        username: username,
+        password: password,
+      })
   );
   // Translations
   //@ts-ignore
@@ -43,8 +44,8 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
     accessibility: {
       webdavUrl: "accessibility.webdavUrl",
       hidePasswd: "accessibility.hidePasswd",
-      showPasswd: "accessibility.showPasswd"
-    }
+      showPasswd: "accessibility.showPasswd",
+    },
   });
 
   useEffect(() => {
@@ -203,7 +204,9 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
                   onClick={toggleInputContentVisibility}
                   className="absolute right-0 py-2.5 text-sm dark:text-[color:var(--selected-dark-text)] text-neutral-500 focus:outline-none"
                   aria-label={
-                    showInputContent ? translations.accessibility.hidePasswd : translations.accessibility.showPasswd
+                    showInputContent
+                      ? translations.accessibility.hidePasswd
+                      : translations.accessibility.showPasswd
                   }
                 >
                   {showInputContent ? (

@@ -1,6 +1,5 @@
 package beaver.notes.pocket;
 
-import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -15,7 +14,9 @@ import java.io.*;
 @CapacitorPlugin(name = "WebDAV")
 public class WebDAVPlugin extends Plugin {
 
-    private OkHttpClient client = new OkHttpClient();
+    private OkHttpClient client = new OkHttpClient.Builder()
+            .hostnameVerifier((hostname, session) -> true) // Allow all hostnames
+            .build();;
 
     private String getAuthHeader(String username, String password) {
         String credential = username + ":" + password;
@@ -113,12 +114,12 @@ public class WebDAVPlugin extends Plugin {
                 if (response.isSuccessful()) {
                     // Read the response body as XML
                     String xmlResponse = response.body() != null ? response.body().string() : "No response body";
-                    Log.d("WebDAVPlugin", "Contents listed successfully.");
 
                     // Send XML response back to JS side
                     JSObject result = new JSObject();
-                    result.put("xml", xmlResponse);
-                    result.put("message", "Contents listed successfully.");
+                    result.put("message", "Folder exists.");
+                    result.put("data", xmlResponse); // Ensure xmlResponse is a valid string
+                    Log.d("WebDAVPlugin", "Resolving call with result: " + result.toString());
                     pluginCall.resolve(result);
                 } else {
                     String responseBody = response.body() != null ? response.body().string() : "No response body";
