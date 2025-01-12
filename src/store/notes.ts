@@ -2,14 +2,75 @@ import {
   Directory,
   Filesystem,
   FilesystemEncoding,
-  FilesystemDirectory,
 } from "@capacitor/filesystem";
 import React from "react";
 import { Note } from "./types";
-import { Capacitor } from "@capacitor/core";
-import { setStoreRemotePath } from "./useDataPath";
-
 const STORAGE_PATH = "notes/data.json";
+const CHANGE_LOG_PATH = "notes/change-log.json";
+
+// Log Change
+export const logChange = async (
+  action: "created" | "updated" | "deleted",
+  paths: string[]
+) => {
+  try {
+    let logData = [];
+
+    // Load existing log data
+    try {
+      const existingLog = await Filesystem.readFile({
+        path: CHANGE_LOG_PATH,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+      logData = JSON.parse(existingLog.data as string);
+    } catch {
+      // If the log file doesn't exist, initialize with an empty array
+      logData = [];
+    }
+
+    // Ensure no duplicate entries in the log
+    const existingPaths = new Set(logData.map((entry: any) => entry.path));
+
+    // Add new log entries
+    paths.forEach((path) => {
+      if (!existingPaths.has(path)) {
+        logData.push({
+          action,
+          path,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    });
+
+    // Write the updated log back to the file
+    await Filesystem.writeFile({
+      path: CHANGE_LOG_PATH,
+      data: JSON.stringify(logData),
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
+    });
+  } catch (error) {
+    console.error("Error logging change:", error);
+  }
+};
+
+// Get changelog
+
+export const getChangeLogs = async (): Promise<
+  { action: string; path: string; timestamp: string }[]
+> => {
+  try {
+    const logFile = await Filesystem.readFile({
+      path: CHANGE_LOG_PATH,
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
+    });
+    return JSON.parse(logFile.data as string);
+  } catch {
+    return []; // Return an empty array if no log exists
+  }
+};
 
 // Create Directory
 
@@ -49,13 +110,6 @@ async function createNotesDirectory() {
 
 export const loadNotes = async (): Promise<Record<string, Note>> => {
   try {
-    const { uri } = await Filesystem.getUri({
-      directory: FilesystemDirectory.Data,
-      path: "",
-    });
-    setStoreRemotePath(Capacitor.convertFileSrc(uri));
-
-    // Check if the file exists before creating the directory
     let fileExists = true;
 
     try {
@@ -69,12 +123,12 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
     }
 
     if (!fileExists) {
-      // Create the notes directory only if the file is missing
       await createNotesDirectory();
       console.log("Notes directory created because no file was found.");
       return {};
     }
 
+    // Read the file only if it exists
     const data = await Filesystem.readFile({
       path: STORAGE_PATH,
       directory: Directory.Data,
@@ -88,22 +142,24 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
         const notes = parsedData.data.notes;
         const collapsibleSetting = localStorage.getItem("collapsibleHeading");
 
-        const filteredNotes = Object.keys(notes).reduce((acc, noteId) => {
-          const note = notes[noteId];
+        const filteredNotes: Record<string, Note> = {};
 
-          // Ensure the title is not missing
-          note.title = note.title || "";
+        for (const noteId in notes) {
+          if (notes.hasOwnProperty(noteId)) {
+            const note = notes[noteId];
 
-          // If collapsible headings are disabled, uncollapse all headings
-          if (collapsibleSetting === "false" && note.content?.content) {
-            note.content.content = uncollapseHeading(note.content.content);
+            // Ensure the title is not missing
+            note.title = note.title || "";
+
+            // If collapsible headings are disabled, uncollapse all headings
+            if (collapsibleSetting === "false" && note.content?.content) {
+              note.content.content = uncollapseHeading(note.content.content);
+            }
+
+            // Add the note to the accumulator
+            filteredNotes[noteId] = note;
           }
-
-          // Add the note to the accumulator
-          acc[noteId] = note;
-
-          return acc;
-        }, {} as Record<string, Note>);
+        }
 
         return filteredNotes;
       } else {
@@ -135,24 +191,17 @@ export const useSaveNote = (
         if (typeof note === "object" && note !== null) {
           const typedNote = note as Note;
 
-          // Ensure createdAt and updatedAt are timestamps
-          const createdAtTimestamp =
-            typeof typedNote.createdAt === "number"
-              ? typedNote.createdAt
-              : Date.now();
-
-          const updatedAtTimestamp =
-            typeof typedNote.updatedAt === "number"
-              ? typedNote.updatedAt
-              : Date.now();
+          const isUpdate = !!notes[typedNote.id];
 
           const updatedNote: Note = {
             ...typedNote,
-            createdAt: createdAtTimestamp,
-            updatedAt: updatedAtTimestamp,
+            createdAt:
+              typeof typedNote.createdAt === "number"
+                ? typedNote.createdAt
+                : Date.now(),
+            updatedAt: Date.now(),
           };
 
-          // Update the notes object with the new/updated note
           const updatedNotes: Record<string, Note> = {
             ...notes,
             [typedNote.id]: updatedNote,
@@ -172,7 +221,32 @@ export const useSaveNote = (
             encoding: FilesystemEncoding.UTF8,
           });
 
-          // Update the state directly
+          // Determine related paths for logging
+          const relatedPaths = [`${STORAGE_PATH}`];
+
+          // Check for the existence of related folders and add to paths
+          const fileAssetsPath = `file-assets/${typedNote.id}`;
+          const noteAssetsPath = `note-assets/${typedNote.id}`;
+          try {
+            await Filesystem.stat({
+              path: fileAssetsPath,
+              directory: Directory.Data,
+            });
+            relatedPaths.push(fileAssetsPath);
+          } catch {}
+
+          try {
+            await Filesystem.stat({
+              path: noteAssetsPath,
+              directory: Directory.Data,
+            });
+            relatedPaths.push(noteAssetsPath);
+          } catch {}
+
+          // Log the action
+          await logChange(isUpdate ? "updated" : "created", relatedPaths);
+
+          // Update the state
           setNotesState(updatedNotes);
         } else {
           console.error("Invalid note object:", note);
@@ -196,31 +270,33 @@ export const useDeleteNote = (
   const deleteNote = React.useCallback(
     async (noteId: string) => {
       try {
-        const notes = { ...notesState }; // Create a copy of notesState
-        delete notes[noteId]; // Delete the note with the given noteId
+        const notes = { ...notesState };
+        delete notes[noteId];
 
-        // Define paths for the folders
         const fileAssetsPath = `file-assets/${noteId}`;
         const noteAssetsPath = `note-assets/${noteId}`;
+        const relatedPaths = [`${STORAGE_PATH}`];
 
-        // Attempt to delete the folders if they exist
-        await Filesystem.rmdir({
-          path: fileAssetsPath,
-          directory: Directory.Data,
-          recursive: true, // This will ensure the directory is deleted even if it contains files
-        }).catch((error) => {
-          console.warn(`Error deleting file-assets for note ${noteId}:`, error);
-        });
+        // Attempt to delete related folders and add to paths
+        try {
+          await Filesystem.rmdir({
+            path: fileAssetsPath,
+            directory: Directory.Data,
+            recursive: true,
+          });
+          relatedPaths.push(fileAssetsPath);
+        } catch {}
 
-        await Filesystem.rmdir({
-          path: noteAssetsPath,
-          directory: Directory.Data,
-          recursive: true,
-        }).catch((error) => {
-          console.warn(`Error deleting note-assets for note ${noteId}:`, error);
-        });
+        try {
+          await Filesystem.rmdir({
+            path: noteAssetsPath,
+            directory: Directory.Data,
+            recursive: true,
+          });
+          relatedPaths.push(noteAssetsPath);
+        } catch {}
 
-        // Update the storage after deletion
+        // Update the storage
         await Filesystem.writeFile({
           path: STORAGE_PATH,
           data: JSON.stringify({ data: { notes } }),
@@ -228,7 +304,9 @@ export const useDeleteNote = (
           encoding: FilesystemEncoding.UTF8,
         });
 
-        // Update the state with the new notes object
+        // Log the deletion
+        await logChange("deleted", relatedPaths);
+
         setNotesState(notes);
       } catch (error) {
         console.error("Error deleting note:", error);
@@ -262,6 +340,8 @@ export const useToggleBookmark = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
+      await logChange("updated", [`${STORAGE_PATH}`]);
+
       return notes; // Return the updated notes
     } catch (error) {
       console.error("Error toggling bookmark:", error);
@@ -291,6 +371,8 @@ export const useToggleArchive = () => {
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
+
+      await logChange("updated", [`${STORAGE_PATH}`]);
 
       return notes; // Return the updated notes
     } catch (error) {

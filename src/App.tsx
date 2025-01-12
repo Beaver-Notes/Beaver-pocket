@@ -21,12 +21,15 @@ import "./assets/css/main.css";
 import "./assets/css/fonts.css";
 import BottomNavBar from "./components/App/BottomNavBar";
 import CommandPrompt from "./components/App/CommandPrompt";
+import { setStoreRemotePath } from "./store/useDataPath";
 import { loadNotes } from "./store/notes";
 import { useNotesState } from "./store/Activenote";
 import Mousetrap from "mousetrap";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { isPlatform } from "@ionic/react";
 import Icons from "./settings/icons";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -65,8 +68,6 @@ const App: React.FC = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
-  const isIpad = isPlatform("ipad");
-
   document.addEventListener("reload", () => {
     const loadNotesFromStorage = async () => {
       const notes = await loadNotes();
@@ -83,22 +84,25 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
-      setNotesState(notes);
+    const initialize = async () => {
+      try {
+        // Fetch the URI
+        const { uri } = await Filesystem.getUri({
+          directory: FilesystemDirectory.Data,
+          path: "",
+        });
+        setStoreRemotePath(Capacitor.convertFileSrc(uri));
+  
+        // Load notes from storage
+        const notes = await loadNotes();
+        setNotesState(notes);
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      }
     };
-
-    loadNotesFromStorage();
+  
+    initialize();
   }, []);
-
-  // Add back button listener for Android
-  CapacitorApp.addListener("backButton", ({ canGoBack }) => {
-    if (!canGoBack) {
-      CapacitorApp.exitApp();
-    } else {
-      window.history.back();
-    }
-  });
 
   useEffect(() => {
     const selectedDarkText =
@@ -208,11 +212,11 @@ const App: React.FC = () => {
     location.pathname.startsWith(path)
   );
 
-  if (isIpad) {
+  if (isPlatform("ipad")) {
     Keyboard.setResizeMode({ mode: KeyboardResize.None });
-  } else {
+  } else if (!isPlatform("android")) {
     Keyboard.setResizeMode({ mode: KeyboardResize.Native });
-  }
+  }  
 
   return (
     <div>

@@ -11,9 +11,10 @@ import {
   FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { loadNotes } from "../../store/notes";
-import getMimeType from "../../utils/mimetype";
+import mime from "mime";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import icons from "../../lib/remixicon-react";
+import { base64ToBlob } from "../../utils/base64";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 const STORAGE_PATH = "notes/data.json";
@@ -424,8 +425,8 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
               });
 
               // Determine file type and create a blob
-              const fileType = getMimeType(item.name);
-              const blob = base64ToBlob(String(fileData.data), fileType);
+              const fileType = mime.getType(item.name);
+              const blob = base64ToBlob(String(fileData.data), String(fileType));
               const uploadedFile = new File([blob], item.name, {
                 type: "application/octet-stream",
               });
@@ -484,15 +485,201 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
     }
   };
 
-  // Function to convert base64 string to Blob
-  const base64ToBlob = (base64String: string, type: string): Blob => {
-    const byteCharacters = atob(base64String);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+  const syncDropBox = async () => {
+    if (accessToken) {
+      try {
+        setProgress(0);
+        setProgressColor(darkMode ? "#444444" : "#e6e6e6");
+
+        // Sync limit for folders
+        const syncLimit = parseInt(
+          localStorage.getItem("synclimit") || "5",
+          10
+        );
+        const dbx = new Dropbox({ accessToken });
+
+        // Function to extract date from folder name in the format "Beaver Notes YYYY-MM-DD"
+        const extractDateFromFolderName = (folderName: string): Date | null => {
+          const datePattern = /Beaver Notes (\d{4}-\d{2}-\d{2})/;
+          const match = folderName.match(datePattern);
+          return match ? new Date(match[1]) : null;
+        };
+
+        // Retrieve folders from Dropbox
+        const folderMetadata = await dbx.filesListFolder({ path: "" });
+        const folders = folderMetadata.result.entries.filter(
+          (entry) => entry[".tag"] === "folder"
+        );
+
+        // Extract dates from folder names and sort them by date (oldest first)
+        const sortedFolders = folders
+          .map((folder) => {
+            const date = extractDateFromFolderName(folder.name);
+            return { ...folder, date };
+          })
+          .filter((folder) => folder.date !== null) // Filter out folders with invalid names
+          .sort(
+            (a, b) => (a.date as Date).getTime() - (b.date as Date).getTime()
+          );
+
+        // If folder count exceeds syncLimit, delete the oldest folders
+        if (sortedFolders.length > syncLimit) {
+          for (let i = 0; i < sortedFolders.length - syncLimit; i++) {
+            const folderToDelete = sortedFolders[i];
+
+            // Ensure that path_lower is defined before trying to delete
+            if (folderToDelete.path_lower) {
+              await dbx.filesDeleteV2({ path: folderToDelete.path_lower });
+            } else {
+              console.warn(
+                `Folder ${folderToDelete.name} does not have a valid path_lower`
+              );
+            }
+          }
+        }
+
+        const countFilesInDirectory = async (path: string): Promise<number> => {
+          let count = 0;
+          const contents = await Filesystem.readdir({
+            path,
+            directory: Directory.Data,
+          });
+          for (const item of contents.files) {
+            if (item.type === "file") {
+              count++;
+            } else if (item.type === "directory") {
+              count += await countFilesInDirectory(`${path}/${item.name}`);
+            }
+          }
+          return count;
+        };
+
+        // Get the current date for folder naming
+        const currentDate = new Date();
+        const formattedDate = currentDate.toISOString().slice(0, 10);
+        const folderPath = `/Beaver Notes ${formattedDate}`;
+
+        // Check if folder exists in Dropbox, handle deletion if necessary
+        try {
+          await dbx.filesGetMetadata({ path: folderPath });
+          await dbx.filesDeleteV2({ path: folderPath });
+        } catch (error: any) {
+          if (error.status !== 409) {
+            throw error;
+          }
+        }
+
+        await dbx.filesCreateFolderV2({ path: folderPath, autorename: false });
+
+        const changelog = await Filesystem.readFile({
+          path: "notes/change-log.json",
+          directory: Directory.Data,
+          encoding: FilesystemEncoding.UTF8,
+        });
+
+        const changelogData = JSON.parse(changelog.data as string);
+
+        const processAssets = async (
+          updatedPaths: string[],
+          assetType: string,
+          formattedDate: string
+        ) => {
+          const assetFolder =
+            assetType === "note-assets" ? "assets" : "file-assets";
+
+          // Filter assets that were updated
+          const updatedAssets = updatedPaths.filter((path) =>
+            path.startsWith(assetType)
+          );
+
+          await dbx.filesCreateFolderV2({
+            path: `/Beaver Notes ${formattedDate}/${assetFolder}`,
+            autorename: false,
+          });
+
+          await Promise.all(
+            updatedAssets.map(async (assetPath) => {
+              const folderName = assetPath.split("/")[1]; // Extract folder name
+              const folderContents = await Filesystem.readdir({
+                path: assetPath,
+                directory: Directory.Data,
+              });
+
+              // Create the folder in Dropbox
+              await dbx.filesCreateFolderV2({
+                path: `/Beaver Notes ${formattedDate}/${assetFolder}/${folderName}`,
+                autorename: false,
+              });
+
+              await Promise.all(
+                folderContents.files.map(async (file) => {
+                  const filePath = `${assetPath}/${file.name}`;
+                  const fileData = await Filesystem.readFile({
+                    path: filePath,
+                    directory: Directory.Data,
+                  });
+
+                  const fileType = mime.getType(file.name); // Get file MIME type
+
+                  // Convert base64 string to Blob
+                  const blob = base64ToBlob(String(fileData.data), String(fileType));
+
+                  // Create a File from the Blob
+                  const uploadedFile = new File([blob], file.name, {
+                    type: "application/octet-stream", // Or use the correct MIME type
+                  });
+
+                  // Upload the file to Dropbox
+                  await dbx.filesUpload({
+                    path: `/Beaver Notes ${formattedDate}/${assetFolder}/${folderName}/${file.name}`,
+                    contents: uploadedFile,
+                  });
+                })
+              );
+            })
+          );
+        };
+
+        const updatedPaths = changelogData
+          .filter(
+            (entry: { action: string }) =>
+              entry.action === "updated" || "created"
+          )
+          .map((entry: { path: string }) => entry.path);
+        alert(updatedPaths);
+        if (updatedPaths.includes("notes/data.json")) {
+          const datafile = await Filesystem.readFile({
+            path: STORAGE_PATH,
+            directory: Directory.Data,
+            encoding: FilesystemEncoding.UTF8,
+          });
+
+          alert(datafile.data);
+          await dbx.filesUpload({
+            path: `${folderPath}/data.json`,
+            contents: datafile.data,
+          });
+          setProgress(20);
+        }
+
+        const assetTypes = ["note-assets", "file-assets"];
+        for (let assetType of assetTypes) {
+          if (updatedPaths.some((path: string) => path.startsWith(assetType))) {
+            await processAssets(updatedPaths, assetType, formattedDate);
+            setProgress(assetType === "note-assets" ? 60 : 100); // Update with an appropriate percentage
+          }
+        }
+
+        setProgress(100); // Ensure progress reaches 100% when done
+      } catch (error) {
+        console.error("Error uploading note assets:", error);
+        setProgressColor("#ff3333");
+        setProgress(0);
+        alert(error);
+      }
+    } else {
+      console.error("Access token not found!");
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: type });
   };
 
   const importData = async () => {
@@ -663,6 +850,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
       console.error("Error logging out:", error);
     }
   };
+  
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
     return storedSync === "dropbox";
@@ -740,9 +928,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
                     {progress}%
                   </span>
                 ) : (
-                  <div
-                    className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center"
-                  >
+                  <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
                     <icons.DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
                   </div>
                 )}
@@ -765,7 +951,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
                 </button>
                 <button
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
-                  onClick={exportdata}
+                  onClick={syncDropBox}
                   aria-label={
                     translations.dropbox.export || "Export data to Dropbox"
                   }

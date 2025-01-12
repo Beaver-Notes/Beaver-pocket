@@ -6,7 +6,7 @@ import CircularProgress from "../../components/ui/ProgressBar";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import icons from "../../lib/remixicon-react";
 import iCloud from "../../utils/iCloud/iCloud";
-import getMimeType from "../../utils/mimetype";
+import mime from "mime";
 const STORAGE_PATH = "notes/data.json";
 
 interface iCloudProps {
@@ -241,8 +241,8 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
       directory: Directory.Data,
     });
 
-    const fileType = getMimeType(fileName);
-    const blob = base64ToBlob(String(fileData), fileType);
+    const fileType = mime.getType(fileName);
+    const blob = base64ToBlob(String(fileData), String(fileType));
     const base64FileData = await blobToBase64(blob);
 
     await iCloud.uploadFile({
@@ -411,7 +411,7 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
             });
             const fileBlob = base64ToBlob(
               base64FileData,
-              getMimeType(file.name)
+              mime.getType(item.name) as string
             );
             const fileBase64String = await blobToBase64(fileBlob);
 
@@ -430,7 +430,10 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
           const { fileData: base64FileData } = await iCloud.downloadFile({
             fileName: `${assetsFolderPathInICloud}/${item.name}`,
           });
-          const fileBlob = base64ToBlob(base64FileData, getMimeType(item.name));
+          const fileBlob = base64ToBlob(
+            base64FileData,
+            mime.getType(item.name) as string
+          );
           const fileBase64String = await blobToBase64(fileBlob);
 
           await Filesystem.writeFile({
@@ -482,7 +485,7 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
             });
             const fileBlob = base64ToBlob(
               base64FileData,
-              getMimeType(file.name)
+              mime.getType(item.name) as string
             );
             const fileBase64String = await blobToBase64(fileBlob);
 
@@ -501,7 +504,10 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
           const { fileData: base64FileData } = await iCloud.downloadFile({
             fileName: `${fileAssetsFolderPathInICloud}/${item.name}`,
           });
-          const fileBlob = base64ToBlob(base64FileData, getMimeType(item.name));
+          const fileBlob = base64ToBlob(
+            base64FileData,
+            mime.getType(item.name) as string
+          );
           const fileBase64String = await blobToBase64(fileBlob);
 
           await Filesystem.writeFile({

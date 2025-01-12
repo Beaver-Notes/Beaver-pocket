@@ -1,20 +1,10 @@
 import { useState, useEffect } from "react";
 import { Note } from "./types";
-import { loadNotes } from "./notes";
 
 const useNotesState = () => {
   const [notesState, setNotesState] = useState<Record<string, Note>>({});
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
-      setNotesState(notes);
-    };
-
-    loadNotesFromStorage();
-  }, []);
-
+  
   return { notesState, setNotesState, activeNoteId, setActiveNoteId };
 };
 

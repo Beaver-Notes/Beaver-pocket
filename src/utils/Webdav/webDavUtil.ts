@@ -5,11 +5,23 @@ import {
   FilesystemDirectory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import getMimeType from "../mimetype";
 import { useState } from "react";
 import { Note } from "../../store/types";
 import { useHandleImportData } from "../importUtils";
 import { loadNotes } from "../../store/notes";
+import { base64ToBlob } from "../base64";
+import mime from "mime";
+
+const useThemeMode = () => {
+  const themeMode = localStorage.getItem("themeMode") || "auto";
+  const darkMode =
+    themeMode === "auto"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : themeMode === "dark";
+  const progressColor = darkMode ? "#444444" : "#e6e6e6";
+
+  return { themeMode, darkMode, progressColor };
+};
 
 export const useExportDav = () => {
   const [baseUrl] = useState<string>(
@@ -21,27 +33,197 @@ export const useExportDav = () => {
   const [password] = useState<string>(
     () => localStorage.getItem("password") || ""
   );
+
   const STORAGE_PATH = "notes/data.json";
   const [webDavService] = useState(
     new WebDavService({ baseUrl, username, password })
   );
 
   const [progress, setProgress] = useState<number>(0);
-  const [progressColor, setProgressColor] = useState("#e6e6e6");
+  const [, setProgressColor] = useState("#e6e6e6");
+  const { darkMode, progressColor } = useThemeMode();
 
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
+  const uploadData = async (datafile: any, formattedDate: string) => {
+    try {
+      const dataContent = datafile.data;
+      const folderPath = `Beaver-Pocket/Beaver Notes ${formattedDate}`;
+      const filename = "data.json";
+      await webDavService.upload(`${folderPath}/${filename}`, dataContent);
+      setProgress(100); // Final progress update
+    } catch (error) {
+      console.error("Error uploading data.json:", error);
+    }
+  };
 
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
+  const processNoteAssets = async (formattedDate: string) => {
+    try {
+      const noteAssetsPath = "note-assets";
+      const noteAssetsContents = await Filesystem.readdir({
+        path: noteAssetsPath,
+        directory: Directory.Data,
+      });
+
+      const folderPath = `Beaver-Pocket/Beaver Notes ${formattedDate}/assets`;
+      await webDavService.createFolder(folderPath);
+
+      await Promise.all(
+        noteAssetsContents.files.map(async (folderName) => {
+          if (folderName.type === "directory") {
+            const subFolderPath = `${noteAssetsPath}/${folderName.name}`;
+            const subFolderContents = await Filesystem.readdir({
+              path: subFolderPath,
+              directory: Directory.Data,
+            });
+
+            const destinationPath = `${folderPath}/${folderName.name}`;
+            await webDavService.createFolder(destinationPath);
+
+            await Promise.all(
+              subFolderContents.files.map(async (file) => {
+                const filePath = `${subFolderPath}/${file.name}`;
+                const fileData = await Filesystem.readFile({
+                  path: filePath,
+                  directory: Directory.Data,
+                });
+
+                await webDavService.upload(
+                  `${destinationPath}/${file.name}`,
+                  fileData.data
+                );
+              })
+            );
+          }
+        })
+      );
+    } catch (error) {
+      console.error("Error processing note-assets:", error);
+    }
+  };
+
+  const processFileAssets = async (formattedDate: string) => {
+    try {
+      const fileAssetsPath = "file-assets";
+      const folderPath = `Beaver-Pocket/Beaver Notes ${formattedDate}/file-assets`;
+
+      const fileAssetsContents = await Filesystem.readdir({
+        path: fileAssetsPath,
+        directory: Directory.Data,
+      });
+
+      await webDavService.createFolder(folderPath);
+
+      await Promise.all(
+        fileAssetsContents.files.map(async (item) => {
+          if (item.type === "file") {
+            const filePath = `${fileAssetsPath}/${item.name}`;
+            const fileData = await Filesystem.readFile({
+              path: filePath,
+              directory: Directory.Data,
+            });
+
+            await webDavService.upload(
+              `${folderPath}/${item.name}`,
+              fileData.data
+            );
+          } else if (item.type === "directory") {
+            const subFolderPath = `${fileAssetsPath}/${item.name}`;
+            const subFolderContents = await Filesystem.readdir({
+              path: subFolderPath,
+              directory: Directory.Data,
+            });
+
+            const destinationPath = `${folderPath}/${item.name}`;
+            await webDavService.createFolder(destinationPath);
+
+            await Promise.all(
+              subFolderContents.files.map(async (file) => {
+                const filePath = `${subFolderPath}/${file.name}`;
+                const fileData = await Filesystem.readFile({
+                  path: filePath,
+                  directory: Directory.Data,
+                });
+
+                await webDavService.upload(
+                  `${destinationPath}/${file.name}`,
+                  fileData.data
+                );
+              })
+            );
+          }
+        })
+      );
+    } catch (error) {
+      console.error("Error processing file-assets:", error);
+    }
+  };
 
   const exportdata = async () => {
+    try {
+      setProgress(0);
+      setProgressColor(darkMode ? "#444444" : "#e6e6e6");
+
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().slice(0, 10);
+
+      const folderExists = await webDavService.folderExists("Beaver-Pocket");
+      if (!folderExists) {
+        await webDavService.createFolder("Beaver-Pocket");
+      }
+
+      const exportFolderPath = `Beaver-Pocket/Beaver Notes ${formattedDate}`;
+      const exportFolderExists = await webDavService.folderExists(
+        exportFolderPath
+      );
+      if (exportFolderExists) {
+        await webDavService.deleteFolder(exportFolderPath);
+      }
+
+      await webDavService.createFolder(exportFolderPath);
+
+      const datafile = await Filesystem.readFile({
+        path: STORAGE_PATH,
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+
+      await uploadData(datafile, formattedDate);
+      setProgress(40);
+
+      await processNoteAssets(formattedDate);
+      setProgress(80);
+
+      await processFileAssets(formattedDate);
+      setProgress(100);
+    } catch (error) {
+      console.error("Error exporting data:", error);
+    }
+  };
+
+  return { exportdata, progress, progressColor };
+};
+
+export const useSyncDav = () => {
+  const [baseUrl] = useState<string>(
+    () => localStorage.getItem("baseUrl") || ""
+  );
+  const [username] = useState<string>(
+    () => localStorage.getItem("username") || ""
+  );
+  const [password] = useState<string>(
+    () => localStorage.getItem("password") || ""
+  );
+
+  const STORAGE_PATH = "notes/data.json";
+  const [webDavService] = useState(
+    new WebDavService({ baseUrl, username, password })
+  );
+
+  const [progress, setProgress] = useState<number>(0);
+  const [, setProgressColor] = useState("#e6e6e6");
+
+  const { darkMode, progressColor } = useThemeMode();
+
+  const syncDav = async () => {
     try {
       // Initialize progress
       setProgress(0);
@@ -70,38 +252,93 @@ export const useExportDav = () => {
         );
       }
 
+      const syncLimit = parseInt(localStorage.getItem("synclimit") || "5", 10);
+
+      const manageFolderLimit = async () => {
+        try {
+          const directoryContent = await webDavService.getDirectoryContent("Beaver-Pocket");
+          const xmlDoc = new DOMParser().parseFromString(directoryContent, "text/xml");
+          const responses = Array.from(xmlDoc.getElementsByTagName("d:response"));
+      
+          const beaverNoteFolders = responses
+            .map((response) => {
+              const href = response.querySelector("d:href")?.textContent;
+              const isCollection = response.querySelector("d:resourcetype d:collection");
+              if (href && isCollection) {
+                const folderName = decodeURIComponent(href).split("/").filter(Boolean).pop();
+                return folderName?.startsWith("Beaver Notes") ? { name: folderName } : null;
+              }
+              return null;
+            })
+            .filter((folder): folder is { name: string } => folder !== null);
+      
+          if (beaverNoteFolders.length > syncLimit) {
+            const sortedFolders = beaverNoteFolders.sort((a, b) => {
+              const aDate = new Date(a?.name.replace("Beaver Notes ", "")).getTime();
+              const bDate = new Date(b?.name.replace("Beaver Notes ", "")).getTime();
+              return aDate - bDate;
+            });
+      
+            const foldersToDelete = sortedFolders.slice(
+              0,
+              beaverNoteFolders.length - syncLimit
+            );
+      
+            await Promise.all(
+              foldersToDelete.map((folder) => {
+                if (folder?.name) {
+                  return webDavService.deleteFolder(`Beaver-Pocket/${folder.name}`);
+                }
+              })
+            );
+          }
+        } catch (error) {
+          console.error("Error managing folder limit:", error);
+        }
+      };    
+      
+      manageFolderLimit();
+
       // Create the folder for today's notes
       await webDavService.createFolder(
         `Beaver-Pocket/Beaver Notes ${formattedDate}`
       );
 
-      // Read the contents of data.json
-      const datafile = await Filesystem.readFile({
-        path: STORAGE_PATH,
+      // Read the contents of changelog.json
+      const changelog = await Filesystem.readFile({
+        path: "notes/change-log.json",
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
+      const changelogData = JSON.parse(changelog.data as string);
 
-      // Upload data.json
-      await uploadData(datafile, formattedDate);
+      // Filter paths from changelog that have been updated
+      const updatedPaths = changelogData
+        .filter((entry: { action: string }) => entry.action === "updated" || "created")
+        .map((entry: { path: string }) => entry.path);
 
-      // Update progress after uploading data.json
-      setProgress(20); // Update with an appropriate percentage
+      // Upload only the files and assets that were updated
+      if (updatedPaths.includes("notes/data.json")) {
+        const datafile = await Filesystem.readFile({
+          path: STORAGE_PATH,
+          directory: Directory.Data,
+          encoding: FilesystemEncoding.UTF8,
+        });
 
-      // Process note-assets folder
-      await processNoteAssets(formattedDate);
+        await uploadData(datafile, formattedDate);
+        setProgress(20); // Update with an appropriate percentage
+      }
 
-      // Update progress after processing note-assets
-      setProgress(60); // Update with an appropriate percentage
-
-      // Process file-assets folder
-      await processFileAssets(formattedDate);
-
-      // Update progress after processing file-assets
-      setProgress(100); // Mark as complete
+      // Process note-assets and file-assets using a common function
+      const assetTypes = ["note-assets", "file-assets"];
+      for (let assetType of assetTypes) {
+        if (updatedPaths.some((path: string) => path.startsWith(assetType))) {
+          await processAssets(updatedPaths, assetType, formattedDate);
+          setProgress(assetType === "note-assets" ? 60 : 100); // Update with an appropriate percentage
+        }
+      }
     } catch (error) {
-      // Handle error
-      console.error("Error uploading note assets:", error);
+      console.error("Error uploading assets:", error);
     }
   };
 
@@ -117,142 +354,68 @@ export const useExportDav = () => {
     }
   };
 
-  // Function to process note-assets
-  const processNoteAssets = async (formattedDate: string) => {
-    const noteAssetsPath = "note-assets";
-    const noteAssetsContents = await Filesystem.readdir({
-      path: noteAssetsPath,
-      directory: Directory.Data,
-    });
+  // General function to process note-assets and file-assets
+  const processAssets = async (
+    updatedPaths: string[],
+    assetType: string,
+    formattedDate: string
+  ) => {
+    const assetPath = assetType; // note-assets or file-assets
+
+    // Filter assets that were updated
+    const updatedAssets = updatedPaths.filter((path) =>
+      path.startsWith(assetPath)
+    );
+
+    const assetFolder = assetType === "note-assets" ? "assets" : "file-assets";
 
     await webDavService.createFolder(
-      `Beaver-Pocket/Beaver Notes ${formattedDate}/assets`
+      `Beaver-Pocket/Beaver Notes ${formattedDate}/${assetFolder}`
     );
 
     await Promise.all(
-      noteAssetsContents.files.map(async (folderName) => {
-        if (folderName.type === "directory") {
-          const folderPath = `${noteAssetsPath}/${folderName.name}`;
-          const folderContents = await Filesystem.readdir({
-            path: folderPath,
-            directory: Directory.Data,
-          });
+      updatedAssets.map(async (assetPath) => {
+        const folderName = assetPath.split("/")[1]; // Extract the folder name (e.g. "30ff176c-3951-4f13-b04e-cdc1cc2a16d7")
+        const folderContents = await Filesystem.readdir({
+          path: assetPath,
+          directory: Directory.Data,
+        });
 
-          await webDavService.createFolder(
-            `Beaver-Pocket/Beaver Notes ${formattedDate}/assets/${folderName.name}`
-          );
+        await webDavService.createFolder(
+          `Beaver-Pocket/Beaver Notes ${formattedDate}/${assetFolder}/${folderName}`
+        );
 
-          await Promise.all(
-            folderContents.files.map(async (file) => {
-              const imageFilePath = `${folderPath}/${file.name}`;
-              const imageFileData = await Filesystem.readFile({
-                path: imageFilePath,
-                directory: Directory.Data,
-              });
+        await Promise.all(
+          folderContents.files.map(async (file) => {
+            const filePath = `${assetPath}/${file.name}`;
+            const fileData = await Filesystem.readFile({
+              path: filePath,
+              directory: Directory.Data,
+            });
 
-              const fileType = getMimeType(file.name);
-              await uploadFileChunked(
-                String(imageFileData.data),
-                fileType,
-                `Beaver-Pocket/Beaver Notes ${formattedDate}/assets/${folderName.name}/${file.name}`
-              );
-            })
-          );
-        }
+            const fileType = mime.getType(file.name);
+
+            // Convert base64 string to Blob
+            const blob = base64ToBlob(String(fileData.data), String(fileType));
+
+            // Create a File from the Blob
+            const uploadedFile = new File([blob], file.name, {
+              type: "application/octet-stream", // Or use the correct MIME type here
+            });
+
+            // Upload the file
+            await webDavService.upload(
+              `Beaver-Pocket/Beaver Notes ${formattedDate}/${assetFolder}/${folderName}/${file.name}`,
+              uploadedFile
+            );
+          })
+        );
       })
     );
-  };
-
-  // Function to process file-assets
-  const processFileAssets = async (formattedDate: string) => {
-    const fileAssetsPath = "file-assets";
-    const fileAssetsFolderPath = `Beaver-Pocket/Beaver Notes ${formattedDate}/file-assets`;
-
-    const fileAssetsContents = await Filesystem.readdir({
-      path: fileAssetsPath,
-      directory: Directory.Data,
-    });
-
-    await webDavService.createFolder(fileAssetsFolderPath);
-
-    await Promise.all(
-      fileAssetsContents.files.map(async (item) => {
-        if (item.type === "file") {
-          const filePath = `${fileAssetsPath}/${item.name}`;
-          const fileData = await Filesystem.readFile({
-            path: filePath,
-            directory: Directory.Data,
-          });
-
-          const fileType = getMimeType(item.name);
-          await uploadFileChunked(
-            String(fileData.data),
-            fileType,
-            `${fileAssetsFolderPath}/${item.name}`
-          );
-        } else if (item.type === "directory") {
-          const folderPath = `${fileAssetsPath}/${item.name}`;
-          const folderContents = await Filesystem.readdir({
-            path: folderPath,
-            directory: Directory.Data,
-          });
-
-          const subFolderPath = `${fileAssetsFolderPath}/${item.name}`;
-          await webDavService.createFolder(subFolderPath);
-
-          await Promise.all(
-            folderContents.files.map(async (file) => {
-              const filePath = `${folderPath}/${file.name}`;
-              const fileData = await Filesystem.readFile({
-                path: filePath,
-                directory: Directory.Data,
-              });
-
-              const fileType = getMimeType(file.name);
-              await uploadFileChunked(
-                String(fileData.data),
-                fileType,
-                `${subFolderPath}/${file.name}`
-              );
-            })
-          );
-        }
-      })
-    );
-  };
-
-  // Function to convert base64 string to Blob
-  const base64ToBlob = (base64String: string, type: string): Blob => {
-    const byteCharacters = atob(base64String);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: type });
-  };
-
-  // Function to upload files in chunks to prevent memory issues
-  const uploadFileChunked = async (
-    base64Data: string,
-    fileType: string,
-    filePath: string,
-    chunkSize = 1024 * 1024
-  ) => {
-    const totalChunks = Math.ceil(base64Data.length / chunkSize);
-    for (let i = 0; i < totalChunks; i++) {
-      const chunk = base64Data.slice(i * chunkSize, (i + 1) * chunkSize);
-      const blob = base64ToBlob(chunk, fileType);
-      const uploadedFile = new File([blob], `chunk-${i + 1}`, {
-        type: fileType,
-      });
-      await webDavService.upload(`${filePath}-chunk-${i + 1}`, uploadedFile);
-      setProgress((prev) => prev + 100 / totalChunks); // Update progress after each chunk
-    }
   };
 
   // Expose the exportdata function and progress state
-  return { exportdata, progress, progressColor };
+  return { syncDav, progress, progressColor };
 };
 
 export const useImportDav = (
@@ -267,6 +430,7 @@ export const useImportDav = (
   const [password] = useState<string>(
     () => localStorage.getItem("password") || ""
   );
+
   const [webDavService] = useState(
     new WebDavService({ baseUrl, username, password })
   );
@@ -280,7 +444,9 @@ export const useImportDav = (
     themeMode === "auto"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
       : themeMode === "dark";
-  const [progressColor, setProgressColor] = useState(darkMode ? "#444444" : "#e6e6e6");
+  const [progressColor, setProgressColor] = useState(
+    darkMode ? "#444444" : "#e6e6e6"
+  );
 
   const HandleImportData = async (): Promise<void> => {
     try {
@@ -325,7 +491,7 @@ export const useImportDav = (
 
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(content, "text/xml");
-      console.log("Parsed XML Document:", xmlDoc);  // Log the parsed XML document
+      console.log("Parsed XML Document:", xmlDoc); // Log the parsed XML document
 
       const responses = Array.from(xmlDoc.getElementsByTagName("d:response"));
       if (responses.length === 0) {
@@ -370,7 +536,9 @@ export const useImportDav = (
     localPath: string
   ): Promise<void> => {
     try {
-      console.log(`Downloading file from WebDAV: ${webDavPath} to ${localPath}`);
+      console.log(
+        `Downloading file from WebDAV: ${webDavPath} to ${localPath}`
+      );
       const authToken = btoa(`${username}:${password}`);
       await Filesystem.downloadFile({
         url: `${baseUrl}/${webDavPath}`,
@@ -380,7 +548,10 @@ export const useImportDav = (
       });
       console.log(`File downloaded: ${localPath}`);
     } catch (error) {
-      console.error(`Error downloading file ${webDavPath} to ${localPath}:`, error);
+      console.error(
+        `Error downloading file ${webDavPath} to ${localPath}:`,
+        error
+      );
     }
   };
 

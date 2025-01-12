@@ -9,7 +9,7 @@ import {
   FilesystemDirectory,
 } from "@capacitor/filesystem";
 import icons from "../../lib/remixicon-react";
-import getMimeType from "../../utils/mimetype";
+import mime from "mime";
 import CircularProgress from "../../components/ui/ProgressBar";
 import { Note } from "../../store/types";
 import { isPlatform } from "@ionic/react";
@@ -203,8 +203,8 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
               directory: Directory.Data,
             });
 
-            const fileType = getMimeType(item.name); // Determine MIME type
-            const blob = base64ToBlob(String(fileData.data), fileType); // Convert base64 to Blob
+            const fileType = mime.getType(item.name); // Determine MIME type
+            const blob = base64ToBlob(String(fileData.data), String(fileType)); // Convert base64 to Blob
 
             // Upload the file to the corresponding Google Drive folder
             await driveAPI.uploadFile(

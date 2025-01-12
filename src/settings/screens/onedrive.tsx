@@ -7,12 +7,13 @@ import {
   FilesystemDirectory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import getMimeType from "../../utils/mimetype";
 import { useHandleImportData } from "../../utils/importUtils";
 import icons from "../../lib/remixicon-react";
 import CircularProgress from "../../components/ui/ProgressBar";
 import { Note } from "../../store/types";
 import { loadNotes } from "../../store/notes";
+import { base64ToBlob } from "../../utils/base64";
+import mime from "mime";
 const STORAGE_PATH = "notes/data.json";
 
 const { MsAuthPlugin } = Plugins;
@@ -90,12 +91,12 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
 
   const logout = async () => {
     try {
+      setAccessToken(null);
       await MsAuthPlugin.logout({
         clientId: import.meta.env.VITE_ONEDRIDE_CLIENT_ID,
         tenant: "common",
         keyHash: import.meta.env.VITE_ONEDRIDE_ANDROID_HASH,
       });
-      setAccessToken(null);
       await SecureStoragePlugin.remove({ key: "access_token" });
       console.log("Logged out successfully");
     } catch (error) {
@@ -441,8 +442,8 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                 path: filePath,
                 directory: Directory.Data,
               });
-              const fileType = getMimeType(item.name);
-              const blob = base64ToBlob(String(fileData.data), fileType);
+              const fileType = mime.getType(item.name);
+              const blob = base64ToBlob(String(fileData.data), String(fileType));
               const uploadedFile = new File([blob], item.name, {
                 type: "application/octet-stream",
               });
@@ -481,8 +482,8 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                   path: imageFilePath,
                   directory: Directory.Data,
                 });
-                const fileType = getMimeType(file.name);
-                const blob = base64ToBlob(String(imageFileData.data), fileType);
+                const fileType = mime.getType(file.name);
+                const blob = base64ToBlob(String(imageFileData.data), String(fileType));
                 const uploadedFile = new File([blob], file.name, {
                   type: "application/octet-stream",
                 });
@@ -554,17 +555,6 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
     } else {
       console.error("Access token not found!");
     }
-  };
-
-  // Function to convert base64 string to Blob
-  const base64ToBlob = (base64String: string, type: string): Blob => {
-    const byteCharacters = atob(base64String);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type });
   };
 
   const [themeMode] = useState(() => {

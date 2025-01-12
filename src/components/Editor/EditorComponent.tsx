@@ -8,6 +8,7 @@ import {
   DialogTitle,
   Transition,
 } from "@headlessui/react";
+import { getChangeLogs } from "../../store/notes";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
 import { isPlatform } from "@ionic/react";
@@ -26,7 +27,7 @@ import Mousetrap from "mousetrap";
 import getMimeType from "../../utils/mimetype";
 import { saveImageToFileSystem } from "../../utils/fileHandler";
 import { saveFileToFileSystem } from "../../utils/fileHandler";
-import { useExportDav } from "../../utils/Webdav/webDavUtil";
+import { useSyncDav } from "../../utils/Webdav/webDavUtil";
 import { WebviewPrint } from "capacitor-webview-print";
 import { shareNote } from "../../utils/share";
 
@@ -49,7 +50,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const [previousContent, setPreviousContent] = useState<JSONContent | null>(
     null
   );
-  const { exportdata } = useExportDav();
+  const { syncDav } = useSyncDav();
   const [searchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
@@ -146,6 +147,36 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     }),
   ];
 
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+
+  // Function to handle typing detection with throttling
+  const handleTyping = useCallback(() => {
+    // Reset the timeout if the user starts typing again within the limit
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set the user as currently typing
+    if (!isTyping) {
+      setIsTyping(true);
+    }
+
+    // Start a new timeout to detect when typing has stopped
+    typingTimeoutRef.current = setTimeout(async () => {
+      setIsTyping(false);
+
+      const showLogs = async () => {
+        const logs = await getChangeLogs();
+        console.log(logs);
+      };
+
+      showLogs();
+
+      alert("User has stopped typing. Files fetched.");
+    }, 4000); // Adjust timeout limit as needed
+  }, [isTyping]);
+
   const editor = useEditor(
     {
       extensions: exts,
@@ -155,6 +186,9 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
 
         // Handle note content change
         handleChangeNoteContent(editorContent || {}, title);
+
+        // Trigger typing detection
+        handleTyping();
 
         // Compare previous and current content
         if (previousContent) {
@@ -195,20 +229,6 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     }
   }, [editor]);
 
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === "f" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        setShowFind(true);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, []);
-
   document.addEventListener("showFind", () => {
     setShowFind((prevShowFind) => !prevShowFind);
   });
@@ -243,21 +263,11 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     return labels;
   };
 
-  const handleshowFind = () => {
-    if (buttonRef.current) {
-      setShowFind(true);
-    }
-  };
-
   const handleKeyDownTitle = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
       editorRef.current?.commands.focus(); // Focus the editor
     }
-  };
-
-  const preventKeyboardToggle = (event: any) => {
-    event.preventDefault();
   };
 
   const setLink = useCallback(() => {
@@ -286,6 +296,10 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   }, [editor]);
 
   useEffect(() => {
+    Mousetrap.bind("mod+f", (e) => {
+      e.preventDefault();
+      setShowFind(true);
+    });
     // Mousetrap key bindings
     Mousetrap.bind("mod+k", (e) => {
       e.preventDefault();
@@ -539,7 +553,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
         const dropboxExport = new CustomEvent("dropboxExport");
         document.dispatchEvent(dropboxExport);
       } else if (syncValue === "webdav") {
-        exportdata(); // Safe hook usage
+        syncDav();
       } else if (syncValue === "iCloud") {
         const iCloudExport = new CustomEvent("iCloudExport");
         document.dispatchEvent(iCloudExport);
@@ -689,7 +703,11 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
 
             <button
               className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
-              onClick={handleshowFind}
+              onClick={() => {
+                if (buttonRef.current) {
+                  setShowFind(true);
+                }
+              }}
               ref={buttonRef}
             >
               <Icons.Search2LineIcon
@@ -722,7 +740,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
             contentEditable
             onPaste={handleTitlePaste}
             suppressContentEditableWarning
-            onTouchStart={preventKeyboardToggle}
+            onTouchStart={event?.preventDefault}
             className={`text-3xl font-bold overflow-y-scroll outline-none ${
               isPlatform("android") ? "mt-10 sm:pt-14" : "md:pt-14"
             } ${isPlatform("ios") ? "mt-10 sm:pt-14" : "md:pt-14"}`}
@@ -736,7 +754,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
               <EditorContent
                 onPaste={handlePaste}
                 editor={editor}
-                onTouchStart={preventKeyboardToggle}
+                onTouchStart={event?.preventDefault}
                 className="prose dark:text-neutral-100 max-w-none prose-indigo mb-12"
               />
             </div>

@@ -41,12 +41,11 @@ export class WebDavService {
   async createFolder(folderPath: string): Promise<void> {
     if (isPlatform("android")) {
       try {
-        const response = await WebDAV.createFolder({
+        await WebDAV.createFolder({
           url: `${this.options.baseUrl}/${folderPath}`,
           username: this.options.username,
           password: this.options.password,
         });
-        alert(response.message); // Display success message from WebDAV plugin
       } catch (error) {
         alert(`Failed to create folder on Android: ${error}`); // Display error message
         throw new Error(`Failed to create folder on Android: ${error}`);
@@ -59,7 +58,6 @@ export class WebDavService {
           url: `${this.options.baseUrl}/${folderPath}`,
           headers: config.headers,
         });
-        alert(`Folder created successfully at ${folderPath}`); // Success alert
       } catch (error) {
         alert(`Failed to create folder at ${folderPath}: ${error}`); // Error alert
         throw new Error(`Failed to create folder at ${folderPath}: ${error}`);
@@ -75,17 +73,17 @@ export class WebDavService {
           username: this.options.username,
           password: this.options.password,
         });
-        alert(`Folder exists at ${path}`); // Success message
         return true;
       } catch (error) {
-        alert(`Folder does not exist at ${path}`); // Error message
         return false; // If an error occurs, assume the folder doesn't exist
       }
     } else {
       try {
         const config = await this.createRequestConfig();
-        const response = await axios.get(`${this.options.baseUrl}/${path}`, config);
-        alert(`Folder exists at ${path}`); // Success message
+        const response = await axios.get(
+          `${this.options.baseUrl}/${path}`,
+          config
+        );
         return response.status !== 404;
       } catch (error) {
         alert(`Folder does not exist at ${path}`); // Error message
@@ -98,7 +96,6 @@ export class WebDavService {
     try {
       const config = await this.createRequestConfig();
       await axios.put(`${this.options.baseUrl}/${fileName}`, content, config);
-      alert(`File uploaded successfully: ${fileName}`); // Success message
     } catch (error) {
       alert(`Failed to upload file: ${fileName}`); // Error message
       throw new Error(`Failed to upload file: ${fileName}`);
@@ -113,7 +110,6 @@ export class WebDavService {
         url: `${this.options.baseUrl}/${folderPath}`,
         headers: config.headers,
       });
-      alert(`Folder deleted successfully at ${folderPath}`); // Success message
     } catch (error) {
       alert(`Failed to delete folder at ${folderPath}: ${error}`); // Error message
       throw new Error(`Failed to delete folder at ${folderPath}: ${error}`);
@@ -129,7 +125,6 @@ export class WebDavService {
           username: this.options.username,
           password: this.options.password,
         });
-        console.log("xml", result.data)
         return result.data;
       } catch (error) {
         console.error("Error getting directory contents on Android:", error);
@@ -160,10 +155,11 @@ export class WebDavService {
           data: requestBody,
           headers,
         });
-        alert(`Directory content retrieved successfully at ${path}`); // Success message
         return response.data;
       } catch (error: any) {
-        alert(`Failed to get content of directory at ${path}: ${error.message}`); // Error message
+        alert(
+          `Failed to get content of directory at ${path}: ${error.message}`
+        ); // Error message
         throw new Error(
           `Failed to get content of directory at ${path}: ${error.message}`
         );

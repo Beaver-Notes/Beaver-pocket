@@ -3,7 +3,6 @@ import icons from "../../lib/remixicon-react";
 import { Link, useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
-import { useExportDav } from "../../utils/Webdav/webDavUtil";
 import { useSaveNote } from "../../store/notes";
 import { Note } from "../../store/types";
 import Mousetrap from "../../utils/mousetrap";
@@ -33,28 +32,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     };
   }, []);
 
-  const buttonClicked = () => {
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
-    } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
-    } else if (syncValue === "iCloud") {
-      const iCloudExport = new CustomEvent("iCloudExport");
-      document.dispatchEvent(iCloudExport);
-    } else if (syncValue === "googledrive") {
-      const driveExport = new CustomEvent("driveExport");
-      document.dispatchEvent(driveExport);
-    } else if (syncValue === "onedrive") {
-      const onedriveExport = new CustomEvent("onedriveExport");
-      document.dispatchEvent(onedriveExport);
-    }
-  };
-
   const handleEditNote = () => {
-    buttonClicked;
     const editedNote = localStorage.getItem("lastNoteEdit");
     if (editedNote) {
       navigate(`/editor/${editedNote}`);
@@ -151,7 +129,6 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
           <Link to="/">
             <button
               className="flex items-center justify-center w-12 h-12"
-              onClick={() => buttonClicked()}
               aria-label={translations.accessibility.home}
             >
               <icons.HomeLineIcon className="text-white hover:text-amber-400 h-10 w-10" />
@@ -177,7 +154,6 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
           <Link to="/archive">
             <button
               className="flex items-center justify-center w-12 h-12"
-              onClick={() => buttonClicked()}
               aria-label={translations.accessibility.archive}
             >
               <icons.ArchiveDrawerLineIcon className="text-white hover:text-amber-400 h-10 w-10" />
@@ -187,7 +163,6 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
           <Link to="/settings">
             <button
               className="flex items-center justify-center w-12 h-12"
-              onClick={() => buttonClicked()}
               aria-label={translations.accessibility.settings}
             >
               <icons.Settings4LineIcon className="text-white hover:text-amber-400 h-10 w-10" />
