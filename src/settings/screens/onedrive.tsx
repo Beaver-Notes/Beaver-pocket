@@ -12,7 +12,7 @@ import icons from "../../lib/remixicon-react";
 import CircularProgress from "../../components/ui/ProgressBar";
 import { Note } from "../../store/types";
 import { loadNotes } from "../../store/notes";
-import { base64ToBlob } from "../../utils/base64";
+import { base64ToBlob, blobToBase64 } from "../../utils/base64";
 import mime from "mime";
 const STORAGE_PATH = "notes/data.json";
 
@@ -249,15 +249,6 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
     }
   };
 
-  const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
   const exportData = async (): Promise<void> => {
     if (accessToken) {
       try {
@@ -443,7 +434,10 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                 directory: Directory.Data,
               });
               const fileType = mime.getType(item.name);
-              const blob = base64ToBlob(String(fileData.data), String(fileType));
+              const blob = base64ToBlob(
+                String(fileData.data),
+                String(fileType)
+              );
               const uploadedFile = new File([blob], item.name, {
                 type: "application/octet-stream",
               });
@@ -483,7 +477,10 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                   directory: Directory.Data,
                 });
                 const fileType = mime.getType(file.name);
-                const blob = base64ToBlob(String(imageFileData.data), String(fileType));
+                const blob = base64ToBlob(
+                  String(imageFileData.data),
+                  String(fileType)
+                );
                 const uploadedFile = new File([blob], file.name, {
                   type: "application/octet-stream",
                 });
@@ -507,6 +504,249 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
         );
 
         await Promise.all(uploadNoteAssetsPromises);
+
+        // Handle folder limit
+        const syncLimit = parseInt(
+          localStorage.getItem("synclimit") || "5",
+          10
+        ); // Default to 5 if not set
+
+        // Filter and sort existing folders by creation date
+        const folders = existingFoldersData.value
+          .filter((item: { folder: any }) => item.folder)
+          .sort(
+            (
+              a: { createdDateTime: string | number | Date },
+              b: { createdDateTime: string | number | Date }
+            ) =>
+              new Date(a.createdDateTime).getTime() -
+              new Date(b.createdDateTime).getTime()
+          );
+
+        const excessCount = folders.length - syncLimit;
+
+        if (excessCount > 0) {
+          // Delete older folders
+          const foldersToDelete = folders.slice(0, excessCount);
+          await Promise.all(
+            foldersToDelete.map(async (folder: { id: any }) => {
+              await fetch(
+                `https://graph.microsoft.com/v1.0/me/drive/items/${folder.id}`,
+                {
+                  method: "DELETE",
+                  headers: { Authorization: `Bearer ${accessToken}` },
+                }
+              );
+            })
+          );
+          console.log(`Deleted ${excessCount} old folders.`);
+        }
+
+        setProgress(100);
+      } catch (error) {
+        console.error("Error uploading note assets:", error);
+        setProgressColor("#ff3333");
+        setProgress(0);
+        alert(error);
+      }
+    } else {
+      console.error("Access token not found!");
+    }
+  };
+
+  const syncOneDrive = async (): Promise<void> => {
+    if (accessToken) {
+      try {
+        setProgress(0);
+        setProgressColor(darkMode ? "#444444" : "#e6e6e6");
+        await refreshAccessToken();      
+
+        const currentDate = new Date();
+        const formattedDate = currentDate.toISOString().slice(0, 10);
+        const parentFolder = "Beaver-Pocket";
+        const fullFolderPath = `${parentFolder}/Beaver Notes ${formattedDate}`;
+
+        // Check if the current date folder already exists
+        const existingFoldersResponse = await fetch(
+          `https://graph.microsoft.com/v1.0/me/drive/root:/${parentFolder}:/children`,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+        const existingFoldersData = await existingFoldersResponse.json();
+
+        const currentDateFolderExists = existingFoldersData.value.some(
+          (folder: { name: string }) => folder.name === fullFolderPath
+        );
+
+        // Handle existing current date folder
+        if (currentDateFolderExists) {
+          await fetch(
+            `https://graph.microsoft.com/v1.0/me/drive/root:/${fullFolderPath}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }
+          );
+        }
+
+        // Create folders in parallel
+        const createFolder = async (path: string) => {
+          const response = await fetch(
+            `https://graph.microsoft.com/v1.0/me/drive/root:/` +
+              encodeURIComponent(path),
+            {
+              method: "GET",
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }
+          );
+
+          if (response.status === 404) {
+            await fetch(
+              `https://graph.microsoft.com/v1.0/me/drive/root:/` +
+                encodeURIComponent(path) +
+                `:/children`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  name: path.split("/").pop(),
+                  folder: {},
+                }),
+              }
+            );
+          }
+        };
+
+        // Create parent folder and assets folder if they don't exist
+        await Promise.all([
+          createFolder(parentFolder),
+          createFolder(fullFolderPath),
+        ]);
+
+        const changelog = await Filesystem.readFile({
+          path: "notes/change-log.json",
+          directory: Directory.Data,
+          encoding: FilesystemEncoding.UTF8,
+        });
+
+        const changelogData = JSON.parse(changelog.data as string);
+
+        const updatedPaths = changelogData
+          .filter(
+            (entry: { action: string }) =>
+              entry.action === "updated" || "created"
+          )
+          .map((entry: { path: string }) => entry.path);
+        alert(updatedPaths);
+        if (updatedPaths.includes("notes/data.json")) {
+          const datafile = await Filesystem.readFile({
+            path: STORAGE_PATH,
+            directory: Directory.Data,
+            encoding: FilesystemEncoding.UTF8,
+          });
+
+          alert(datafile.data);
+          await fetch(
+            `https://graph.microsoft.com/v1.0/me/drive/root:/` +
+              encodeURIComponent(`${fullFolderPath}/data.json`) +
+              `:/content`,
+            {
+              method: "PUT",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: datafile.data,
+            }
+          );
+          setProgress(20);
+        }
+
+        // Upload note-assets in parallel
+        const processAssets = async (
+          updatedPaths: string[],
+          assetType: string,
+        ) => {
+          const assetFolder =
+            assetType === "note-assets" ? "assets" : "file-assets";
+
+          // Filter assets that were updated
+          const updatedAssets = updatedPaths.filter((path) =>
+            path.startsWith(assetType)
+          );
+
+          for (const assetPath of updatedAssets) {
+            const folderName = assetPath.split("/")[1]; // Extract folder name
+            const folderContents = await Filesystem.readdir({
+              path: assetPath,
+              directory: Directory.Data,
+            });
+
+            // Ensure the folder exists on OneDrive
+            await fetch(
+              `https://graph.microsoft.com/v1.0/me/drive/root:/` +
+                encodeURIComponent(
+                  `${fullFolderPath}/${assetFolder}/${folderName}`
+                ) +
+                `:/children`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  name: folderName,
+                  folder: {},
+                  "@microsoft.graph.conflictBehavior": "fail",
+                }),
+              }
+            );
+
+            // Upload files in the folder
+            for (const file of folderContents.files) {
+              const filePath = `${assetPath}/${file.name}`;
+              const fileData = await Filesystem.readFile({
+                path: filePath,
+                directory: Directory.Data,
+              });
+
+              const fileType = mime.getType(file.name); // Get file MIME type
+              const blob = base64ToBlob(
+                String(fileData.data),
+                String(fileType)
+              );
+              const uploadedFile = new File([blob], file.name, {
+                type: "application/octet-stream", // Or use the correct MIME type
+              });
+
+              // Upload the file to OneDrive
+              await fetch(
+                `https://graph.microsoft.com/v1.0/me/drive/root:/` +
+                  encodeURIComponent(
+                    `${fullFolderPath}/${assetFolder}/${folderName}/${file.name}`
+                  ) +
+                  `:/content`,
+                {
+                  method: "PUT",
+                  headers: { Authorization: `Bearer ${accessToken}` },
+                  body: uploadedFile,
+                }
+              );
+            }
+          }
+        };
+
+        const assetTypes = ["note-assets", "file-assets"];
+        for (let assetType of assetTypes) {
+          if (updatedPaths.some((path: string) => path.startsWith(assetType))) {
+            await processAssets(updatedPaths, assetType);
+            setProgress(assetType === "note-assets" ? 60 : 100); // Update with an appropriate percentage
+          }
+        }
 
         // Handle folder limit
         const syncLimit = parseInt(
@@ -649,7 +889,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
 
   async function OnedriveExport() {
     await refreshAccessToken();
-    await exportData();
+    await syncOneDrive();
   }
   async function OnedriveImport() {
     await refreshAccessToken();
@@ -675,15 +915,11 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                 strokeWidth={8}
               >
                 {progress ? (
-                  <span
-                    className="text-amber-400 text-xl font-semibold"
-                  >
+                  <span className="text-amber-400 text-xl font-semibold">
                     {progress}%
                   </span>
                 ) : (
-                  <div
-                    className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center"
-                  >
+                  <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
                     <icons.OneDrive className="w-32 h-32 text-neutral-800 dark:text-neutral-200 p-1" />
                   </div>
                 )}

@@ -167,12 +167,12 @@
             <key>iCloud.beaver.notes.pocket</key>
             <dict>
                 <key>NSUbiquitousContainerIsDocumentScopePublic</key>
-                <true/>
+                <true />
                 <key>NSUbiquitousContainerName</key>
                 <string>Beaver Pocket</string>
                 <key>NSUbiquitousContainerSupportedFolderLevels</key>
                 <string>ANY</string>
-		    </dict>
+            </dict>
         </dict>
         <key>UIFileSharingEnabled</key>
         <true />

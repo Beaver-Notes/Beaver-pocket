@@ -426,7 +426,10 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
 
               // Determine file type and create a blob
               const fileType = mime.getType(item.name);
-              const blob = base64ToBlob(String(fileData.data), String(fileType));
+              const blob = base64ToBlob(
+                String(fileData.data),
+                String(fileType)
+              );
               const uploadedFile = new File([blob], item.name, {
                 type: "application/octet-stream",
               });
@@ -622,7 +625,10 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
                   const fileType = mime.getType(file.name); // Get file MIME type
 
                   // Convert base64 string to Blob
-                  const blob = base64ToBlob(String(fileData.data), String(fileType));
+                  const blob = base64ToBlob(
+                    String(fileData.data),
+                    String(fileType)
+                  );
 
                   // Create a File from the Blob
                   const uploadedFile = new File([blob], file.name, {
@@ -850,7 +856,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
       console.error("Error logging out:", error);
     }
   };
-  
+
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
     return storedSync === "dropbox";

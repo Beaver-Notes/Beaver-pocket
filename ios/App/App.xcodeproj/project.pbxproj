@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -64,7 +64,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		AB2445C62D061EBC0047BA3E /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		AB2445C62D061EBC0047BA3E /* Exceptions for "share" folder in "share" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -74,7 +74,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		AB2445BC2D061EBC0047BA3E /* share */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (AB2445C62D061EBC0047BA3E /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = share; sourceTree = "<group>"; };
+		AB2445BC2D061EBC0047BA3E /* share */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AB2445C62D061EBC0047BA3E /* Exceptions for "share" folder in "share" target */,
+			);
+			path = share;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -191,8 +198,6 @@
 				AB2445BC2D061EBC0047BA3E /* share */,
 			);
 			name = share;
-			packageProductDependencies = (
-			);
 			productName = share;
 			productReference = AB2445BB2D061EBC0047BA3E /* share.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -217,7 +222,6 @@
 				};
 			};
 			buildConfigurationList = 504EC2FF1FED79650016851F /* Build configuration list for PBXProject "App" */;
-			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -225,6 +229,7 @@
 				Base,
 			);
 			mainGroup = 504EC2FB1FED79650016851F;
+			preferredProjectObjectVersion = 77;
 			productRefGroup = 504EC3051FED79650016851F /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -282,10 +287,10 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
+			inputFileListPaths = (
 			);
 			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
+			outputFileListPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

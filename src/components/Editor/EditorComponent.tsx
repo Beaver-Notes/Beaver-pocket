@@ -24,7 +24,7 @@ import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 import Icons from "../../lib/remixicon-react";
 import Mousetrap from "mousetrap";
-import getMimeType from "../../utils/mimetype";
+import mime from "mime";
 import { saveImageToFileSystem } from "../../utils/fileHandler";
 import { saveFileToFileSystem } from "../../utils/fileHandler";
 import { useSyncDav } from "../../utils/Webdav/webDavUtil";
@@ -483,7 +483,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
       if (item.kind === "file") {
         const file = item.getAsFile();
         if (file) {
-          const fileType = getMimeType(file.name);
+          const fileType = mime.getType(file.name);
           if (fileType) {
             await handleFileByType(file);
           } else {
