@@ -837,7 +837,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
 
   async function handleDropboxExport() {
     await checkTokenExpiration();
-    await exportdata();
+    await syncDropBox();
   }
   async function handleDropboxImport() {
     await checkTokenExpiration();
@@ -957,7 +957,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState }) => {
                 </button>
                 <button
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
-                  onClick={syncDropBox}
+                  onClick={exportdata}
                   aria-label={
                     translations.dropbox.export || "Export data to Dropbox"
                   }

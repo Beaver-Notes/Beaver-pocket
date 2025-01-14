@@ -7,6 +7,7 @@ import {
   Directory,
   Encoding,
   FilesystemDirectory,
+  FilesystemEncoding,
 } from "@capacitor/filesystem";
 import icons from "../../lib/remixicon-react";
 import mime from "mime";
@@ -15,6 +16,7 @@ import { Note } from "../../store/types";
 import { isPlatform } from "@ionic/react";
 import { useHandleImportData } from "../../utils/importUtils";
 import { loadNotes } from "../../store/notes";
+import { base64ToBlob } from "../../utils/base64";
 
 interface GdriveProps {
   setNotesState: (notes: Record<string, Note>) => void;
@@ -113,7 +115,7 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
   document.addEventListener("driveImport", handleDriveImport);
 
   async function handleDriveExport() {
-    await exportdata();
+    await syncGdrive();
   }
   async function handleDriveImport() {
     await importData();
@@ -358,16 +360,165 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
     }
   };
 
-  // Function to convert base64 string to Blob
-  const base64ToBlob = (base64String: string, type: string): Blob => {
-    const byteCharacters = atob(base64String); // Decode base64 string
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+  const syncGdrive = async () => {
+    if (!driveAPI) return;
+  
+    try {
+      setProgress(0);
+      setProgressColor(darkMode ? "#444444" : "#e6e6e6");
+      const syncLimit = parseInt(localStorage.getItem("synclimit") || "5", 10);
+  
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
+      const datedFolderPath = `Beaver Notes ${formattedDate}`;
+  
+      let rootFolderId = await driveAPI.checkFolderExists("beaver-pocket");
+      if (!rootFolderId) {
+        rootFolderId = await driveAPI.createFolder("beaver-pocket");
+      }
+      if (!rootFolderId) {
+        throw new Error("Root folder ID could not be determined.");
+      }
+  
+      const existingFolders = await driveAPI.listContents(rootFolderId);
+      const datedFolders = existingFolders.filter((folder) =>
+        folder.name.startsWith("Beaver Notes")
+      );
+  
+      // Sort and delete oldest folders exceeding sync limit
+      datedFolders.sort((a, b) => {
+        const dateA = new Date(a.createdTime || 0).getTime();
+        const dateB = new Date(b.createdTime || 0).getTime();
+        return dateA - dateB;
+      });
+  
+      while (datedFolders.length > syncLimit) {
+        const folderToDelete = datedFolders.shift();
+        if (folderToDelete) {
+          await driveAPI.deleteFolder(folderToDelete.id);
+        }
+      }
+  
+      let datedFolderId = await driveAPI.checkFolderExists(
+        datedFolderPath,
+        rootFolderId
+      );
+      if (!datedFolderId) {
+        datedFolderId = await driveAPI.createFolder(
+          datedFolderPath,
+          rootFolderId
+        );
+      }
+  
+      const changelog = await Filesystem.readFile({
+        path: "notes/change-log.json",
+        directory: Directory.Data,
+        encoding: FilesystemEncoding.UTF8,
+      });
+      const changelogData = JSON.parse(changelog.data as string);
+      const updatedPaths = changelogData
+        .filter(
+          (entry: { action: string }) => entry.action === "updated" || "created"
+        )
+        .map((entry: { path: string }) => entry.path);
+  
+      if (updatedPaths.includes("notes/data.json")) {
+        const datafile = await Filesystem.readFile({
+          path: "notes/data.json",
+          directory: Directory.Data,
+          encoding: FilesystemEncoding.UTF8,
+        });
+  
+        const dataBlob = new Blob([datafile.data], {
+          type: "application/json",
+        });
+  
+        await driveAPI.uploadFile(
+          "data.json",
+          dataBlob,
+          String(datedFolderId),
+          "application/json"
+        );
+        setProgress(20);
+      }
+  
+      const processAssets = async (
+        updatedPaths: string[],
+        assetType: string,
+        assetFolderId: string
+      ) => {
+        const updatedAssets = updatedPaths.filter((path) =>
+          path.startsWith(assetType)
+        );
+  
+        for (const assetPath of updatedAssets) {
+          const folderName = assetPath.split("/")[1]; // Extract folder name
+  
+          const driveFolderId = await driveAPI.createFolder(
+            folderName,
+            assetFolderId
+          );
+  
+          const folderContents = await Filesystem.readdir({
+            path: assetPath,
+            directory: Directory.Data,
+          });
+  
+          for (const item of folderContents.files) {
+            if (item.type === "file") {
+              const filePath = `${assetPath}/${item.name}`;
+              const fileData = await Filesystem.readFile({
+                path: filePath,
+                directory: Directory.Data,
+              });
+  
+              const fileType = mime.getType(item.name); // Determine MIME type
+              const blob = base64ToBlob(
+                String(fileData.data),
+                String(fileType)
+              );
+  
+              await driveAPI.uploadFile(
+                item.name,
+                blob,
+                String(driveFolderId),
+                fileType || "application/octet-stream"
+              );
+            }
+          }
+        }
+      };
+  
+      const assetTypes = ["note-assets", "file-assets"];
+      for (let assetType of assetTypes) {
+        const assetFolder =
+          assetType === "note-assets" ? "assets" : "file-assets";
+        let assetFolderId = await driveAPI.createFolder(
+          assetFolder,
+          datedFolderId
+        );
+  
+        if (updatedPaths.some((path: string) => path.startsWith(assetType))) {
+          await processAssets(updatedPaths, assetType, String(assetFolderId));
+          
+          // Update progress after processing each asset type
+          if (assetType === "note-assets") {
+            setProgress(60);  // Set to 60% after note-assets are processed
+          } else if (assetType === "file-assets") {
+            setProgress(90);  // Set to 90% after file-assets are processed
+          }
+        }
+      }
+  
+      // Final progress set to 100%
+      setProgress(100);
+    } catch (error) {
+      console.error("Error syncing data:", error);
+      setProgressColor("#ff3333");
+      setProgress(0);
+      alert(error);
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: type });
-  };
+  };  
 
   const importData = async () => {
     if (!driveAPI) {
