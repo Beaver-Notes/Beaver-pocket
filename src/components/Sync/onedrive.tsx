@@ -9,7 +9,7 @@ import {
 } from "@capacitor/filesystem";
 import { useHandleImportData } from "../../utils/importUtils";
 import icons from "../../lib/remixicon-react";
-import CircularProgress from "../../components/ui/ProgressBar";
+import CircularProgress from "../UI/ProgressBar";
 import { Note } from "../../store/types";
 import { loadNotes } from "../../store/notes";
 import { base64ToBlob, blobToBase64 } from "../../utils/base64";

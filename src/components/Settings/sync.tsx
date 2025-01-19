@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { isPlatform } from "@ionic/react";
-import { Note } from "../store/types";
+import { Note } from "../../store/types";
 import dayjs from "dayjs";
-import { useExportData } from "../utils/exportUtils";
-import { useHandleImportData } from "../utils/importUtils";
+import { useExportData } from "../../utils/exportUtils";
+import { useHandleImportData } from "../../utils/importUtils";
 import { useNavigate } from "react-router-dom";
-import icons from "../lib/remixicon-react";
-import { loadNotes } from "../store/notes";
+import icons from "../../lib/remixicon-react";
+import { loadNotes } from "../../store/notes";
 
 interface SyncProps {
   notesState: Record<string, Note>;
@@ -70,7 +70,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
         const translationModule = await import(
-          `../assets/locales/${selectedLanguage}.json`
+          `../../assets/locales/${selectedLanguage}.json`
         );
 
         setTranslations({ ...translations, ...translationModule.default });

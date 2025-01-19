@@ -3,18 +3,18 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Home from "./Home";
 import Archive from "./Archive";
 import Settings from "./Settings";
-import About from "./settings/about";
+import About from "./components/Settings/about";
 import { App as CapacitorApp } from "@capacitor/app";
-import Shortcuts from "./settings/shortcuts";
+import Shortcuts from "./components/Settings/shortcuts";
 import Welcome from "./Welcome";
-import Dropbox from "./settings/screens/dropbox";
-import Onedrive from "./settings/screens/onedrive";
-import Gdrive from "./settings/screens/gdrive";
-import Dav from "./settings/screens/dav";
-import Icloud from "./settings/screens/icloud";
+import Dropbox from "./components/Sync/dropbox";
+import Onedrive from "./components/Sync/onedrive";
+import Gdrive from "./components/Sync/gdrive";
+import Dav from "./components/Sync/dav";
+import Icloud from "./components/Sync/icloud";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
-import Sync from "./settings/sync";
+import Sync from "./components/Settings/sync";
 import Editor from "./Editor";
 import { useImportDav } from "./utils/Webdav/webDavUtil";
 import "./assets/css/main.css";
@@ -27,9 +27,10 @@ import { useNotesState } from "./store/Activenote";
 import Mousetrap from "mousetrap";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { isPlatform } from "@ionic/react";
-import Icons from "./settings/icons";
+import Icons from "./components/Settings/icons";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import { useDropboxImport } from "./utils/Dropbox/DropboxUtil";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -125,14 +126,14 @@ const App: React.FC = () => {
   }, [checkedFirstTime, history]);
 
   const { HandleImportData } = useImportDav(setNotesState);
+  const { importData:DropboxImport } = useDropboxImport(darkMode, setNotesState);
 
   useEffect(() => {
     const handleSync = () => {
       const syncValue = localStorage.getItem("sync");
-
+  
       if (syncValue === "dropbox") {
-        const dropboxImport = new CustomEvent("dropboxImport");
-        document.dispatchEvent(dropboxImport);
+        DropboxImport();
       } else if (syncValue === "webdav") {
         HandleImportData(); // now safely called
       } else if (syncValue === "iCloud") {
@@ -146,9 +147,9 @@ const App: React.FC = () => {
         document.dispatchEvent(onedriveImport);
       }
     };
-
+  
     handleSync();
-  }, [HandleImportData]);
+  }, []);
 
   const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
 
@@ -251,7 +252,7 @@ const App: React.FC = () => {
           <Route
             path="/dropbox"
             element={
-              <Dropbox notesState={notesState} setNotesState={setNotesState} />
+              <Dropbox notesState={notesState} setNotesState={setNotesState} themeMode={themeMode} darkMode={darkMode}/>
             }
           />
           <Route
@@ -287,7 +288,7 @@ const App: React.FC = () => {
           <Route
             path="/editor/:note"
             element={
-              <Editor notesState={notesState} setNotesState={setNotesState} />
+              <Editor notesState={notesState} setNotesState={setNotesState}/>
             }
           />
         </Routes>

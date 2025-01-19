@@ -1187,10 +1187,10 @@
   resolved "https://registry.yarnpkg.com/@capacitor/status-bar/-/status-bar-6.0.1.tgz#27cef2560cdefb8e14d2cecc976056ede7b822ef"
   integrity sha512-Usd9hZZQVAqy+jJfL7jRcYI7dcsxN09Na1yttwdl+F1bk3Ztoukk7CGPDm5VgKUSs53ihQBOy1+sczCACxhNiw==
 
-"@codetrix-studio/capacitor-google-auth@^3.4.0-rc.4":
-  version "3.4.0-rc.4"
-  resolved "https://registry.yarnpkg.com/@codetrix-studio/capacitor-google-auth/-/capacitor-google-auth-3.4.0-rc.4.tgz#bcc4471f7f4fdfc3d2bd5000600cd5ed4979872b"
-  integrity sha512-d548/xKrbMHHbzMYSWnlgZCLZYo2zzY7Onrh3x8ujojrb7atkNK68I6su5WgmaBt4E+R4gxBsWams4554aOFjA==
+"@capgo/capacitor-social-login@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@capgo/capacitor-social-login/-/capacitor-social-login-0.3.0.tgz#12fd950c0fb4ab3ba812b625c2e8e88b7d0614c3"
+  integrity sha512-hV8r2x9+Psp6C6pT8Lg2zrOJQ0sYl8m3FfsZw4gOm6CPIgdY31T/twsRQpXGi+a85uwb+Y5sg9TG2KP3PZPllg==
 
 "@csstools/selector-resolve-nested@^1.1.0":
   version "1.1.0"

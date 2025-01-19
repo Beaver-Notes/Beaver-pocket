@@ -29,19 +29,26 @@ export const logChange = async (
       logData = [];
     }
 
-    // Ensure no duplicate entries in the log
-    const existingPaths = new Set(logData.map((entry: any) => entry.path));
+    if (action === "deleted") {
+      // Remove entries from the log for the given paths
+      logData = logData.filter(
+        (entry: any) => !paths.includes(entry.path)
+      );
+    } else {
+      // Ensure no duplicate entries in the log
+      const existingPaths = new Set(logData.map((entry: any) => entry.path));
 
-    // Add new log entries
-    paths.forEach((path) => {
-      if (!existingPaths.has(path)) {
-        logData.push({
-          action,
-          path,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    });
+      // Add new log entries
+      paths.forEach((path) => {
+        if (!existingPaths.has(path)) {
+          logData.push({
+            action,
+            path,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      });
+    }
 
     // Write the updated log back to the file
     await Filesystem.writeFile({

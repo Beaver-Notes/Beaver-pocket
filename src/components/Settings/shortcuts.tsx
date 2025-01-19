@@ -36,7 +36,7 @@ const Shortcuts: React.FC = () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
         const translationModule = await import(
-          `../assets/locales/${selectedLanguage}.json`
+          `../../assets/locales/${selectedLanguage}.json`
         );
 
         setTranslations({ ...translations, ...translationModule.default });

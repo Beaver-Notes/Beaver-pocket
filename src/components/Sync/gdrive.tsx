@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
+import { SocialLogin } from "@capgo/capacitor-social-login";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { GoogleDriveAPI } from "../../utils/Google Drive/GoogleDriveAPI";
 import {
@@ -11,9 +11,8 @@ import {
 } from "@capacitor/filesystem";
 import icons from "../../lib/remixicon-react";
 import mime from "mime";
-import CircularProgress from "../../components/ui/ProgressBar";
+import CircularProgress from "../UI/ProgressBar";
 import { Note } from "../../store/types";
-import { isPlatform } from "@ionic/react";
 import { useHandleImportData } from "../../utils/importUtils";
 import { loadNotes } from "../../store/notes";
 import { base64ToBlob } from "../../utils/base64";
@@ -22,8 +21,8 @@ interface GdriveProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const IOS_CLIENT_ID = import.meta.env.VITE_IOS_GOOGLE_CLIENT_ID;
-const ANDROID_CLIENT_ID = import.meta.env.VITE_ANDROID_GOOGLE_CLIENT_ID;
+const WEB_CLIENT_ID = import.meta.env.VITE_WEB_GOOGLE_CLIENT_ID; // Web Client ID for all platforms
+const IOS_CLIENT_ID = import.meta.env.VITE_IOS_GOOGLE_CLIENT_ID; // iOS-specific Client ID
 
 const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
   const { importUtils } = useHandleImportData();
@@ -35,24 +34,13 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
   useEffect(() => {
     const initializeGoogleAuth = async () => {
       try {
-        let clientId = "";
-
-        // Determine the platform and select the correct clientId
-        if (isPlatform("ios")) {
-          clientId = IOS_CLIENT_ID; // iOS Client ID
-        } else if (isPlatform("android")) {
-          clientId = ANDROID_CLIENT_ID; // Android Client ID
-        } else {
-          console.error("Platform not supported");
-          return;
-        }
-
-        await GoogleAuth.initialize({
-          clientId: clientId,
-          scopes: ["profile", "email", "https://www.googleapis.com/auth/drive"],
-          grantOfflineAccess: true,
+        await SocialLogin.initialize({
+          google: {
+            webClientId: WEB_CLIENT_ID,
+            iOSClientId: IOS_CLIENT_ID,
+            mode: "online",
+          },
         });
-
         await loadAccessToken();
       } catch (error) {
         console.error("Failed to initialize Google Auth:", error);
@@ -64,27 +52,55 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
 
   const loadAccessToken = async () => {
     try {
-      const result = await SecureStoragePlugin.get({ key: "access_token" });
+      const result = await SecureStoragePlugin.get({
+        key: "google_access_token",
+      });
       if (result.value) {
-        const userInfo = await GoogleAuth.refresh(); // Initial refresh
-        setUser({ ...userInfo, authentication: { accessToken: result.value } });
-        setDriveAPI(new GoogleDriveAPI(result.value)); // Initialize GoogleDriveAPI with access token
-        console.log("Access token loaded from secure storage.");
+        const isValid = await validateAccessToken(result.value);
+        if (isValid) {
+          const userInfo = await SocialLogin.login({
+            provider: "google",
+            options: {
+              scopes: [
+                "profile",
+                "email",
+                "https://www.googleapis.com/auth/drive",
+              ],
+              forceRefreshToken: true,
+            },
+          });
+          setUser({
+            //@ts-ignore
+            ...userInfo.result.profile,
+            authentication: { accessToken: result.value },
+          });
+          setDriveAPI(new GoogleDriveAPI(result.value));
+        }
       }
     } catch (error) {
-      console.log(
-        "No access token found in secure storage or failed to refresh."
-      );
+      console.log("No valid access token found in secure storage.");
     }
   };
 
   const Login = async () => {
     try {
-      const googleUser = await GoogleAuth.signIn();
-      console.log("Google User:", googleUser);
-      setUser(googleUser);
-      setDriveAPI(new GoogleDriveAPI(googleUser.authentication.accessToken)); // Initialize API
-      saveAccessToken(googleUser.authentication.accessToken);
+      const res = await SocialLogin.login({
+        provider: "google",
+        options: {
+          scopes: ["profile", "email", "https://www.googleapis.com/auth/drive"],
+          forceRefreshToken: true,
+        },
+      });
+      const { result } = res;
+      //@ts-ignore
+      if (result.accessToken?.token) {
+        //@ts-ignore
+        setUser(result.profile);
+        //@ts-ignore
+        setDriveAPI(new GoogleDriveAPI(result.accessToken.token));
+        //@ts-ignore
+        saveAccessToken(result.accessToken.token);
+      }
     } catch (err) {
       console.error("Google Sign-In Error:", err);
     }
@@ -92,19 +108,34 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
 
   const saveAccessToken = async (token: string) => {
     try {
-      await SecureStoragePlugin.set({ key: "access_token", value: token });
+      await SecureStoragePlugin.set({
+        key: "google_access_token",
+        value: token,
+      });
       console.log("Access token saved to secure storage.");
     } catch (error) {
       console.error("Error saving access token:", error);
     }
   };
 
+  const validateAccessToken = async (token: string) => {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}`
+      );
+      return response.ok;
+    } catch (error) {
+      console.error("Error validating access token:", error);
+      return false;
+    }
+  };
+
   const Logout = async () => {
     try {
-      await GoogleAuth.signOut();
+      await SocialLogin.logout({ provider: "google" });
       setUser(null);
       setDriveAPI(null);
-      await SecureStoragePlugin.remove({ key: "access_token" });
+      await SecureStoragePlugin.remove({ key: "google_access_token" });
     } catch (err) {
       console.error("Error signing out:", err);
     }
@@ -362,16 +393,16 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
 
   const syncGdrive = async () => {
     if (!driveAPI) return;
-  
+
     try {
       setProgress(0);
       setProgressColor(darkMode ? "#444444" : "#e6e6e6");
       const syncLimit = parseInt(localStorage.getItem("synclimit") || "5", 10);
-  
+
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().slice(0, 10); // Format: YYYY-MM-DD
       const datedFolderPath = `Beaver Notes ${formattedDate}`;
-  
+
       let rootFolderId = await driveAPI.checkFolderExists("beaver-pocket");
       if (!rootFolderId) {
         rootFolderId = await driveAPI.createFolder("beaver-pocket");
@@ -379,37 +410,46 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
       if (!rootFolderId) {
         throw new Error("Root folder ID could not be determined.");
       }
-  
+
       const existingFolders = await driveAPI.listContents(rootFolderId);
       const datedFolders = existingFolders.filter((folder) =>
         folder.name.startsWith("Beaver Notes")
       );
-  
+
       // Sort and delete oldest folders exceeding sync limit
       datedFolders.sort((a, b) => {
         const dateA = new Date(a.createdTime || 0).getTime();
         const dateB = new Date(b.createdTime || 0).getTime();
         return dateA - dateB;
       });
-  
+
       while (datedFolders.length > syncLimit) {
         const folderToDelete = datedFolders.shift();
         if (folderToDelete) {
           await driveAPI.deleteFolder(folderToDelete.id);
         }
       }
-  
+
+      // Check if the "Beaver Notes YYYY-MM-DD" folder already exists
       let datedFolderId = await driveAPI.checkFolderExists(
         datedFolderPath,
         rootFolderId
       );
+
+      // Automatically delete the folder if it exists
+      if (datedFolderId) {
+        await driveAPI.deleteFolder(datedFolderId);
+        datedFolderId = null; // Reset folder ID after deletion
+      }
+
+      // Create the "Beaver Notes YYYY-MM-DD" folder inside "beaver-pocket"
       if (!datedFolderId) {
         datedFolderId = await driveAPI.createFolder(
           datedFolderPath,
           rootFolderId
         );
       }
-  
+
       const changelog = await Filesystem.readFile({
         path: "notes/change-log.json",
         directory: Directory.Data,
@@ -421,18 +461,18 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
           (entry: { action: string }) => entry.action === "updated" || "created"
         )
         .map((entry: { path: string }) => entry.path);
-  
+
       if (updatedPaths.includes("notes/data.json")) {
         const datafile = await Filesystem.readFile({
           path: "notes/data.json",
           directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
-  
+
         const dataBlob = new Blob([datafile.data], {
           type: "application/json",
         });
-  
+
         await driveAPI.uploadFile(
           "data.json",
           dataBlob,
@@ -441,7 +481,7 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
         );
         setProgress(20);
       }
-  
+
       const processAssets = async (
         updatedPaths: string[],
         assetType: string,
@@ -450,20 +490,20 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
         const updatedAssets = updatedPaths.filter((path) =>
           path.startsWith(assetType)
         );
-  
+
         for (const assetPath of updatedAssets) {
           const folderName = assetPath.split("/")[1]; // Extract folder name
-  
+
           const driveFolderId = await driveAPI.createFolder(
             folderName,
             assetFolderId
           );
-  
+
           const folderContents = await Filesystem.readdir({
             path: assetPath,
             directory: Directory.Data,
           });
-  
+
           for (const item of folderContents.files) {
             if (item.type === "file") {
               const filePath = `${assetPath}/${item.name}`;
@@ -471,13 +511,13 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
                 path: filePath,
                 directory: Directory.Data,
               });
-  
+
               const fileType = mime.getType(item.name); // Determine MIME type
               const blob = base64ToBlob(
                 String(fileData.data),
                 String(fileType)
               );
-  
+
               await driveAPI.uploadFile(
                 item.name,
                 blob,
@@ -488,7 +528,7 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
           }
         }
       };
-  
+
       const assetTypes = ["note-assets", "file-assets"];
       for (let assetType of assetTypes) {
         const assetFolder =
@@ -497,28 +537,27 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
           assetFolder,
           datedFolderId
         );
-  
+
         if (updatedPaths.some((path: string) => path.startsWith(assetType))) {
           await processAssets(updatedPaths, assetType, String(assetFolderId));
-          
+
           // Update progress after processing each asset type
           if (assetType === "note-assets") {
-            setProgress(60);  // Set to 60% after note-assets are processed
+            setProgress(60); // Set to 60% after note-assets are processed
           } else if (assetType === "file-assets") {
-            setProgress(90);  // Set to 90% after file-assets are processed
+            setProgress(90); // Set to 90% after file-assets are processed
           }
         }
       }
-  
+
       // Final progress set to 100%
       setProgress(100);
     } catch (error) {
       console.error("Error syncing data:", error);
       setProgressColor("#ff3333");
       setProgress(0);
-      alert(error);
     }
-  };  
+  };
 
   const importData = async () => {
     if (!driveAPI) {
@@ -594,7 +633,7 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
     const folderContents = await driveAPI!.listContents(driveFolderId);
 
     // Get the access token from SecureStoragePlugin
-    const token = await SecureStoragePlugin.get({ key: "access_token" });
+    const token = await SecureStoragePlugin.get({ key: "google_access_token" });
 
     for (const item of folderContents) {
       let subFolderPath = localFolderPath;

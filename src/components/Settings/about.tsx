@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { version } from "../../package.json";
-import icons from "../lib/remixicon-react";
+import { version } from "../../../package.json";
+import icons from "../../lib/remixicon-react";
 import dayjs from "dayjs";
 
 const Shortcuts: React.FC = () => {
@@ -31,7 +31,7 @@ const Shortcuts: React.FC = () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
         const translationModule = await import(
-          `../assets/locales/${selectedLanguage}.json`
+          `../../assets/locales/${selectedLanguage}.json`
         );
 
         setTranslations({ ...translations, ...translationModule.default });

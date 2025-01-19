@@ -305,7 +305,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
   return (
     <div className="draw w-full min-h-screen flex flex-col">
       {/* Top Toolbar */}
-      <div className="mt-2 sticky top-0 z-10 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800 rounded-none shadow-md">
+      <div className="sm:mt-2 mt-10 sticky top-0 z-10 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800 rounded-none shadow-md">
         {/* Left side controls */}
         <div className="flex items-center space-x-2">
           <button
@@ -354,7 +354,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           </button>
           <div className="relative">
             <select
-              className="border border-neutral-300 dark:border-neutral-600 rounded w-full p-2 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none mr-6"
+              className="hidden sm:block border border-neutral-300 dark:border-neutral-600 rounded w-full p-2 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none mr-6"
               value={background}
               onChange={handleBackgroundChange}
             >
@@ -396,7 +396,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
             <select
               value={size}
               onChange={(e) => setSize(Number(e.target.value))}
-              className="border border-neutral-300 dark:border-neutral-600 rounded w-full p-2 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none mr-6"
+              className="border hidden sm:block  border-neutral-300 dark:border-neutral-600 rounded w-full p-2 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none mr-6"
             >
               {tool === "pencil" && (
                 <>

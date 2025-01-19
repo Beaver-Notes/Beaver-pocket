@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { loadNotes } from "../../store/notes";
 import { useHandleImportData } from "../../utils/importUtils";
 import { Note } from "../../store/types";
-import CircularProgress from "../../components/ui/ProgressBar";
+import CircularProgress from "../UI/ProgressBar";
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import icons from "../../lib/remixicon-react";
 import iCloud from "../../utils/iCloud/iCloud";

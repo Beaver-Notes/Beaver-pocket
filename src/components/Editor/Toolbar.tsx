@@ -9,8 +9,9 @@ import AudioUploadComponent from "./AudioUpload";
 import VideoUploadComponent from "./VideoUpload";
 import { useNavigate } from "react-router-dom";
 import Mousetrap from "mousetrap";
-import { useExportDav } from "../../utils/Webdav/webDavUtil";
+import { useSyncDav } from "../../utils/Webdav/webDavUtil";
 import Find from "./Find";
+import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
 
 interface ToolbarProps {
   note: Note;
@@ -18,10 +19,7 @@ interface ToolbarProps {
   editor: Editor | null;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({
-  editor,
-  noteId,
-}) => {
+const Toolbar: React.FC<ToolbarProps> = ({ editor, noteId }) => {
   const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [showFind, setShowFind] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{
@@ -37,6 +35,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const FindRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  //Sync
+  const { syncDropBox } = useDropboxSync();
+  const { syncDav } = useSyncDav();
+
   const [translations, setTranslations] = useState({
     editor: {
       embedUrl: "editor.embedUrl",
@@ -90,7 +93,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       stopRecording: "accessibility.stopRecording",
       searchContent: "accessibility.searchContent",
       back: "accessibility.back",
-      videoUpload: "accessibility.videoUpload"
+      videoUpload: "accessibility.videoUpload",
     },
   });
 
@@ -315,11 +318,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const goBack = () => {
     const syncValue = localStorage.getItem("sync");
     if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
+      syncDropBox();
     } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
+      syncDav();
     } else if (syncValue === "iCloud") {
       const iCloudExport = new CustomEvent("iCloudExport");
       document.dispatchEvent(iCloudExport);
