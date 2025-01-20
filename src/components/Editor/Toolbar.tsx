@@ -12,6 +12,9 @@ import Mousetrap from "mousetrap";
 import { useSyncDav } from "../../utils/Webdav/webDavUtil";
 import Find from "./Find";
 import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
+import { useOnedriveSync } from "../../utils/Onedrive/oneDriveUtil";
+import { useExportiCloud } from "../../utils/iCloud/iCloudUtil";
+import { useDriveSync } from "../../utils/Google Drive/GDriveUtil";
 
 interface ToolbarProps {
   note: Note;
@@ -39,6 +42,9 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor, noteId }) => {
   //Sync
   const { syncDropBox } = useDropboxSync();
   const { syncDav } = useSyncDav();
+  const { syncOneDrive } = useOnedriveSync();
+  const { exportdata:SyncIcloud } = useExportiCloud();
+  const { syncGdrive } = useDriveSync();
 
   const [translations, setTranslations] = useState({
     editor: {
@@ -322,14 +328,11 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor, noteId }) => {
     } else if (syncValue === "webdav") {
       syncDav();
     } else if (syncValue === "iCloud") {
-      const iCloudExport = new CustomEvent("iCloudExport");
-      document.dispatchEvent(iCloudExport);
+      SyncIcloud();
     } else if (syncValue === "googledrive") {
-      const driveExport = new CustomEvent("driveExport");
-      document.dispatchEvent(driveExport);
+      syncGdrive();
     } else if (syncValue === "onedrive") {
-      const onedriveExport = new CustomEvent("onedriveExport");
-      document.dispatchEvent(onedriveExport);
+      syncOneDrive();
     }
     navigate("/");
   };

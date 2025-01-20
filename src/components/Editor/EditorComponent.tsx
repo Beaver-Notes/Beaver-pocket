@@ -23,6 +23,9 @@ import { saveFileToFileSystem } from "../../utils/fileHandler";
 import { useSyncDav } from "../../utils/Webdav/webDavUtil";
 import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
 import { WebviewPrint } from "capacitor-webview-print";
+import { useOnedriveSync } from "../../utils/Onedrive/oneDriveUtil";
+import { useExportiCloud } from "../../utils/iCloud/iCloudUtil";
+import { useDriveSync } from "../../utils/Google Drive/GDriveUtil";
 
 type Props = {
   note: Note;
@@ -47,9 +50,14 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
   const [sortingOption] = useState("updatedAt");
-  const { syncDav } = useSyncDav();
+
+  //Sync
   const { syncDropBox } = useDropboxSync();
-  
+  const { syncDav } = useSyncDav();
+  const { syncOneDrive } = useOnedriveSync();
+  const { exportdata: SyncIcloud } = useExportiCloud();
+  const { syncGdrive } = useDriveSync();
+
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
       const titleMatch = note.title
@@ -164,17 +172,13 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
       if (syncValue === "dropbox") {
         syncDropBox();
       } else if (syncValue === "webdav") {
-        const { syncDav } = useSyncDav();
         syncDav();
       } else if (syncValue === "iCloud") {
-        const iCloudExport = new CustomEvent("iCloudExport");
-        document.dispatchEvent(iCloudExport);
+        SyncIcloud();
       } else if (syncValue === "googledrive") {
-        const driveExport = new CustomEvent("driveExport");
-        document.dispatchEvent(driveExport);
+        syncGdrive();
       } else if (syncValue === "onedrive") {
-        const onedriveExport = new CustomEvent("onedriveExport");
-        document.dispatchEvent(onedriveExport);
+        syncOneDrive();
       }
     }, 4000); // Adjust timeout limit as needed
   }, [isTyping]);

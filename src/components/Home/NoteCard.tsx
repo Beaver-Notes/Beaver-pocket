@@ -49,6 +49,9 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   //Sync
   const { syncDropBox } = useDropboxSync();
   const { syncDav } = useSyncDav();
+  const { syncOneDrive } = useOnedriveSync();
+  const { exportdata:SyncIcloud } = useExportiCloud();
+  const { syncGdrive } = useDriveSync();
 
   // Translations
   const [translations, setTranslations] = useState({
@@ -99,14 +102,11 @@ const NoteCard: React.FC<BookmarkedProps> = ({
       } else if (syncValue === "webdav") {
         syncDav();
       } else if (syncValue === "iCloud") {
-        const iCloudExport = new CustomEvent("iCloudExport");
-        document.dispatchEvent(iCloudExport);
+        SyncIcloud();
       } else if (syncValue === "googledrive") {
-        const driveExport = new CustomEvent("driveExport");
-        document.dispatchEvent(driveExport);
+        syncGdrive();
       } else if (syncValue === "onedrive") {
-        const onedriveExport = new CustomEvent("onedriveExport");
-        document.dispatchEvent(onedriveExport);
+        syncOneDrive();
       }
 
       timeoutId = null;
@@ -519,3 +519,15 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 };
 
 export default NoteCard;
+function useOnedriveSync(): { syncOneDrive: any; } {
+  throw new Error("Function not implemented.");
+}
+
+function useExportiCloud(): { exportdata: any; } {
+  throw new Error("Function not implemented.");
+}
+
+function useDriveSync(): { syncGdrive: any; } {
+  throw new Error("Function not implemented.");
+}
+

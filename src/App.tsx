@@ -31,6 +31,9 @@ import Icons from "./components/Settings/icons";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { useDropboxImport } from "./utils/Dropbox/DropboxUtil";
+import { useImportOneDrive } from "./utils/Onedrive/oneDriveUtil";
+import { useImportiCloud } from "./utils/iCloud/iCloudUtil";
+import { useDriveImport } from "./utils/Google Drive/GDriveUtil";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -93,7 +96,7 @@ const App: React.FC = () => {
           path: "",
         });
         setStoreRemotePath(Capacitor.convertFileSrc(uri));
-  
+
         // Load notes from storage
         const notes = await loadNotes();
         setNotesState(notes);
@@ -101,7 +104,7 @@ const App: React.FC = () => {
         console.error("Error initializing data:", error);
       }
     };
-  
+
     initialize();
   }, []);
 
@@ -126,28 +129,34 @@ const App: React.FC = () => {
   }, [checkedFirstTime, history]);
 
   const { HandleImportData } = useImportDav(setNotesState);
-  const { importData:DropboxImport } = useDropboxImport(darkMode, setNotesState);
-
+  const { importData: DropboxImport } = useDropboxImport(
+    darkMode,
+    setNotesState
+  );
+  const { importData: OneDriveImport } = useImportOneDrive(
+    darkMode,
+    setNotesState
+  );
+  const { importData: IcloudImport } = useImportiCloud(setNotesState);
+  const { importData: DriveImport } = useDriveImport(darkMode, setNotesState);
+  
   useEffect(() => {
     const handleSync = () => {
       const syncValue = localStorage.getItem("sync");
-  
+
       if (syncValue === "dropbox") {
         DropboxImport();
       } else if (syncValue === "webdav") {
         HandleImportData(); // now safely called
       } else if (syncValue === "iCloud") {
-        const iCloudImport = new CustomEvent("iCloudImport");
-        document.dispatchEvent(iCloudImport);
+        IcloudImport();
       } else if (syncValue === "googledrive") {
-        const driveImport = new CustomEvent("driveImport");
-        document.dispatchEvent(driveImport);
+        DriveImport();
       } else if (syncValue === "onedrive") {
-        const onedriveImport = new CustomEvent("onedriveImport");
-        document.dispatchEvent(onedriveImport);
+        OneDriveImport();
       }
     };
-  
+
     handleSync();
   }, []);
 
@@ -217,7 +226,7 @@ const App: React.FC = () => {
     Keyboard.setResizeMode({ mode: KeyboardResize.None });
   } else if (!isPlatform("android")) {
     Keyboard.setResizeMode({ mode: KeyboardResize.Native });
-  }  
+  }
 
   return (
     <div>
@@ -252,7 +261,12 @@ const App: React.FC = () => {
           <Route
             path="/dropbox"
             element={
-              <Dropbox notesState={notesState} setNotesState={setNotesState} themeMode={themeMode} darkMode={darkMode}/>
+              <Dropbox
+                notesState={notesState}
+                setNotesState={setNotesState}
+                themeMode={themeMode}
+                darkMode={darkMode}
+              />
             }
           />
           <Route
@@ -288,7 +302,7 @@ const App: React.FC = () => {
           <Route
             path="/editor/:note"
             element={
-              <Editor notesState={notesState} setNotesState={setNotesState}/>
+              <Editor notesState={notesState} setNotesState={setNotesState} />
             }
           />
         </Routes>
