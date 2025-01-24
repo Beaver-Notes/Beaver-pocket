@@ -25,6 +25,9 @@ import "dayjs/locale/de";
 import "dayjs/locale/zh-cn";
 import { useSyncDav } from "../../utils/Webdav/webDavUtil";
 import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
+import { useOnedriveSync } from "../../utils/Onedrive/oneDriveUtil";
+import { useExportiCloud } from "../../utils/iCloud/iCloudUtil";
+import { useDriveSync } from "../../utils/Google Drive/GDriveUtil";
 
 interface BookmarkedProps {
   note: Note;
@@ -519,15 +522,3 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 };
 
 export default NoteCard;
-function useOnedriveSync(): { syncOneDrive: any; } {
-  throw new Error("Function not implemented.");
-}
-
-function useExportiCloud(): { exportdata: any; } {
-  throw new Error("Function not implemented.");
-}
-
-function useDriveSync(): { syncGdrive: any; } {
-  throw new Error("Function not implemented.");
-}
-

@@ -17,8 +17,10 @@ const STORAGE_PATH = "notes/data.json";
 const { importUtils } = useHandleImportData();
 
 export const useOneDrive = async () => {
-  const accessToken = (await SecureStoragePlugin.get({ key: "access_token" }))
-    .value;
+  const accessToken = await SecureStoragePlugin.get({
+    key: "onedrive_access_token",
+  });
+
   const refreshAccessToken = async () => {
     try {
       const result = await MsAuthPlugin.login({
@@ -31,11 +33,11 @@ export const useOneDrive = async () => {
 
       // Save the access token and expiration time to secure storage
       await SecureStoragePlugin.set({
-        key: "access_token",
+        key: "onedrive_access_token",
         value: result.accessToken,
       });
       await SecureStoragePlugin.set({
-        key: "expiration_time",
+        key: "onedrive_expiration_time",
         value: (Date.now() + result.expiresIn * 1000).toString(), // Assuming `expiresIn` is returned in seconds
       });
     } catch (error) {
@@ -173,41 +175,41 @@ export const useExport = (darkMode: boolean) => {
 
         // Create folders in parallel
         const createFolder = async (path: string, parentPath: string = "") => {
-            const fullPath = parentPath ? `${parentPath}/${path}` : path;
-          
-            const response = await fetch(
+          const fullPath = parentPath ? `${parentPath}/${path}` : path;
+
+          const response = await fetch(
+            `https://graph.microsoft.com/v1.0/me/drive/root:/` +
+              encodeURIComponent(fullPath),
+            {
+              method: "GET",
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }
+          );
+
+          if (response.status === 404) {
+            await fetch(
               `https://graph.microsoft.com/v1.0/me/drive/root:/` +
-                encodeURIComponent(fullPath),
+                encodeURIComponent(parentPath || "") +
+                `:/children`,
               {
-                method: "GET",
-                headers: { Authorization: `Bearer ${accessToken}` },
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  name: path.split("/").pop(),
+                  folder: {},
+                }),
               }
             );
-          
-            if (response.status === 404) {
-              await fetch(
-                `https://graph.microsoft.com/v1.0/me/drive/root:/` +
-                  encodeURIComponent(parentPath || "") +
-                  `:/children`,
-                {
-                  method: "POST",
-                  headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    name: path.split("/").pop(),
-                    folder: {},
-                  }),
-                }
-              );
-            }
-          };
-          
-          // Create necessary folders in a clear hierarchy
-          await createFolder(parentFolder);
-          await createFolder(folderName, parentFolder);
-          await createFolder("assets", `${parentFolder}/${folderName}`);
+          }
+        };
+
+        // Create necessary folders in a clear hierarchy
+        await createFolder(parentFolder);
+        await createFolder(folderName, parentFolder);
+        await createFolder("assets", `${parentFolder}/${folderName}`);
 
         // Upload data.json
         await fetch(
@@ -356,10 +358,7 @@ export const useExport = (darkMode: boolean) => {
   return { exportData, progress, progressColor };
 };
 
-export const useImportOneDrive = (
-  darkMode: boolean,
-  setNotesState: any
-) => {
+export const useImportOneDrive = (darkMode: boolean, setNotesState: any) => {
   const [progress, setProgress] = useState(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
   const importData = async (): Promise<void> => {
@@ -597,7 +596,6 @@ export const useOnedriveSync = () => {
               entry.action === "updated" || "created"
           )
           .map((entry: { path: string }) => entry.path);
-        alert(updatedPaths);
         if (updatedPaths.includes("notes/data.json")) {
           const datafile = await Filesystem.readFile({
             path: STORAGE_PATH,
@@ -605,7 +603,6 @@ export const useOnedriveSync = () => {
             encoding: FilesystemEncoding.UTF8,
           });
 
-          alert(datafile.data);
           await fetch(
             `https://graph.microsoft.com/v1.0/me/drive/root:/` +
               encodeURIComponent(`${fullFolderPath}/data.json`) +
@@ -640,27 +637,6 @@ export const useOnedriveSync = () => {
               directory: Directory.Data,
             });
 
-            // Ensure the folder exists on OneDrive
-            await fetch(
-              `https://graph.microsoft.com/v1.0/me/drive/root:/` +
-                encodeURIComponent(
-                  `${fullFolderPath}/${assetFolder}/${folderName}`
-                ) +
-                `:/children`,
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  name: folderName,
-                  folder: {},
-                  "@microsoft.graph.conflictBehavior": "fail",
-                }),
-              }
-            );
-
             // Upload files in the folder
             for (const file of folderContents.files) {
               const filePath = `${assetPath}/${file.name}`;
@@ -679,18 +655,27 @@ export const useOnedriveSync = () => {
               });
 
               // Upload the file to OneDrive
-              await fetch(
-                `https://graph.microsoft.com/v1.0/me/drive/root:/` +
-                  encodeURIComponent(
-                    `${fullFolderPath}/${assetFolder}/${folderName}/${file.name}`
-                  ) +
-                  `:/content`,
-                {
-                  method: "PUT",
-                  headers: { Authorization: `Bearer ${accessToken}` },
-                  body: uploadedFile,
+              try {
+                const response = await fetch(
+                  `https://graph.microsoft.com/v1.0/me/drive/root:/` +
+                    encodeURIComponent(
+                      `${fullFolderPath}/${assetFolder}/${folderName}/${file.name}`
+                    ) +
+                    `:/content`,
+                  {
+                    method: "PUT",
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                    body: uploadedFile,
+                  }
+                );
+                if (response.ok) {
+                } else {
+                  const errorText = await response.text();
+                  console.log(errorText);
                 }
-              );
+              } catch (error) {
+                console.log(error);
+              }
             }
           }
         };

@@ -1,32 +1,43 @@
 import React, { useEffect, useState } from "react";
-import { SocialLogin } from "@capgo/capacitor-social-login";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { GoogleDriveAPI } from "../../utils/Google Drive/GoogleDriveAPI";
 import icons from "../../lib/remixicon-react";
 import CircularProgress from "../UI/ProgressBar";
 import { Note } from "../../store/types";
+import { isPlatform } from "@ionic/react";
 import { useDriveImport, useExport } from "../../utils/Google Drive/GDriveUtil";
 
 interface GdriveProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const WEB_CLIENT_ID = import.meta.env.VITE_WEB_GOOGLE_CLIENT_ID; // Web Client ID for all platforms
-const IOS_CLIENT_ID = import.meta.env.VITE_IOS_GOOGLE_CLIENT_ID; // iOS-specific Client ID
+const IOS_CLIENT_ID = import.meta.env.VITE_IOS_GOOGLE_CLIENT_ID;
+const ANDROID_CLIENT_ID = import.meta.env.VITE_ANDROID_GOOGLE_CLIENT_ID;
 
 const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
   const [user, setUser] = useState<any | null>(null);
-  
+
   useEffect(() => {
     const initializeGoogleAuth = async () => {
       try {
-        await SocialLogin.initialize({
-          google: {
-            webClientId: WEB_CLIENT_ID,
-            iOSClientId: IOS_CLIENT_ID,
-            mode: "online",
-          },
+        let clientId = "";
+
+        // Determine the platform and select the correct clientId
+        if (isPlatform("ios")) {
+          clientId = IOS_CLIENT_ID; // iOS Client ID
+        } else if (isPlatform("android")) {
+          clientId = ANDROID_CLIENT_ID; // Android Client ID
+        } else {
+          console.error("Platform not supported");
+          return;
+        }
+
+        await GoogleAuth.initialize({
+          clientId: clientId,
+          scopes: ["profile", "email", "https://www.googleapis.com/auth/drive"],
+          grantOfflineAccess: true,
         });
+
         await loadAccessToken();
       } catch (error) {
         console.error("Failed to initialize Google Auth:", error);
@@ -38,54 +49,25 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
 
   const loadAccessToken = async () => {
     try {
-      const result = await SecureStoragePlugin.get({
-        key: "google_access_token",
-      });
+      const result = await SecureStoragePlugin.get({ key: "access_token" });
       if (result.value) {
-        const isValid = await validateAccessToken(result.value);
-        if (isValid) {
-          const userInfo = await SocialLogin.login({
-            provider: "google",
-            options: {
-              scopes: [
-                "profile",
-                "email",
-                "https://www.googleapis.com/auth/drive",
-              ],
-              forceRefreshToken: true,
-            },
-          });
-          setUser({
-            //@ts-ignore
-            ...userInfo.result.profile,
-            authentication: { accessToken: result.value },
-          });
-        }
+        const userInfo = await GoogleAuth.refresh(); // Initial refresh
+        setUser({ ...userInfo, authentication: { accessToken: result.value } });
+        console.log("Access token loaded from secure storage.");
       }
     } catch (error) {
-      console.log("No valid access token found in secure storage.");
+      console.log(
+        "No access token found in secure storage or failed to refresh."
+      );
     }
   };
 
   const Login = async () => {
     try {
-      const res = await SocialLogin.login({
-        provider: "google",
-        options: {
-          scopes: ["profile", "email", "https://www.googleapis.com/auth/drive"],
-          forceRefreshToken: true,
-        },
-      });
-      const { result } = res;
-      //@ts-ignore
-      if (result.accessToken?.token) {
-        //@ts-ignore
-        setUser(result.profile);
-        //@ts-ignore
-        setDriveAPI(new GoogleDriveAPI(result.accessToken.token));
-        //@ts-ignore
-        saveAccessToken(result.accessToken.token);
-      }
+      const googleUser = await GoogleAuth.signIn();
+      console.log("Google User:", googleUser);
+      setUser(googleUser);
+      saveAccessToken(googleUser.authentication.accessToken);
     } catch (err) {
       console.error("Google Sign-In Error:", err);
     }
@@ -93,33 +75,18 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
 
   const saveAccessToken = async (token: string) => {
     try {
-      await SecureStoragePlugin.set({
-        key: "google_access_token",
-        value: token,
-      });
+      await SecureStoragePlugin.set({ key: "access_token", value: token });
       console.log("Access token saved to secure storage.");
     } catch (error) {
       console.error("Error saving access token:", error);
     }
   };
 
-  const validateAccessToken = async (token: string) => {
-    try {
-      const response = await fetch(
-        `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}`
-      );
-      return response.ok;
-    } catch (error) {
-      console.error("Error validating access token:", error);
-      return false;
-    }
-  };
-
   const Logout = async () => {
     try {
-      await SocialLogin.logout({ provider: "google" });
+      await GoogleAuth.signOut();
       setUser(null);
-      await SecureStoragePlugin.remove({ key: "google_access_token" });
+      await SecureStoragePlugin.remove({ key: "access_token" });
     } catch (err) {
       console.error("Error signing out:", err);
     }
@@ -141,6 +108,18 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
+
+  const {
+    exportdata,
+    progress: exportProgress,
+    progressColor: exportProgressColor,
+  } = useExport(darkMode);
+
+  const {
+    importData,
+    progress: importProgress,
+    progressColor: importProgressColor,
+  } = useDriveImport(darkMode, setNotesState);
 
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
@@ -201,18 +180,6 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
 
     loadTranslations();
   }, []);
-
-  const {
-    exportdata,
-    progress: exportProgress,
-    progressColor: exportProgressColor,
-  } = useExport(darkMode);
-
-  const {
-    importData,
-    progress: importProgress,
-    progressColor: importProgressColor,
-  } = useDriveImport(darkMode, setNotesState);
 
   return (
     <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">

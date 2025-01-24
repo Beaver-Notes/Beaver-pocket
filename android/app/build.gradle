@@ -14,7 +14,7 @@ android {
         buildConfigField "String", "SERVER_CLIENT_ID", "\"${project.GOOGLE_CLIENT_ID}\""
 
         manifestPlaceholders = [
-                ONEDRIVE_SHA1: "\"${project.ONEDRIVE_SHA1}\""
+                ONEDRIVE_SHA1: "${project.ONEDRIVE_SHA1}"
         ]
 
         signingConfigs {

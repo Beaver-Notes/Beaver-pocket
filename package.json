@@ -30,7 +30,7 @@
     "@capacitor/share": "^6.0.0",
     "@capacitor/splash-screen": "^6.0.0",
     "@capacitor/status-bar": "^6.0.0",
-    "@capgo/capacitor-social-login": "^0.3.0",
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@emotion/core": "^11.0.0",
     "@headlessui/react": "^2.1.1",
     "@ionic/cli": "^7.1.6",

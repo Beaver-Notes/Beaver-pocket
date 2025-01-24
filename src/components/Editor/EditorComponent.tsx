@@ -702,7 +702,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
                 onPaste={handlePaste}
                 editor={editor}
                 onTouchStart={event?.preventDefault}
-                className="prose dark:text-neutral-100 max-w-none prose-indigo mb-12"
+                className="prose dark:text-neutral-100 max-w-none prose-indigo mb-[5em]"
               />
             </div>
           </div>

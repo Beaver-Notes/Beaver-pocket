@@ -20,7 +20,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
 
   useEffect(() => {
     const loadToken = async () => {
-      const { value } = await SecureStoragePlugin.get({ key: "access_token" });
+      const { value } = await SecureStoragePlugin.get({ key: "onedrive_access_token" });
 
       if (value) {
         setAccessToken(value);
@@ -42,11 +42,11 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
 
       // Save the access token and expiration time to secure storage
       await SecureStoragePlugin.set({
-        key: "access_token",
+        key: "onedrive_access_token",
         value: result.accessToken,
       });
       await SecureStoragePlugin.set({
-        key: "expiration_time",
+        key: "onedrive_expiration_time",
         value: (Date.now() + result.expiresIn * 1000).toString(), // Save expiration time
       });
     } catch (error) {
@@ -62,7 +62,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
         tenant: "common",
         keyHash: import.meta.env.VITE_ONEDRIDE_ANDROID_HASH,
       });
-      await SecureStoragePlugin.remove({ key: "access_token" });
+      await SecureStoragePlugin.remove({ key: "onedrive_access_token" });
       console.log("Logged out successfully");
     } catch (error) {
       console.error("Logout failed:", error);

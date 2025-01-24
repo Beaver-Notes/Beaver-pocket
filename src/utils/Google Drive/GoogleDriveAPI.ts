@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export type FileMetadata = {
   id: string;
   name: string;
@@ -12,6 +14,15 @@ export class GoogleDriveAPI {
     this.accessToken = accessToken;
   }
 
+  private get axiosInstance() {
+    return axios.create({
+      baseURL: "https://www.googleapis.com/drive/v3",
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+      },
+    });
+  }
+
   // Create a folder in Google Drive
   async createFolder(
     folderName: string,
@@ -24,29 +35,16 @@ export class GoogleDriveAPI {
     };
 
     try {
-      const response = await fetch(
-        "https://www.googleapis.com/drive/v3/files",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(metadata),
-        }
+      const response = await this.axiosInstance.post("/files", metadata);
+      return response.data.id || null; // Return folder ID if successful
+    } catch (error: any) {
+      console.error(
+        "Error creating folder:",
+        error.response?.data || error.message
       );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error creating folder:", error);
-        throw new Error(`Error creating folder: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.id || null; // Return folder ID if successful
-    } catch (error) {
-      console.error("Exception in createFolder:", error);
-      throw error;
+      throw new Error(
+        `Error creating folder: ${error.response?.statusText || error.message}`
+      );
     }
   }
 
@@ -60,63 +58,46 @@ export class GoogleDriveAPI {
       (parentId ? ` and '${parentId}' in parents` : ` and 'root' in parents`);
 
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
-          query
-        )}&fields=files(id,name)`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
-      );
+      const response = await this.axiosInstance.get(`/files`, {
+        params: {
+          q: query,
+          fields: "files(id,name)",
+        },
+      });
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error checking folder existence:", error);
-        throw new Error(
-          `Error checking folder existence: ${response.statusText}`
-        );
-      }
-
-      const data = await response.json();
-      if (data.files && data.files.length > 0) {
-        return data.files[0].id; // Return folder ID if found
+      if (response.data.files && response.data.files.length > 0) {
+        return response.data.files[0].id; // Return folder ID if found
       }
 
       return null; // Folder does not exist
-    } catch (error) {
-      console.error("Exception in checkFolderExists:", error);
-      throw error;
+    } catch (error: any) {
+      console.error(
+        "Error checking folder existence:",
+        error.response?.data || error.message
+      );
+      throw new Error(
+        `Error checking folder existence: ${
+          error.response?.statusText || error.message
+        }`
+      );
     }
   }
 
   // Delete a folder by its ID
   async deleteFolder(folderId: string): Promise<void> {
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${folderId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
+      await this.axiosInstance.delete(`/files/${folderId}`);
+    } catch (error: any) {
+      console.error(
+        "Error deleting folder:",
+        error.response?.data || error.message
       );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error deleting folder:", error);
-        throw new Error(`Error deleting folder: ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error("Exception in deleteFolder:", error);
-      throw error;
+      throw new Error(
+        `Error deleting folder: ${error.response?.statusText || error.message}`
+      );
     }
   }
 
-  // Upload a file to a specific folder
   async uploadFile(
     fileName: string,
     content: Blob | string,
@@ -173,53 +154,42 @@ export class GoogleDriveAPI {
   // List contents of a folder
   async listContents(folderId: string): Promise<FileMetadata[]> {
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents&fields=files(id,name,mimeType,createdTime)`, // Add createdTime to the fields
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
+      const response = await this.axiosInstance.get(`/files`, {
+        params: {
+          q: `'${folderId}' in parents`,
+          fields: "files(id,name,mimeType,createdTime)",
+        },
+      });
+
+      return response.data.files || [];
+    } catch (error: any) {
+      console.error(
+        "Error listing contents:",
+        error.response?.data || error.message
       );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error listing contents:", error);
-        throw new Error(`Error listing contents: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.files || [];
-    } catch (error) {
-      console.error("Exception in listContents:", error);
-      throw error;
+      throw new Error(
+        `Error listing contents: ${error.response?.statusText || error.message}`
+      );
     }
   }
 
   // Download a file by its ID
   async downloadFile(fileId: string): Promise<string> {
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
+      const response = await this.axiosInstance.get(`/files/${fileId}`, {
+        params: { alt: "media" },
+        responseType: "text", // Assuming the file is text
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error(
+        "Error downloading file:",
+        error.response?.data || error.message
       );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error downloading file:", error);
-        throw new Error(`Error downloading file: ${response.statusText}`);
-      }
-
-      return await response.text(); // Assuming the file is a text file
-    } catch (error) {
-      console.error("Exception in downloadFile:", error);
-      throw error;
+      throw new Error(
+        `Error downloading file: ${error.response?.statusText || error.message}`
+      );
     }
   }
 }

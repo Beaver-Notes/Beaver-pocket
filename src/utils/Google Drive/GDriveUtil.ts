@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { GoogleDriveAPI } from "../../utils/Google Drive/GoogleDriveAPI";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { SocialLogin } from "@capgo/capacitor-social-login";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import {
   Directory,
   Encoding,
@@ -20,58 +20,29 @@ export const useDrive = () => {
   const [user, setUser] = useState<any | null>(null);
   const [driveAPI, setDriveAPI] = useState<GoogleDriveAPI | null>(null);
 
-  const validateAccessToken = async (token: string) => {
-    try {
-      const response = await fetch(
-        `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}`
-      );
-      return response.ok;
-    } catch (error) {
-      console.error("Error validating access token:", error);
-      return false;
-    }
-  };
-
   const loadAccessToken = async () => {
     try {
-      alert("token");
-      const result = await SecureStoragePlugin.get({
-        key: "google_access_token",
-      });
+      const result = await SecureStoragePlugin.get({ key: "access_token" });
       if (result.value) {
-        const isValid = await validateAccessToken(result.value);
-        if (isValid) {
-          const userInfo = await SocialLogin.login({
-            provider: "google",
-            options: {
-              scopes: [
-                "profile",
-                "email",
-                "https://www.googleapis.com/auth/drive",
-              ],
-              forceRefreshToken: true,
-            },
-          });
-          setUser({
-            //@ts-ignore
-            ...userInfo.result.profile,
-            authentication: { accessToken: result.value },
-          });
-          setDriveAPI(new GoogleDriveAPI(result.value));
-        }
+        const userInfo = await GoogleAuth.refresh(); // Initial refresh
+        setUser({ ...userInfo, authentication: { accessToken: result.value } });
+        setDriveAPI(new GoogleDriveAPI(result.value)); // Initialize GoogleDriveAPI with access token
+        console.log("Access token loaded from secure storage.");
       }
     } catch (error) {
-      console.log("No valid access token found in secure storage.");
+      console.log(
+        "No access token found in secure storage or failed to refresh."
+      );
     }
   };
   return { user, driveAPI, loadAccessToken };
 };
 
 export const useExport = (darkMode: boolean) => {
+  const { driveAPI, loadAccessToken } = useDrive();
   const [progress, setProgress] = useState(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
   const exportdata = async () => {
-    const { driveAPI, loadAccessToken } = await useDrive();
     loadAccessToken();
     if (!driveAPI) return;
     try {
@@ -243,9 +214,8 @@ export const useExport = (darkMode: boolean) => {
       const dataFile = await Filesystem.readFile({
         path: "notes/data.json",
         directory: Directory.Data,
-        encoding: Encoding.UTF8, // Use UTF-8 for text-based files like JSON
+        encoding: Encoding.UTF8,
       });
-
       const dataBlob = new Blob([dataFile.data], { type: "application/json" });
       await driveAPI.uploadFile(
         "data.json",
@@ -288,14 +258,15 @@ export const useExport = (darkMode: boolean) => {
 };
 
 export const useDriveSync = () => {
+  const { driveAPI, loadAccessToken } = useDrive();
   const [progress, setProgress] = useState(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
   const syncGdrive = async () => {
-    const { driveAPI, loadAccessToken } = await useDrive();
     loadAccessToken();
     if (!driveAPI) return;
 
     try {
+      alert("starting");
       setProgress(0);
       const syncLimit = parseInt(localStorage.getItem("synclimit") || "5", 10);
 
@@ -462,13 +433,13 @@ export const useDriveSync = () => {
 };
 
 export const useDriveImport = (darkMode: boolean, setNotesState: any) => {
+  const { driveAPI, loadAccessToken } = useDrive();
   const [progress, setProgress] = useState(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
   const downloadFolderContents = async (
     driveFolderId: string,
     localFolderPath: string
   ) => {
-    const { driveAPI, loadAccessToken } = await useDrive();
     loadAccessToken();
     // Ensure driveAPI is not null by using '!'
     const folderContents = await driveAPI!.listContents(driveFolderId);
