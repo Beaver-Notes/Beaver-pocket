@@ -20,7 +20,9 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
 
   useEffect(() => {
     const loadToken = async () => {
-      const { value } = await SecureStoragePlugin.get({ key: "onedrive_access_token" });
+      const { value } = await SecureStoragePlugin.get({
+        key: "onedrive_access_token",
+      });
 
       if (value) {
         setAccessToken(value);
@@ -28,6 +30,17 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
     };
     loadToken();
   }, []);
+
+  const decodeJwt = (token:string) => {
+    try {
+      const payload = token.split(".")[1]; // Extract the payload part of the JWT
+      const decodedPayload = atob(payload); // Decode base64 string
+      return JSON.parse(decodedPayload); // Parse the JSON
+    } catch (error) {
+      console.error("Failed to decode JWT:", error);
+      return null;
+    }
+  };
 
   const login = async () => {
     try {
@@ -37,17 +50,30 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
         keyHash: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
         scopes: ["Files.ReadWrite", "User.Read"],
       });
+
+      if (!result || !result.accessToken) {
+        throw new Error("Access token not found in login result.");
+      }
+
       setAccessToken(result.accessToken);
-      console.log("Access Token:", result.accessToken);
+
+      // Decode the JWT to extract the expiration time
+      const tokenData = decodeJwt(result.accessToken);
+      const expirationTime = tokenData?.exp
+        ? tokenData.exp * 1000 // Convert `exp` from seconds to milliseconds
+        : Date.now() + 3600 * 1000; // Default to 1 hour if `exp` is missing
+
+      alert(new Date(expirationTime));
 
       // Save the access token and expiration time to secure storage
       await SecureStoragePlugin.set({
         key: "onedrive_access_token",
         value: result.accessToken,
       });
+
       await SecureStoragePlugin.set({
         key: "onedrive_expiration_time",
-        value: (Date.now() + result.expiresIn * 1000).toString(), // Save expiration time
+        value: expirationTime.toString(),
       });
     } catch (error) {
       console.error("Login failed:", error);

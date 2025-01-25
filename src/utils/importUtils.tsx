@@ -16,15 +16,11 @@ export const useHandleImportData = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      let jsonString: string;
       if (typeof fileContents.data === "string") {
-        jsonString = fileContents.data;
+        return JSON.parse(fileContents.data);
       } else {
-        // If data is a Blob, convert it to string
-        jsonString = await fileContents.data.text();
+        throw new Error("File content is not a string");
       }
-
-      return JSON.parse(jsonString);
     } catch (error) {
       console.error("Error reading JSON file:", error);
       throw new Error("Failed to read JSON file");
@@ -37,17 +33,15 @@ export const useHandleImportData = () => {
   ) => {
     try {
       const currentDate = new Date();
-      const oneDayInMs = 24 * 60 * 60 * 1000; // milliseconds in a day
+      const oneDayInMs = 24 * 60 * 60 * 1000;
       let foundViableFolder = false;
       let importFolderPath = "";
 
-      // Check back for 30 days
       for (let i = 0; i < 30; i++) {
         const checkDate = new Date(currentDate.getTime() - i * oneDayInMs);
         const formattedDate = checkDate.toISOString().split("T")[0];
         importFolderPath = `/export/Beaver Notes ${formattedDate}`;
 
-        // Check if the folder exists
         const folderExists = await Filesystem.readdir({
           path: importFolderPath,
           directory: Directory.Data,
@@ -57,7 +51,7 @@ export const useHandleImportData = () => {
 
         if (folderExists) {
           foundViableFolder = true;
-          break; // Exit the loop if a viable folder is found
+          break;
         }
       }
 
@@ -70,53 +64,61 @@ export const useHandleImportData = () => {
       const importFileAssetsPath = `${importFolderPath}/file-assets`;
 
       // Import note-assets
-      const existingNoteAssets = await Filesystem.readdir({
-        path: "note-assets",
-        directory: Directory.Data,
-      });
+      try {
+        const existingNoteAssets = await Filesystem.readdir({
+          path: "note-assets",
+          directory: Directory.Data,
+        });
 
-      const existingNoteFiles = new Set(
-        existingNoteAssets.files.map((file) => file.name)
-      );
+        const existingNoteFiles = new Set(
+          existingNoteAssets.files.map((file) => file.name)
+        );
 
-      const importedNoteAssets = await Filesystem.readdir({
-        path: importAssetsPath,
-        directory: Directory.Data,
-      });
+        const importedNoteAssets = await Filesystem.readdir({
+          path: importAssetsPath,
+          directory: Directory.Data,
+        });
 
-      for (const file of importedNoteAssets.files) {
-        if (!existingNoteFiles.has(file.name)) {
-          await Filesystem.copy({
-            from: `${importAssetsPath}/${file.name}`,
-            to: `note-assets/${file.name}`,
-            directory: Directory.Data,
-          });
+        for (const file of importedNoteAssets.files) {
+          if (!existingNoteFiles.has(file.name)) {
+            await Filesystem.copy({
+              from: `${importAssetsPath}/${file.name}`,
+              to: `note-assets/${file.name}`,
+              directory: Directory.Data,
+            });
+          }
         }
+      } catch (error) {
+        console.warn(`Note-assets folder not found: ${error}`);
       }
 
       // Import file-assets
-      const existingFileAssets = await Filesystem.readdir({
-        path: "file-assets",
-        directory: Directory.Data,
-      });
+      try {
+        const existingFileAssets = await Filesystem.readdir({
+          path: "file-assets",
+          directory: Directory.Data,
+        });
 
-      const existingFileFiles = new Set(
-        existingFileAssets.files.map((file) => file.name)
-      );
+        const existingFileFiles = new Set(
+          existingFileAssets.files.map((file) => file.name)
+        );
 
-      const importedFileAssets = await Filesystem.readdir({
-        path: importFileAssetsPath,
-        directory: Directory.Data,
-      });
+        const importedFileAssets = await Filesystem.readdir({
+          path: importFileAssetsPath,
+          directory: Directory.Data,
+        });
 
-      for (const file of importedFileAssets.files) {
-        if (!existingFileFiles.has(file.name)) {
-          await Filesystem.copy({
-            from: `${importFileAssetsPath}/${file.name}`,
-            to: `file-assets/${file.name}`,
-            directory: Directory.Data,
-          });
+        for (const file of importedFileAssets.files) {
+          if (!existingFileFiles.has(file.name)) {
+            await Filesystem.copy({
+              from: `${importFileAssetsPath}/${file.name}`,
+              to: `file-assets/${file.name}`,
+              directory: Directory.Data,
+            });
+          }
         }
+      } catch (error) {
+        console.warn(`File-assets folder not found: ${error}`);
       }
 
       const parsedData = await readJsonFile(importDataPath);
@@ -136,7 +138,7 @@ export const useHandleImportData = () => {
             "content" in note.content
           ) {
             if (note.content.content) {
-              const updatedContent = note.content.content.map((node: any) => {
+              note.content.content = note.content.content.map((node: any) => {
                 if (node.type === "image" && node.attrs && node.attrs.src) {
                   node.attrs.src = node.attrs.src.replace(
                     "assets://",
@@ -145,10 +147,8 @@ export const useHandleImportData = () => {
                 }
                 return node;
               });
-              note.content.content = updatedContent;
-            }
-            if (note.content.content) {
-              const updatedContent = note.content.content.map((node: any) => {
+
+              note.content.content = note.content.content.map((node: any) => {
                 if (
                   (node.type === "fileEmbed" ||
                     node.type === "Audio" ||
@@ -163,7 +163,6 @@ export const useHandleImportData = () => {
                 }
                 return node;
               });
-              note.content.content = updatedContent;
             }
           }
         });
@@ -182,12 +181,7 @@ export const useHandleImportData = () => {
         });
 
         setNotesState(mergedNotes);
-        const triggerReload = () => {
-          const event = new Event("reload");
-          document.dispatchEvent(event);
-        };
-
-        triggerReload();
+        document.dispatchEvent(new Event("reload"));
       }
     } catch (error: any) {
       alert(error);

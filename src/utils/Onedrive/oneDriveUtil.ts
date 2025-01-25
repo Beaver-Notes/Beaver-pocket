@@ -16,47 +16,90 @@ const { MsAuthPlugin } = Plugins;
 const STORAGE_PATH = "notes/data.json";
 const { importUtils } = useHandleImportData();
 
-export const useOneDrive = async () => {
-  const accessToken = await SecureStoragePlugin.get({
-    key: "onedrive_access_token",
-  });
+const decodeJwt = (token:string) => {
+  try {
+    const payload = token.split(".")[1]; // Extract the payload part of the JWT
+    const decodedPayload = atob(payload); // Decode base64 string
+    return JSON.parse(decodedPayload); // Parse the JSON
+  } catch (error) {
+    console.error("Failed to decode JWT:", error);
+    return null;
+  }
+};
 
-  const refreshAccessToken = async () => {
-    try {
-      const result = await MsAuthPlugin.login({
-        clientId: import.meta.env.VITE_ONEDRIVE_CLIENT_ID,
-        tenant: "common",
-        keyHash: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
-        scopes: ["Files.ReadWrite", "User.Read"],
-      });
-      console.log("Refreshed Access Token:", result.accessToken);
+const refreshAccessToken = async (): Promise<string | null> => {
+  try {
+    const result = await MsAuthPlugin.login({
+      clientId: import.meta.env.VITE_ONEDRIDE_CLIENT_ID,
+      tenant: "common",
+      keyHash: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
+      scopes: ["Files.ReadWrite", "User.Read"],
+    });
 
-      // Save the access token and expiration time to secure storage
-      await SecureStoragePlugin.set({
-        key: "onedrive_access_token",
-        value: result.accessToken,
-      });
-      await SecureStoragePlugin.set({
-        key: "onedrive_expiration_time",
-        value: (Date.now() + result.expiresIn * 1000).toString(), // Assuming `expiresIn` is returned in seconds
-      });
-    } catch (error) {
-      console.error("Token refresh failed:", error);
+    const tokenData = decodeJwt(result.accessToken);
+    const expirationTime = tokenData?.exp
+      ? tokenData.exp * 1000 // Convert `exp` from seconds to milliseconds
+      : Date.now() + 3600 * 1000; // Default to 1 hour if `exp` is missing
+
+    // Save the access token and expiration time to secure storage
+    await SecureStoragePlugin.set({
+      key: "onedrive_access_token",
+      value: result.accessToken,
+    });
+
+    await SecureStoragePlugin.set({
+      key: "onedrive_expiration_time",
+      value: expirationTime.toString(),
+    });
+
+    console.log("Access token refreshed successfully.");
+    return result.accessToken;
+  } catch (error) {
+    console.error("Error refreshing access token:", error);
+    return null;
+  }
+};
+
+const getValidAccessToken = async (): Promise<string | null> => {
+  try {
+    const tokenData = await SecureStoragePlugin.get({
+      key: "onedrive_access_token",
+    });
+    const expiryData = await SecureStoragePlugin.get({
+      key: "onedrive_expiration_time",
+    });
+
+    const accessToken = tokenData.value;
+    const expirationTime = expiryData.value
+      ? parseInt(expiryData.value, 10)
+      : 0;
+
+    if (!accessToken || Date.now() >= expirationTime) {
+      console.log("Access token expired or not found. Refreshing...");
+      return await refreshAccessToken();
     }
-  };
-  return { accessToken, refreshAccessToken };
+
+    return accessToken;
+  } catch (error) {
+    console.error("Error fetching access token:", error);
+    return null;
+  }
+};
+
+export const useOneDrive = () => {
+  return { getValidAccessToken, refreshAccessToken };
 };
 
 export const useExport = (darkMode: boolean) => {
   const [progress, setProgress] = useState(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
   const exportData = async (): Promise<void> => {
-    const { refreshAccessToken, accessToken } = await useOneDrive();
+    const { getValidAccessToken } = useOneDrive();
+    const accessToken = await getValidAccessToken();
     if (accessToken) {
       try {
         setProgress(0);
         setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-        await refreshAccessToken();
 
         const countFilesInDirectory = async (path: string): Promise<number> => {
           const contents = await Filesystem.readdir({
@@ -130,6 +173,44 @@ export const useExport = (darkMode: boolean) => {
         const fullFolderPath = `${parentFolder}/${folderName}`;
         const assetsPath = `${fullFolderPath}/assets`;
 
+        // Create folders in parallel
+        const createFolder = async (path: string, parentPath: string = "") => {
+          const fullPath = parentPath ? `${parentPath}/${path}` : path;
+
+          const response = await fetch(
+            `https://graph.microsoft.com/v1.0/me/drive/root:/` +
+              encodeURIComponent(fullPath),
+            {
+              method: "GET",
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }
+          );
+
+          if (response.status === 404) {
+            await fetch(
+              `https://graph.microsoft.com/v1.0/me/drive/root:/` +
+                encodeURIComponent(parentPath || "") +
+                `:/children`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  name: path.split("/").pop(),
+                  folder: {},
+                }),
+              }
+            );
+          }
+        };
+
+        // Create necessary folders in a clear hierarchy
+        await createFolder(parentFolder);
+        await createFolder(folderName, parentFolder);
+        await createFolder("assets", `${parentFolder}/${folderName}`);
+
         // Check if the current date folder already exists
         const existingFoldersResponse = await fetch(
           `https://graph.microsoft.com/v1.0/me/drive/root:/${parentFolder}:/children`,
@@ -172,44 +253,6 @@ export const useExport = (darkMode: boolean) => {
             }
           }
         }
-
-        // Create folders in parallel
-        const createFolder = async (path: string, parentPath: string = "") => {
-          const fullPath = parentPath ? `${parentPath}/${path}` : path;
-
-          const response = await fetch(
-            `https://graph.microsoft.com/v1.0/me/drive/root:/` +
-              encodeURIComponent(fullPath),
-            {
-              method: "GET",
-              headers: { Authorization: `Bearer ${accessToken}` },
-            }
-          );
-
-          if (response.status === 404) {
-            await fetch(
-              `https://graph.microsoft.com/v1.0/me/drive/root:/` +
-                encodeURIComponent(parentPath || "") +
-                `:/children`,
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  name: path.split("/").pop(),
-                  folder: {},
-                }),
-              }
-            );
-          }
-        };
-
-        // Create necessary folders in a clear hierarchy
-        await createFolder(parentFolder);
-        await createFolder(folderName, parentFolder);
-        await createFolder("assets", `${parentFolder}/${folderName}`);
 
         // Upload data.json
         await fetch(
@@ -362,11 +405,11 @@ export const useImportOneDrive = (darkMode: boolean, setNotesState: any) => {
   const [progress, setProgress] = useState(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
   const importData = async (): Promise<void> => {
-    const { refreshAccessToken, accessToken } = await useOneDrive();
+    const { getValidAccessToken } = useOneDrive();
+    const accessToken = await getValidAccessToken();
     if (accessToken) {
       try {
         setProgressColor(darkMode ? "#444444" : "#e6e6e6");
-        await refreshAccessToken();
         const currentDate = new Date();
         let formattedDate = currentDate.toISOString().slice(0, 10); // Start with today’s date
         const mainFolderBasePath = `/Beaver-Pocket/Beaver Notes `;
@@ -488,14 +531,7 @@ export const useImportOneDrive = (darkMode: boolean, setNotesState: any) => {
         // Import the notes
         importUtils(setNotesState, loadNotes);
 
-        // Clean up by deleting the temporary folder after import
-        await Filesystem.rmdir({
-          path: `export/Beaver Notes ${formattedDate}`,
-          directory: FilesystemDirectory.Data,
-          recursive: true, // Delete folder and its contents
-        });
-
-        setProgress(100); // Set progress to 100 when done
+        setProgress(100);
         console.log("Folder deleted successfully!");
       } catch (error) {
         console.error("Error during import or folder deletion:", error);
@@ -511,11 +547,10 @@ export const useImportOneDrive = (darkMode: boolean, setNotesState: any) => {
 
 export const useOnedriveSync = () => {
   const syncOneDrive = async (): Promise<void> => {
-    const { refreshAccessToken, accessToken } = await useOneDrive();
+    const { getValidAccessToken } = useOneDrive();
+    const accessToken = await getValidAccessToken();
     if (accessToken) {
       try {
-        await refreshAccessToken();
-
         const currentDate = new Date();
         const formattedDate = currentDate.toISOString().slice(0, 10);
         const parentFolder = "Beaver-Pocket";
