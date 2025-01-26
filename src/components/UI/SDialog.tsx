@@ -15,6 +15,7 @@ type SDialogProps = {
   closeDialog: () => void;
   note: Note;
   notesState: any;
+  translations: any;
   handlePrint: (filename: string) => void;
 };
 
@@ -24,6 +25,7 @@ const SDialog: React.FC<SDialogProps> = ({
   note,
   notesState,
   handlePrint,
+  translations,
 }) => {
   return (
     <Transition show={isOpen} as={React.Fragment}>
@@ -47,7 +49,7 @@ const SDialog: React.FC<SDialogProps> = ({
             <DialogPanel className="bg-white dark:bg-[#2D2C2C] p-6 rounded-2xl w-full mx-4 mb-8">
               <div className="flex justify-between items-center dark:bg-[#2D2C2C] px-2">
                 <DialogTitle as="h2" className="text-xl font-semibold">
-                  Export As
+                  {translations.editor.exportas || "-"}
                 </DialogTitle>
                 <button
                   onClick={closeDialog}

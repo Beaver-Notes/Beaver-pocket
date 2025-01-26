@@ -100,7 +100,7 @@ const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
   }, [searchTerm, editor]);
 
   return (
-    <div className="pt-4 overflow-enabled h-auto w-full bg-transparent z-30 no-scrollbar">
+    <div className="pt-4 overflow-enabled h-auto w-full bg-white dark:bg-[#232222] z-30 no-scrollbar">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 w-full">
         {/* Search Input and Button */}
         <div className="flex items-center sm:col-span-1 w-full space-x-2">

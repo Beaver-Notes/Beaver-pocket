@@ -36,7 +36,8 @@ function Editor({notesState, setNotesState}: Props) {
       biometricReason: "enter.biometricReason",
       biometricTitle: "enter.biometricTitle",
       noteNotFound: "enter.noteNotFound",
-      noNoteId: "enter.noNoteId"
+      noNoteId: "enter.noNoteId",
+      exportas: "editor.exportas",
     },
   });
 
@@ -248,7 +249,7 @@ function Editor({notesState, setNotesState}: Props) {
 
   localStorage.setItem("lastNoteEdit", note);
 
-  return <EditorComponent note={noteData} notesState={notesState} setNotesState={setNotesState}/>;
+  return <EditorComponent note={noteData} notesState={notesState} setNotesState={setNotesState} translations={translations}/>;
 }
 
 export default Editor;

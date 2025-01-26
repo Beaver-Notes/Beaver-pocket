@@ -189,7 +189,8 @@
     "biometricTitle": "Lock/Unlock with Biometrics",
     "noteNotFound": "Note not found",
     "noNoteId": "No note ID provided",
-    "noNotes": "No notes found"
+    "noNotes": "No notes found",
+    "exportas": "Export as"
   },
   "archive": {
     "archived": "Archived",

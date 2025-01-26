@@ -31,9 +31,15 @@ type Props = {
   note: Note;
   notesState: Record<string, Note>;
   setNotesState: (notes: Record<string, Note>) => void;
+  translations: any;
 };
 
-function EditorComponent({ note, notesState, setNotesState }: Props) {
+function EditorComponent({
+  note,
+  notesState,
+  setNotesState,
+  translations,
+}: Props) {
   const { activeNoteId, setActiveNoteId } = useNotesState();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const findRef = useRef<HTMLDivElement | null>(null);
@@ -605,7 +611,13 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
       >
-        <Toolbar note={note} noteId={note.id} editor={editor} />
+        <Toolbar
+          note={note}
+          noteId={note.id}
+          editor={editor}
+          openDialog={openDialog}
+          toggleFocusMode={toggleFocusMode}
+        />
         <div
           className={`sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] fixed inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between print:hidden`}
         >
@@ -628,6 +640,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
             </button>
 
             <SDialog
+              translations={translations}
               isOpen={isOpen}
               closeDialog={closeDialog}
               notesState={notesState}

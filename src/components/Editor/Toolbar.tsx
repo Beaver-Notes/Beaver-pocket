@@ -20,9 +20,16 @@ interface ToolbarProps {
   note: Note;
   noteId: string;
   editor: Editor | null;
+  openDialog: any;
+  toggleFocusMode: any;
 }
 
-const Toolbar: React.FC<ToolbarProps> = ({ editor, noteId }) => {
+const Toolbar: React.FC<ToolbarProps> = ({
+  editor,
+  noteId,
+  openDialog,
+  toggleFocusMode,
+}) => {
   const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [showFind, setShowFind] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{
@@ -43,7 +50,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor, noteId }) => {
   const { syncDropBox } = useDropboxSync();
   const { syncDav } = useSyncDav();
   const { syncOneDrive } = useOnedriveSync();
-  const { exportdata:SyncIcloud } = useExportiCloud();
+  const { exportdata: SyncIcloud } = useExportiCloud();
   const { syncGdrive } = useDriveSync();
 
   const [translations, setTranslations] = useState({
@@ -408,6 +415,18 @@ const Toolbar: React.FC<ToolbarProps> = ({ editor, noteId }) => {
   ];
 
   const search = [
+    {
+      icon: (
+        <icons.ShareLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: openDialog,
+    },
+    {
+      icon: (
+        <icons.FileArticleLine className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+      ),
+      action: toggleFocusMode,
+    },
     {
       label: translations.accessibility.searchContent,
       icon: (
