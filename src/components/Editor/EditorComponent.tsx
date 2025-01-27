@@ -604,19 +604,14 @@ function EditorComponent({
 
   return (
     <div>
-      <div
-        className={`editor overflow-auto h-full justify-center items-start px-4 ${
-          wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
-        } text-black dark:text-[color:var(--selected-dark-text)]`}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={handleDrop}
-      >
+      <div onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
         <Toolbar
           note={note}
           noteId={note.id}
           editor={editor}
           openDialog={openDialog}
           toggleFocusMode={toggleFocusMode}
+          focusMode={focusMode}
         />
         <div
           className={`sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] fixed inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between print:hidden`}
@@ -695,7 +690,12 @@ function EditorComponent({
           )}
         </div>
 
-        <div id="content">
+        <div
+          id="content"
+          className={`editor overflow-auto h-full justify-center items-start px-4 ${
+            wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
+          } text-black dark:text-[color:var(--selected-dark-text)]`}
+        >
           <div
             contentEditable
             onPaste={handleTitlePaste}

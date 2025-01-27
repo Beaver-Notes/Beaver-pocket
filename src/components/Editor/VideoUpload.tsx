@@ -120,7 +120,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
           />
         </div>
       ) : (
-        <div className="flex items-center justify-between p-2 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+        <div className="flex items-center justify-between p-1 rounded-md  bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
           <button
             onClick={() => {
               const inputElement = document.getElementById(
@@ -133,7 +133,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
             aria-label={translations.accessibility.uploadVideo} // Accessibility label for the button
           >
             <icons.VideoIcon
-              className="sm:text-white text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"
+              className=" text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"
               aria-hidden="true"
             />
           </button>

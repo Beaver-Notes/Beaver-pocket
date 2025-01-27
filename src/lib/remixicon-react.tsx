@@ -90,6 +90,7 @@ import FileTextLineIcon from "remixicon-react/FileTextLineIcon";
 import FileArticleLine from "remixicon-react/ArticleLineIcon";
 import SplitCellsHorizontalIcon from "remixicon-react/SplitCellsHorizontalIcon";
 import DeleteBackLineIcon from "remixicon-react/DeleteBackLineIcon";
+import MoreLineIcon from "remixicon-react/MoreLineIcon";
 
 const Forward5Line: React.FC<{ className?: string }> = ({ className }) => (
   <svg
@@ -345,6 +346,7 @@ const Icons = {
   FileArticleLine,
   SplitCellsHorizontalIcon,
   DeleteBackLineIcon,
+  MoreLineIcon,
 };
 
 export default Icons;

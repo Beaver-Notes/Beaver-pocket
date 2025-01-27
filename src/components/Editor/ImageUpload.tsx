@@ -91,7 +91,9 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
 
   // Function to trigger the file input click
   const triggerFileInput = () => {
-    const inputElement = document.getElementById("image-upload-input") as HTMLInputElement;
+    const inputElement = document.getElementById(
+      "image-upload-input"
+    ) as HTMLInputElement;
     if (inputElement) {
       inputElement.click();
     }
@@ -108,7 +110,10 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
             aria-label={translations.menuItems.imageLabel}
           >
             {/* Icon */}
-            <icons.ImageLineIcon className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3" aria-hidden="true" />
+            <icons.ImageLineIcon
+              className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3"
+              aria-hidden="true"
+            />
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
@@ -129,12 +134,15 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
         </div>
       ) : (
         // Default image upload component
-        <div className="flex items-center justify-between p-2 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+        <div className="flex items-center justify-between p-1 rounded-md  bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
           <button
             onClick={triggerFileInput}
             aria-label={translations.menuItems.imageLabel}
           >
-            <icons.ImageLineIcon className="sm:text-white text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer" aria-hidden="true" />
+            <icons.ImageLineIcon
+              className="text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer"
+              aria-hidden="true"
+            />
           </button>
           <input
             type="file"

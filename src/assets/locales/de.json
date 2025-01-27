@@ -147,7 +147,11 @@
         "unlock": "Entsperren",
         "unlocktoedit": "Entsperren zum Bearbeiten",
         "wrongpasswd": "Falsches Passwort. Notiz kann nicht entsperrt werden.",
-        "exportas": "Exportieren als"
+        "exportas": "Exportieren als",
+        "share": "Teilen",
+        "searchPage": "Seite durchsuchen",
+        "ReadingMode": "Lesemodus",
+        "deleteTable": "Tabelle löschen"
     },
     "gdrive": {
         "autoSync": "Automatische Synchronisierung",

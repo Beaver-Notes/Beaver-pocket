@@ -71,7 +71,7 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between p-2 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+      <div className="flex items-center justify-between p-1 rounded-md  bg-transparent cursor-pointer text-neutral-700 dark:dark:text-[color:var(--selected-dark-text)] text-neutral-800">
         {!isRecording ? (
           <button
             onClick={startRecording}

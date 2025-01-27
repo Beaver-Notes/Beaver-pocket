@@ -128,7 +128,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
         </div>
       ) : (
         <div
-          className="flex items-center justify-between p-2 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+          className="flex items-center justify-between p-1 rounded-md  bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
           aria-label={translations.accessibility?.fileUpload || "Upload File"} // Use fallback
         >
           <label
@@ -136,7 +136,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             aria-label={translations.menuItems?.fileLabel || "Upload File"} // Use fallback
           >
             <icons.FileIcon
-              className="sm:text-white text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer"
+              className=" text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer"
               aria-hidden="true"
             />
           </label>

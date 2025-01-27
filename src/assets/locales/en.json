@@ -190,7 +190,11 @@
     "noteNotFound": "Note not found",
     "noNoteId": "No note ID provided",
     "noNotes": "No notes found",
-    "exportas": "Export as"
+    "exportas": "Export as",
+    "share": "Share",
+    "searchPage": "Search Page",
+    "ReadingMode": "Reading Mode",
+    "deleteTable": "Delete Table"
   },
   "archive": {
     "archived": "Archived",
