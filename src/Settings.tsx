@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import enTranslations from "./assets/locales/en.json";
-import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
 import { useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
@@ -150,7 +149,6 @@ const Archive: React.FC<SettingsProps> = ({ themeMode, setThemeMode }) => {
 
   const languages = [
     { code: "en", name: "English", translations: enTranslations },
-    { code: "it", name: "Italiano", translations: itTranslations },
     { code: "de", name: "Deutsch", translations: deTranslations },
   ];
 

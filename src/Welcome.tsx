@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
 import enTranslations from "./assets/locales/en.json";
-import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
 
 const Welcome: React.FC = () => {
@@ -105,7 +104,6 @@ const Welcome: React.FC = () => {
 
   const languages = [
     { code: "en", name: "English", translations: enTranslations },
-    { code: "it", name: "Italiano", translations: itTranslations },
     { code: "de", name: "Deutsch", translations: deTranslations },
   ];
 

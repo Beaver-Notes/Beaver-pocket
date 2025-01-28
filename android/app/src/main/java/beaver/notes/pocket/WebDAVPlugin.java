@@ -14,9 +14,9 @@ import java.io.*;
 @CapacitorPlugin(name = "WebDAV")
 public class WebDAVPlugin extends Plugin {
 
-    private OkHttpClient client = new OkHttpClient.Builder()
+    private final OkHttpClient client = new OkHttpClient.Builder()
             .hostnameVerifier((hostname, session) -> true) // Allow all hostnames
-            .build();;
+            .build();
 
     private String getAuthHeader(String username, String password) {
         String credential = username + ":" + password;
@@ -119,7 +119,7 @@ public class WebDAVPlugin extends Plugin {
                     JSObject result = new JSObject();
                     result.put("message", "Folder exists.");
                     result.put("data", xmlResponse); // Ensure xmlResponse is a valid string
-                    Log.d("WebDAVPlugin", "Resolving call with result: " + result.toString());
+                    Log.d("WebDAVPlugin", "Resolving call with result: " + result);
                     pluginCall.resolve(result);
                 } else {
                     String responseBody = response.body() != null ? response.body().string() : "No response body";

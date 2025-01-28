@@ -45,7 +45,6 @@ import {
 
 // Languages
 import enTranslations from "../../assets/locales/en.json";
-import itTranslations from "../../assets/locales/it.json";
 import deTranslations from "../../assets/locales/de.json";
 import Footnote from "./exts/footnote-block/footnote";
 import Footnotes from "./exts/footnote-block/footnotes";
@@ -56,9 +55,7 @@ let translations: any = enTranslations;
 const selectedLanguage: string | null =
   localStorage.getItem("selectedLanguage") || "en";
 
-if (selectedLanguage === "it") {
-  translations = itTranslations;
-} else if (selectedLanguage === "de") {
+if (selectedLanguage === "de") {
   translations = deTranslations;
 }
 
