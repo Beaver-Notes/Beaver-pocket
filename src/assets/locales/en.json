@@ -97,7 +97,9 @@
     "shareError": "The following error accured while trying to share your notes: ",
     "importSuccess": "Notes imported successfully!",
     "importInvalid": "Invalid data format",
-    "Sync": "Sync"
+    "Sync": "Sync",
+    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?"
+
   },
   "dropbox": {
     "title": "Sync with Dropbox",
@@ -105,7 +107,6 @@
     "export": "Export",
     "submit": "Submit",
     "refreshingToken": "Access token expired, refreshing...",
-    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
     "getToken": "Get Access Token",
     "autoSync": "Auto Sync",
     "logout": "Logout",
@@ -119,7 +120,6 @@
     "autoSync": "Auto Sync",
     "logout": "Logout",
     "login": "Login",
-    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
     "refreshingToken": "Access token expired, refreshing..."
   },
   "icloud": {
@@ -144,7 +144,6 @@
     "login": "Login",
     "logout": "Logout",
     "autoSync": "Auto Sync",
-    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
     "refreshingToken": "Access token expired, refreshing..."
   },
   "welcome": {

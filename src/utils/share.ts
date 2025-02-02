@@ -13,17 +13,8 @@ export const shareNote = async (
   try {
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-
-    // Create export folder
-    const parentExportFolderPath = "export";
-    await Filesystem.mkdir({
-      path: parentExportFolderPath,
-      directory: Directory.Data,
-      recursive: true,
-    });
-
     const exportFolderName = `Beaver Notes ${formattedDate}`;
-    const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
+    const exportFolderPath = `export/${exportFolderName}`;
 
     await Filesystem.mkdir({
       path: exportFolderPath,
@@ -218,7 +209,7 @@ export const useImportBea = () => {
       console.log("Parsed Data:", JSON.stringify(parsedData, null, 2));
 
       // Replace assets:// and file-assets:// prefixes in the parsed data
-      const updateAssetLinks = (obj:any) => {
+      const updateAssetLinks = (obj: any) => {
         for (const key in obj) {
           if (typeof obj[key] === "object" && obj[key] !== null) {
             updateAssetLinks(obj[key]);

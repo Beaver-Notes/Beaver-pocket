@@ -23,9 +23,11 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
       getToken: "icloud.getToken",
       autoSync: "icloud.Autosync",
       logout: "icloud.logout",
-      existingFolder: "icloud.existingFolder",
       refreshingToken: "icloud.refreshingToken",
     },
+    sync : {
+      existingFolder: "sync.existingFolder",
+    }
   });
 
   useEffect(() => {

@@ -44,6 +44,9 @@ project(':codetrix-studio-capacitor-google-auth').projectDir = new File('../node
 include ':recognizebv-capacitor-plugin-msauth'
 project(':recognizebv-capacitor-plugin-msauth').projectDir = new File('../node_modules/@recognizebv/capacitor-plugin-msauth/android')
 
+include ':capa-zip'
+project(':capa-zip').projectDir = new File('../node_modules/capa-zip/android')
+
 include ':capacitor-native-biometric'
 project(':capacitor-native-biometric').projectDir = new File('../node_modules/capacitor-native-biometric/android')
 

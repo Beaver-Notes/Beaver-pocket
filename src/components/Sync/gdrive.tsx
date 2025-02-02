@@ -158,9 +158,11 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
       autoSync: "gdrive.Autosync",
       logout: "gdrive.logout",
       login: "gdrive.login",
-      existingFolder: "gdrive.existingFolder",
       refreshingToken: "gdrive.refreshingToken",
     },
+    sync : {
+      existingFolder: "sync.existingFolder",
+    }
   });
 
   useEffect(() => {

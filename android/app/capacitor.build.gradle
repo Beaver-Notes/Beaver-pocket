@@ -7,6 +7,7 @@ android {
   }
 }
 
+apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
     implementation project(':aashu-dubey-capacitor-statusbar-safe-area')
     implementation project(':capacitor-community-app-icon')
@@ -22,6 +23,7 @@ dependencies {
     implementation project(':capacitor-status-bar')
     implementation project(':codetrix-studio-capacitor-google-auth')
     implementation project(':recognizebv-capacitor-plugin-msauth')
+    implementation project(':capa-zip')
     implementation project(':capacitor-native-biometric')
     implementation project(':capacitor-secure-storage-plugin')
     implementation project(':capacitor-voice-recorder')

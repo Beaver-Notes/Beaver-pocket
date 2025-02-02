@@ -40,37 +40,37 @@ const App: React.FC = () => {
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { notesState, setNotesState } = useNotesState();
-  const [themeMode, setThemeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
+  const [themeMode, setThemeMode] = useState<string>(
+    localStorage.getItem("themeMode") || "auto"
+  );
   const [darkMode, setDarkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
     return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
   });
-
-  useEffect(() => {
-    const handleThemeChange = (e: MediaQueryListEvent) => {
-      if (themeMode === "auto") {
-        setDarkMode(e.matches);
-      }
-    };
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    mediaQuery.addEventListener("change", handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener("change", handleThemeChange);
-    };
-  }, [themeMode]);
-
+  // Effect to update the classList and localStorage when darkMode or themeMode changes
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
+
+  // Function to toggle dark mode
+  const toggleTheme = (
+    newMode: boolean | ((prevState: boolean) => boolean)
+  ) => {
+    setDarkMode(newMode);
+    setThemeMode(newMode ? "dark" : "light");
+  };
+
+  // Function to set theme mode to auto based on device preference
+  const setAutoMode = () => {
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    setDarkMode(prefersDarkMode);
+    setThemeMode("auto");
+  };
 
   document.addEventListener("reload", () => {
     const loadNotesFromStorage = async () => {
@@ -139,7 +139,7 @@ const App: React.FC = () => {
   );
   const { importData: IcloudImport } = useImportiCloud(setNotesState);
   const { importData: DriveImport } = useDriveImport(darkMode, setNotesState);
-  
+
   useEffect(() => {
     const handleSync = () => {
       const syncValue = localStorage.getItem("sync");
@@ -254,7 +254,13 @@ const App: React.FC = () => {
           <Route
             path="/settings"
             element={
-              <Settings themeMode={themeMode} setThemeMode={setThemeMode} />
+              <Settings
+                themeMode={themeMode}
+                setThemeMode={setThemeMode}
+                toggleTheme={toggleTheme}
+                setAutoMode={setAutoMode}
+                darkMode={darkMode}
+              />
             }
           />
           <Route path="/about" element={<About />} />

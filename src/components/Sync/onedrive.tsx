@@ -121,9 +121,11 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
       autoSync: "onedrive.Autosync",
       logout: "onedrive.logout",
       login: "onedrive.login",
-      existingFolder: "onedrive.existingFolder",
       refreshingToken: "onedrive.refreshingToken",
     },
+    sync : {
+      existingFolder: "sync.existingFolder",
+    }
   });
 
   useEffect(() => {

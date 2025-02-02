@@ -41,6 +41,9 @@ PODS:
     - Capacitor
   - CapacitorWebviewPrint (6.0.1):
     - Capacitor
+  - CapaZip (7.0.0):
+    - Capacitor
+    - SSZipArchive
   - CodetrixStudioCapacitorGoogleAuth (0.0.1):
     - Capacitor
     - GoogleSignIn (~> 6.2.4)
@@ -60,6 +63,7 @@ PODS:
     - MSAL (~> 1.1)
   - SendIntent (6.0.2):
     - Capacitor
+  - SSZipArchive (2.4.3)
   - SwiftKeychainWrapper (4.0.1)
 
 DEPENDENCIES:
@@ -81,6 +85,7 @@ DEPENDENCIES:
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - CapacitorVoiceRecorder (from `../../node_modules/capacitor-voice-recorder`)
   - CapacitorWebviewPrint (from `../../node_modules/capacitor-webview-print`)
+  - CapaZip (from `../../node_modules/capa-zip`)
   - "CodetrixStudioCapacitorGoogleAuth (from `../../node_modules/@codetrix-studio/capacitor-google-auth`)"
   - "RecognizebvCapacitorPluginMsauth (from `../../node_modules/@recognizebv/capacitor-plugin-msauth`)"
   - SendIntent (from `../../node_modules/send-intent`)
@@ -92,6 +97,7 @@ SPEC REPOS:
     - GTMAppAuth
     - GTMSessionFetcher
     - MSAL
+    - SSZipArchive
     - SwiftKeychainWrapper
 
 EXTERNAL SOURCES:
@@ -131,6 +137,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/capacitor-voice-recorder"
   CapacitorWebviewPrint:
     :path: "../../node_modules/capacitor-webview-print"
+  CapaZip:
+    :path: "../../node_modules/capa-zip"
   CodetrixStudioCapacitorGoogleAuth:
     :path: "../../node_modules/@codetrix-studio/capacitor-google-auth"
   RecognizebvCapacitorPluginMsauth:
@@ -158,6 +166,7 @@ SPEC CHECKSUMS:
   CapacitorStatusBar: 9ed7f06318fd436917072a9bf60fda56d12c8bdb
   CapacitorVoiceRecorder: d07f0794998ff8c9a6ca3debd70070b286f70cb1
   CapacitorWebviewPrint: f17e654a2ff99367a429c9e01b62ddbdcf62c45d
+  CapaZip: f00f38cb02483a395bb648321fcaf034724d475b
   CodetrixStudioCapacitorGoogleAuth: 9dcfabfb7dd804ad6231a1513bc6e81e620cbec6
   GoogleSignIn: 5651ce3a61e56ca864160e79b484cd9ed3f49b7a
   GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
@@ -165,8 +174,9 @@ SPEC CHECKSUMS:
   MSAL: 5149daaa19228c2c27d81987634da15b50981cef
   RecognizebvCapacitorPluginMsauth: 2a861c981426c9354bb22cb987e4768153bb2b15
   SendIntent: 79fd252e2477951566ac7f60c91195e686e4c9b4
+  SSZipArchive: fe6a26b2a54d5a0890f2567b5cc6de5caa600aef
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
 
-PODFILE CHECKSUM: cbf547d581cd0c6d5c0511b57d638a313c506aea
+PODFILE CHECKSUM: 7caad2ac6535f5d1d059412f62f2f850b1c45f9f
 
 COCOAPODS: 1.16.2

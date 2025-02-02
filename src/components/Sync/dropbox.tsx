@@ -33,10 +33,12 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState, darkMode }) => {
       getToken: "dropbox.getToken",
       autoSync: "dropbox.Autosync",
       logout: "dropbox.logout",
-      existingFolder: "dropbox.existingFolder",
       refreshingToken: "dropbox.refreshingToken",
       placeholder: "dropbox.placeholder",
     },
+    sync : {
+      existingFolder: "sync.existingFolder",
+    }
   });
 
   const {

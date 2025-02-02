@@ -1,12 +1,9 @@
-// exportUtils.ts
-
-// Handles export and sharing notes and assets
-
 import { Directory, Filesystem, FilesystemEncoding } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import { useState, useEffect } from "react";
 import { Note } from "../store/types";
+import { Zip } from "capa-zip";
 
 export const useExportData = () => {
   const [translations, setTranslations] = useState({
@@ -40,16 +37,8 @@ export const useExportData = () => {
     try {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-
-      const parentExportFolderPath = `export`;
-      await Filesystem.mkdir({
-        path: parentExportFolderPath,
-        directory: Directory.Data,
-        recursive: true,
-      });
-
       const exportFolderName = `Beaver Notes ${formattedDate}`;
-      const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
+      const exportFolderPath = `export/${exportFolderName}`;
 
       await Filesystem.mkdir({
         path: exportFolderPath,
@@ -150,20 +139,20 @@ export const useExportData = () => {
 
   const shareExportFolder = async (folderPath: string) => {
     try {
+      const zipFilePath = `${folderPath}.zip`;
+      await Zip.zip({ sourcePath: folderPath, destinationPath: zipFilePath });
+
       const result = await Filesystem.getUri({
         directory: Directory.Data,
-        path: folderPath,
+        path: zipFilePath,
       });
-
-      const resolvedFolderPath = result.uri;
-
       await Share.share({
-        title: `${translations.home.shareTitle}`,
-        url: resolvedFolderPath,
-        dialogTitle: `${translations.home.shareTitle}`,
+        title: translations.home.shareTitle,
+        url: result.uri,
+        dialogTitle: translations.home.shareTitle,
       });
     } catch (error) {
-      alert(translations.home.shareError + (error as any).message);
+      alert(translations.home.shareError + error);
     }
   };
 

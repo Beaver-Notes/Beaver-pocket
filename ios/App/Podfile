@@ -24,6 +24,7 @@ def capacitor_pods
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
   pod 'CodetrixStudioCapacitorGoogleAuth', :path => '../../node_modules/@codetrix-studio/capacitor-google-auth'
   pod 'RecognizebvCapacitorPluginMsauth', :path => '../../node_modules/@recognizebv/capacitor-plugin-msauth'
+  pod 'CapaZip', :path => '../../node_modules/capa-zip'
   pod 'CapacitorNativeBiometric', :path => '../../node_modules/capacitor-native-biometric'
   pod 'CapacitorSecureStoragePlugin', :path => '../../node_modules/capacitor-secure-storage-plugin'
   pod 'CapacitorVoiceRecorder', :path => '../../node_modules/capacitor-voice-recorder'

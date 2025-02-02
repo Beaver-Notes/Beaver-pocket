@@ -8,9 +8,12 @@ import { isPlatform } from "@ionic/react";
 interface SettingsProps {
   themeMode: string;
   setThemeMode: (mode: any) => void;
+  toggleTheme: (newMode: boolean | ((prevState: boolean) => boolean)) => void;
+  setAutoMode: () => void;
+  darkMode: boolean;
 }
 
-const Archive: React.FC<SettingsProps> = ({ themeMode, setThemeMode }) => {
+const Settings: React.FC<SettingsProps> = ({ themeMode, darkMode, toggleTheme, setAutoMode }) => {
   const navigate = useNavigate();
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
@@ -55,39 +58,6 @@ const Archive: React.FC<SettingsProps> = ({ themeMode, setThemeMode }) => {
 
   const updatCodeFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCodeFont(e.target.value);
-  };
-
-  // State to manage dark mode
-  const [darkMode, setDarkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  // Effect to update the classList and localStorage when darkMode or themeMode changes
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
-  // Function to toggle dark mode
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-    setSelectedOption(newMode ? "Dark" : "Light");
-  };
-
-  // Function to set theme mode to auto based on device preference
-  const setAutoMode = () => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    setDarkMode(prefersDarkMode);
-    setThemeMode("auto");
-    setSelectedOption("System");
   };
 
   // Translations
@@ -431,4 +401,4 @@ const Archive: React.FC<SettingsProps> = ({ themeMode, setThemeMode }) => {
   );
 };
 
-export default Archive;
+export default Settings;

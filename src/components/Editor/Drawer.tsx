@@ -346,14 +346,13 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
 
   return (
     <div
-      className={`drawer sm:hidden shadow-t-md block bottom-0 fixed left-0 right-0 ${
+      className={`sm:hidden shadow-t-md bottom-0 fixed left-0 right-0 ${
         isKeyboardVisible
           ? "bg-[#F8F8F7] dark:bg-[#2D2C2C]"
           : "bg-white dark:bg-[#232222] p-1 pb-2"
-      } cursor-grab overflow-y-auto transition-height duration-200 ease-in-out`}
-      style={{ maxHeight: "50vh" }}
+      } cursor-grab transition-height duration-200 ease-in-out`}
     >
-      <div className="align-center items-center max-auto flex justify-center">
+      <div className="align-center items-center justify-center">
         <div
           className={`flex p-2 w-full space-x-2 ${
             isTableActive ? "hidden" : "block"

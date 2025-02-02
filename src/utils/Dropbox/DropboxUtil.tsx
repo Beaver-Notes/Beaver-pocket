@@ -228,7 +228,7 @@ export const useExport = (darkMode: boolean, translations: any) => {
             await dbx.filesDeleteV2({ path: folderPath });
           } else {
             const userConfirmed = window.confirm(
-              translations.dropbox.existingFolder.replace(
+              translations.sync.existingFolder.replace(
                 "${folderPath}",
                 folderPath
               )

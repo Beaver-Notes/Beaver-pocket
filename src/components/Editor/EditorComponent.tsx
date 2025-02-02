@@ -4,7 +4,6 @@ import { Note } from "../../store/types";
 import SDialog from "../UI/SDialog";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
-import { isPlatform } from "@ionic/react";
 import Drawer from "./Drawer";
 import Find from "./Find";
 import "../../assets/css/editor.css";
@@ -603,8 +602,13 @@ function EditorComponent({
   }
 
   return (
-    <div>
-      <div onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
+    <div
+      className="relative h-screen"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={handleDrop}
+    >
+      {/* Fixed Header */}
+      <div>
         <Toolbar
           note={note}
           noteId={note.id}
@@ -613,9 +617,7 @@ function EditorComponent({
           toggleFocusMode={toggleFocusMode}
           focusMode={focusMode}
         />
-        <div
-          className={`sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] fixed inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between print:hidden`}
-        >
+        <div className="sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] w-full no-scrollbar flex justify-between print:hidden">
           <button
             className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
             onClick={goBack}
@@ -629,9 +631,7 @@ function EditorComponent({
               className="p-2 rounded-md text-white bg-transparent cursor-pointer"
               onClick={openDialog}
             >
-              <Icons.ShareLineIcon
-                className={`border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
-              />
+              <Icons.ShareLineIcon className="border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
             </button>
 
             <SDialog
@@ -652,7 +652,7 @@ function EditorComponent({
                   focusMode
                     ? "text-amber-400"
                     : "text-neutral-800 dark:text-[color:var(--selected-dark-text)]"
-                }  text-xl w-7 h-7`}
+                } text-xl w-7 h-7`}
               />
             </button>
 
@@ -672,15 +672,10 @@ function EditorComponent({
               />
             </button>
           </div>
+
           {/* Portal appears below the button */}
           {showFind && (
-            <div
-              ref={findRef}
-              className={`fixed ${showFind ? "block" : "hidden"}`}
-              style={{
-                zIndex: 80,
-              }}
-            >
+            <div ref={findRef} className="fixed" style={{ zIndex: 80 }}>
               <div className="fixed inset-x-0 flex justify-center">
                 <div className="w-full bg-white dark:bg-[#232222] px-4 sm:px-10 md:px-20 lg:px-60">
                   <Find editor={editor} setShowFind={setShowFind} />
@@ -689,43 +684,39 @@ function EditorComponent({
             </div>
           )}
         </div>
+      </div>
 
+      <div
+        id="content"
+        className={`absolute inset-x-0 top-12 bottom-16 overflow-auto editor px-4 ${
+          wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
+        } text-black dark:text-[color:var(--selected-dark-text)]`}
+      >
         <div
-          id="content"
-          className={`editor overflow-auto h-full justify-center items-start px-4 ${
-            wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
-          } text-black dark:text-[color:var(--selected-dark-text)]`}
-        >
-          <div
-            contentEditable
-            onPaste={handleTitlePaste}
-            suppressContentEditableWarning
-            onTouchStart={event?.preventDefault}
-            className={`text-3xl font-bold overflow-y-scroll outline-none ${
-              isPlatform("android") ? "mt-10 sm:pt-14" : "md:pt-14"
-            } ${isPlatform("ios") ? "mt-10 sm:pt-14" : "md:pt-14"}`}
-            onBlur={handleTitleChange}
-            onKeyDown={handleKeyDownTitle} // Add onKeyDown to handle Enter key
-            dangerouslySetInnerHTML={{ __html: note.title }}
-            ref={titleRef} // Attach ref to title field
-          />
-          <div>
-            <div className="py-2 h-full w-full" id="container">
-              <EditorContent
-                onPaste={handlePaste}
-                editor={editor}
-                onTouchStart={event?.preventDefault}
-                className="prose dark:text-neutral-100 max-w-none prose-indigo mb-[5em]"
-              />
-            </div>
+          contentEditable
+          onPaste={handleTitlePaste}
+          suppressContentEditableWarning
+          onTouchStart={event?.preventDefault}
+          className={`text-3xl font-bold overflow-y-scroll outline-none`}
+          onBlur={handleTitleChange}
+          onKeyDown={handleKeyDownTitle}
+          dangerouslySetInnerHTML={{ __html: note.title }}
+          ref={titleRef}
+        />
+        <div>
+          <div className="py-2 h-full w-full" id="container">
+            <EditorContent
+              onPaste={handlePaste}
+              editor={editor}
+              onTouchStart={event?.preventDefault}
+              className="prose dark:text-neutral-100 max-w-none prose-indigo mb-[5em]"
+            />
           </div>
         </div>
+      </div>
 
-        <div
-          className={`${focusMode ? "hidden" : "block"} sm:hidden print:hidden`}
-        >
-          <Drawer noteId={note.id} note={note} editor={editor} />
-        </div>
+      <div className="fixed bottom-0 left-0 right-0 sm:hidden print:hidden bg-white dark:bg-[#232222] z-50">
+        <Drawer noteId={note.id} note={note} editor={editor} />
       </div>
     </div>
   );
