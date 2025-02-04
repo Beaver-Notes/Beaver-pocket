@@ -16,6 +16,16 @@ export const shareNote = async (
     const exportFolderName = `Beaver Notes ${formattedDate}`;
     const exportFolderPath = `export/${exportFolderName}`;
 
+    try {
+      await Filesystem.rmdir({
+        path: "export",
+        directory: Directory.Data,
+        recursive: true,
+      });
+    } catch (error) {
+      console.log("No existing export folder found, continuing...");
+    }
+
     await Filesystem.mkdir({
       path: exportFolderPath,
       directory: Directory.Data,
@@ -181,15 +191,12 @@ const STORAGE_PATH = "notes/data.json";
 
 const base64ToFile = async (base64Data: string, filePath: string) => {
   try {
-    // Decode base64 to binary string
-    // Write binary string directly to file
     await Filesystem.writeFile({
       path: filePath,
       data: base64Data, // Direct binary string
       directory: Directory.Data,
     });
   } catch (error) {
-    alert(`Error writing file: ${error}`);
     console.error("Error writing file:", error);
   }
 };
@@ -201,8 +208,6 @@ export const useImportBea = () => {
     fileContent: string // UTF-8 file content
   ) => {
     try {
-      // Alert and log file content for debugging
-      alert(fileContent);
       const parsedData = JSON.parse(fileContent);
 
       // Debug parsed data
@@ -319,11 +324,8 @@ export const useImportBea = () => {
 
       // Trigger UI update
       document.dispatchEvent(new Event("reload"));
-
-      alert("Import successful!");
     } catch (error) {
-      console.error("Error during import:", error);
-      alert("Import failed. Please check the error log.");
+      console.error(error);
     }
   };
 

@@ -34,6 +34,7 @@ import { useDropboxImport } from "./utils/Dropbox/DropboxUtil";
 import { useImportOneDrive } from "./utils/Onedrive/oneDriveUtil";
 import { useImportiCloud } from "./utils/iCloud/iCloudUtil";
 import { useDriveImport } from "./utils/Google Drive/GDriveUtil";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -127,6 +128,18 @@ const App: React.FC = () => {
       setCheckedFirstTime(true);
     }
   }, [checkedFirstTime, history]);
+
+  async function styleStatusBar(darkMode: boolean) {
+    StatusBar.setStyle({ style: darkMode ? Style.Dark : Style.Light });
+
+    if (Capacitor.getPlatform() === "android") {
+      await StatusBar.setBackgroundColor({
+        color: darkMode ? "#232222" : "#FFFFFF",
+      });
+    }
+  }
+
+  styleStatusBar(darkMode).catch(console.error);
 
   const { HandleImportData } = useImportDav(setNotesState);
   const { importData: DropboxImport } = useDropboxImport(

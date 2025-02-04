@@ -184,8 +184,7 @@ export const useHandleImportData = () => {
         document.dispatchEvent(new Event("reload"));
       }
     } catch (error: any) {
-      alert(error);
-      console.error("Error importing data:", error);
+      console.error(error);
     }
   };
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -27,6 +27,54 @@ const SDialog: React.FC<SDialogProps> = ({
   handlePrint,
   translations,
 }) => {
+  const dialogPanelRef = useRef<HTMLDivElement>(null);
+  const [startY, setStartY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  const handleTouchStart = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      setStartY(event.touches[0].clientY);
+      setDragging(true);
+    },
+    []
+  );
+
+  const handleTouchMove = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      if (!dragging) return;
+      const currentY = event.touches[0].clientY;
+      const delta = currentY - startY;
+
+      // Limit dragging to positive delta (downwards)
+      if (delta > 0) {
+        dialogPanelRef.current!.style.transform = `translateY(${delta}px)`;
+      }
+    },
+    [startY, dragging]
+  );
+
+  const handleTouchEnd = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      if (!dragging) return;
+      const currentY = event.changedTouches[0].clientY;
+      const delta = currentY - startY;
+
+      if (delta > 100) {
+        // User has dragged down enough to close the modal
+        closeDialog();
+      } else {
+        // Animate back to original position
+        dialogPanelRef.current!.style.transition = "transform 0.3s ease";
+        dialogPanelRef.current!.style.transform = "translateY(0)";
+      }
+
+      // Reset states
+      setDragging(false);
+      setStartY(0);
+    },
+    [startY, dragging, closeDialog]
+  );
+
   return (
     <Transition show={isOpen} as={React.Fragment}>
       <Dialog
@@ -35,7 +83,7 @@ const SDialog: React.FC<SDialogProps> = ({
         onClose={closeDialog}
       >
         <DialogBackdrop className="fixed inset-0 bg-neutral-300 dark:bg-neutral-800 bg-opacity-75 dark:bg-opacity-75 transition-opacity" />
-        <div className="fixed inset-0 flex items-center justify-center">
+        <div className="fixed inset-0 flex items-end sm:items-center pb-6 justify-center">
           <Transition.Child
             as={React.Fragment}
             enter="ease-out duration-300"
@@ -45,14 +93,24 @@ const SDialog: React.FC<SDialogProps> = ({
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <DialogPanel className="bg-white dark:bg-[#2D2C2C] p-6 rounded-2xl w-full max-w-lg mx-4">
+            <DialogPanel
+              ref={dialogPanelRef}
+              className="bg-white dark:bg-[#2D2C2C] p-6 rounded-2xl w-full max-w-lg mx-4"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              style={{
+                transition: dragging ? "none" : "transform 0.3s ease",
+              }}
+              aria-labelledby="dialog-title"
+            >
               <div className="flex justify-between items-center">
                 <DialogTitle as="h2" className="text-xl font-semibold">
                   {translations.editor.exportas || "-"}
                 </DialogTitle>
                 <button
                   onClick={closeDialog}
-                  className="text-white dark:text-[color:var(--selected-dark-text)] bg-neutral-300 dark:bg-neutral-700 rounded-full hover:text-neutral-100 focus:outline-none p-2"
+                  className="text-white dark:text-[color:var(--selected-dark-text)] bg-neutral-300 dark:bg-neutral-700 rounded-full hover:text-neutral-100 focus:outline-none"
                 >
                   <Icons.CloseLineIcon />
                 </button>

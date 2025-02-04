@@ -83,7 +83,7 @@
     "@use-gesture/react": "^10.3.1",
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.8",
-    "capa-zip": "^7.0.0",
+    "capa-zip": "^7.0.3",
     "capacitor": "^0.5.6",
     "capacitor-native-biometric": "^4.2.2",
     "capacitor-secure-storage-plugin": "^0.10.0",

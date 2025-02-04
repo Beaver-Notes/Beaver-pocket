@@ -4213,10 +4213,10 @@ canvas-size@^1.2.6:
   resolved "https://registry.yarnpkg.com/canvas-size/-/canvas-size-1.2.6.tgz#1eaa6b56167cf2a70fa4021680829d2073b45706"
   integrity sha512-x2iVHOrZ5x9V0Hwx6kBz+Yxf/VCAII+jrD6WLjJbytJLozHq/oDJjEva432Os0eHxWMFR0vYlLJwTr6QxyxQqw==
 
-capa-zip@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/capa-zip/-/capa-zip-7.0.0.tgz#21c2662583d163898674380471fde3e5097792ea"
-  integrity sha512-hGmGFAuiH/rZmNJyApolpOZyN35dUk32gY5ByyCtzwqlRfSt/1B8yRgUx7x+C4f9Oz0XpSbKlckAeihHjLqhXg==
+capa-zip@^7.0.3:
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/capa-zip/-/capa-zip-7.0.3.tgz#3bea4d0bd958d8e4b3468522e68f31a3a26e28bd"
+  integrity sha512-6srimbwB54q80GP0dDm9fJ/awi7Mxw5YmfQgSfVSumgkPFzmTCgXOXiMlFOoMaZD20IzzEOZTV6n0bvZCJA1Fw==
 
 capacitor-native-biometric@^4.2.2:
   version "4.2.2"

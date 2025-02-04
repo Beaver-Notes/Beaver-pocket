@@ -41,7 +41,7 @@ PODS:
     - Capacitor
   - CapacitorWebviewPrint (6.0.1):
     - Capacitor
-  - CapaZip (7.0.0):
+  - CapaZip (7.0.3):
     - Capacitor
     - SSZipArchive
   - CodetrixStudioCapacitorGoogleAuth (0.0.1):
@@ -166,7 +166,7 @@ SPEC CHECKSUMS:
   CapacitorStatusBar: 9ed7f06318fd436917072a9bf60fda56d12c8bdb
   CapacitorVoiceRecorder: d07f0794998ff8c9a6ca3debd70070b286f70cb1
   CapacitorWebviewPrint: f17e654a2ff99367a429c9e01b62ddbdcf62c45d
-  CapaZip: f00f38cb02483a395bb648321fcaf034724d475b
+  CapaZip: a379d937c2db9a882d0be29e63dcb0090e6cd6ae
   CodetrixStudioCapacitorGoogleAuth: 9dcfabfb7dd804ad6231a1513bc6e81e620cbec6
   GoogleSignIn: 5651ce3a61e56ca864160e79b484cd9ed3f49b7a
   GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd

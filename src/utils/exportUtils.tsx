@@ -1,4 +1,8 @@
-import { Directory, Filesystem, FilesystemEncoding } from "@capacitor/filesystem";
+import {
+  Directory,
+  Filesystem,
+  FilesystemEncoding,
+} from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import { useState, useEffect } from "react";
@@ -39,6 +43,16 @@ export const useExportData = () => {
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
       const exportFolderName = `Beaver Notes ${formattedDate}`;
       const exportFolderPath = `export/${exportFolderName}`;
+
+      try {
+        await Filesystem.rmdir({
+          path: "export",
+          directory: Directory.Data,
+          recursive: true,
+        });
+      } catch (error) {
+        console.log("No existing export folder found, continuing...");
+      }
 
       await Filesystem.mkdir({
         path: exportFolderPath,
@@ -129,11 +143,9 @@ export const useExportData = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      alert(translations.home.exportSuccess);
-
       await shareExportFolder(exportFolderPath);
     } catch (error) {
-      alert(translations.home.exportError + (error as any).message);
+      console.log((error as any).message);
     }
   };
 
@@ -141,7 +153,11 @@ export const useExportData = () => {
     try {
       const zipFilePath = `${folderPath}.zip`;
       await Zip.zip({ sourcePath: folderPath, destinationPath: zipFilePath });
-
+      await Filesystem.rmdir({
+        path: folderPath,
+        directory: Directory.Data,
+        recursive: true,
+      });
       const result = await Filesystem.getUri({
         directory: Directory.Data,
         path: zipFilePath,
@@ -151,8 +167,11 @@ export const useExportData = () => {
         url: result.uri,
         dialogTitle: translations.home.shareTitle,
       });
+      await Filesystem.deleteFile({
+        path: zipFilePath,
+      });
     } catch (error) {
-      alert(translations.home.shareError + error);
+      console.log(error);
     }
   };
 

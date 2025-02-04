@@ -7,6 +7,8 @@ import { useHandleImportData } from "../../utils/importUtils";
 import { useNavigate } from "react-router-dom";
 import icons from "../../lib/remixicon-react";
 import { loadNotes } from "../../store/notes";
+import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import { Zip } from "capa-zip";
 
 interface SyncProps {
   notesState: Record<string, Note>;
@@ -40,7 +42,51 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
     exportUtils(notesState); // Pass notesState as an argument
   };
 
-  const handleImportData = () => {
+  const handleImportData = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(file);
+
+      return new Promise((reject) => {
+        fileReader.onload = async () => {
+          const fileDataUrl = fileReader.result as string;
+
+          // Write file to filesystem under "file-assets/noteId" directory
+          const filePath = `export/${file.name}`;
+          try {
+            await Filesystem.writeFile({
+              path: filePath,
+              data: fileDataUrl.split(",")[1], // Write only base64 data
+              directory: FilesystemDirectory.Data,
+              recursive: true,
+            });
+
+            await Zip.unzip({
+              sourceFile: filePath,
+              destinationPath: `export/${file.name.split('.').slice(0, -1).join('.')}`,
+            });
+
+            await Filesystem.deleteFile({
+              path: filePath,
+              directory: FilesystemDirectory.Data,
+            });
+
+          } catch (error) {
+            console.error("Error writing file to filesystem:", error);
+            reject(error); // Reject promise on error
+          }
+        };
+
+        fileReader.onerror = (error) => {
+          console.error("Error reading file:", error);
+          reject(error); // Reject promise on error
+        };
+      });
+    }
     importUtils(setNotesState, loadNotes); // Pass notesState as an argument
   };
 
@@ -148,38 +194,29 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                   </button>
                 </div>
 
-                <div className="relative pt-2 gap-1 flex flex-col sm:flex-row">
-                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
-                    <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                      <icons.FileDownloadLineIcon className="w-12 h-12 text-neutral-800 dark:text-neutral-300" />
-                    </div>
-                    <div className="bottom-0">
-                      <button
-                        className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]"
-                        onClick={handleImportData}
-                        aria-label={translations.sync.importData || "-"}
-                      >
-                        {translations.sync.importData || "-"}
-                      </button>
-                    </div>
+                <div className="flex flex-row gap-2">
+                  <div className="flex-1">
+                    <label
+                      htmlFor="file-upload-input"
+                      className="w-full flex items-center justify-center h-20  bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl"
+                      aria-label={translations.sync.importData || "-"}
+                    >
+                      <icons.Download2LineIcon className="w-12 h-12 text-neutral-800 dark:text-neutral-300" />
+                    </label>
+                    <input
+                      type="file"
+                      onChange={handleImportData}
+                      id="file-upload-input"
+                      className="hidden"
+                    />
                   </div>
-
-                  <div className="sm:w-1/2 mb-2 w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl items-center">
-                    <div className="flex items-center justify-center w-20 h-20 bg-[#E6E6E6] dark:bg-[#383737] rounded-full mx-auto">
-                      <icons.FileUploadLineIcon className="w-12 h-12 text-neutral-800 dark:text-neutral-300" />
-                    </div>
-                    <div className="flex items-center pt-2">
-                      <input type="checkbox" />
-                      <span className="ml-2">
-                        {translations.sync.encryptwPasswd || "-"}
-                      </span>
-                    </div>
+                  <div className="flex-1">
                     <button
-                      className="w-full mt-2 rounded-xl p-2 bg-[#E6E6E6] dark:bg-[#383737]"
+                      className="w-full flex items-center justify-center h-20  bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl"
                       onClick={exportData}
                       aria-label={translations.sync.exportData || "-"}
                     >
-                      {translations.sync.exportData || "-"}
+                      <icons.Upload2LineIcon className="w-12 h-12 text-neutral-800 dark:text-neutral-300" />
                     </button>
                   </div>
                 </div>
