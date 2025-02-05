@@ -100,10 +100,10 @@ const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
   }, [searchTerm, editor]);
 
   return (
-    <div className="pt-4 overflow-enabled h-auto w-full bg-white dark:bg-[#232222] z-30 no-scrollbar">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 w-full">
+    <div className="fixed top-5 pl-20 bg-white dark:bg-[#232222] flex items-center left-0 w-full py-2 pr-8 rtl:pr-2 z-30">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 w-full mx-auto justify-items-center">
         {/* Search Input and Button */}
-        <div className="flex items-center sm:col-span-1 w-full space-x-2">
+        <div className="flex items-center sm:col-span-1 w-full space-x-2 justify-center">
           <div className="flex w-full px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-neutral-800">
             <icons.Search2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6 mr-2" />
             <input
@@ -132,7 +132,7 @@ const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
         </div>
 
         {/* Replace Input */}
-        <div className="hidden sm:flex items-center sm:col-span-1 w-full space-x-2">
+        <div className="hidden sm:flex items-center sm:col-span-1 w-full space-x-2 justify-center">
           <div className="flex w-full px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-neutral-800">
             <input
               className="text-lg text-neutral-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
@@ -145,21 +145,21 @@ const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="hidden sm:flex items-center sm:col-span-1 w-full space-x-2">
+        <div className="hidden sm:flex items-center sm:col-span-1 w-full space-x-2 justify-center gap-2">
           <button
-            className="flex-grow sm:flex-grow-0 p-3 w-full sm:w-auto hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] rounded-lg text-lg bg-[#F8F8F7] dark:bg-[#353333]"
+            className="p-3 w-full hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] rounded-lg text-lg bg-[#F8F8F7] dark:bg-[#353333]"
             onClick={handleSearch}
           >
             {translations.editor.find || "-"}
           </button>
           <button
-            className="flex-grow sm:flex-grow-0 p-3 w-full sm:w-auto rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
+            className="p-3 w-full rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
             onClick={handleReplace}
           >
             {translations.editor.replace || "-"}
           </button>
           <button
-            className="flex-grow sm:flex-grow-0 p-3 w-full sm:w-auto rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
+            className="p-3 rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
             onClick={handleClose}
           >
             <Icons.CloseLineIcon

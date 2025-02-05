@@ -2,10 +2,10 @@
 import StarterKit from "@tiptap/starter-kit";
 import Video from "./exts/video-block";
 import Audio from "./exts/audio-block";
-import Document from '@tiptap/extension-document'
+import Document from "@tiptap/extension-document";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
-import Typography from '@tiptap/extension-typography';
+import Typography from "@tiptap/extension-typography";
 import Placeholder from "@tiptap/extension-placeholder";
 import Highlight from "./exts/highlight";
 import Underline from "@tiptap/extension-underline";
@@ -26,7 +26,7 @@ import { LinkNote } from "./exts/note-link";
 import FileEmbed from "./exts/file-block";
 import SearchAndReplace from "./exts/search-&-replace";
 import Mathblock from "./exts/math-block/Index";
-import CodeBlock from './exts/code-block';
+import CodeBlock from "./exts/code-block";
 import paper from "./exts/paper-block";
 import iframe from "./exts/embed-block/iframe";
 import { useDataPath } from "../../store/useDataPath";
@@ -61,7 +61,7 @@ if (selectedLanguage === "de") {
 
 const extensions = [
   Document.extend({
-    content: 'block+ footnotes?',
+    content: "block+ footnotes?",
   }),
   CodeBlock,
   StarterKit,
@@ -75,7 +75,26 @@ const extensions = [
   TaskItem.configure({
     nested: true,
   }),
-  Link,
+  Link.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        href: {
+          default: null,
+          parseHTML: (element) => {
+            let href = element.getAttribute("href");
+            if (href && !href.startsWith("http")) {
+              href = `https://${href}`; // Auto-fix missing "https://"
+            }
+            return href;
+          },
+          renderHTML: (attributes) => {
+            return attributes.href ? { href: attributes.href } : {};
+          },
+        },
+      };
+    },
+  }),
   Text,
   Table,
   TableCell,

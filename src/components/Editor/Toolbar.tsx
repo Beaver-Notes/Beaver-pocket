@@ -385,12 +385,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   return (
     <div
-      className={`print:hidden drawer hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] dark:text-neutral-50 overflow-x-auto sm:overflow-x-hidden mx-2 transition ${
+      className={`print:hidden drawer hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] overflow-auto dark:text-neutral-50 mx-2 transition ${
         focusMode ? "opacity-0 hover:opacity-100" : ""
       }`}
     >
       <div className="w-full h-full flex justify-center items-center">
-        <div className="flex items-center justify-center border-b">
+        <div className="flex items-center justify-center border-b dark:border-b-neutral-600">
           {/* Back button */}
           <div>
             {back.map((item) => (
@@ -405,7 +405,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               </button>
             ))}
           </div>
-          <hr className="border-r mx-2 h-6" />
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
           <button
             className={
               editor?.isActive("paragraph")
@@ -446,7 +446,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <icons.Heading2Icon className="border-none text-xl w-7 h-7" />
           </button>
-          <hr className="border-r mx-2 h-6" />
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
           <button
             className={
               editor?.isActive("bold")
@@ -512,7 +512,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             createPortal(
               <div
                 ref={dropdownRef}
-                className="absolute p-1 bg-white dark:bg-[#353333] shadow-lg rounded-md grid grid-cols-4"
+                className="absolute p-1 bg-white dark: shadow-lg rounded-md grid grid-cols-4"
                 style={{
                   top: dropdownPosition.top,
                   left: dropdownPosition.left,
@@ -561,10 +561,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
               </div>,
               document.body // Mount the dropdown in the document body
             )}
-          <hr className="border-r h-6" />
           {isTableActive && !isTextSelected && (
             <>
-              {" "}
+              <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />{" "}
               <button
                 className="p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
                 onMouseDown={handleMouseDown}
@@ -617,6 +616,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           )}
           {!isTableActive && (
             <>
+              <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />{" "}
               <button
                 className={
                   editor?.isActive("bulletList")
@@ -636,7 +636,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
                     : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
                 }
                 onMouseDown={handleMouseDown}
-                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                onClick={() =>
+                  editor?.chain().focus().toggleOrderedList().run()
+                }
                 aria-label={translations.menuItems.orderedListLabel}
               >
                 <icons.ListOrderedIcon className="border-none text-xl w-7 h-7" />
@@ -679,7 +681,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               </button>
             </>
           )}
-          <hr className="border-r h-6" />
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
           <ImageUploadComponent
             onImageUpload={handleImageUpload}
             noteId={noteId}
@@ -693,7 +695,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={`p-1 ${
               editor?.isActive("link")
-                ? "p-1 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                ? "p-1 rounded-md text-amber-400  cursor-pointer"
                 : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
             }`}
             onMouseDown={handleMouseDown}
@@ -727,7 +729,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </button>
           <button
             ref={moreRef}
-            className={"p-1 rounded-md text-amber-400 hoverable cursor-pointer"}
+            className={
+              "p-1 rounded-md text-neutral-800 dark:text-[color:var(--selected-dark-text)]  hoverable cursor-pointer"
+            }
             onMouseDown={handleMouseDown}
             onClick={toggleMore}
             aria-label={translations.accessibility.highlight}
@@ -738,7 +742,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             createPortal(
               <div
                 ref={moreDropdownRef}
-                className="absolute p-1 bg-white dark:bg-[#353333] shadow-lg rounded-md flex"
+                className="absolute p-1 bg-white dark: shadow-lg rounded-md flex"
                 style={{
                   top: morePosition.top,
                   left: morePosition.left,
@@ -753,7 +757,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 <button
                   className={`p-1 ${
                     editor?.isActive("Embed")
-                      ? "p-1 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
+                      ? "p-1 rounded-md text-amber-400  cursor-pointer"
                       : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
                   } cursor-pointer flex-1`}
                   onMouseDown={handleMouseDown}
@@ -779,7 +783,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               </div>,
               document.body // Mount the dropdown in the document body
             )}
-          <hr className="border-r h-6" />
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
           <button
             className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
@@ -788,7 +792,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <icons.ShareLineIcon className="border-none text-xl w-7 h-7" />
           </button>
-          <hr className="border-r h-6" />
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
           <div className="flex items-center">
             <button
               className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
