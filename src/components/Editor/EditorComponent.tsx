@@ -233,13 +233,6 @@ function EditorComponent({
     [note.id]
   );
 
-  useEffect(() => {
-    if (editor) {
-      editor.commands.focus();
-      editorRef.current = editor; // Store editor in ref
-    }
-  }, [editor]);
-
   document.addEventListener("showFind", () => {
     setShowFind((prevShowFind) => !prevShowFind);
   });
@@ -408,86 +401,6 @@ function EditorComponent({
     await processItems(items);
   };
 
-  const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const items = event.clipboardData.items;
-    document.execCommand("insertText", false, " "); // Add space before pasting
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-
-      if (item.kind === "file") {
-        // Handle pasted file (like from file manager)
-        const file = item.getAsFile();
-        if (file) {
-          await handleFileByType(file); // Handle file processing as usual
-        }
-      } else if (item.kind === "string" && item.type === "text/html") {
-        // Handle HTML content (like pasting from a web page)
-        item.getAsString(async (htmlContent: string) => {
-          const imageUrl = extractImageUrlFromHtml(htmlContent);
-          if (imageUrl) {
-            editor?.chain().setImage({ src: imageUrl }).run(); // Insert image from URL
-          } else {
-            // If no image URL, fallback to pasting the content as plain HTML/text
-            editor?.chain().insertContent(htmlContent).run();
-          }
-        });
-      } else if (item.kind === "string" && item.type === "text/plain") {
-        // Handle plain text or URLs
-        item.getAsString(async (textContent: string) => {
-          if (isBase64Image(textContent)) {
-            // If the content is a base64 image, insert it directly
-            editor?.chain().setImage({ src: textContent }).run();
-          } else if (isValidUrl(textContent)) {
-            // If it's a valid URL, check if it's an image URL
-            if (isImageUrl(textContent)) {
-              editor?.chain().setImage({ src: textContent }).run(); // Insert image
-            } else {
-              // If it's not an image URL, insert it as plain text or link
-              editor?.chain().insertContent(textContent).run();
-            }
-          } else {
-            // If neither base64 nor a valid URL, insert it as plain text
-            editor?.chain().insertContent(textContent).run();
-          }
-        });
-      }
-    }
-  };
-
-  // Helper to check if the pasted content is a base64 image
-  const isBase64Image = (str: string): boolean => {
-    return str.startsWith("data:image/") && str.includes("base64,");
-  };
-
-  // Helper to extract image URL from pasted HTML content
-  const extractImageUrlFromHtml = (htmlContent: string): string | null => {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlContent;
-    const imgTag = tempDiv.querySelector("img");
-
-    return imgTag ? imgTag.src : null;
-  };
-
-  // Helper to validate if a string is a valid URL
-  const isValidUrl = (string: string): boolean => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
-
-  // Helper to check if a URL is an image URL (jpg, png, gif, etc.)
-  const isImageUrl = (url: string): boolean => {
-    const imagePattern = /\.(jpeg|jpg|gif|png|bmp|webp)$/i;
-    return imagePattern.test(url);
-  };
-
   const processItems = async (items: DataTransferItemList) => {
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -650,7 +563,7 @@ function EditorComponent({
               <Icons.FileArticleLine
                 className={`border-none ${
                   focusMode
-                    ? "text-amber-400"
+                    ? "text-primary"
                     : "text-neutral-800 dark:text-[color:var(--selected-dark-text)]"
                 } text-xl w-7 h-7`}
               />
@@ -676,11 +589,7 @@ function EditorComponent({
           {/* Portal appears below the button */}
           {showFind && (
             <div ref={findRef} className="fixed" style={{ zIndex: 80 }}>
-              <div className="fixed inset-x-0 flex justify-center">
-                <div className="w-full bg-white dark:bg-[#232222] px-4 sm:px-10 md:px-20 lg:px-60">
-                  <Find editor={editor} setShowFind={setShowFind} />
-                </div>
-              </div>
+              <Find editor={editor} setShowFind={setShowFind} />
             </div>
           )}
         </div>
@@ -706,7 +615,6 @@ function EditorComponent({
         <div>
           <div className="py-2 h-full w-full" id="container">
             <EditorContent
-              onPaste={handlePaste}
               editor={editor}
               onTouchStart={event?.preventDefault}
               className="prose dark:text-neutral-100 max-w-none prose-indigo mb-[5em]"

@@ -366,10 +366,10 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               className={`p-1 ${
                 item.level
                   ? editor?.isActive("heading", { level: item.level }) // Strictly check both type and level for headings
-                    ? "text-amber-400"
+                    ? "text-primary"
                     : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
                   : editor?.isActive(item.active.toLowerCase()) // For non-headings, check only the type
-                  ? "text-amber-400"
+                  ? "text-primary"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
@@ -382,7 +382,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("blockquote")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -403,7 +403,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("codeBlock")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -422,7 +422,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("Embed")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -450,7 +450,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("table")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -469,7 +469,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             <button
               className={`p-1 ${
                 editor?.isActive(item.active.toLowerCase())
-                  ? "text-amber-400"
+                  ? "text-primary"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
@@ -498,7 +498,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("heading", { level: 1 })
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -510,7 +510,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("heading", { level: 2 })
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -522,7 +522,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("blockquote")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -534,7 +534,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("codeBlock")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -546,7 +546,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("Embed")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -558,7 +558,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("codeBlock")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -570,7 +570,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("Tasklist")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -588,7 +588,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("Embed")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -610,7 +610,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("Tasklist")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1 pr-6`}
             onMouseDown={handleMouseDown}
@@ -631,10 +631,10 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
               className={`p-1 ${
                 item.level
                   ? editor?.isActive("heading", { level: item.level }) // Strictly check both type and level for headings
-                    ? "text-amber-400"
+                    ? "text-primary"
                     : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
                   : editor?.isActive(item.active.toLowerCase()) // For non-headings, check only the type
-                  ? "text-amber-400"
+                  ? "text-primary"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
@@ -647,7 +647,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("bold")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -659,7 +659,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("italic")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -671,7 +671,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("underline")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -683,7 +683,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("strike")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -696,7 +696,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             ref={buttonRef}
             className={`p-1 ${
               editor?.isActive("highlight")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -723,7 +723,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                   role="menuitem"
                   className={
                     editor?.isActive("highlight")
-                      ? "rounded-md text-amber-400 cursor-pointer"
+                      ? "rounded-md text-primary cursor-pointer"
                       : "rounded-md bg-transparent cursor-pointer"
                   }
                   onClick={() => {
@@ -734,7 +734,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                   <icons.CloseLineIcon
                     className={
                       editor?.isActive("highlight")
-                        ? "border-none text-amber-400 text-xl w-8 h-8"
+                        ? "border-none text-primary text-xl w-8 h-8"
                         : "border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"
                     }
                   />
@@ -765,7 +765,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             <button
               className={`p-1 ${
                 editor?.isActive(item.active.toLowerCase())
-                  ? "text-amber-400"
+                  ? "text-primary"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
@@ -778,7 +778,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("subscript")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -790,7 +790,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("superscript")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -802,7 +802,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("highlight")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1 pr-6`}
             onMouseDown={handleMouseDown}

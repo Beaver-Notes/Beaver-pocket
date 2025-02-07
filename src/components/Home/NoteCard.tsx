@@ -406,7 +406,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
                     {note.labels.map((label) => (
                       <span
                         key={label}
-                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                        className="text-primary text-opacity-100 px-1 py-0.5 rounded-md"
                         aria-label={`Label: ${label}`}
                       >
                         #{label}
@@ -459,7 +459,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
             }}
           >
             {note.isBookmarked ? (
-              <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2" />
+              <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2 text-primary" />
             ) : (
               <Icons.Bookmark3LineIcon className="w-8 h-8 mr-2" />
             )}

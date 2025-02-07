@@ -83,27 +83,13 @@ const FootnoteReference = Node.create({
         key: new PluginKey("footnoteRefClick"),
 
         props: {
-          // on double-click, focus on the footnote
-          // @ts-ignore
-          handleDoubleClickOn(view, pos, node, nodePos, event) {
-            if (node.type.name != "footnoteReference") return false;
-            event.preventDefault();
-            const id = node.attrs["data-id"];
-            return editor.commands.focusFootnote(id);
-          },
-          // click the footnote reference once to get focus, click twice to scroll to the footnote
+          // click the footnote to scroll to it
           // @ts-ignore
           handleClickOn(view, pos, node, nodePos, event) {
             if (node.type.name != "footnoteReference") return false;
             event.preventDefault();
-            const { selection } = editor.state.tr;
-            if (selection instanceof NodeSelection && selection.node.eq(node)) {
-              const id = node.attrs["data-id"];
-              return editor.commands.focusFootnote(id);
-            } else {
-              editor.chain().setNodeSelection(nodePos).run();
-              return true;
-            }
+            const id = node.attrs["data-id"];
+            return editor.commands.focusFootnote(id);
           },
 
           // Handle paste events

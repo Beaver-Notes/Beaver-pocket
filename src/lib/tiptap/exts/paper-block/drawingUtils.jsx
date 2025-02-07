@@ -1,4 +1,3 @@
-// src/utils/drawingUtils.js
 import { useMemo, useRef } from "react";
 import * as d3 from "d3";
 import { v4 as uuid } from "uuid";
@@ -91,13 +90,10 @@ export const useEraseOverlappingPaths = (
 
     if (pathIndex !== -1) {
       const removedLine = linesRef.current[pathIndex];
-
-      // Save the deletion action
       setHistory((prevHistory) => [
         ...prevHistory,
         { action: "delete", line: removedLine },
       ]);
-
       linesRef.current.splice(pathIndex, 1);
       updateAttributes({
         lines: linesRef.current,
@@ -113,11 +109,9 @@ export const useGetPointerCoordinates = (svgRef) => {
     const svg = svgRef.current;
     const rect = svg.getBoundingClientRect();
 
-    // Get the correct pointer position, including page scroll and scale
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const clientY = event.touches ? event.touches[0].clientY : event.clientY;
 
-    // Calculate the mouse position relative to the SVG
     const scaleX = svg.viewBox.baseVal.width / rect.width;
     const scaleY = svg.viewBox.baseVal.height / rect.height;
 
@@ -144,7 +138,20 @@ export const useSaveDrawing = (
   const saveDrawing = () => {
     if (!path) return;
 
-    const newLine = { id: uuid(), path, color, size, tool };
+    // Check if it's a dot by looking at the path length
+    const isDot = path.length < 10;
+
+    // Halve the width for dots
+    const adjustedSize = isDot ? size / 2 : size;
+
+    const newLine = {
+      id: uuid(),
+      path,
+      color,
+      size: adjustedSize,
+      tool,
+    };
+
     linesRef.current = [...linesRef.current, newLine];
 
     setHistory((prevHistory) => [
@@ -155,6 +162,7 @@ export const useSaveDrawing = (
     setRedoStack([]);
     batchUpdatePaths();
   };
+
   const batchUpdatePaths = () => {
     if (batchUpdateTimeoutRef.current) {
       clearTimeout(batchUpdateTimeoutRef.current);
@@ -164,8 +172,9 @@ export const useSaveDrawing = (
       updateAttributes({
         lines: linesRef.current,
       });
-    }, 500); // Adjust timeout as needed
+    }, 500);
   };
+
   return saveDrawing;
 };
 
@@ -173,32 +182,38 @@ export const useRenderPaths = (chunkedLines) => {
   const renderPaths = () =>
     chunkedLines.map((chunk, chunkIndex) => (
       <g key={`chunk-${chunkIndex}`}>
-        {chunk.map((item) => (
-          <path
-            key={`${item.id}-${item.color}-${item.size}`}
-            d={item.path}
-            stroke={adjustColorForMode(item.color)}
-            strokeWidth={item.size}
-            opacity={item.tool === "highlighter" ? 0.3 : 1}
-            fill="none"
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
+        {chunk.map((item) => {
+          // Apply the same dot width logic in the renderer
+          const isDot = item.path.length < 10;
+          const strokeWidth = isDot ? item.size : item.size;
+
+          return (
+            <path
+              key={`${item.id}-${item.color}-${item.size}`}
+              d={item.path}
+              stroke={adjustColorForMode(item.color)}
+              strokeWidth={strokeWidth}
+              opacity={item.tool === "highlighter" ? 0.3 : 1}
+              fill="none"
+              vectorEffect="non-scaling-stroke"
+            />
+          );
+        })}
       </g>
     ));
 
   const adjustColorForMode = (color) => {
     if (isDarkMode) {
-      // Dark mode: Black turns to white; other colors unchanged
       return color === "#000000" ? "#FFFFFF" : color;
     } else {
-      // Light mode: White turns to black; other colors unchanged
       return color === "#FFFFFF" ? "#000000" : color;
     }
   };
+
   return renderPaths;
 };
 
+// Rest of the code remains the same...
 export const useLineGenerator = () => {
   const lineGenerator = useMemo(
     () =>
@@ -212,7 +227,13 @@ export const useLineGenerator = () => {
   return lineGenerator;
 };
 
-export const useRedo = (redoStack, setRedoStack, setHistory, updateAttributes, linesRef) => {
+export const useRedo = (
+  redoStack,
+  setRedoStack,
+  setHistory,
+  updateAttributes,
+  linesRef
+) => {
   const redo = () => {
     if (redoStack.length > 0) {
       const lastRedo = redoStack[redoStack.length - 1];
@@ -220,10 +241,8 @@ export const useRedo = (redoStack, setRedoStack, setHistory, updateAttributes, l
       setHistory((prevHistory) => [...prevHistory, lastRedo]);
 
       if (lastRedo.action === "add") {
-        // Redo adding a line by adding it back
         linesRef.current = [...linesRef.current, lastRedo.line];
       } else if (lastRedo.action === "delete") {
-        // Redo deleting a line by removing it again
         linesRef.current = linesRef.current.filter(
           (line) => line.id !== lastRedo.line.id
         );
@@ -235,9 +254,15 @@ export const useRedo = (redoStack, setRedoStack, setHistory, updateAttributes, l
     }
   };
   return redo;
-}
+};
 
-export const useUndo = (history, setHistory, setRedoStack, updateAttributes, linesRef) => {
+export const useUndo = (
+  history,
+  setHistory,
+  setRedoStack,
+  updateAttributes,
+  linesRef
+) => {
   const undo = () => {
     if (history.length > 0) {
       const lastAction = history[history.length - 1];
@@ -245,12 +270,10 @@ export const useUndo = (history, setHistory, setRedoStack, updateAttributes, lin
       setRedoStack((prevStack) => [...prevStack, lastAction]);
 
       if (lastAction.action === "add") {
-        // Undo adding a line by removing it
         linesRef.current = linesRef.current.filter(
           (line) => line.id !== lastAction.line.id
         );
       } else if (lastAction.action === "delete") {
-        // Undo deleting a line by adding it back
         linesRef.current = [...linesRef.current, lastAction.line];
       }
 

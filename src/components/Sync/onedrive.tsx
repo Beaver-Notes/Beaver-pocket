@@ -205,7 +205,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                 strokeWidth={8}
               >
                 {importProgress || exportProgress ? (
-                  <span className="text-amber-400 text-xl font-semibold">
+                  <span className="text-primary text-xl font-semibold">
                     {importProgress || exportProgress}%
                   </span>
                 ) : (
@@ -276,7 +276,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
                     aria-checked={autoSync}
                     aria-labelledby="auto-sync-toggle"
                   />
-                  <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                 </label>
               </div>
             </section>
@@ -287,7 +287,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
               <div className="sm:mx-auto sm:w-full sm:max-w-sm">
                 <div className="space-y-4">
                   <button
-                    className="bg-amber-400 w-full text-white p-3 text-xl font-bold rounded-xl"
+                    className="bg-primary w-full text-white p-3 text-xl font-bold rounded-xl"
                     onClick={login}
                     aria-label={
                       translations.onedrive.login || "Login to OneDrive"

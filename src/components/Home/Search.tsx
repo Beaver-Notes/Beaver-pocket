@@ -17,12 +17,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
   uniqueLabels,
 }) => {
   const [translations, setTranslations] = useState({
-    search: {
-      searchNotes: "search.searchNotes",
-      selectlabel: "search.selectlabel",
-      lastUpdated: "search.lastUpdated",
-      creationDate: "search.creationDate",
-      alphabetical: "search.alphabetical",
+    filter: {
+      searchNotes: "filter.searchNotes",
+      selectlabel: "filter.selectlabel",
+      lastUpdated: "filter.lastUpdated",
+      creationDate: "filter.creationDate",
+      alphabetical: "filter.alphabetical",
     },
   });
 
@@ -45,14 +45,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <div className="bg-transparent px-6">
       <div className="flex justify-center">
-        <div className="apply relative w-full sm:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-neutral-800 cursor-pointer flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2;">
+        <div className="apply relative w-full ring-2 ring-primary sm:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] align-middle inline rounded-full text-neutral-800 cursor-pointer flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2;">
           <div>
             <icons.Search2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6" />
           </div>
           <input
             className="text-xl text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
             type="text"
-            placeholder={translations.search.searchNotes}
+            placeholder={translations.filter.searchNotes}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -72,7 +72,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               onChange={(e) => handleLabelFilterChange(e.target.value)}
               className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
             >
-              <option value="">{translations.search.selectlabel}</option>
+              <option value="">{translations.filter.selectlabel}</option>
               {uniqueLabels.map((label) => (
                 <option key={label} value={label}>
                   {label}
@@ -87,12 +87,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
             onChange={(e) => setSortingOption(e.target.value)}
             className="rounded-full ml-2 pl-4 pr-10 p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
           >
-            <option value="updatedAt">{translations.search.lastUpdated}</option>
+            <option value="updatedAt">{translations.filter.lastUpdated}</option>
             <option value="createdAt">
-              {translations.search.creationDate}
+              {translations.filter.creationDate}
             </option>
             <option value="alphabetical">
-              {translations.search.alphabetical}
+              {translations.filter.alphabetical}
             </option>
           </select>
           <icons.ArrowDownS className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none" />
@@ -107,13 +107,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
               className="bg-transparent dark:text-[color:var(--selected-dark-text)] outline-none appearance-none pl-8 w-full"
             >
               <option value="updatedAt">
-                {translations.search.lastUpdated}
+                {translations.filter.lastUpdated}
               </option>
               <option value="createdAt">
-                {translations.search.creationDate}
+                {translations.filter.creationDate}
               </option>
               <option value="alphabetical">
-                {translations.search.alphabetical}
+                {translations.filter.alphabetical}
               </option>
             </select>
           </div>
@@ -124,7 +124,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             onChange={(e) => handleLabelFilterChange(e.target.value)}
             className="rounded-full pr-10 p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none w-full"
           >
-            <option value="">{translations.search.selectlabel}</option>
+            <option value="">{translations.filter.selectlabel}</option>
             {uniqueLabels.map((label) => (
               <option key={label} value={label}>
                 {label}

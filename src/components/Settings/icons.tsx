@@ -47,7 +47,7 @@ const App: React.FC = () => {
         {/* Default Icon Button */}
         <button
           className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center ${
-            currentIcon === "AppIcon" ? "ring-2 ring-amber-400" : ""
+            currentIcon === "AppIcon" ? "ring-2 ring-primary" : ""
           }`}
           aria-label="Default App Icon"
           onClick={() => resetIcon()}
@@ -65,7 +65,7 @@ const App: React.FC = () => {
           <button
             key={name}
             className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center ${
-              currentIcon === name ? "ring-2 ring-amber-400" : ""
+              currentIcon === name ? "ring-2 ring-primary" : ""
             }`}
             onClick={() => changeIcon(name)}
             aria-label={cuteName}

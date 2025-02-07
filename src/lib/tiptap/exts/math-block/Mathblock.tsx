@@ -220,13 +220,13 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                         useKatexMacros ? "text-primary" : ""
                       } ${
                         showSecondTextarea
-                          ? "text-amber-400"
+                          ? "text-primary"
                           : "text-neutral-800 dark:text-white"
                       }`}
                       onClick={toggleSecondTextarea}
                     >
                       <Settings4LineIcon
-                        className="active:text-amber-500"
+                        className="active:text-secondary"
                         aria-hidden="true"
                       />
                     </button>

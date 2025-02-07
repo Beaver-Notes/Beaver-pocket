@@ -165,7 +165,7 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
                   strokeWidth={8}
                 >
                   {importProgress || exportProgress ? (
-                    <span className="text-amber-400 text-xl font-semibold">
+                    <span className="text-primary text-xl font-semibold">
                       {importProgress || exportProgress}%
                     </span>
                   ) : (
@@ -177,7 +177,7 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
               </div>
               <input
                 type="text"
-                className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-amber-400 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
+                className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-primary focus:border-primary focus:outline-none focus:border-secondary border-2 p-2 rounded-xl pr-10"
                 value={baseUrl}
                 placeholder="https://server.example"
                 onChange={(e) => setBaseUrl(e.target.value)}
@@ -185,7 +185,7 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
               />
               <input
                 type="text"
-                className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-amber-400 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
+                className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-primary focus:border-primary focus:outline-none focus:border-secondary border-2 p-2 rounded-xl pr-10"
                 placeholder={translations.webdav.username}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -193,7 +193,7 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
               />
               <div className="relative">
                 <input
-                  className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-amber-400 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 rounded-xl pr-10"
+                  className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-primary focus:border-primary focus:outline-none focus:border-secondary border-2 p-2 rounded-xl pr-10"
                   type={showInputContent ? "text" : "password"}
                   placeholder={translations.webdav.password}
                   value={password}
@@ -259,7 +259,7 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
                     aria-checked={autoSync}
                     aria-labelledby="auto-sync-toggle"
                   />
-                  <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                 </label>
               </div>
             </div>

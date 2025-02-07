@@ -44,11 +44,10 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
           r={radius}
           strokeWidth={strokeWidth}
           fill="none"
-          stroke='#fbbf24'
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          className="transition-all duration-300"
+          className="stroke-primary transition-all duration-300"
         />
       </svg>
       <div className="absolute inset-0 flex justify-center items-center">

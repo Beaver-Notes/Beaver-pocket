@@ -44,6 +44,8 @@ const App: React.FC = () => {
   const [themeMode, setThemeMode] = useState<string>(
     localStorage.getItem("themeMode") || "auto"
   );
+  const colorScheme = localStorage.getItem("color-scheme") || "light";
+  document.documentElement.classList.add(colorScheme);
   const [darkMode, setDarkMode] = useState(() => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"

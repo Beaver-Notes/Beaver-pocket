@@ -307,7 +307,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState, darkMode }) => {
                 strokeWidth={8}
               >
                 {importProgress || exportProgress ? (
-                  <span className="text-amber-400 text-xl font-semibold">
+                  <span className="text-primary text-xl font-semibold">
                     {importProgress || exportProgress}%
                   </span>
                 ) : (
@@ -374,7 +374,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState, darkMode }) => {
                   aria-checked={autoSync}
                   aria-labelledby="Auto sync"
                 />
-                <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
               </label>
             </div>
           </section>
@@ -401,7 +401,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState, darkMode }) => {
                     {translations.dropbox.submit || "-"}
                   </button>
                   <button
-                    className="bg-amber-400 w-full text-white p-3 text-xl font-bold rounded-xl"
+                    className="bg-primary w-full text-white p-3 text-xl font-bold rounded-xl"
                     onClick={handleLogin}
                     aria-label={
                       translations.dropbox.getToken || "Get Dropbox token"

@@ -1,4 +1,5 @@
 // index.ts
+import Image from './exts/image';
 import StarterKit from "@tiptap/starter-kit";
 import Video from "./exts/video-block";
 import Audio from "./exts/audio-block";
@@ -19,19 +20,19 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import BulletList from "@tiptap/extension-bullet-list";
-import ImageResize from "tiptap-extension-resize-image";
 import MathInline from "./exts/math-inline";
 import { NoteLabel } from "./exts/NoteLabel";
 import { LinkNote } from "./exts/note-link";
 import FileEmbed from "./exts/file-block";
-import SearchAndReplace from "./exts/search-&-replace";
+import SearchAndReplace from "@sereneinserenade/tiptap-search-and-replace";
 import Mathblock from "./exts/math-block/Index";
 import CodeBlock from "./exts/code-block";
 import paper from "./exts/paper-block";
 import iframe from "./exts/embed-block/iframe";
-import { useDataPath } from "../../store/useDataPath";
 import MermaidDiagram from "./exts/mermaid-block";
 import labels from "./exts/labels";
+import markdownEngine from './exts/markdown-engine';
+import { Paste } from './exts/markdown-engine/paste';
 
 // Callouts
 import {
@@ -103,20 +104,6 @@ const extensions = [
   MermaidDiagram,
   BulletList,
   MathInline,
-  ImageResize.extend({
-    addNodeView() {
-      const viewer = this.parent?.() as any;
-      return (props) => {
-        const attrs = props.node.attrs;
-        const node = {
-          ...props.node,
-          attrs: { ...attrs, src: useDataPath().getRemotePath(attrs.src) },
-        };
-        const newProps = { ...props, node };
-        return viewer(newProps);
-      };
-    },
-  }),
   NoteLabel,
   LinkNote,
   FileEmbed,
@@ -139,6 +126,9 @@ const extensions = [
   paper,
   FootnoteReference,
   Video,
+  markdownEngine,
+  Paste,
+  Image,
 ];
 
 export default extensions;

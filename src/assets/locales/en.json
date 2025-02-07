@@ -84,7 +84,8 @@
     "expandPage": "Expand Page",
     "CollapsibleHeading": "Collapsible Heading",
     "scribbleCompatibility": "Scribble compatibility",
-    "appIcon": "App Icon"
+    "appIcon": "App Icon",
+    "colorScheme": "Color Scheme"
   },
   "sync": {
     "Dropbox": "Dropbox",
@@ -99,7 +100,6 @@
     "importInvalid": "Invalid data format",
     "Sync": "Sync",
     "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?"
-
   },
   "dropbox": {
     "title": "Sync with Dropbox",
@@ -214,13 +214,22 @@
     "biometricReason": "Lock/Unlock notes",
     "biometricTitle": "Lock/Unlock with Biometrics"
   },
-  "search": {
+  "filter": {
     "searchNotes": "Search Notes",
     "select": "Select ",
     "lastUpdated": "Last Updated",
     "creationDate": "Creation Date",
     "alphabetical": "Alphabetical",
     "selectlabel": "Select label"
+  },
+  "search": {
+    "clear": "Clear",
+    "find": "Find",
+    "replace": "Replace",
+    "replaceall": "Replace all",
+    "replaceplaceholder": "Replace...",
+    "searchplaceholder": "Search...",
+    "useRegex": "Use regex (Alt+R)"
   },
   "shortcuts": {
     "General": "General shortcuts",

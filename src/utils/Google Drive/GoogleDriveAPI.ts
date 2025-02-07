@@ -23,7 +23,6 @@ export class GoogleDriveAPI {
     });
   }
 
-  // Create a folder in Google Drive
   async createFolder(
     folderName: string,
     parentId: string | null = null
@@ -36,7 +35,7 @@ export class GoogleDriveAPI {
 
     try {
       const response = await this.axiosInstance.post("/files", metadata);
-      return response.data.id || null; // Return folder ID if successful
+      return response.data.id || null;
     } catch (error: any) {
       console.error(
         "Error creating folder:",
@@ -48,7 +47,6 @@ export class GoogleDriveAPI {
     }
   }
 
-  // Check if a folder exists in the root or specified folder
   async checkFolderExists(
     folderName: string,
     parentId: string | null = null
@@ -58,18 +56,13 @@ export class GoogleDriveAPI {
       (parentId ? ` and '${parentId}' in parents` : ` and 'root' in parents`);
 
     try {
-      const response = await this.axiosInstance.get(`/files`, {
+      const response = await this.axiosInstance.get("/files", {
         params: {
           q: query,
           fields: "files(id,name)",
         },
       });
-
-      if (response.data.files && response.data.files.length > 0) {
-        return response.data.files[0].id; // Return folder ID if found
-      }
-
-      return null; // Folder does not exist
+      return response.data.files?.length > 0 ? response.data.files[0].id : null;
     } catch (error: any) {
       console.error(
         "Error checking folder existence:",
@@ -83,7 +76,6 @@ export class GoogleDriveAPI {
     }
   }
 
-  // Delete a folder by its ID
   async deleteFolder(folderId: string): Promise<void> {
     try {
       await this.axiosInstance.delete(`/files/${folderId}`);
@@ -104,46 +96,29 @@ export class GoogleDriveAPI {
     parentId: string,
     mimeType: string
   ): Promise<void> {
-    const metadata = {
-      name: fileName,
-      parents: [parentId], // Specify the folder ID
-    };
-
-    // Create a FormData object to hold the metadata and file content
+    const metadata = { name: fileName, parents: [parentId] };
     const form = new FormData();
     form.append(
       "metadata",
       new Blob([JSON.stringify(metadata)], { type: "application/json" })
     );
-
-    // Determine if the content is a Blob or a string and set the MIME type
     const fileBlob =
       typeof content === "string"
-        ? new Blob([content], { type: mimeType || "text/plain" }) // Default to 'text/plain' for strings
+        ? new Blob([content], { type: mimeType || "text/plain" })
         : content;
-
     form.append("file", fileBlob);
 
     try {
-      // Make a POST request to upload the file
       const response = await fetch(
         "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`, // Use the provided access token
-          },
-          body: form, // Attach the form data
+          headers: { Authorization: `Bearer ${this.accessToken}` },
+          body: form,
         }
       );
-
-      // Check for a successful response
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error uploading file:", error);
+      if (!response.ok)
         throw new Error(`Error uploading file: ${response.statusText}`);
-      }
-
       console.log("File uploaded successfully.");
     } catch (error) {
       console.error("Exception in uploadFile:", error);
@@ -151,16 +126,14 @@ export class GoogleDriveAPI {
     }
   }
 
-  // List contents of a folder
   async listContents(folderId: string): Promise<FileMetadata[]> {
     try {
-      const response = await this.axiosInstance.get(`/files`, {
+      const response = await this.axiosInstance.get("/files", {
         params: {
           q: `'${folderId}' in parents`,
           fields: "files(id,name,mimeType,createdTime)",
         },
       });
-
       return response.data.files || [];
     } catch (error: any) {
       console.error(
@@ -173,14 +146,12 @@ export class GoogleDriveAPI {
     }
   }
 
-  // Download a file by its ID
   async downloadFile(fileId: string): Promise<string> {
     try {
       const response = await this.axiosInstance.get(`/files/${fileId}`, {
         params: { alt: "media" },
-        responseType: "text", // Assuming the file is text
+        responseType: "text",
       });
-
       return response.data;
     } catch (error: any) {
       console.error(

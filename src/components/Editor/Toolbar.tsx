@@ -409,7 +409,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={
               editor?.isActive("paragraph")
-                ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                 : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
@@ -421,7 +421,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={
               editor?.isActive("heading", { level: 1 })
-                ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                 : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
@@ -435,7 +435,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={
               editor?.isActive("heading", { level: 2 })
-                ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                 : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
@@ -450,7 +450,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={
               editor?.isActive("bold")
-                ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                 : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
@@ -462,7 +462,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={
               editor?.isActive("italic")
-                ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                 : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
@@ -474,7 +474,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={
               editor?.isActive("underline")
-                ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                 : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
@@ -486,7 +486,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={
               editor?.isActive("strike")
-                ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                 : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
@@ -499,7 +499,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             ref={buttonRef}
             className={
               editor?.isActive("highlight")
-                ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                 : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
@@ -523,7 +523,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 <button
                   className={
                     editor?.isActive("highlight")
-                      ? "rounded-md text-amber-400 cursor-pointer"
+                      ? "rounded-md text-primary cursor-pointer"
                       : "rounded-md bg-transparent cursor-pointer"
                   }
                   onClick={() => {
@@ -534,7 +534,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   <icons.CloseLineIcon
                     className={
                       editor?.isActive("highlight")
-                        ? "border-none text-amber-400 text-xl w-7 h-7"
+                        ? "border-none text-primary text-xl w-7 h-7"
                         : "border-none text-neutral-800 dark:dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7"
                     }
                   />
@@ -620,7 +620,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <button
                 className={
                   editor?.isActive("bulletList")
-                    ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                     : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
                 }
                 onMouseDown={handleMouseDown}
@@ -632,7 +632,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <button
                 className={
                   editor?.isActive("orderedList")
-                    ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                     : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
                 }
                 onMouseDown={handleMouseDown}
@@ -646,7 +646,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <button
                 className={
                   editor?.isActive("TaskList")
-                    ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                     : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
                 }
                 onMouseDown={handleMouseDown}
@@ -658,7 +658,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <button
                 className={
                   editor?.isActive("blockquote")
-                    ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                     : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
                 }
                 onMouseDown={handleMouseDown}
@@ -670,7 +670,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <button
                 className={
                   editor?.isActive("codeBlock")
-                    ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                     : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
                 }
                 onMouseDown={handleMouseDown}
@@ -695,7 +695,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={`p-1 ${
               editor?.isActive("link")
-                ? "p-1 rounded-md text-amber-400  cursor-pointer"
+                ? "p-1 rounded-md text-primary  cursor-pointer"
                 : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
             }`}
             onMouseDown={handleMouseDown}
@@ -712,7 +712,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <button
             className={
               editor?.isActive("table")
-                ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                 : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
@@ -757,7 +757,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 <button
                   className={`p-1 ${
                     editor?.isActive("Embed")
-                      ? "p-1 rounded-md text-amber-400  cursor-pointer"
+                      ? "p-1 rounded-md text-primary  cursor-pointer"
                       : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
                   } cursor-pointer flex-1`}
                   onMouseDown={handleMouseDown}
@@ -770,7 +770,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   <button
                     className={
                       editor?.isActive(item.active.toLowerCase())
-                        ? "p-1 rounded-md text-amber-400 hoverable cursor-pointer"
+                        ? "p-1 rounded-md text-primary hoverable cursor-pointer"
                         : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
                     }
                     onMouseDown={handleMouseDown}

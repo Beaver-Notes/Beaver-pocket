@@ -94,7 +94,7 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
               type={showInputContent ? "text" : "password"}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="w-full dark:bg-neutral-800 border-amber-300 focus:border-amber-400 focus:outline-none focus:border-amber-300 border-2 p-2 mb-4 rounded-lg pr-10"
+              className="w-full dark:bg-neutral-800 border-secondary focus:border-primary focus:outline-none focus:border-secondary border-2 p-2 mb-4 rounded-lg pr-10"
               placeholder={translations.home.enterpasswd}
               aria-labelledby="modal-title"
             />
@@ -124,7 +124,7 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
             </button>
             <button
               onClick={handleConfirm}
-              className="p-3 w-1/2 text-xl bg-amber-400 text-white rounded-lg hover:bg-amber-300 mr-2"
+              className="p-3 w-1/2 text-xl bg-primary text-white rounded-lg hover:bg-secondary mr-2"
               aria-label={translations.home.confirm}
             >
               {translations.home.confirm}

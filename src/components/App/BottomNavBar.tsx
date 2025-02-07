@@ -131,7 +131,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
               className="flex items-center justify-center w-12 h-12"
               aria-label={translations.accessibility.home}
             >
-              <icons.HomeLineIcon className="text-white hover:text-amber-400 h-10 w-10" />
+              <icons.HomeLineIcon className="text-white hover:text-primary h-10 w-10" />
             </button>
           </Link>
 
@@ -140,7 +140,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
             className="flex items-center justify-center w-12 h-12"
             aria-label={translations.accessibility.editNote}
           >
-            <icons.Edit2LineIcon className="text-white hover:text-amber-400 h-10 w-10" />
+            <icons.Edit2LineIcon className="text-white hover:text-primary h-10 w-10" />
           </button>
 
           <button
@@ -148,7 +148,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
             onClick={handleCreateNewNote}
             aria-label={translations.accessibility.createNew}
           >
-            <icons.AddFillIcon className="text-white hover:text-amber-400 h-10 w-10" />
+            <icons.AddFillIcon className="text-white hover:text-primary h-10 w-10" />
           </button>
 
           <Link to="/archive">
@@ -156,7 +156,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
               className="flex items-center justify-center w-12 h-12"
               aria-label={translations.accessibility.archive}
             >
-              <icons.ArchiveDrawerLineIcon className="text-white hover:text-amber-400 h-10 w-10" />
+              <icons.ArchiveDrawerLineIcon className="text-white hover:text-primary h-10 w-10" />
             </button>
           </Link>
 
@@ -165,7 +165,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
               className="flex items-center justify-center w-12 h-12"
               aria-label={translations.accessibility.settings}
             >
-              <icons.Settings4LineIcon className="text-white hover:text-amber-400 h-10 w-10" />
+              <icons.Settings4LineIcon className="text-white hover:text-primary h-10 w-10" />
             </button>
           </Link>
         </div>
