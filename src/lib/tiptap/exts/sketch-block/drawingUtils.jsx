@@ -179,6 +179,8 @@ export const useSaveDrawing = (
 };
 
 export const useRenderPaths = (chunkedLines) => {
+  const isDarkMode = document.documentElement.classList.contains("dark");
+
   const renderPaths = () =>
     chunkedLines.map((chunk, chunkIndex) => (
       <g key={`chunk-${chunkIndex}`}>
@@ -211,20 +213,6 @@ export const useRenderPaths = (chunkedLines) => {
   };
 
   return renderPaths;
-};
-
-// Rest of the code remains the same...
-export const useLineGenerator = () => {
-  const lineGenerator = useMemo(
-    () =>
-      d3
-        .line()
-        .x((d) => d.x)
-        .y((d) => d.y)
-        .curve(d3.curveBasis),
-    []
-  );
-  return lineGenerator;
 };
 
 export const useRedo = (
@@ -283,4 +271,46 @@ export const useUndo = (
     }
   };
   return undo;
+};
+
+export const useDraw = (drawing, points, setPoints, setPath, svgHeight) => {
+  const BUFFER_ZONE = 50;
+  const INCREMENT_HEIGHT = 200;
+
+  const lineGenerator = useMemo(
+    () =>
+      d3
+        .line()
+        .x((d) => d.x)
+        .y((d) => d.y)
+        .curve(d3.curveBasis),
+    []
+  );
+
+  const draw = (x, y) => {
+    if (!drawing) return;
+
+    const newPoints = [...points, { x, y }];
+    setPoints(newPoints);
+    const newPath = lineGenerator(newPoints);
+    setPath(newPath);
+    if (y > svgHeight - BUFFER_ZONE) {
+      const newHeight = svgHeight + INCREMENT_HEIGHT;
+      setSvgHeight(newHeight);
+      updateAttributes({ height: newHeight });
+
+      // Adjust scroll position to keep the drawing point in view
+      const container = containerRef.current;
+      if (container) {
+        const scrollContainer = container.closest(".drawing-component");
+        if (scrollContainer) {
+          scrollContainer.scrollTo({
+            top: scrollContainer.scrollHeight,
+            behavior: "smooth",
+          });
+        }
+      }
+    }
+  };
+  return draw;
 };

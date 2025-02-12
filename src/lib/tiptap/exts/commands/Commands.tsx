@@ -9,8 +9,14 @@ interface SlashMenuProps {
   noteId: string;
   editor: any;
   query: string;
+  range: string;
 }
-const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
+const Commands: React.FC<SlashMenuProps> = ({
+  noteId,
+  editor,
+  query,
+  range,
+}) => {
   useEffect(() => {
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
@@ -28,14 +34,19 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
   }, []);
 
   const handlefileUpload = (fileUrl: string, fileName: string) => {
+    editor.commands.deleteRange(range).run();
+
     editor?.chain().setFileEmbed(fileUrl, fileName).run();
   };
 
   const handlevideoUpload = (fileUrl: string) => {
+    editor.commands.deleteRange(range).run();
     editor?.chain().setVideo(fileUrl).run();
   };
 
   const handleImageUpload = (imageUrl: string) => {
+    editor.commands.deleteRange(range).run();
+
     editor?.chain().setImage({ src: imageUrl }).run();
   };
 
@@ -62,7 +73,12 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
       formattedUrl = `https://www.youtube.com/embed/${videoId}`;
     }
 
-    editor?.chain().focus().setIframe({ src: formattedUrl }).run();
+    editor
+      ?.chain()
+      .focus()
+      .deleteRange(range)
+      .setIframe({ src: formattedUrl })
+      .run();
   };
 
   const [translations, setTranslations] = useState({
@@ -103,47 +119,86 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
     {
       icon: icons.ParagraphIcon,
       label: translations.menu.paragraph,
-      action: () => editor.chain().focus().setParagraph().run(),
+      action: () =>
+        editor.chain().focus().deleteRange(range).setParagraph().run(),
     },
     {
       icon: icons.Heading1Icon,
       label: translations.menu.heading1,
-      action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+      action: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .toggleHeading({ level: 1 })
+          .run(),
     },
     {
       icon: icons.Heading2Icon,
       label: translations.menu.heading2,
-      action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+      action: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .toggleHeading({ level: 2 })
+          .run(),
     },
     {
       icon: icons.Heading3Icon,
       label: translations.menu.heading3,
-      action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+      action: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .toggleHeading({ level: 3 })
+          .run(),
     },
     {
       icon: icons.Heading4Icon,
       label: translations.menu.heading4,
-      action: () => editor.chain().focus().toggleHeading({ level: 4 }).run(),
+      action: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .toggleHeading({ level: 4 })
+          .run(),
     },
     {
       icon: icons.Heading5Icon,
       label: translations.menu.heading5,
-      action: () => editor.chain().focus().toggleHeading({ level: 5 }).run(),
+      action: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .toggleHeading({ level: 5 })
+          .run(),
     },
     {
       icon: icons.Heading6Icon,
       label: translations.menu.heading6,
-      action: () => editor.chain().focus().toggleHeading({ level: 6 }).run(),
+      action: () =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .toggleHeading({ level: 6 })
+          .run(),
     },
     {
       icon: icons.DoubleQuotesLIcon,
       label: translations.menu.quote,
-      action: () => editor.chain().focus().toggleBlockquote().run(),
+      action: () =>
+        editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
     },
     {
       icon: icons.CodeBoxLineIcon,
       label: translations.menu.code,
-      action: () => editor.chain().focus().toggleCodeBlock().run(),
+      action: () =>
+        editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
     },
     {
       icon: icons.Table2Icon,
@@ -158,45 +213,52 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
     {
       icon: icons.ListUnorderedIcon,
       label: translations.menu.bulletList,
-      action: () => editor.chain().focus().toggleBulletList().run(),
+      action: () =>
+        editor.chain().focus().deleteRange(range).toggleBulletList().run(),
     },
     {
       icon: icons.ListOrderedIcon,
       label: translations.menu.orderedList,
-      action: () => editor?.chain().focus().toggleOrderedList().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).toggleOrderedList().run(),
     },
     {
       icon: icons.ListCheck2Icon,
       label: translations.menu.checklist,
-      action: () => editor?.chain().focus().toggleTaskList().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).toggleTaskList().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menu.blackCallout,
       className: "dark:text-neutral-400",
       //@ts-ignore
-      action: () => editor?.chain().focus().setBlackCallout().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).setBlackCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menu.blueCallout,
       className: "text-blue-500 dark:text-blue-500",
       //@ts-ignore
-      action: () => editor?.chain().focus().setBlueCallout().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).setBlueCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menu.greenCallout,
       className: "text-green-600 dark:text-green-600",
       //@ts-ignore
-      action: () => editor?.chain().focus().setGreenCallout().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).setGreenCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menu.purpleCallout,
       className: "text-purple-500 dark:text-purple-500",
       //@ts-ignore
-      action: () => editor?.chain().focus().setPurpleCallout().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).setPurpleCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
@@ -204,7 +266,8 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
 
       className: "text-red-500 dark:text-red-500",
       //@ts-ignore
-      action: () => editor?.chain().focus().setRedCallout().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).setRedCallout().run(),
     },
     {
       icon: icons.SingleQuotesLIcon,
@@ -213,21 +276,24 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
       className: "text-yellow-500 dark:text-yellow-500",
       //@ts-ignore
 
-      action: () => editor?.chain().focus().setYellowCallout().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).setYellowCallout().run(),
     },
     {
       icon: icons.CalculatorLineIcon,
       label: translations.menu.mathBlock,
 
       //@ts-ignore
-      action: () => editor?.chain().focus().setMathBlock().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).setMathBlock().run(),
     },
     {
       icon: icons.PieChart2LineIcon,
       label: translations.menu.mermaidBlock,
 
       //@ts-ignore
-      action: () => editor?.chain().focus().setMermaidDiagram().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).setMermaidDiagram().run(),
     },
     {
       icon: icons.PagesLineIcon,
@@ -240,7 +306,8 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
       label: translations.menu.drawingBlock,
 
       //@ts-ignore
-      action: () => editor?.chain().focus().insertPaper().run(),
+      action: () =>
+        editor?.chain().focus().deleteRange(range).insertPaper().run(),
     },
   ];
 
@@ -309,15 +376,15 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
         <button
           key={index}
           onClick={item.action}
-          className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#353333] transition duration-200"
+          className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700 transition duration-200"
         >
-          <item.icon
-            className={`text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-2 ${
-              item.className || ""
-            }`}
-          />
-          <div className="text-left">
-            <h3 className="font-medium text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
+          <div className="text-left flex overflow-hidden text-ellipsis whitespace-nowrap">
+            <item.icon
+              className={`text-left overflow-hidden text-ellipsis whitespace-nowrap mr-2 ltr:ml-2 text-lg ${
+                item.className || ""
+              }`}
+            />
+            <h3 className="text-lg font-medium text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
               {item.label}
             </h3>
           </div>
@@ -328,10 +395,10 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ noteId, editor, query }) => {
   ].slice(0, 5);
 
   return (
-    <div className="z-50 fixed bg-white dark:bg-[#232222] rounded-lg shadow-lg border-2 shadow dark:border-neutral-600 p-4">
+    <div className="z-50 fixed bg-white dark:bg-neutral-800 rounded-lg shadow-lg border shadow-xl dark:border-neutral-600 p-2">
       {combinedItems.map((item) => item.component)}
     </div>
   );
 };
 
-export default SlashMenu;
+export default Commands;

@@ -3,7 +3,7 @@ import Suggestion from "@tiptap/suggestion";
 import tippy from "tippy.js";
 import { createRoot } from "react-dom/client";
 import { PluginKey } from "prosemirror-state";
-import SlashMenu from "./FloatingMenu";
+import Commands from "./Commands";
 
 interface EditorSuggestionProps {
   translations: any;
@@ -28,7 +28,7 @@ export default Extension.create<EditorSuggestionProps>({
       handleAddIframe: () => {},
       suggestion: {
         char: "/",
-        pluginKey: new PluginKey("slash-menu"),
+        pluginKey: new PluginKey("commands"),
       },
     };
   },
@@ -37,7 +37,7 @@ export default Extension.create<EditorSuggestionProps>({
     return [
       Suggestion({
         editor: this.editor,
-        pluginKey: new PluginKey("slash-suggestion"),
+        pluginKey: new PluginKey("commands"),
         char: "/", // Listening for the '/' character
         command: ({ editor, range, props }) => {
           editor.chain().focus().deleteRange(range).run();
@@ -58,10 +58,11 @@ export default Extension.create<EditorSuggestionProps>({
                   root = createRoot(element);
 
                   root.render(
-                    <SlashMenu
+                    <Commands
                       noteId={this.options.noteId}
                       editor={this.editor}
                       query={props.query}
+                      range={props.range}
                     />
                   );
 
@@ -76,10 +77,11 @@ export default Extension.create<EditorSuggestionProps>({
             onUpdate: (props: any) => {
               if (root) {
                 root.render(
-                  <SlashMenu
+                  <Commands
                     noteId={this.options.noteId}
                     editor={this.editor}
                     query={props.query}
+                    range={props.range}
                   />
                 );
               }

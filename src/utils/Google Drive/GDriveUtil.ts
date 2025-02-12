@@ -440,13 +440,11 @@ export const useDriveImport = (darkMode: boolean, setNotesState: any) => {
     driveFolderId: string,
     localFolderPath: string
   ) => {
-    loadAccessToken();
-    // Ensure driveAPI is not null by using '!'
     const folderContents = await driveAPI!.listContents(driveFolderId);
 
     // Get the access token from SecureStoragePlugin
     const token = await SecureStoragePlugin.get({
-      key: "google_access_token",
+      key: "access_token",
     });
 
     for (const item of folderContents) {
@@ -484,7 +482,6 @@ export const useDriveImport = (darkMode: boolean, setNotesState: any) => {
     }
   };
   const importData = async () => {
-    const { driveAPI, loadAccessToken } = await useDrive();
     loadAccessToken();
     if (!driveAPI) {
       console.error("Drive API is not initialized.");

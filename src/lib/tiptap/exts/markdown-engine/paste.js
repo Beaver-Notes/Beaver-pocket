@@ -1,16 +1,16 @@
-import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from 'prosemirror-state';
-import MarkdownIt from 'markdown-it';
-import { generateJSON } from '@tiptap/core';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
+import { Extension } from "@tiptap/core";
+import { Plugin, PluginKey } from "prosemirror-state";
+import MarkdownIt from "markdown-it";
+import { generateJSON } from "@tiptap/core";
+import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
 
 export const Paste = Extension.create({
-  name: 'paste',
+  name: "paste",
   addProseMirrorPlugins() {
     return [
       new Plugin({
-        key: new PluginKey('Paste'),
+        key: new PluginKey("Paste"),
         props: {
           handleDOMEvents: {
             paste: (view, event) => {
@@ -20,33 +20,31 @@ export const Paste = Extension.create({
               const clipboardData = event.clipboardData;
               if (!clipboardData) return false;
 
-              // Check all items in clipboard for non-text content
               const hasNonTextContent = Array.from(clipboardData.items).some(
-                (item) => {
-                  const type = item.type.toLowerCase();
-                  return !type.startsWith('text/');
-                }
+                (item) => !item.type.startsWith("text/")
               );
 
-              // If there's any non-text content, let the default handler process it
               if (hasNonTextContent) {
                 return false;
               }
 
-              // If we only have text content, process it
-              const text = clipboardData.getData('text/plain');
+              if (clipboardData.getData("text/html")) {
+                return false;
+              }
+              const text = clipboardData.getData("text/plain");
               if (!text) return false;
-
               try {
                 const md = new MarkdownIt();
                 const parsedHtml = md.render(text);
+
+                event.preventDefault();
 
                 const json = generateJSON(parsedHtml, [
                   StarterKit,
                   Link.configure({ openOnClick: false }),
                 ]);
 
-                editor.commands.setContent('', {
+                editor.commands.insertContent("", {
                   parseOptions: { preserveWhitespace: false },
                 });
 
@@ -56,7 +54,7 @@ export const Paste = Extension.create({
 
                 return true;
               } catch (error) {
-                console.error('Error processing markdown:', error);
+                console.error("Error processing markdown:", error);
                 return false;
               }
             },

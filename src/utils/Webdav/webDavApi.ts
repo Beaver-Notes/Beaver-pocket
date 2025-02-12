@@ -128,7 +128,6 @@ export class WebDavService {
         return result.data;
       } catch (error) {
         console.error("Error getting directory contents on Android:", error);
-        alert(`Failed to get directory content on Android: ${error}`); // Error message
         throw new Error(`Failed to get directory content on Android: ${error}`);
       }
     } else {
@@ -157,9 +156,6 @@ export class WebDavService {
         });
         return response.data;
       } catch (error: any) {
-        alert(
-          `Failed to get content of directory at ${path}: ${error.message}`
-        ); // Error message
         throw new Error(
           `Failed to get content of directory at ${path}: ${error.message}`
         );

@@ -23,6 +23,7 @@ interface ToolbarProps {
   openDialog: any;
   toggleFocusMode: any;
   focusMode: boolean;
+  wd: boolean;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -31,6 +32,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   openDialog,
   toggleFocusMode,
   focusMode,
+  wd,
 }) => {
   const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [isMoreOpen, setMoreOpen] = useState<boolean>(false);
@@ -387,7 +389,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     <div
       className={`print:hidden drawer hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] overflow-auto dark:text-neutral-50 mx-2 transition ${
         focusMode ? "opacity-0 hover:opacity-100" : ""
-      }`}
+      } ${wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"} `}
     >
       <div className="w-full h-full flex justify-center items-center">
         <div className="flex items-center justify-center border-b dark:border-b-neutral-600">
@@ -405,47 +407,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
               </button>
             ))}
           </div>
-          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
-          <button
-            className={
-              editor?.isActive("paragraph")
-                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
-                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().setParagraph().run()}
-            aria-label={translations.menuItems.paragraphLabel}
-          >
-            <icons.ParagraphIcon className="border-none text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("heading", { level: 1 })
-                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
-                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() =>
-              editor?.chain().focus().toggleHeading({ level: 1 }).run()
-            }
-            aria-label={translations.menuItems.heading1Label}
-          >
-            <icons.Heading1Icon className="border-none text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("heading", { level: 2 })
-                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
-                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() =>
-              editor?.chain().focus().toggleHeading({ level: 2 }).run()
-            }
-            aria-label={translations.menuItems.heading2Label}
-          >
-            <icons.Heading2Icon className="border-none text-xl w-7 h-7" />
-          </button>
           <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
           <button
             className={

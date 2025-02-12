@@ -8,7 +8,7 @@ import Drawer from "./Drawer";
 import Find from "./Find";
 import "../../assets/css/editor.css";
 import extensions from "../../lib/tiptap/index";
-import EditorSuggestion from "../../lib/tiptap/exts/suggestions/EditorSuggestion";
+import Commands from "../../lib/tiptap/exts/commands";
 import NoteLinkExtension from "../../lib/tiptap/exts/suggestions/NoteLinkSuggestion";
 import NoteLabelSuggestion from "../../lib/tiptap/exts/suggestions/NoteLabelSuggestion";
 import DOMPurify from "dompurify";
@@ -123,6 +123,7 @@ function EditorComponent({
   document.addEventListener("updateLabel", (event: Event) => {
     const customEvent = event as CustomEvent;
     const labelToAdd = customEvent.detail.props;
+    console.log(labelToAdd);
 
     // Ensure existingLabels is initialized correctly
     const existingLabels = note.labels || [];
@@ -149,7 +150,7 @@ function EditorComponent({
     NoteLabelSuggestion.configure({
       uniqueLabels: uniqueLabels,
     }),
-    EditorSuggestion.configure({
+    Commands.configure({
       noteId: note.id,
     }),
   ];
@@ -529,6 +530,7 @@ function EditorComponent({
           openDialog={openDialog}
           toggleFocusMode={toggleFocusMode}
           focusMode={focusMode}
+          wd={wd}
         />
         <div className="sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] w-full no-scrollbar flex justify-between print:hidden">
           <button

@@ -91,7 +91,7 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
     progressColor: exportProgressColor,
   } = useExportDav();
   const {
-    HandleImportData,
+    handleImportData,
     progress: importProgress,
     progressColor: importProgressColor,
   } = useImportDav(setNotesState);
@@ -232,7 +232,7 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
               </button>
               <button
                 className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
-                onClick={HandleImportData}
+                onClick={handleImportData}
                 aria-label={translations.webdav.import}
               >
                 {translations.webdav.import || "-"}

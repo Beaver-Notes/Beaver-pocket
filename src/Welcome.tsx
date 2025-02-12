@@ -99,6 +99,7 @@ const Welcome: React.FC = () => {
       light: "settings.light",
       dark: "settings.dark",
       system: "settings.system",
+      colorScheme: "settings.colorScheme"
     },
   });
 

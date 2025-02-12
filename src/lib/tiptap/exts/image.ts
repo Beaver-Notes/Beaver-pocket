@@ -20,7 +20,7 @@ async function createDirectory(noteId: string): Promise<void> {
   }
 }
 
-async function saveImageToFileSystem(file: File, noteId: string): Promise<{ imageUrl: string; fileUri: string }> {
+export async function saveImageToFileSystem(file: File, noteId: string): Promise<{ imageUrl: string; fileUri: string }> {
   try {
     await createDirectory(noteId);
     const fileName = `${Date.now()}_${file.name}`;

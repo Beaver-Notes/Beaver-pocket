@@ -143,7 +143,7 @@ const App: React.FC = () => {
 
   styleStatusBar(darkMode).catch(console.error);
 
-  const { HandleImportData } = useImportDav(setNotesState);
+  const { handleImportData } = useImportDav(setNotesState);
   const { importData: DropboxImport } = useDropboxImport(
     darkMode,
     setNotesState
@@ -162,7 +162,7 @@ const App: React.FC = () => {
       if (syncValue === "dropbox") {
         DropboxImport();
       } else if (syncValue === "webdav") {
-        HandleImportData(); // now safely called
+        handleImportData(); // now safely called
       } else if (syncValue === "iCloud") {
         IcloudImport();
       } else if (syncValue === "googledrive") {
