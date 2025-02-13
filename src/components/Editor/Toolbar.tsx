@@ -339,7 +339,16 @@ const Toolbar: React.FC<ToolbarProps> = ({
       ) {
         setDropdownOpen(false);
       }
+  
+      if (
+        moreDropdownRef.current &&
+        !moreDropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)
+      ) {
+        setMoreOpen(false); // Reset or handle closing logic
+      }
     };
+  
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -473,7 +482,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             createPortal(
               <div
                 ref={dropdownRef}
-                className="absolute p-1 bg-white dark: shadow-lg rounded-md grid grid-cols-4"
+                className="absolute p-1 bg-white dark:bg-neutral-800 border dark:border-neutral-600 shadow-lg rounded-md grid grid-cols-4"
                 style={{
                   top: dropdownPosition.top,
                   left: dropdownPosition.left,
@@ -703,7 +712,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             createPortal(
               <div
                 ref={moreDropdownRef}
-                className="absolute p-1 bg-white dark: shadow-lg rounded-md flex"
+                className="absolute p-1 bg-white dark:bg-neutral-800 shadow-lg rounded-md flex"
                 style={{
                   top: morePosition.top,
                   left: morePosition.left,

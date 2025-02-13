@@ -27,13 +27,12 @@ import FileEmbed from "./exts/file-block";
 import SearchAndReplace from "@sereneinserenade/tiptap-search-and-replace";
 import Mathblock from "./exts/math-block/Index";
 import CodeBlock from "./exts/code-block";
-import paper from "./exts/sketch-block";
+import paper from "./exts/paper-block";
 import iframe from "./exts/embed-block/iframe";
 import MermaidDiagram from "./exts/mermaid-block";
 import labels from "./exts/labels";
 import markdownEngine from "./exts/markdown-engine";
 import { Paste } from "./exts/markdown-engine/paste";
-import SketchBlock from "./exts/sketch-block";
 
 // Callouts
 import {
@@ -105,7 +104,6 @@ const extensions = [
   MermaidDiagram,
   BulletList,
   MathInline,
-  SketchBlock,
   NoteLabel,
   LinkNote,
   FileEmbed,

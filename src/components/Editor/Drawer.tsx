@@ -709,7 +709,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             createPortal(
               <div
                 ref={dropdownRef}
-                className="absolute p-2 bg-white dark:bg-[#353333] shadow-lg rounded-md grid grid-cols-4 gap-2"
+                className="absolute p-2 bg-white dark:bg-neutral-800 shadow-lg rounded-md grid grid-cols-4 gap-2"
                 role="menu"
                 aria-label={translations.accessibility.highlightOptions}
                 style={{
@@ -801,7 +801,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           </button>
           <button
             className={`p-1 ${
-              editor?.isActive("highlight")
+              editor?.isActive("link")
                 ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1 pr-6`}

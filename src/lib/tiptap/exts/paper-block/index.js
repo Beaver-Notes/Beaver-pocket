@@ -43,4 +43,17 @@ export default Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(Component);
   },
+
+  addCommands() {
+    return {
+      insertPaper:
+        () =>
+        ({ commands }) => {
+          return commands.insertContent({
+            type: 'paper',
+            attrs: { lines: [], height: 800 }, // Ensure default height is set
+          });
+        },
+    };
+  },
 });

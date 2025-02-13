@@ -1,3 +1,4 @@
+// src/utils/drawingUtils.js
 import { useMemo, useRef } from "react";
 import * as d3 from "d3";
 import { v4 as uuid } from "uuid";
@@ -90,10 +91,13 @@ export const useEraseOverlappingPaths = (
 
     if (pathIndex !== -1) {
       const removedLine = linesRef.current[pathIndex];
+
+      // Save the deletion action
       setHistory((prevHistory) => [
         ...prevHistory,
         { action: "delete", line: removedLine },
       ]);
+
       linesRef.current.splice(pathIndex, 1);
       updateAttributes({
         lines: linesRef.current,
@@ -109,9 +113,11 @@ export const useGetPointerCoordinates = (svgRef) => {
     const svg = svgRef.current;
     const rect = svg.getBoundingClientRect();
 
+    // Get the correct pointer position, including page scroll and scale
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const clientY = event.touches ? event.touches[0].clientY : event.clientY;
 
+    // Calculate the mouse position relative to the SVG
     const scaleX = svg.viewBox.baseVal.width / rect.width;
     const scaleY = svg.viewBox.baseVal.height / rect.height;
 
@@ -138,20 +144,7 @@ export const useSaveDrawing = (
   const saveDrawing = () => {
     if (!path) return;
 
-    // Check if it's a dot by looking at the path length
-    const isDot = path.length < 10;
-
-    // Halve the width for dots
-    const adjustedSize = isDot ? size / 2 : size;
-
-    const newLine = {
-      id: uuid(),
-      path,
-      color,
-      size: adjustedSize,
-      tool,
-    };
-
+    const newLine = { id: uuid(), path, color, size, tool };
     linesRef.current = [...linesRef.current, newLine];
 
     setHistory((prevHistory) => [
@@ -162,7 +155,6 @@ export const useSaveDrawing = (
     setRedoStack([]);
     batchUpdatePaths();
   };
-
   const batchUpdatePaths = () => {
     if (batchUpdateTimeoutRef.current) {
       clearTimeout(batchUpdateTimeoutRef.current);
@@ -172,56 +164,55 @@ export const useSaveDrawing = (
       updateAttributes({
         lines: linesRef.current,
       });
-    }, 500);
+    }, 500); // Adjust timeout as needed
   };
-
   return saveDrawing;
 };
 
 export const useRenderPaths = (chunkedLines) => {
-  const isDarkMode = document.documentElement.classList.contains("dark");
-
   const renderPaths = () =>
     chunkedLines.map((chunk, chunkIndex) => (
       <g key={`chunk-${chunkIndex}`}>
-        {chunk.map((item) => {
-          // Apply the same dot width logic in the renderer
-          const isDot = item.path.length < 10;
-          const strokeWidth = isDot ? item.size : item.size;
-
-          return (
-            <path
-              key={`${item.id}-${item.color}-${item.size}`}
-              d={item.path}
-              stroke={adjustColorForMode(item.color)}
-              strokeWidth={strokeWidth}
-              opacity={item.tool === "highlighter" ? 0.3 : 1}
-              fill="none"
-              vectorEffect="non-scaling-stroke"
-            />
-          );
-        })}
+        {chunk.map((item) => (
+          <path
+            key={`${item.id}-${item.color}-${item.size}`}
+            d={item.path}
+            stroke={adjustColorForMode(item.color)}
+            strokeWidth={item.size}
+            opacity={item.tool === "highlighter" ? 0.3 : 1}
+            fill="none"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
       </g>
     ));
 
   const adjustColorForMode = (color) => {
     if (isDarkMode) {
+      // Dark mode: Black turns to white; other colors unchanged
       return color === "#000000" ? "#FFFFFF" : color;
     } else {
+      // Light mode: White turns to black; other colors unchanged
       return color === "#FFFFFF" ? "#000000" : color;
     }
   };
-
   return renderPaths;
 };
 
-export const useRedo = (
-  redoStack,
-  setRedoStack,
-  setHistory,
-  updateAttributes,
-  linesRef
-) => {
+export const useLineGenerator = () => {
+  const lineGenerator = useMemo(
+    () =>
+      d3
+        .line()
+        .x((d) => d.x)
+        .y((d) => d.y)
+        .curve(d3.curveBasis),
+    []
+  );
+  return lineGenerator;
+};
+
+export const useRedo = (redoStack, setRedoStack, setHistory, updateAttributes, linesRef) => {
   const redo = () => {
     if (redoStack.length > 0) {
       const lastRedo = redoStack[redoStack.length - 1];
@@ -229,8 +220,10 @@ export const useRedo = (
       setHistory((prevHistory) => [...prevHistory, lastRedo]);
 
       if (lastRedo.action === "add") {
+        // Redo adding a line by adding it back
         linesRef.current = [...linesRef.current, lastRedo.line];
       } else if (lastRedo.action === "delete") {
+        // Redo deleting a line by removing it again
         linesRef.current = linesRef.current.filter(
           (line) => line.id !== lastRedo.line.id
         );
@@ -242,15 +235,9 @@ export const useRedo = (
     }
   };
   return redo;
-};
+}
 
-export const useUndo = (
-  history,
-  setHistory,
-  setRedoStack,
-  updateAttributes,
-  linesRef
-) => {
+export const useUndo = (history, setHistory, setRedoStack, updateAttributes, linesRef) => {
   const undo = () => {
     if (history.length > 0) {
       const lastAction = history[history.length - 1];
@@ -258,10 +245,12 @@ export const useUndo = (
       setRedoStack((prevStack) => [...prevStack, lastAction]);
 
       if (lastAction.action === "add") {
+        // Undo adding a line by removing it
         linesRef.current = linesRef.current.filter(
           (line) => line.id !== lastAction.line.id
         );
       } else if (lastAction.action === "delete") {
+        // Undo deleting a line by adding it back
         linesRef.current = [...linesRef.current, lastAction.line];
       }
 
@@ -271,46 +260,4 @@ export const useUndo = (
     }
   };
   return undo;
-};
-
-export const useDraw = (drawing, points, setPoints, setPath, svgHeight) => {
-  const BUFFER_ZONE = 50;
-  const INCREMENT_HEIGHT = 200;
-
-  const lineGenerator = useMemo(
-    () =>
-      d3
-        .line()
-        .x((d) => d.x)
-        .y((d) => d.y)
-        .curve(d3.curveBasis),
-    []
-  );
-
-  const draw = (x, y) => {
-    if (!drawing) return;
-
-    const newPoints = [...points, { x, y }];
-    setPoints(newPoints);
-    const newPath = lineGenerator(newPoints);
-    setPath(newPath);
-    if (y > svgHeight - BUFFER_ZONE) {
-      const newHeight = svgHeight + INCREMENT_HEIGHT;
-      setSvgHeight(newHeight);
-      updateAttributes({ height: newHeight });
-
-      // Adjust scroll position to keep the drawing point in view
-      const container = containerRef.current;
-      if (container) {
-        const scrollContainer = container.closest(".drawing-component");
-        if (scrollContainer) {
-          scrollContainer.scrollTo({
-            top: scrollContainer.scrollHeight,
-            behavior: "smooth",
-          });
-        }
-      }
-    }
-  };
-  return draw;
 };
