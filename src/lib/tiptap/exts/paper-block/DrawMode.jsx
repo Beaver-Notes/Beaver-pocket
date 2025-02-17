@@ -3,27 +3,29 @@ import * as d3 from "d3";
 import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
 import Icons from "../../../remixicon-react";
-
-const thicknessOptions = {
-  thin: 2,
-  medium: 3,
-  thick: 4,
-  thicker: 5,
-  thickest: 6,
-};
-
-const backgroundStyles = {
-  none: "",
-  grid: "grid",
-  ruled: "ruled",
-  dotted: "dotted",
-};
+import {
+  smoothPoints,
+  useChunkedLines,
+  useEraseOverlappingPaths,
+  useGetPointerCoordinates,
+  thicknessOptions,
+  backgroundStyles,
+  useSaveDrawing,
+  useRenderPaths,
+  useLineGenerator,
+  useRedo,
+  useUndo,
+} from "./drawingUtils";
+import paperBlock from ".";
 
 const BUFFER_ZONE = 50;
 const INCREMENT_HEIGHT = 200;
 const PREVIEW_HEIGHT = 500;
 
 const DrawMode = ({ onClose, updateAttributes, node }) => {
+  const pathsGroupRef = useRef(null);
+  const activePathRef = useRef(null);
+  const throttleRef = useRef(null);
   const isDarkMode = document.documentElement.classList.contains("dark");
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingPath, setDrawingPath] = useState("");
@@ -49,8 +51,41 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
   const [background, setBackground] = useState(
     node.attrs.paperType || backgroundStyles.none
   );
-
   const linesRef = useRef(node.attrs.lines || []);
+  const chunkedLines = useChunkedLines(linesRef);
+  const eraseOverlappingPaths = useEraseOverlappingPaths(
+    svgRef,
+    linesRef,
+    setHistory,
+    updateAttributes
+  );
+  const getPointerCoordinates = useGetPointerCoordinates(svgRef);
+  const saveDrawing = useSaveDrawing(
+    linesRef,
+    setHistory,
+    updateAttributes,
+    path,
+    color,
+    size,
+    tool,
+    setRedoStack
+  );
+  const renderPaths = useRenderPaths(chunkedLines);
+  const lineGenerator = useLineGenerator();
+  const redo = useRedo(
+    redoStack,
+    setRedoStack,
+    setHistory,
+    updateAttributes,
+    linesRef
+  );
+  const undo = useUndo(
+    history,
+    setHistory,
+    setRedoStack,
+    updateAttributes,
+    linesRef
+  );
 
   const handleBackgroundChange = (event) => {
     const newBackground = event.target.value;
@@ -68,7 +103,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     const PEN_TIMEOUT_DURATION = 700;
 
     const handlePointerEvent = (event) => {
-      if (event.pointerType === "pen") {
+      if (event.pointerType === "pen" || event.pointerType === "mouse") {
         penActive = true;
         clearTimeout(penTimeout);
         event.preventDefault(); // Prevent touch interaction when pen is active
@@ -101,30 +136,6 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           }, PEN_TIMEOUT_DURATION);
         }
       }
-    };
-
-    const eraseOverlappingPaths = (x, y) => {
-      const eraserArea = {
-        x: x - eraseRadius,
-        y: y - eraseRadius,
-        width: eraseRadius * 2,
-        height: eraseRadius * 2,
-      };
-
-      svg.selectAll("path").each(function () {
-        const path = d3.select(this);
-        const pathNode = path.node();
-        const pathBBox = pathNode.getBBox();
-
-        if (
-          pathBBox.x < eraserArea.x + eraserArea.width &&
-          pathBBox.x + pathBBox.width > eraserArea.x &&
-          pathBBox.y < eraserArea.y + eraserArea.height &&
-          pathBBox.y + pathBBox.height > eraserArea.y
-        ) {
-          deletePath(pathNode);
-        }
-      });
     };
 
     // Prevent scrolling when the pencil (pen) is active
@@ -161,28 +172,6 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     };
   }, [tool, color, size, points]);
 
-  const deletePath = (pathElement) => {
-    const clickedPathData = pathElement.getAttribute("d");
-    const pathIndex = linesRef.current.findIndex(
-      (line) => line.path === clickedPathData
-    );
-
-    if (pathIndex !== -1) {
-      const removedLine = linesRef.current[pathIndex];
-
-      // Save the deletion action
-      setHistory((prevHistory) => [
-        ...prevHistory,
-        { action: "delete", line: removedLine },
-      ]);
-
-      linesRef.current.splice(pathIndex, 1);
-      updateAttributes({
-        lines: linesRef.current,
-      });
-    }
-  };
-
   const handleMouseDown = (event) => {
     event.preventDefault();
   };
@@ -194,32 +183,19 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
       }
     };
 
+    const showListener = Keyboard.addListener("keyboardWillShow", () => {
+      Keyboard.hide();
+    });
+
     document.addEventListener("touchmove", disableScroll, { passive: false });
     document.addEventListener("wheel", disableScroll, { passive: false });
 
     return () => {
       document.removeEventListener("touchmove", disableScroll);
       document.removeEventListener("wheel", disableScroll);
+      showListener.remove();
     };
   }, [isDrawing]);
-
-  const getPointerCoordinates = (event) => {
-    const svg = svgRef.current;
-    const rect = svg.getBoundingClientRect();
-
-    // Get the correct pointer position, including page scroll and scale
-    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-
-    // Calculate the mouse position relative to the SVG
-    const scaleX = svg.viewBox.baseVal.width / rect.width;
-    const scaleY = svg.viewBox.baseVal.height / rect.height;
-
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
-
-    return [x, y];
-  };
 
   const startDrawing = (x, y) => {
     setDrawing(true);
@@ -273,145 +249,9 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     colorInputRef.current.click();
   };
 
-  // Store only actions in history (add or delete)
-  const undo = () => {
-    if (history.length > 0) {
-      const lastAction = history[history.length - 1];
-      setHistory((prevHistory) => prevHistory.slice(0, -1));
-      setRedoStack((prevStack) => [...prevStack, lastAction]);
-
-      if (lastAction.action === "add") {
-        // Undo adding a line by removing it
-        linesRef.current = linesRef.current.filter(
-          (line) => line.id !== lastAction.line.id
-        );
-      } else if (lastAction.action === "delete") {
-        // Undo deleting a line by adding it back
-        linesRef.current = [...linesRef.current, lastAction.line];
-      }
-
-      updateAttributes({
-        lines: linesRef.current,
-      });
-    }
-  };
-
-  const redo = () => {
-    if (redoStack.length > 0) {
-      const lastRedo = redoStack[redoStack.length - 1];
-      setRedoStack((prevStack) => prevStack.slice(0, -1));
-      setHistory((prevHistory) => [...prevHistory, lastRedo]);
-
-      if (lastRedo.action === "add") {
-        // Redo adding a line by adding it back
-        linesRef.current = [...linesRef.current, lastRedo.line];
-      } else if (lastRedo.action === "delete") {
-        // Redo deleting a line by removing it again
-        linesRef.current = linesRef.current.filter(
-          (line) => line.id !== lastRedo.line.id
-        );
-      }
-
-      updateAttributes({
-        lines: linesRef.current,
-      });
-    }
-  };
-
   const saveHeight = () => {
     updateAttributes({ height: svgHeight });
   };
-
-  useEffect(() => {
-    const showListener = Keyboard.addListener("keyboardWillShow", () => {
-      Keyboard.hide();
-    });
-
-    return () => {
-      showListener.remove();
-    };
-  }, []);
-
-  const pathsGroupRef = useRef(null);
-  const activePathRef = useRef(null);
-  const throttleRef = useRef(null);
-  const batchUpdateTimeoutRef = useRef(null);
-
-  // Memoize the line generator to prevent recreation
-  const lineGenerator = useMemo(
-    () =>
-      d3
-        .line()
-        .x((d) => d.x)
-        .y((d) => d.y)
-        .curve(d3.curveBasis), // Adjusted alpha for more smoothness
-    []
-  );
-
-  const smoothPoints = (points) => {
-    if (points.length < 3) return points;
-    return points.map((point, i, arr) => {
-      if (i === 0 || i === arr.length - 1) return point; // Keep endpoints
-      const prev = arr[i - 1];
-      const next = arr[i + 1];
-      return {
-        x: (prev.x + point.x + next.x) / 3,
-        y: (prev.y + point.y + next.y) / 3,
-      };
-    });
-  };
-
-  // Batch update function for paths
-  const batchUpdatePaths = () => {
-    if (batchUpdateTimeoutRef.current) {
-      clearTimeout(batchUpdateTimeoutRef.current);
-    }
-
-    batchUpdateTimeoutRef.current = setTimeout(() => {
-      updateAttributes({
-        lines: linesRef.current,
-      });
-    }, 500); // Adjust timeout as needed
-  };
-
-  // Throttle draw function
-  const throttledDraw = (x, y) => {
-    if (!throttleRef.current) {
-      throttleRef.current = setTimeout(() => {
-        throttleRef.current = null;
-      }, 16); // ~60fps
-
-      if (!drawing) return;
-
-      const newPoints = [...points, { x, y }];
-      setPoints(newPoints);
-
-      const newPath = lineGenerator(smoothPoints(newPoints));
-      setPath(newPath);
-
-      // Update active path directly in DOM for better performance
-      if (activePathRef.current) {
-        activePathRef.current.setAttribute("d", newPath);
-      }
-
-      // Check for canvas expansion
-      if (y > svgHeight - BUFFER_ZONE) {
-        const newHeight = svgHeight + INCREMENT_HEIGHT;
-        setSvgHeight(newHeight);
-        updateAttributes({ height: newHeight });
-      }
-    }
-  };
-
-  // Split paths into chunks for better rendering
-  const chunkedLines = useMemo(() => {
-    const chunkSize = 100; // Adjust based on performance needs
-    const chunks = [];
-    for (let i = 0; i < linesRef.current.length; i += chunkSize) {
-      chunks.push(linesRef.current.slice(i, i + chunkSize));
-    }
-    return chunks;
-  }, [linesRef.current.length]);
 
   const adjustColorForMode = (color) => {
     if (isDarkMode) {
@@ -423,52 +263,59 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
     }
   };
 
-  // Optimize path rendering
-  const renderPaths = () =>
-    chunkedLines.map((chunk, chunkIndex) => (
-      <g key={`chunk-${chunkIndex}`}>
-        {chunk.map((item) => (
-          <path
-            key={`${item.id}-${item.color}-${item.size}`}
-            d={item.path}
-            stroke={adjustColorForMode(item.color)}
-            strokeWidth={item.size}
-            opacity={item.tool === "highlighter" ? 0.3 : 1}
-            fill="none"
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
-      </g>
-    ));
+  const [translations, setTranslations] = useState({
+    paperBlock: {
+      thin: "paperBlock.thin",
+      medium: "paperBlock.medium",
+      thick: "paperBlock.thick",
+      thicker: "paperBlock.thicker",
+      none: "paperBlock.none",
+      grid: "paperBlock.grid",
+      ruled: "paperBlock.ruled",
+      dotted: "paperBlock.dotted",
+      pencil: "paperBlock.pencil",
+      highlighter: "paperBlock.highlighter",
+      eraser: "paperBlock.eraser",
+      undo: "paperBlock.undo",
+      redo: "paperBlock.redo",
+    },
+    accessibility: {
+      close: "accessibility.close",
+    },
+  });
 
-  // Optimize save drawing function
-  const saveDrawing = () => {
-    if (!path) return;
+  useEffect(() => {
+    // Load translations
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../../../assets/locales/${selectedLanguage}.json`
+        );
 
-    const newLine = { id: uuid(), path, color, size, tool };
-    linesRef.current = [...linesRef.current, newLine];
+        setTranslations({ ...translations, ...translationModule.default });
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
 
-    setHistory((prevHistory) => [
-      ...prevHistory,
-      { action: "add", line: newLine },
-    ]);
-
-    setRedoStack([]);
-    batchUpdatePaths();
-  };
+    loadTranslations();
+  }, []);
 
   return (
     <div className="draw w-full min-h-screen flex flex-col">
       {/* Top Toolbar */}
-      <div className="mt-2 sticky top-0 z-10 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800 rounded-none shadow-md">
+      <div className="sm:mt-2 mt-10 sticky top-0 z-10 p-4 flex justify-between items-center bg-gray-100 dark:bg-neutral-800 rounded-none shadow-md">
         {/* Left side controls */}
         <div className="flex items-center space-x-2">
           <button
             onClick={() => {
               setTool("pencil");
+              setSize(2);
               setColor(isDarkMode ? "#FFFFFF" : "#000000");
             }}
             onMouseDown={(e) => e.preventDefault()}
+            aria-label={translations.paperBlock.pencil}
             className={`flex items-center justify-center p-2 border ${
               tool === "pencil"
                 ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
@@ -480,9 +327,11 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           <button
             onClick={() => {
               setTool("highlighter");
+              setSize(8);
               setColor("#FFFF00");
             }}
             onMouseDown={(e) => e.preventDefault()}
+            aria-label={translations.paperBlock.highlighter}
             className={`flex items-center justify-center p-2 border ${
               tool === "highlighter"
                 ? "border-amber-400 bg-amber-100 dark:bg-amber-700"
@@ -493,6 +342,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           </button>
           <button
             onClick={() => setTool("erase")}
+            aria-label={translations.paperBlock.eraser}
             onMouseDown={(e) => e.preventDefault()}
             className={`flex items-center justify-center p-2 border ${
               tool === "erase"
@@ -504,114 +354,28 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           </button>
           <div className="relative">
             <select
-              className="border border-neutral-300 dark:border-neutral-600 rounded w-full p-2 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none mr-6"
+              className="hidden sm:block border border-neutral-300 dark:border-neutral-600 rounded w-full p-2 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none mr-6"
               value={background}
               onChange={handleBackgroundChange}
             >
-              <option value="none">None</option>
-              <option value="grid">Grid</option>
-              <option value="ruled">Ruled</option>
-              <option value="dotted">Dotted</option>
+              <option value="none">
+                {translations.paperBlock.none || "-"}
+              </option>
+              <option value="grid">
+                {translations.paperBlock.grid || "-"}
+              </option>
+              <option value="ruled">
+                {translations.paperBlock.ruled || "-"}
+              </option>
+              <option value="dotted">
+                {translations.paperBlock.dotted || "-"}
+              </option>
             </select>
             <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
           </div>
         </div>
         {/* Right side controls */}
         <div className="flex items-center space-x-2">
-          <button
-            onClick={undo}
-            onMouseDown={(e) => e.preventDefault()}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
-          >
-            <Icons.ArrowGoBackLineIcon className="w-6 h-6" />
-          </button>
-          <button
-            onClick={redo}
-            onMouseDown={(e) => e.preventDefault()}
-            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
-          >
-            <Icons.ArrowGoForwardLineIcon className="w-6 h-6" />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.thin)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.thin
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="3"
-              height="3"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.medium)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.medium
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="4"
-              height="4"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.thick)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.thick
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="5"
-              height="5"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.thicker)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.thicker
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="6"
-              height="6"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
-          <button
-            onClick={() => setSize(thicknessOptions.thickest)}
-            onMouseDown={(e) => e.preventDefault()}
-            className={`flex items-center justify-center p-1 border ${
-              size === thicknessOptions.thickest
-                ? "border-amber-400 bg-amber-100 dark:bg-amber-700 w-10 h-10"
-                : "border-gray-300 dark:border-neutral-600 h-10 w-10"
-            } rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
-          >
-            <svg
-              width="7"
-              height="7"
-              className="rounded-full"
-              style={{ backgroundColor: color }}
-            />
-          </button>
           <div className="relative inline-block">
             {/* Hidden color input */}
             <input
@@ -628,8 +392,50 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
               className={`flex items-center justify-center p-1 h-10 w-10 rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800`}
             />
           </div>
+          <div className="relative">
+            <select
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              className="border hidden sm:block  border-neutral-300 dark:border-neutral-600 rounded w-full p-2 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none mr-6"
+            >
+              {tool === "pencil" && (
+                <>
+                  <option value={2}>{translations.paperBlock.thin}</option>
+                  <option value={3}>{translations.paperBlock.medium}</option>
+                  <option value={4}>{translations.paperBlock.thick}</option>
+                  <option value={5}>{translations.paperBlock.thicker}</option>
+                </>
+              )}
+              {tool === "highlighter" && (
+                <>
+                  <option value={8}>{translations.paperBlock.thin}</option>
+                  <option value={9}>{translations.paperBlock.medium}</option>
+                  <option value={10}>{translations.paperBlock.thick}</option>
+                  <option value={11}>{translations.paperBlock.thicker}</option>
+                </>
+              )}
+            </select>
+            <Icons.ArrowDownSLineIcon className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none" />
+          </div>
+          <button
+            onClick={undo}
+            aria-label={translations.paperBlock.undo}
+            onMouseDown={(e) => e.preventDefault()}
+            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+          >
+            <Icons.ArrowGoBackLineIcon className="w-6 h-6" />
+          </button>
+          <button
+            onClick={redo}
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label={translations.paperBlock.redo}
+            className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+          >
+            <Icons.ArrowGoForwardLineIcon className="w-6 h-6" />
+          </button>
           <button
             onClick={onClose}
+            aria-label={translations.accessibility.close}
             className="p-2 rounded-full bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
           >
             <Icons.CloseLineIcon className="w-6 h-6" />

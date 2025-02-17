@@ -1,11 +1,12 @@
 // index.ts
+import Image from "./exts/image";
 import StarterKit from "@tiptap/starter-kit";
 import Video from "./exts/video-block";
 import Audio from "./exts/audio-block";
-import Document from '@tiptap/extension-document'
+import Document from "@tiptap/extension-document";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
-import Typography from '@tiptap/extension-typography';
+import Typography from "@tiptap/extension-typography";
 import Placeholder from "@tiptap/extension-placeholder";
 import Highlight from "./exts/highlight";
 import Underline from "@tiptap/extension-underline";
@@ -19,19 +20,19 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import BulletList from "@tiptap/extension-bullet-list";
-import ImageResize from "tiptap-extension-resize-image";
 import MathInline from "./exts/math-inline";
 import { NoteLabel } from "./exts/NoteLabel";
 import { LinkNote } from "./exts/note-link";
 import FileEmbed from "./exts/file-block";
-import SearchAndReplace from "./exts/search-&-replace";
+import SearchAndReplace from "@sereneinserenade/tiptap-search-and-replace";
 import Mathblock from "./exts/math-block/Index";
-import CodeBlock from './exts/code-block';
+import CodeBlock from "./exts/code-block";
 import paper from "./exts/paper-block";
 import iframe from "./exts/embed-block/iframe";
-import { useDataPath } from "../../store/useDataPath";
 import MermaidDiagram from "./exts/mermaid-block";
 import labels from "./exts/labels";
+import markdownEngine from "./exts/markdown-engine";
+import { Paste } from "./exts/markdown-engine/paste";
 
 // Callouts
 import {
@@ -45,7 +46,6 @@ import {
 
 // Languages
 import enTranslations from "../../assets/locales/en.json";
-import itTranslations from "../../assets/locales/it.json";
 import deTranslations from "../../assets/locales/de.json";
 import Footnote from "./exts/footnote-block/footnote";
 import Footnotes from "./exts/footnote-block/footnotes";
@@ -56,15 +56,13 @@ let translations: any = enTranslations;
 const selectedLanguage: string | null =
   localStorage.getItem("selectedLanguage") || "en";
 
-if (selectedLanguage === "it") {
-  translations = itTranslations;
-} else if (selectedLanguage === "de") {
+if (selectedLanguage === "de") {
   translations = deTranslations;
 }
 
 const extensions = [
   Document.extend({
-    content: 'block+ footnotes?',
+    content: "block+ footnotes?",
   }),
   CodeBlock,
   StarterKit,
@@ -78,7 +76,26 @@ const extensions = [
   TaskItem.configure({
     nested: true,
   }),
-  Link,
+  Link.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        href: {
+          default: null,
+          parseHTML: (element) => {
+            let href = element.getAttribute("href");
+            if (href && !href.startsWith("http")) {
+              href = `https://${href}`; // Auto-fix missing "https://"
+            }
+            return href;
+          },
+          renderHTML: (attributes) => {
+            return attributes.href ? { href: attributes.href } : {};
+          },
+        },
+      };
+    },
+  }),
   Text,
   Table,
   TableCell,
@@ -87,20 +104,6 @@ const extensions = [
   MermaidDiagram,
   BulletList,
   MathInline,
-  ImageResize.extend({
-    addNodeView() {
-      const viewer = this.parent?.() as any;
-      return (props) => {
-        const attrs = props.node.attrs;
-        const node = {
-          ...props.node,
-          attrs: { ...attrs, src: useDataPath().getRemotePath(attrs.src) },
-        };
-        const newProps = { ...props, node };
-        return viewer(newProps);
-      };
-    },
-  }),
   NoteLabel,
   LinkNote,
   FileEmbed,
@@ -123,6 +126,9 @@ const extensions = [
   paper,
   FootnoteReference,
   Video,
+  markdownEngine,
+  Paste,
+  Image,
 ];
 
 export default extensions;
