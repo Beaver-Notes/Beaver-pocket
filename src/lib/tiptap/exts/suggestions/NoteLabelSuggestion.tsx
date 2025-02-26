@@ -34,33 +34,33 @@ export default Extension.create<LabelSuggestionOptions>({
           const queryText = query.startsWith("@@") ? query.slice(2) : query;
 
           // Debugging: Check the availability of uniqueLabels
-          console.log('Unique Labels:', this.options.uniqueLabels);
-          console.log('Query Text:', queryText);
+          console.log("Unique Labels:", this.options.uniqueLabels);
+          console.log("Query Text:", queryText);
 
           // Ensure uniqueLabels is an array and filter it
-          const filteredLabels = (Array.isArray(this.options.uniqueLabels) ? this.options.uniqueLabels : [])
-            .filter((label) =>
-              typeof label === 'string' && label.toLowerCase().includes(queryText.toLowerCase())
+          const filteredLabels = (
+            Array.isArray(this.options.uniqueLabels)
+              ? this.options.uniqueLabels
+              : []
+          )
+            .filter(
+              (label) =>
+                typeof label === "string" &&
+                label.toLowerCase().includes(queryText.toLowerCase())
             )
             .slice(0, 5);
 
           // Debugging: Log the filtered results
-          console.log('Filtered labels:', filteredLabels);
+          console.log("Filtered labels:", filteredLabels);
 
           return filteredLabels;
         },
         command: ({ editor, range, props }) => {
-          console.log("Suggestion command called with props:", props);
-
-          // Delete the range that contains the trigger and query
-          editor.chain().focus().deleteRange(range).run();
-
-          // Insert the custom noteLabel element
-          editor.commands.insertContent(
+          alert(range);
+          editor?.chain().focus().deleteRange(range).run();
+          editor?.commands.insertContent(
             `<noteLabel id="${props}" label="${props}"></noteLabel>`
           );
-
-          // Dispatch an event after adding the label
           const event = new CustomEvent("updateLabel", { detail: { props } });
           document.dispatchEvent(event);
         },

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
 import enTranslations from "./assets/locales/en.json";
-import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
 
 const Welcome: React.FC = () => {
@@ -100,12 +99,12 @@ const Welcome: React.FC = () => {
       light: "settings.light",
       dark: "settings.dark",
       system: "settings.system",
+      colorScheme: "settings.colorScheme"
     },
   });
 
   const languages = [
     { code: "en", name: "English", translations: enTranslations },
-    { code: "it", name: "Italiano", translations: itTranslations },
     { code: "de", name: "Deutsch", translations: deTranslations },
   ];
 
@@ -187,6 +186,32 @@ const Welcome: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [currentView, history]);
+
+  const colors = [
+    { name: "red", bg: "bg-red-500" },
+    { name: "light", bg: "bg-amber-400" }, // Amber (yellow/orange)
+    { name: "green", bg: "bg-emerald-500" },
+    { name: "blue", bg: "bg-blue-400" },
+    { name: "purple", bg: "bg-purple-400" },
+    { name: "pink", bg: "bg-pink-400" },
+    { name: "neutral", bg: "bg-neutral-400" }, // Neutral at the end
+  ];
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const savedColor = localStorage.getItem("color-scheme") || "light"; // Default to 'light' if not found
+    setColor(savedColor);
+  });
+
+  const setColor = (color: any) => {
+    const root = document.documentElement;
+    root.classList.forEach((cls) => {
+      if (cls !== "light" && cls !== "dark") {
+        root.classList.remove(cls);
+      }
+    });
+    root.classList.add(color);
+    localStorage.setItem("color-scheme", color);
+  };
 
   return (
     <div className={`view ${currentView} overflow-y-hide`}>
@@ -283,6 +308,26 @@ const Welcome: React.FC = () => {
                     className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
                     aria-hidden="true"
                   />
+                </div>
+              </section>
+              <section
+                className="w-full relative"
+                aria-labelledby="app-theme-label"
+              >
+                <p
+                  id="app-theme-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
+                  {translations.settings.colorScheme || "-"}
+                </p>
+                <div className="w-full flex items-center justify-center gap-2">
+                  {colors.map((color) => (
+                    <button
+                      key={color.name}
+                      className={`${color.bg} p-2 w-10 h-10 rounded-full focus:ring-primary transition cursor-pointer `}
+                      onClick={() => setColor(color.name)}
+                    ></button>
+                  ))}
                 </div>
               </section>
               <section
@@ -392,21 +437,21 @@ const Welcome: React.FC = () => {
         <span
           className={`transition-all w-3 h-3 rounded-full ${
             currentView === "view1"
-              ? "w-6 bg-amber-400"
+              ? "w-6 bg-primary"
               : "bg-neutral-100 dark:bg-neutral-500"
           }`}
         ></span>
         <span
           className={`transition-all w-3 h-3 rounded-full ${
             currentView === "view2"
-              ? "w-6 bg-amber-400"
+              ? "w-6 bg-primary"
               : "bg-neutral-100 dark:bg-neutral-500"
           }`}
         ></span>
         <span
           className={`transition-all w-3 h-3 rounded-full ${
             currentView === "view3"
-              ? "w-6 bg-amber-400"
+              ? "w-6 bg-primary"
               : "bg-neutral-100 dark:bg-neutral-500"
           }`}
         ></span>
