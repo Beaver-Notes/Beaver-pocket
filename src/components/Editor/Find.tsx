@@ -28,7 +28,7 @@ const Find: React.FC<SearchReplaceBarProps> = ({ editor, setShowFind }) => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
         const translationModule = await import(
-          `../../pages/settings/locales/${selectedLanguage}.json`
+          `../../../pages/settings/locales/${selectedLanguage}.json`
         );
         setTranslations(translationModule.default);
       } catch (error) {

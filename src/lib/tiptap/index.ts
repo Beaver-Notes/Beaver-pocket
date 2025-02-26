@@ -27,7 +27,7 @@ import FileEmbed from "./exts/file-block";
 import SearchAndReplace from "@sereneinserenade/tiptap-search-and-replace";
 import Mathblock from "./exts/math-block/Index";
 import CodeBlock from "./exts/code-block";
-import paper from "./exts/paper-block";
+import Paper from "./exts/paper-block";
 import iframe from "./exts/embed-block/iframe";
 import MermaidDiagram from "./exts/mermaid-block";
 import labels from "./exts/labels";
@@ -123,7 +123,7 @@ const extensions = [
   Superscript,
   Footnote,
   Footnotes,
-  paper,
+  Paper,
   FootnoteReference,
   Video,
   markdownEngine,

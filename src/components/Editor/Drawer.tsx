@@ -349,7 +349,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       className={`drawer sm:hidden shadow-t-md block bottom-0 fixed left-0 right-0 ${
         isKeyboardVisible
           ? "bg-[#F8F8F7] dark:bg-[#2D2C2C]"
-          : "bg-white dark:bg-[#232222] p-1 pb-2"
+          : "bg-white dark:bg-neutral-800 p-1 pb-2"
       } cursor-grab overflow-y-auto transition-height duration-200 ease-in-out`}
       style={{ maxHeight: "50vh" }}
     >
