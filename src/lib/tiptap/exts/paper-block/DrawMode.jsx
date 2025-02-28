@@ -7,47 +7,18 @@ import React, {
 } from "react";
 import { getStroke } from "perfect-freehand";
 import Icons from "../../../remixicon-react";
-
-const average = (a, b) => (a + b) / 2;
-
-function getSvgPathFromStroke(points, closed = true) {
-  const len = points.length;
-
-  if (len < 4) {
-    return ``;
-  }
-
-  let a = points[0];
-  let b = points[1];
-  const c = points[2];
-
-  let result = `M${a[0].toFixed(2)},${a[1].toFixed(2)} Q${b[0].toFixed(
-    2
-  )},${b[1].toFixed(2)} ${average(b[0], c[0]).toFixed(2)},${average(
-    b[1],
-    c[1]
-  ).toFixed(2)} T`;
-
-  for (let i = 2, max = len - 1; i < max; i++) {
-    a = points[i];
-    b = points[i + 1];
-    result += `${average(a[0], b[0]).toFixed(2)},${average(a[1], b[1]).toFixed(
-      2
-    )} `;
-  }
-
-  if (closed) {
-    result += "Z";
-  }
-
-  return result;
-}
+import {
+  getSvgPathFromStroke,
+  getPointerCoordinates,
+  getStrokeOptions,
+} from "./Draw";
+import { renderedPaths, renderSelectionOverlay } from "./Renderer";
+import DrawingToolBar from "./DrawingToolbar";
 
 const DrawingComponent = ({ node, updateAttributes, onClose }) => {
   const svgRef = useRef(null);
   const currentPointsRef = useRef([]);
   const [renderKey, setRenderKey] = useState(0);
-  const [activePicker, setActivePicker] = useState(null);
   const [selectedElement, setSelectedElement] = useState(null);
   const [transformState, setTransformState] = useState(null);
   const [state, setState] = useState({
@@ -120,22 +91,52 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
     });
   };
 
+  // Modified to check if the point is inside any existing selection
+  const isPointInsideSelection = (x, y) => {
+    if (!selectedElement) return false;
+
+    const { bounds } = selectedElement;
+    return (
+      x >= bounds.x &&
+      x <= bounds.x + bounds.width &&
+      y >= bounds.y &&
+      y <= bounds.y + bounds.height
+    );
+  };
+
   const handleSelectionStart = (e) => {
     if (state.tool !== "select") return;
 
-    const [x, y] = getPointerCoordinates(e);
+    const [x, y] = getPointerCoordinates(e, svgRef);
+
+    setState((prev) => ({
+      ...prev,
+      isDrawing: true,
+    }));
+
+    // Check if the click is inside the current selection
+    if (selectedElement && isPointInsideSelection(x, y)) {
+      // Start moving the selection
+      handleTransformStart(e, "move");
+      return;
+    }
+
+    // Otherwise, start a new selection
     setSelectionBox({
       startX: x,
       startY: y,
       currentX: x,
       currentY: y,
     });
+
+    // Clear any existing selection when starting a new one
+    setSelectedElement(null);
   };
 
   const handleSelectionMove = (e) => {
     if (!selectionBox || state.tool !== "select") return;
 
-    const [x, y] = getPointerCoordinates(e);
+    const [x, y] = getPointerCoordinates(e, svgRef);
     setSelectionBox((prev) => ({
       ...prev,
       currentX: x,
@@ -174,25 +175,36 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
     }
 
     setSelectionBox(null);
+
+    setState((prev) => ({
+      ...prev,
+      isDrawing: false,
+    }));
   };
 
   // Transform handlers
   const handleTransformStart = (e, corner) => {
-    if (!selectedElement) return;
+    if (!selectedElement && corner === "move") return;
 
-    const [x, y] = getPointerCoordinates(e);
+    const [x, y] = getPointerCoordinates(e, svgRef);
     setTransformState({
       corner,
       startX: x,
       startY: y,
-      originalBounds: { ...selectedElement.bounds }, // Ensure we capture latest bounds
+      originalBounds: { ...selectedElement.bounds },
     });
+
+    // Set isDrawing to true to prevent scrolling
+    setState((prev) => ({
+      ...prev,
+      isDrawing: true,
+    }));
   };
 
   const handleTransformMove = (e) => {
     if (!transformState || !selectedElement) return;
 
-    const [currentX, currentY] = getPointerCoordinates(e);
+    const [currentX, currentY] = getPointerCoordinates(e, svgRef);
     const dx = currentX - transformState.startX;
     const dy = currentY - transformState.startY;
 
@@ -257,6 +269,7 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       ...prev,
       lines: transformedLines,
       undoStack: [...prev.undoStack, prev.lines],
+      isDrawing: false, // Set isDrawing back to false
     }));
 
     // Finally, update selectedElement with the transformed lines
@@ -331,40 +344,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       : highlighterSettings;
   };
 
-  const getStrokeOptions = (settings) => ({
-    size: settings.size,
-    thinning: 0.6, // Increase thinning to capture more details
-    smoothing: 0.4, // Decrease smoothing for sharper corners
-    streamline: 0.5,
-    easing: (t) => Math.sin((t * Math.PI) / 2),
-    simulatePressure: false, // Enable pressure simulation if supported
-    last: true,
-    start: {
-      cap: true,
-      taper: 0,
-      easing: (t) => Math.sin((t * Math.PI) / 2),
-    },
-    end: {
-      cap: true,
-      taper: 0,
-      easing: (t) => Math.sin((t * Math.PI) / 2),
-    },
-  });
-
-  const getPointerCoordinates = (event) => {
-    const svg = svgRef.current;
-    const point = svg.createSVGPoint();
-
-    point.x = event.clientX;
-    point.y = event.clientY;
-
-    const transformedPoint = point.matrixTransform(
-      svg.getScreenCTM().inverse()
-    );
-
-    return [transformedPoint.x, transformedPoint.y];
-  };
-
   const handlePointerDown = (e) => {
     if (e.pointerType === "pen" || e.pointerType === "mouse") {
       const svgElem = e.currentTarget;
@@ -376,7 +355,12 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
         return;
       }
 
-      const [x, y] = getPointerCoordinates(e);
+      // If we're in another tool, and there's a current selection, clear it
+      if (selectedElement) {
+        setSelectedElement(null);
+      }
+
+      const [x, y] = getPointerCoordinates(e, svgRef);
 
       setState((prev) => ({
         ...prev,
@@ -422,7 +406,7 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
         return;
       }
 
-      const [x, y] = getPointerCoordinates(e);
+      const [x, y] = getPointerCoordinates(e, svgRef);
 
       // Collect points more frequently
       currentPointsRef.current = [...currentPointsRef.current, [x, y]];
@@ -517,6 +501,8 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       lines: previousLines,
       undoStack: prev.undoStack.slice(0, -1),
     }));
+    // Clear selection when undoing
+    setSelectedElement(null);
   };
 
   const redo = () => {
@@ -528,355 +514,98 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       lines: nextLines,
       redoStack: prev.redoStack.slice(0, -1),
     }));
-  };
-
-  const handleColorChange = (type, color) => {
-    setState((prev) => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        color,
-      },
-    }));
-  };
-
-  const renderedPaths = useMemo(() => {
-    return lines.map((line, lineIndex) => {
-      const stroke = getStroke(line.points, getStrokeOptions(line));
-      const pathData = getSvgPathFromStroke(stroke);
-
-      // Render each line in a separate <svg> element
-      return (
-        <svg
-          key={`line-${lineIndex}`}
-          viewBox={`0 0 ${width} ${height}`}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            pointerEvents: "none",
-          }}
-        >
-          <path
-            d={pathData}
-            fill={line.color}
-            stroke="none"
-            strokeWidth="0"
-            opacity={line.tool === "highlighter" ? 0.4 : 1}
-          />
-        </svg>
-      );
-    });
-  }, [lines]);
-
-  // Modify renderSelectionOverlay to prevent event propagation
-  const renderSelectionOverlay = () => {
-    if (!selectedElement) return null;
-
-    const { x, y, width, height } = selectedElement.bounds;
-
-    const handleControlPointerDown = (e, corner) => {
-      e.stopPropagation(); // Prevent the SVG from receiving the event
-      handleTransformStart(e, corner);
-    };
-
-    return (
-      <g className="selection-overlay" pointerEvents="none">
-        <rect
-          x={x}
-          y={y}
-          width={width}
-          height={height}
-          fill="none"
-          stroke="#4099ff"
-          strokeWidth="1"
-          strokeDasharray="4 4"
-        />
-        {/* Resize handles */}
-        {["nw", "ne", "se", "sw"].map((corner) => (
-          <circle
-            key={corner}
-            cx={x + (corner.includes("e") ? width : 0)}
-            cy={y + (corner.includes("s") ? height : 0)}
-            r="4"
-            fill="white"
-            stroke="#4099ff"
-            strokeWidth="1"
-            pointerEvents="all"
-            onPointerDown={(e) => handleControlPointerDown(e, corner)}
-            style={{ cursor: "pointer" }}
-          />
-        ))}
-        {/* Move handle */}
-        <rect
-          x={x + width / 2 - 10}
-          y={y - 20}
-          width="20"
-          height="20"
-          fill="white"
-          stroke="#4099ff"
-          strokeWidth="1"
-          pointerEvents="all"
-          onPointerDown={(e) => handleControlPointerDown(e, "move")}
-          style={{ cursor: "move" }}
-        />
-      </g>
-    );
+    // Clear selection when redoing
+    setSelectedElement(null);
   };
 
   return (
-    <div
-      className="bg-neutral-200 dark:bg-neutral-700 p-5"
-      style={{ height: `${height}px` }}
-    >
-      <div className="draw w-full min-h-screen flex flex-col border-neutral-400 shadow-2xl">
-        <div className="fixed top-6 right-0 transform -translate-x-1/2 z-10 p-2 flex justify-between items-center bg-[#2D2C2C] rounded-xl shadow-md">
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full text-[color:var(--selected-dark-text)] transition-colors"
-          >
-            <Icons.CloseLineIcon className="w-8 h-8" />
-          </button>
-        </div>
-
-        <div
-          className="drawing-container relative w-full rounded-lg "
-          style={{ height: `${height}px` }}
+    <div className="draw w-full min-h-screen flex flex-col border-neutral-400 shadow-2xl">
+      <div
+        className="drawing-container relative w-full rounded-lg "
+        style={{ height: `${height}px` }}
+      >
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          className={`${background} bg-neutral-100 dark:bg-neutral-800 rounded-xl`}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerLeave}
         >
-          <svg
-            ref={svgRef}
-            viewBox={`0 0 ${width} ${height}`}
-            preserveAspectRatio="xMidYMid meet"
-            className={`${background} bg-neutral-100 dark:bg-neutral-800 rounded-xl`}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerLeave}
-          >
-            {renderedPaths}
-            {selectionBox && (
-              <rect
-                x={Math.min(selectionBox.startX, selectionBox.currentX)}
-                y={Math.min(selectionBox.startY, selectionBox.currentY)}
-                width={Math.abs(selectionBox.currentX - selectionBox.startX)}
-                height={Math.abs(selectionBox.currentY - selectionBox.startY)}
-                fill="rgba(64, 153, 255, 0.1)"
-                stroke="#4099ff"
-                strokeWidth="1"
-                strokeDasharray="4 4"
-              />
-            )}
-            {renderSelectionOverlay()}
-            {isDrawing &&
-              currentPointsRef.current.length > 1 &&
-              (() => {
-                const settings = getSettings();
-                const stroke = getStroke(
-                  currentPointsRef.current,
-                  getStrokeOptions(settings)
-                );
-                const pathData = getSvgPathFromStroke(stroke);
+          {renderedPaths(
+            lines,
+            width,
+            height,
+            getStroke,
+            getStrokeOptions,
+            getSvgPathFromStroke
+          )}{" "}
+          {selectionBox && (
+            <rect
+              x={Math.min(selectionBox.startX, selectionBox.currentX)}
+              y={Math.min(selectionBox.startY, selectionBox.currentY)}
+              width={Math.abs(selectionBox.currentX - selectionBox.startX)}
+              height={Math.abs(selectionBox.currentY - selectionBox.startY)}
+              className="fill-secondary opacity-10 stoke-primary"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+            />
+          )}
+          {renderSelectionOverlay(selectedElement, handleTransformStart)}
+          {isDrawing &&
+            currentPointsRef.current.length > 1 &&
+            (() => {
+              const settings = getSettings();
+              const stroke = getStroke(
+                currentPointsRef.current,
+                getStrokeOptions(settings)
+              );
+              const pathData = getSvgPathFromStroke(stroke);
 
-                if (tool === "eraser") {
-                  const shortStroke = currentPointsRef.current.slice(-5);
-                  const shortPathData = shortStroke
-                    .map((point, index) =>
-                      index === 0
-                        ? `M ${point[0]},${point[1]}`
-                        : `L ${point[0]},${point[1]}`
-                    )
-                    .join(" ");
-
-                  return (
-                    <path
-                      d={shortPathData}
-                      fill="none"
-                      stroke="rgba(150, 150, 150, 0.8)"
-                      strokeWidth={eraserSettings.size}
-                      strokeLinecap="round"
-                    />
-                  );
-                }
+              if (tool === "eraser") {
+                const shortStroke = currentPointsRef.current.slice(-5);
+                const shortPathData = shortStroke
+                  .map((point, index) =>
+                    index === 0
+                      ? `M ${point[0]},${point[1]}`
+                      : `L ${point[0]},${point[1]}`
+                  )
+                  .join(" ");
 
                 return (
                   <path
-                    d={pathData}
-                    fill={settings.color}
-                    stroke="none"
-                    strokeWidth="0"
-                    opacity={tool === "highlighter" ? 0.4 : 1}
+                    d={shortPathData}
+                    fill="none"
+                    stroke="rgba(150, 150, 150, 0.8)"
+                    strokeWidth={eraserSettings.size}
+                    strokeLinecap="round"
                   />
                 );
-              })()}
-          </svg>
-        </div>
-
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2">
-          <div className="p-1 flex justify-between items-center bg-[#2D2C2C] rounded-xl shadow-md gap-2">
-            <button
-              onClick={() => setState((prev) => ({ ...prev, tool: "select" }))}
-              className={`flex items-center justify-center p-2 ${
-                state.tool === "select"
-                  ? "text-secondary"
-                  : "text-[color:var(--selected-dark-text)]"
-              }`}
-            >
-              <Icons.Focus3LineIcon className="w-8 h-8" />
-            </button>
-            <button
-              onClick={() => setState((prev) => ({ ...prev, tool: "pen" }))}
-              className={`flex items-center justify-center p-2 ${
-                tool === "pen"
-                  ? "text-secondary"
-                  : "text-[color:var(--selected-dark-text)]"
-              }`}
-            >
-              <Icons.BallPenLine className="w-8 h-8" />
-            </button>
-            <button
-              onClick={() =>
-                setState((prev) => ({ ...prev, tool: "highlighter" }))
               }
-              className={`flex items-center justify-center p-2 ${
-                tool === "highlighter"
-                  ? "text-secondary"
-                  : "text-[color:var(--selected-dark-text)]"
-              }`}
-            >
-              <Icons.MarkPenLineIcon className="w-8 h-8" />
-            </button>
-            <button
-              onClick={() => setState((prev) => ({ ...prev, tool: "eraser" }))}
-              className={`flex items-center justify-center p-2 ${
-                tool === "eraser"
-                  ? "text-secondary"
-                  : "text-[color:var(--selected-dark-text)]"
-              }`}
-            >
-              <Icons.EraserLineIcon className="w-8 h-8" />
-            </button>
-            {tool === "highlighter" && (
-              <>
-                <div className="relative inline-block">
-                  {activePicker === "highlighter" && (
-                    <input
-                      type="color"
-                      value={highlighterSettings.color}
-                      onChange={(e) =>
-                        handleColorChange("highlighterSettings", e.target.value)
-                      }
-                      onBlur={() => setActivePicker(null)}
-                      autoFocus
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                  )}
-                  <button
-                    onClick={() =>
-                      setActivePicker(
-                        activePicker === "highlighter" ? null : "highlighter"
-                      )
-                    }
-                    style={{ backgroundColor: highlighterSettings.color }}
-                    className="flex items-center justify-center p-1 h-8 w-8 rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
-                  />
-                </div>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="range"
-                    min="10"
-                    max="50"
-                    value={highlighterSettings.size}
-                    onChange={(e) =>
-                      setState((prev) => ({
-                        ...prev,
-                        highlighterSettings: {
-                          ...prev.highlighterSettings,
-                          size: parseInt(e.target.value),
-                        },
-                      }))
-                    }
-                  />
-                </label>
-              </>
-            )}
-            {tool === "pen" && (
-              <>
-                <div className="relative inline-block">
-                  {activePicker === "pen" && (
-                    <input
-                      type="color"
-                      value={penSettings.color}
-                      onChange={(e) =>
-                        handleColorChange("penSettings", e.target.value)
-                      }
-                      onBlur={() => setActivePicker(null)}
-                      autoFocus
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                  )}
-                  <button
-                    onClick={() =>
-                      setActivePicker(activePicker === "pen" ? null : "pen")
-                    }
-                    style={{ backgroundColor: penSettings.color }}
-                    className="flex items-center justify-center p-1 h-8 w-8 rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
-                  />
-                </div>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="range"
-                    min="1"
-                    max="20"
-                    value={penSettings.size}
-                    onChange={(e) =>
-                      setState((prev) => ({
-                        ...prev,
-                        penSettings: {
-                          ...prev.penSettings,
-                          size: parseInt(e.target.value),
-                        },
-                      }))
-                    }
-                  />
-                </label>
-              </>
-            )}
-            {tool === "eraser" && (
-              <label className="flex items-center gap-1">
-                <input
-                  type="range"
-                  min="5"
-                  max="50"
-                  value={eraserSettings.size}
-                  onChange={(e) =>
-                    setState((prev) => ({
-                      ...prev,
-                      eraserSettings: {
-                        ...prev.eraserSettings,
-                        size: parseInt(e.target.value),
-                      },
-                    }))
-                  }
+
+              return (
+                <path
+                  d={pathData}
+                  fill={settings.color}
+                  stroke="none"
+                  strokeWidth="0"
+                  opacity={tool === "highlighter" ? 0.4 : 1}
                 />
-              </label>
-            )}
-            <button
-              onClick={undo}
-              disabled={undoStack.length === 0}
-              className="p-2 text-[color:var(--selected-dark-text)]"
-            >
-              <Icons.ArrowGoBackLineIcon className="w-8 h-8" />
-            </button>
-            <button
-              onClick={redo}
-              disabled={redoStack.length === 0}
-              className="p-2 text-[color:var(--selected-dark-text)]"
-            >
-              <Icons.ArrowGoForwardLineIcon className="w-8 h-8" />
-            </button>
-          </div>
-        </div>
+              );
+            })()}
+        </svg>
       </div>
+
+        <DrawingToolBar
+          setState={setState}
+          state={state}
+          tool={state.tool}
+          setSelectedElement={setSelectedElement}
+          onClose={onClose}
+          updateAttributes={updateAttributes}
+        />
     </div>
   );
 };
