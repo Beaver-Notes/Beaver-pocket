@@ -3,6 +3,7 @@ import {
   Directory,
   Encoding as FilesystemEncoding,
 } from "@capacitor/filesystem";
+import { useNavigate } from "react-router-dom";
 import { Share } from "@capacitor/share";
 import { Note } from "../store/types";
 
@@ -208,6 +209,7 @@ export const useImportBea = () => {
     fileContent: string // UTF-8 file content
   ) => {
     try {
+      const navigate = useNavigate();
       const parsedData = JSON.parse(fileContent);
 
       // Debug parsed data
@@ -324,6 +326,7 @@ export const useImportBea = () => {
 
       // Trigger UI update
       document.dispatchEvent(new Event("reload"));
+      navigate(`/editor/${parsedData.data.idteId}`);
     } catch (error) {
       console.error(error);
     }

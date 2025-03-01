@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { getStroke } from "perfect-freehand";
 import "../../../../assets/css/paper.scss";
 import { createPortal } from "react-dom";
 import { NodeViewWrapper } from "@tiptap/react";
@@ -6,7 +7,21 @@ import Icons from "../../../remixicon-react";
 import { v4 as uuid } from "uuid";
 import DrawMode from "./DrawMode";
 
-const PREVIEW_HEIGHT = 500;
+const getSvgPathFromStroke = (stroke) => {
+  if (!stroke.length) return "";
+
+  const d = stroke.reduce(
+    (acc, [x0, y0], i, arr) => {
+      const [x1, y1] = arr[(i + 1) % arr.length];
+      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
+      return acc;
+    },
+    ["M", ...stroke[0], "Q"]
+  );
+
+  d.push("Z");
+  return d.join(" ");
+};
 
 const OverlayPortal = ({ children, onClose }) => {
   return createPortal(
@@ -21,6 +36,20 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   const [isDrawMode, setIsDrawMode] = useState(false);
   const [lines, setLines] = useState(node.attrs.lines || []);
   const [background, setBackground] = useState(node.attrs.paperType);
+  const [tool, setTool] = useState("pen");
+  const [height] = useState(node.attrs.height);
+
+  const getStrokeOptions = (settings) => ({
+    size: settings.size,
+    thinning: tool === "highlighter" ? 0 : 0.2, // Reduce thinning to maintain line thickness
+    smoothing: 0.75, // Increase smoothing to make curves less choppy
+    streamline: 0.7, // Increase streamline to reduce jitter
+    easing: (t) => t,
+    simulatePressure: false,
+    last: true,
+    start: { cap: true, taper: 0, easing: (t) => t },
+    end: { cap: true, taper: 0, easing: (t) => t },
+  });
 
   const toggleDrawMode = () => {
     setIsDrawMode(!isDrawMode);
@@ -56,6 +85,24 @@ const CustomNodeView = ({ node, updateAttributes }) => {
     loadTranslations();
   }, []);
 
+  const renderedPaths = useMemo(() => {
+    return lines.map((line, lineIndex) => {
+      const stroke = getStroke(line.points, getStrokeOptions(line));
+      const pathData = getSvgPathFromStroke(stroke);
+
+      return (
+        <path
+          key={`line-${lineIndex}`}
+          d={pathData}
+          fill={line.color}
+          stroke="none"
+          strokeWidth="0"
+          opacity={line.tool === "highlighter" ? 0.4 : 1}
+        />
+      );
+    });
+  }, [lines]);
+
   // Preview Mode Component
   const PreviewMode = () => (
     <div
@@ -63,25 +110,11 @@ const CustomNodeView = ({ node, updateAttributes }) => {
       onClick={toggleDrawMode}
     >
       <div className="relative drawing-container">
-        <svg
-          viewBox={`0 0 500 ${PREVIEW_HEIGHT}`}
-          style={{ height: PREVIEW_HEIGHT }}
-          className={`w-full ${background}`}
-        >
-          {lines.map((line) => (
-            <path
-              key={line.id}
-              d={line.path}
-              stroke={line.color}
-              strokeWidth={line.size}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          ))}
+        <svg viewBox={`0 0 500 ${height}`} className={`w-full ${background}`}>
+          {renderedPaths}
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
-          <span className="text-white text-lg font-medium">
+        <div className="absolute inset-0 flex items-end justify-center bg-black bg-opacity-5 rounded-xl">
+          <span className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] mb-6 text-lg font-medium">
             {translations.paperBlock.clicktoDraw}
           </span>
         </div>
