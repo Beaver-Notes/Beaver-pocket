@@ -1,8 +1,8 @@
 import { Note } from "../../store/types";
 import Icons from "../../lib/remixicon-react";
 import { useNotesState } from "../../store/Activenote";
-import ReactDOM from "react-dom";
-import ModularPrompt from "../ui/Dialog";
+import ReactDOM from "react-dom/client";
+import ModularPrompt from "../UI/Dialog";
 import * as CryptoJS from "crypto-js";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { NativeBiometric } from "capacitor-native-biometric";
@@ -23,6 +23,11 @@ import dayjs from "dayjs";
 import "dayjs/locale/en";
 import "dayjs/locale/de";
 import "dayjs/locale/zh-cn";
+import { useSyncDav } from "../../utils/Webdav/webDavUtil";
+import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
+import { useOnedriveSync } from "../../utils/Onedrive/oneDriveUtil";
+import { useExportiCloud } from "../../utils/iCloud/iCloudUtil";
+import { useDriveSync } from "../../utils/Google Drive/GDriveUtil";
 
 interface BookmarkedProps {
   note: Note;
@@ -44,8 +49,127 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   const { toggleBookmark } = useToggleBookmark();
   const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
 
+  //Sync
+  const { syncDropBox } = useDropboxSync();
+  const { syncDav } = useSyncDav();
+  const { syncOneDrive } = useOnedriveSync();
+  const { exportdata:SyncIcloud } = useExportiCloud();
+  const { syncGdrive } = useDriveSync();
+
+  // Translations
+  const [translations, setTranslations] = useState({
+    card: {
+      unlocktoedit: "card.unlocktoedit",
+      noContent: "card.noContent",
+      confirmDelete: "card.confirmDelete",
+      bookmarkError: "card.bookmarkError",
+      archiveError: "card.archiveError",
+      wrongpasswd: "card.wrongpasswd",
+      lockerror: "card.lockerror",
+      enterpasswd: "card.enterpasswd",
+      biometricReason: "card.biometricReason",
+      biometricTitle: "card.biometricTitle",
+    },
+  });
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+        dayjs.locale(selectedLanguage);
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+
+  let timeoutId: any = null;
+
+  function SyncAction() {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    timeoutId = setTimeout(() => {
+      const syncValue = localStorage.getItem("sync");
+
+      if (syncValue === "dropbox") {
+        syncDropBox();
+      } else if (syncValue === "webdav") {
+        syncDav();
+      } else if (syncValue === "iCloud") {
+        SyncIcloud();
+      } else if (syncValue === "googledrive") {
+        syncGdrive();
+      } else if (syncValue === "onedrive") {
+        syncOneDrive();
+      }
+
+      timeoutId = null;
+    }, 5000);
+  }
+
+  const handleToggleBookmark = async (
+    noteId: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+    SyncAction();
+
+    try {
+      const updatedNotes = await toggleBookmark(noteId);
+      setNotesState(updatedNotes);
+    } catch (error) {
+      console.error(translations.card.bookmarkError, error);
+      alert(translations.card.bookmarkError + (error as any).message);
+    }
+  };
+  const handleToggleArchive = async (
+    noteId: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+    SyncAction();
+
+    try {
+      const updatedNotes = await toggleArchive(noteId);
+      setNotesState(updatedNotes);
+    } catch (error) {
+      console.error(translations.card.archiveError, error);
+      alert(translations.card.archiveError + (error as any).message);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    SyncAction();
+    const isConfirmed = window.confirm(translations.card.confirmDelete);
+
+    if (isConfirmed) {
+      try {
+        await deleteNote(noteId);
+        // Remove the deleted note from filteredNotes state
+        setFilteredNotes((prevFilteredNotes) => {
+          const updatedFilteredNotes = { ...prevFilteredNotes };
+          delete updatedFilteredNotes[noteId];
+          return updatedFilteredNotes;
+        });
+      } catch (error) {
+        alert(error);
+      }
+    }
+  };
+
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
+    SyncAction();
 
     try {
       let password: string | null = null;
@@ -164,114 +288,34 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 
   // Helper function to prompt the user for a password
   const promptForPassword = async (): Promise<string | null> => {
-    // Define a div where the prompt will be rendered
     const promptRoot = document.createElement("div");
     document.body.appendChild(promptRoot);
 
     return new Promise<string | null>((resolve) => {
       const handleConfirm = (value: string | null) => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
+        root.unmount(); // Unmount with new API
+        document.body.removeChild(promptRoot); // Clean up DOM
         resolve(value);
       };
       const handleCancel = () => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        resolve(null); // Resolving with null for cancel action
+        root.unmount(); // Unmount with new API
+        document.body.removeChild(promptRoot); // Clean up DOM
+        resolve(null);
       };
-      ReactDOM.render(
+
+      const root = ReactDOM.createRoot(promptRoot); // Create root
+      root.render(
         <ModularPrompt
           title={translations.card.enterpasswd}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
-        />,
-        promptRoot
+        />
       );
     });
   };
 
   const handleClickNote = async (note: Note) => {
     navigate(`/editor/${note.id}`);
-  };
-
-  // Translations
-  const [translations, setTranslations] = useState({
-    card: {
-      unlocktoedit: "card.unlocktoedit",
-      noContent: "card.noContent",
-      confirmDelete: "card.confirmDelete",
-      bookmarkError: "card.bookmarkError",
-      archiveError: "card.archiveError",
-      wrongpasswd: "card.wrongpasswd",
-      lockerror: "card.lockerror",
-      enterpasswd: "card.enterpasswd",
-      biometricReason: "card.biometricReason",
-      biometricTitle: "card.biometricTitle",
-    },
-  });
-
-  useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
-  }, []);
-
-  const handleToggleBookmark = async (
-    noteId: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation();
-
-    try {
-      const updatedNotes = await toggleBookmark(noteId);
-      setNotesState(updatedNotes);
-    } catch (error) {
-      console.error(translations.card.bookmarkError, error);
-      alert(translations.card.bookmarkError + (error as any).message);
-    }
-  };
-  const handleToggleArchive = async (
-    noteId: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation();
-
-    try {
-      const updatedNotes = await toggleArchive(noteId);
-      setNotesState(updatedNotes);
-    } catch (error) {
-      console.error(translations.card.archiveError, error);
-      alert(translations.card.archiveError + (error as any).message);
-    }
-  };
-
-  const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    const isConfirmed = window.confirm(translations.card.confirmDelete);
-
-    if (isConfirmed) {
-      try {
-        await deleteNote(noteId);
-        // Remove the deleted note from filteredNotes state
-        setFilteredNotes((prevFilteredNotes) => {
-          const updatedFilteredNotes = { ...prevFilteredNotes };
-          delete updatedFilteredNotes[noteId];
-          return updatedFilteredNotes;
-        });
-      } catch (error) {
-        alert(error);
-      }
-    }
   };
 
   const MAX_CONTENT_PREVIEW_LENGTH = 150;
@@ -362,7 +406,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
                     {note.labels.map((label) => (
                       <span
                         key={label}
-                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                        className="text-primary text-opacity-100 px-1 py-0.5 rounded-md"
                         aria-label={`Label: ${label}`}
                       >
                         #{label}
@@ -415,7 +459,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
             }}
           >
             {note.isBookmarked ? (
-              <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2" />
+              <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2 text-primary" />
             ) : (
               <Icons.Bookmark3LineIcon className="w-8 h-8 mr-2" />
             )}

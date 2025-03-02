@@ -9,22 +9,39 @@ import AudioUploadComponent from "./AudioUpload";
 import VideoUploadComponent from "./VideoUpload";
 import { useNavigate } from "react-router-dom";
 import Mousetrap from "mousetrap";
-import { useExportDav } from "../../utils/Webdav/webDavUtil";
+import { useSyncDav } from "../../utils/Webdav/webDavUtil";
 import Find from "./Find";
+import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
+import { useOnedriveSync } from "../../utils/Onedrive/oneDriveUtil";
+import { useExportiCloud } from "../../utils/iCloud/iCloudUtil";
+import { useDriveSync } from "../../utils/Google Drive/GDriveUtil";
 
 interface ToolbarProps {
   note: Note;
   noteId: string;
   editor: Editor | null;
+  openDialog: any;
+  toggleFocusMode: any;
+  focusMode: boolean;
+  wd: boolean;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
   editor,
   noteId,
+  openDialog,
+  toggleFocusMode,
+  focusMode,
+  wd,
 }) => {
   const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const [isMoreOpen, setMoreOpen] = useState<boolean>(false);
   const [showFind, setShowFind] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+  }>({ top: 0, left: 0 });
+  const [morePosition, setMorePosition] = useState<{
     top: number;
     left: number;
   }>({ top: 0, left: 0 });
@@ -36,10 +53,24 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const searchRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const FindRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLButtonElement>(null);
+  const moreDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  //Sync
+  const { syncDropBox } = useDropboxSync();
+  const { syncDav } = useSyncDav();
+  const { syncOneDrive } = useOnedriveSync();
+  const { exportdata: SyncIcloud } = useExportiCloud();
+  const { syncGdrive } = useDriveSync();
+
   const [translations, setTranslations] = useState({
     editor: {
       embedUrl: "editor.embedUrl",
+      share: "editor.share",
+      ReadingMode: "editor.ReadingMode",
+      searchPage: "editor.searchPage",
+      deleteTable: "editor.deleteTable",
     },
     menuItems: {
       paragraphLabel: "menuItems.paragraphLabel",
@@ -90,7 +121,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       stopRecording: "accessibility.stopRecording",
       searchContent: "accessibility.searchContent",
       back: "accessibility.back",
-      videoUpload: "accessibility.videoUpload"
+      videoUpload: "accessibility.videoUpload",
     },
   });
 
@@ -110,9 +141,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
     loadTranslations();
   }, []);
-  const [wd] = useState<boolean>(
-    localStorage.getItem("expand-editor") === "true"
-  );
 
   const handleImageUpload = (imageUrl: string) => {
     editor?.chain().setImage({ src: imageUrl }).run();
@@ -289,6 +317,18 @@ const Toolbar: React.FC<ToolbarProps> = ({
     setDropdownOpen(!isDropdownOpen);
   };
 
+  // Toggle dropdown visibility
+  const toggleMore = () => {
+    if (moreRef.current) {
+      const rect = moreRef.current.getBoundingClientRect(); // Get the button's position
+      setMorePosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+      }); // Set dropdown position relative to button
+    }
+    setMoreOpen(!isMoreOpen);
+  };
+
   // Close the dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -299,7 +339,16 @@ const Toolbar: React.FC<ToolbarProps> = ({
       ) {
         setDropdownOpen(false);
       }
+  
+      if (
+        moreDropdownRef.current &&
+        !moreDropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)
+      ) {
+        setMoreOpen(false); // Reset or handle closing logic
+      }
     };
+  
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -315,482 +364,125 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const goBack = () => {
     const syncValue = localStorage.getItem("sync");
     if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
+      syncDropBox();
     } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
+      syncDav();
     } else if (syncValue === "iCloud") {
-      const iCloudExport = new CustomEvent("iCloudExport");
-      document.dispatchEvent(iCloudExport);
+      SyncIcloud();
     } else if (syncValue === "googledrive") {
-      const driveExport = new CustomEvent("driveExport");
-      document.dispatchEvent(driveExport);
+      syncGdrive();
     } else if (syncValue === "onedrive") {
-      const onedriveExport = new CustomEvent("onedriveExport");
-      document.dispatchEvent(onedriveExport);
+      syncOneDrive();
     }
     navigate("/");
   };
-
-  const formatting = [
-    {
-      label: translations.menuItems.paragraphLabel,
-      active: "Pragraph",
-      icon: (
-        <icons.ParagraphIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) => editor?.chain().focus().setParagraph().run(),
-    },
-    {
-      label: translations.menuItems.heading1Label,
-      active: "heading",
-      level: 1,
-      icon: (
-        <icons.Heading1Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) =>
-        editor?.chain().focus().toggleHeading({ level: 1 }).run(),
-    },
-    {
-      label: translations.menuItems.heading2Label,
-      active: "heading",
-      level: 2,
-      icon: (
-        <icons.Heading2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) =>
-        editor?.chain().focus().toggleHeading({ level: 2 }).run(),
-    },
-  ];
-
-  const lists = [
-    {
-      active: "bulletList",
-      label: translations.menuItems.bulletListLabel,
-      icon: (
-        <icons.ListUnorderedIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) => editor?.chain().focus().toggleBulletList().run(),
-    },
-    {
-      active: "orderedList",
-      label: translations.menuItems.orderedListLabel,
-      icon: (
-        <icons.ListOrderedIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) =>
-        editor?.chain().focus().toggleOrderedList().run(),
-    },
-    {
-      active: "TaskList",
-      label: translations.menuItems.bulletListLabel,
-      icon: (
-        <icons.ListCheck2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) => editor?.chain().focus().toggleTaskList().run(),
-    },
-  ];
 
   const draw = [
     {
       label: translations.menuItems.drawLabel,
       active: "paper",
-      icon: (
-        <icons.Brush2Fill className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
+      icon: <icons.Brush2Fill className="border-none text-xl w-7 h-7" />,
       action: (editor: any) => editor?.chain().focus().insertPaper().run(),
-    },
-  ];
-
-  const search = [
-    {
-      label: translations.accessibility.searchContent,
-      icon: (
-        <icons.Search2LineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: handleshowFind,
     },
   ];
 
   const back = [
     {
       label: translations.accessibility.back,
-      icon: (
-        <icons.ArrowLeftLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
+      icon: <icons.ArrowLeftLineIcon className="border-none text-xl w-7 h-7" />,
       action: goBack,
     },
   ];
 
   return (
     <div
-      className={`drawer hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] dark:text-neutral-50 overflow-x-auto sm:overflow-x-none py-1 ${
-        wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
-      }`}
+      className={`print:hidden drawer hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] overflow-auto dark:text-neutral-50 mx-2 transition ${
+        focusMode ? "opacity-0 hover:opacity-100" : ""
+      } ${wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"} `}
     >
-      <div
-        className={`w-full h-full flex items-center justify-between bg-[#2D2C2C] rounded-full  ${
-          isTableActive ? "hidden" : "block"
-        } ${isTextSelected ? "hidden" : "block"}`}
-      >
-        {back.map((item) => (
-          <button
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
-        <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-          {formatting.map((item) => (
-            <button
-              className={
-                editor?.isActive(item.active.toLowerCase(), item.level)
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
-          <button
-            className={
-              editor?.isActive("blockquote")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-            aria-label={translations.menuItems.quoteLabel}
-          >
-            <icons.DoubleQuotesLIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          {/* Media and File Upload Options */}
-          <ImageUploadComponent
-            onImageUpload={handleImageUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <button
-            className={`p-1 ${
-              editor?.isActive("Embed")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
-            onMouseDown={handleMouseDown}
-            onClick={handleAddIframe}
-            aria-label={translations.menuItems.embedLabel}
-          >
-            <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
-          <FileUploadComponent
-            onFileUpload={handlefileUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <VideoUploadComponent
-            onVideoUpload={handlevideoUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <AudioUploadComponent
-            onAudioUpload={handleaudioUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          {draw.map((item) => (
-            <button
-              className={
-                editor?.isActive(item.active.toLowerCase())
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
-          {/* List and Table Options */}
-          <button
-            className={
-              editor?.isActive("table")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() =>
-              editor?.commands.insertTable({
-                rows: 3,
-                cols: 3,
-                withHeaderRow: true,
-              })
-            }
-            aria-label={translations.menuItems.tableLabel}
-          >
-            <icons.Table2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          {lists.map((item) => (
-            <button
-              className={
-                editor?.isActive(item.active.toLowerCase())
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
-        </div>
-        {search.map((item) => (
-          <button
-            ref={searchRef}
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
-      </div>
-      <div
-        className={`w-full h-full flex items-center justify-between bg-[#2D2C2C] rounded-full  ${
-          isTableActive ? "block" : "hidden"
-        } ${isTextSelected ? "hidden" : "block"}`}
-      >
-        {back.map((item) => (
-          <button
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
-        <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-          <button
-            className="p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().addRowAfter().run()}
-            aria-label={translations.accessibility.insertRowAfter}
-          >
-            <icons.InsertRowBottomIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().addRowBefore().run()}
-            aria-label={translations.accessibility.insertRowBefore}
-          >
-            <icons.InsertRowTopIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().deleteRow().run()}
-            aria-label={translations.accessibility.deleteRow}
-          >
-            <icons.DeleteRow className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().addColumnBefore().run()}
-            aria-label={translations.accessibility.insertColumnLeft}
-          >
-            <icons.InsertColumnLeftIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().addColumnAfter().run()}
-            aria-label={translations.accessibility.insertColumnRight}
-          >
-            <icons.InsertColumnRightIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().deleteColumn().run()}
-            aria-label={translations.accessibility.deleteColumn}
-          >
-            <icons.DeleteColumn className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          {draw.map((item) => (
-            <button
-              className={
-                editor?.isActive(item.active.toLowerCase())
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
-          {/* Media and File Upload Options */}
-          <ImageUploadComponent
-            onImageUpload={handleImageUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <button
-            className={`p-1 ${
-              editor?.isActive("Embed")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
-            onMouseDown={handleMouseDown}
-            onClick={handleAddIframe}
-            aria-label={translations.menuItems.embedLabel}
-          >
-            <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
-          <FileUploadComponent
-            onFileUpload={handlefileUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <VideoUploadComponent
-            onVideoUpload={handlevideoUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <button
-            className={`p-1 ${
-              editor?.isActive("Tasklist")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1 pr-6`}
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().deleteTable().run()}
-            aria-label={translations.accessibility.deleteTable}
-          >
-            <icons.DeleteBinLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
-        </div>
-        {search.map((item) => (
-          <button
-            ref={searchRef}
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
-      </div>
-      <div
-        className={`w-full h-full flex items-center justify-between bg-[#2D2C2C] rounded-full  ${
-          isTextSelected ? "block" : "hidden"
-        }`}
-      >
-        {back.map((item) => (
-          <button
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
-        <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-          {formatting.map((item) => (
-            <button
-              className={
-                editor?.isActive(item.active.toLowerCase(), item.level)
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
+      <div className="w-full h-full flex justify-center items-center">
+        <div className="flex items-center justify-center border-b dark:border-b-neutral-600">
+          {/* Back button */}
+          <div>
+            {back.map((item) => (
+              <button
+                key={item.label}
+                className="p-1 dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onClick={() => item.action()}
+                aria-label={item.label}
+              >
+                {item.icon}
+              </button>
+            ))}
+          </div>
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
           <button
             className={
               editor?.isActive("bold")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBold().run()}
             aria-label={translations.accessibility.bold}
           >
-            <icons.BoldIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+            <icons.BoldIcon className="border-none text-xl w-7 h-7" />
           </button>
           <button
             className={
               editor?.isActive("italic")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleItalic().run()}
             aria-label={translations.accessibility.italic}
           >
-            <icons.ItalicIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+            <icons.ItalicIcon className="border-none text-xl w-7 h-7" />
           </button>
           <button
             className={
               editor?.isActive("underline")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
             aria-label={translations.accessibility.underline}
           >
-            <icons.UnderlineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+            <icons.UnderlineIcon className="border-none text-xl w-7 h-7" />
           </button>
           <button
             className={
               editor?.isActive("strike")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleStrike().run()}
             aria-label={translations.accessibility.strikethrough}
           >
-            <icons.StrikethroughIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+            <icons.StrikethroughIcon className="border-none text-xl w-7 h-7" />
           </button>
           <button
             ref={buttonRef}
             className={
               editor?.isActive("highlight")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
             }
             onMouseDown={handleMouseDown}
             onClick={toggleDropdown}
             aria-label={translations.accessibility.highlight}
           >
-            <icons.MarkPenLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+            <icons.MarkPenLineIcon className="border-none text-xl w-7 h-7" />
           </button>
           {isDropdownOpen &&
             createPortal(
               <div
                 ref={dropdownRef}
-                className="absolute p-2 bg-white dark:bg-[#353333] shadow-lg rounded-md grid grid-cols-4 gap-2"
+                className="absolute p-1 bg-white dark:bg-neutral-800 border dark:border-neutral-600 shadow-lg rounded-md grid grid-cols-4"
                 style={{
                   top: dropdownPosition.top,
                   left: dropdownPosition.left,
@@ -801,7 +493,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 <button
                   className={
                     editor?.isActive("highlight")
-                      ? "rounded-md text-amber-400 cursor-pointer"
+                      ? "rounded-md text-primary cursor-pointer"
                       : "rounded-md bg-transparent cursor-pointer"
                   }
                   onClick={() => {
@@ -812,8 +504,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   <icons.CloseLineIcon
                     className={
                       editor?.isActive("highlight")
-                        ? "border-none text-amber-400 text-xl w-7 h-7"
-                        : "border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7"
+                        ? "border-none text-primary text-xl w-7 h-7"
+                        : "border-none text-neutral-800 dark:dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7"
                     }
                   />
                 </button>
@@ -839,74 +531,277 @@ const Toolbar: React.FC<ToolbarProps> = ({
               </div>,
               document.body // Mount the dropdown in the document body
             )}
-          {lists.map((item) => (
-            <button
-              className={
-                editor?.isActive(item.active.toLowerCase())
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
-          <button
-            className={`p-1 ${
-              editor?.isActive("subscript")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.commands.toggleSubscript()}
-            aria-label={translations.accessibility.subscript}
-          >
-            <icons.SubscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
-          <button
-            className={`p-1 ${
-              editor?.isActive("superscript")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.commands.toggleSuperscript()}
-            aria-label={translations.accessibility.superscript}
-          >
-            <icons.SuperscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
+          {isTableActive && !isTextSelected && (
+            <>
+              <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />{" "}
+              <button
+                className="p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().addRowAfter().run()}
+                aria-label={translations.accessibility.insertRowAfter}
+              >
+                <icons.InsertRowBottomIcon className="border-none text-xl w-7 h-7" />
+              </button>
+              <button
+                className="p-1 hidden sm:block sm:align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().addRowBefore().run()}
+                aria-label={translations.accessibility.insertRowBefore}
+              >
+                <icons.InsertRowTopIcon className="border-none text-xl w-7 h-7" />
+              </button>
+              <button
+                className="p-1 hidden sm:block sm:align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().deleteRow().run()}
+                aria-label={translations.accessibility.deleteRow}
+              >
+                <icons.DeleteRow className="border-none text-xl w-7 h-7" />
+              </button>
+              <button
+                className="p-1 hidden sm:block sm:align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().addColumnBefore().run()}
+                aria-label={translations.accessibility.insertColumnLeft}
+              >
+                <icons.InsertColumnLeftIcon className="border-none text-xl w-7 h-7" />
+              </button>
+              <button
+                className="p-1 hidden sm:block sm:align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().addColumnAfter().run()}
+                aria-label={translations.accessibility.insertColumnRight}
+              >
+                <icons.InsertColumnRightIcon className="border-none text-xl w-7 h-7" />
+              </button>
+              <button
+                className="p-1 hidden sm:block sm:align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().deleteColumn().run()}
+                aria-label={translations.accessibility.deleteColumn}
+              >
+                <icons.DeleteColumn className="border-none text-xl w-7 h-7" />
+              </button>
+            </>
+          )}
+          {!isTableActive && (
+            <>
+              <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />{" "}
+              <button
+                className={
+                  editor?.isActive("bulletList")
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                    : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+                }
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                aria-label={translations.menuItems.bulletListLabel}
+              >
+                <icons.ListUnorderedIcon className="border-none text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("orderedList")
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                    : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+                }
+                onMouseDown={handleMouseDown}
+                onClick={() =>
+                  editor?.chain().focus().toggleOrderedList().run()
+                }
+                aria-label={translations.menuItems.orderedListLabel}
+              >
+                <icons.ListOrderedIcon className="border-none text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("TaskList")
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                    : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+                }
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().toggleTaskList().run()}
+                aria-label={translations.menuItems.bulletListLabel}
+              >
+                <icons.ListCheck2Icon className="border-none text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("blockquote")
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                    : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+                }
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+                aria-label={translations.menuItems.quoteLabel}
+              >
+                <icons.DoubleQuotesLIcon className="border-none text-xl w-7 h-7" />
+              </button>
+              <button
+                className={
+                  editor?.isActive("codeBlock")
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                    : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+                }
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+                aria-label={translations.menuItems.codeLabel}
+              >
+                <icons.CodeBoxLineIcon className="border-none text-xl w-7 h-7" />
+              </button>
+            </>
+          )}
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+          <ImageUploadComponent
+            onImageUpload={handleImageUpload}
+            noteId={noteId}
+            translations={translations}
+          />{" "}
+          <AudioUploadComponent
+            onAudioUpload={handleaudioUpload}
+            noteId={noteId}
+            translations={translations}
+          />
           <button
             className={`p-1 ${
               editor?.isActive("link")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1 pr-6`}
+                ? "p-1 rounded-md text-primary  cursor-pointer"
+                : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+            }`}
             onMouseDown={handleMouseDown}
             onClick={setLink}
             aria-label={translations.accessibility.link}
           >
-            <icons.LinkIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
+            <icons.LinkIcon className="border-none text-xl w-7 h-7" />
           </button>
-        </div>
-        {search.map((item) => (
+          <FileUploadComponent
+            onFileUpload={handlefileUpload}
+            noteId={noteId}
+            translations={translations}
+          />
           <button
-            ref={searchRef}
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
+            className={
+              editor?.isActive("table")
+                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+            }
             onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
+            onClick={() =>
+              editor?.commands.insertTable({
+                rows: 3,
+                cols: 3,
+                withHeaderRow: true,
+              })
+            }
+            aria-label={translations.menuItems.tableLabel}
           >
-            {item.icon}
+            <icons.Table2Icon className="border-none text-xl w-7 h-7" />
           </button>
-        ))}
+          <button
+            ref={moreRef}
+            className={
+              "p-1 rounded-md text-neutral-800 dark:text-[color:var(--selected-dark-text)]  hoverable cursor-pointer"
+            }
+            onMouseDown={handleMouseDown}
+            onClick={toggleMore}
+            aria-label={translations.accessibility.highlight}
+          >
+            <icons.MoreLineIcon className="border-none text-xl w-7 h-7" />
+          </button>
+          {isMoreOpen &&
+            createPortal(
+              <div
+                ref={moreDropdownRef}
+                className="absolute p-1 bg-white dark:bg-neutral-800 shadow-lg rounded-md flex"
+                style={{
+                  top: morePosition.top,
+                  left: morePosition.left,
+                  zIndex: 1000,
+                }}
+              >
+                <VideoUploadComponent
+                  onVideoUpload={handlevideoUpload}
+                  noteId={noteId}
+                  translations={translations}
+                />
+                <button
+                  className={`p-1 ${
+                    editor?.isActive("Embed")
+                      ? "p-1 rounded-md text-primary  cursor-pointer"
+                      : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+                  } cursor-pointer flex-1`}
+                  onMouseDown={handleMouseDown}
+                  onClick={handleAddIframe}
+                  aria-label={translations.menuItems.embedLabel}
+                >
+                  <icons.PagesLineIcon className="border-none text-xl w-7 h-7" />
+                </button>
+                {draw.map((item) => (
+                  <button
+                    className={
+                      editor?.isActive(item.active.toLowerCase())
+                        ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                        : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+                    }
+                    onMouseDown={handleMouseDown}
+                    onClick={() => item.action(editor)}
+                    aria-label={item.label}
+                  >
+                    {item.icon}
+                  </button>
+                ))}
+              </div>,
+              document.body // Mount the dropdown in the document body
+            )}
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+          <button
+            className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+            onMouseDown={handleMouseDown}
+            onClick={() => openDialog()}
+            aria-label={translations.editor.share}
+          >
+            <icons.ShareLineIcon className="border-none text-xl w-7 h-7" />
+          </button>
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+          <div className="flex items-center">
+            <button
+              className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => toggleFocusMode()}
+              aria-label={translations.editor.ReadingMode}
+            >
+              <icons.FileArticleLine className="border-none text-xl w-7 h-7" />
+            </button>
+            {!isTableActive && !isTextSelected && (
+              <button
+                className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onClick={() => handleshowFind()}
+                aria-label={translations.editor.searchPage}
+              >
+                <icons.Search2LineIcon className="border-none text-xl w-7 h-7" />
+              </button>
+            )}
+          </div>
+          {isTableActive && !isTextSelected && (
+            <>
+              <button
+                className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+                onMouseDown={handleMouseDown}
+                onClick={() => editor?.chain().focus().deleteTable().run()}
+                aria-label={translations.editor.deleteTable}
+              >
+                <icons.DeleteBinLineIcon className="border-none text-xl w-7 h-7" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
       {showFind &&
         createPortal(
           <div
             ref={FindRef}
-            className="absolute p-2"
+            className="absolute p-1"
             style={{
               top: FindPosition.top,
               left: FindPosition.left,

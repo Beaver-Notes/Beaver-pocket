@@ -1,18 +1,29 @@
 import React, { useState, useEffect } from "react";
 import enTranslations from "./assets/locales/en.json";
-import itTranslations from "./assets/locales/it.json";
 import deTranslations from "./assets/locales/de.json";
 import { useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
-import { Note } from "./store/types";
+import { isPlatform } from "@ionic/react";
+import { useTranslation } from "./utils/translations";
 
 interface SettingsProps {
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
+  themeMode: string;
+  setThemeMode: (mode: any) => void;
+  toggleTheme: (newMode: boolean | ((prevState: boolean) => boolean)) => void;
+  setAutoMode: () => void;
+  darkMode: boolean;
 }
 
-const Archive: React.FC<SettingsProps> = () => {
+const Settings: React.FC<SettingsProps> = ({
+  themeMode,
+  darkMode,
+  toggleTheme,
+  setAutoMode,
+}) => {
   const navigate = useNavigate();
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    settings: {},
+  });
   const [selectedFont, setSelectedFont] = useState<string>(
     localStorage.getItem("selected-font") || "Arimo"
   );
@@ -58,65 +69,6 @@ const Archive: React.FC<SettingsProps> = () => {
     setSelectedCodeFont(e.target.value);
   };
 
-  const [themeMode, setThemeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  // State to manage dark mode
-  const [darkMode, setDarkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  // Effect to update the classList and localStorage when darkMode or themeMode changes
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
-  // Function to toggle dark mode
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
-  ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
-    setSelectedOption(newMode ? "Dark" : "Light");
-  };
-
-  // Function to set theme mode to auto based on device preference
-  const setAutoMode = () => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    setDarkMode(prefersDarkMode);
-    setThemeMode("auto");
-    setSelectedOption("System");
-  };
-
-  // Translations
-  const [translations, setTranslations] = useState({
-    settings: {
-      title: "settings.title",
-      apptheme: "settings.apptheme",
-      light: "settings.light",
-      dark: "settings.dark",
-      system: "settings.system",
-      selectlanguage: "settings.selectlanguage",
-      selectfont: "settings.selectfont",
-      About: "settings.About",
-      Shortcuts: "settings.Shortcuts",
-      codeFont: "settings.codeFont",
-      interfaceOptions: "settings.interfaceOptions",
-      clearFont: "settings.clearFont",
-      Sync: "settings.Sync",
-      expandPage: "settings.expandPage",
-      scribbleCompatibility: "settings.scribbleCompatibility",
-    },
-  });
-
   const [wd, setwd] = useState<boolean>(
     localStorage.getItem("expand-editor") === "true"
   );
@@ -132,21 +84,14 @@ const Archive: React.FC<SettingsProps> = () => {
   };
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `./assets/locales/${selectedLanguage}.json`
-        );
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
-  }, []); // Empty dependency array means this effect runs once on mount
+    fetchTranslations();
+  }, []);
 
   const [selectedLanguage, setSelectedLanguage] = useState(
     localStorage.getItem("selectedLanguage") || "en"
@@ -154,7 +99,6 @@ const Archive: React.FC<SettingsProps> = () => {
 
   const languages = [
     { code: "en", name: "English", translations: enTranslations },
-    { code: "it", name: "Italiano", translations: itTranslations },
     { code: "de", name: "Deutsch", translations: deTranslations },
   ];
 
@@ -207,6 +151,32 @@ const Archive: React.FC<SettingsProps> = () => {
     translations.settings.system,
   ];
 
+  const colors = [
+    { name: "red", bg: "bg-red-500" },
+    { name: "light", bg: "bg-amber-400" }, // Amber (yellow/orange)
+    { name: "green", bg: "bg-emerald-500" },
+    { name: "blue", bg: "bg-blue-400" },
+    { name: "purple", bg: "bg-purple-400" },
+    { name: "pink", bg: "bg-pink-400" },
+    { name: "neutral", bg: "bg-neutral-400" }, // Neutral at the end
+  ];
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const savedColor = localStorage.getItem("color-scheme") || "light"; // Default to 'light' if not found
+    setColor(savedColor);
+  });
+
+  const setColor = (color: any) => {
+    const root = document.documentElement;
+    root.classList.forEach((cls) => {
+      if (cls !== "light" && cls !== "dark") {
+        root.classList.remove(cls);
+      }
+    });
+    root.classList.add(color);
+    localStorage.setItem("color-scheme", color);
+  };
+
   return (
     <div>
       <div className="grid sm:grid-cols-[auto]">
@@ -247,6 +217,24 @@ const Archive: React.FC<SettingsProps> = () => {
                     aria-hidden="true"
                     className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
                   />
+                </div>
+              </section>
+
+              <section aria-labelledby="app-theme-label">
+                <p
+                  id="app-theme-label"
+                  className="text-xl py-2 text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                >
+                  {translations.settings.colorScheme || "-"}
+                </p>
+                <div className="w-full flex items-center justify-center gap-2">
+                  {colors.map((color) => (
+                    <button
+                      key={color.name}
+                      className={`${color.bg} p-2 w-10 h-10 rounded-full focus:ring-primary transition cursor-pointer `}
+                      onClick={() => setColor(color.name)}
+                    ></button>
+                  ))}
                 </div>
               </section>
 
@@ -362,7 +350,7 @@ const Archive: React.FC<SettingsProps> = () => {
                       className="peer sr-only"
                       aria-checked={wd}
                     />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                   </label>
                 </div>
 
@@ -382,7 +370,7 @@ const Archive: React.FC<SettingsProps> = () => {
                       className="peer sr-only"
                       aria-checked={ClearFontChecked}
                     />
-                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-400 peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                   </label>
                 </div>
 
@@ -399,12 +387,14 @@ const Archive: React.FC<SettingsProps> = () => {
                     </button>
 
                     <button
-                      onClick={() => navigate("/about")}
-                      aria-label={translations.settings.About || "-"}
-                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                      onClick={() => navigate("/icons")}
+                      aria-label={translations.settings.Shortcuts || "-"}
+                      className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center ${
+                        isPlatform("android") ? "hidden" : ""
+                      }`}
                     >
-                      <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
-                      {translations.settings.About || "-"}
+                      <Icons.Brush2Fill className="w-6 h-6 mr-2" />
+                      {translations.settings.appIcon || "-"}
                     </button>
 
                     <button
@@ -414,6 +404,15 @@ const Archive: React.FC<SettingsProps> = () => {
                     >
                       <Icons.KeyboardLineIcon className="w-6 h-6 mr-2" />
                       {translations.settings.Shortcuts || "-"}
+                    </button>
+
+                    <button
+                      onClick={() => navigate("/about")}
+                      aria-label={translations.settings.About || "-"}
+                      className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    >
+                      <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
+                      {translations.settings.About || "-"}
                     </button>
                   </div>
                 </div>
@@ -426,4 +425,4 @@ const Archive: React.FC<SettingsProps> = () => {
   );
 };
 
-export default Archive;
+export default Settings;

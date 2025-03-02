@@ -6,9 +6,9 @@ const config: CapacitorConfig = {
   webDir: "dist",
   plugins: {
     SplashScreen: {
-      launchShowDuration: 3000,
-      launchAutoHide: true,
-      launchFadeOutDuration: 3000,
+      launchShowDuration: 300,
+      launchAutoHide: false,
+      launchFadeOutDuration: 300,
       backgroundColor: "#ffffffff",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
@@ -21,10 +21,12 @@ const config: CapacitorConfig = {
       layoutName: "launch_screen",
       useDialog: true,
     },
-    GoogleAuth: {
-      scopes: ["profile", "email", "https://www.googleapis.com/auth/drive"],
-      serverClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID,
-      forceCodeForRefreshToken: true,
+    SocialLogin: {
+      google: {
+        webClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID,
+        iOSClientId: process.env.VITE_IOS_GOOGLE_CLIENT_ID,
+        mode: "offline",
+      },
     },
     Keyboard: {
       //@ts-ignore

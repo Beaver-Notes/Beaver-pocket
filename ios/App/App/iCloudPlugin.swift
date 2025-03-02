@@ -15,7 +15,7 @@ public class iCloudPlugin: CAPPlugin, CAPBridgedPlugin {
     ]
 
     private let fileManager = FileManager.default
-    private let containerIdentifier = "iCloud.beavernotes.beaverpocket"
+    private let containerIdentifier = "iCloud.beaver.notes.pocket"
 
     private var ubiquityURL: URL? {
         return fileManager.url(forUbiquityContainerIdentifier: containerIdentifier)?.appendingPathComponent("Documents")

@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
+import SDialog from "../UI/SDialog";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
-import { isPlatform } from "@ionic/react";
 import Drawer from "./Drawer";
 import Find from "./Find";
 import "../../assets/css/editor.css";
 import extensions from "../../lib/tiptap/index";
-import EditorSuggestion from "../../lib/tiptap/exts/suggestions/EditorSuggestion";
+import Commands from "../../lib/tiptap/exts/commands";
 import NoteLinkExtension from "../../lib/tiptap/exts/suggestions/NoteLinkSuggestion";
 import NoteLabelSuggestion from "../../lib/tiptap/exts/suggestions/NoteLabelSuggestion";
 import DOMPurify from "dompurify";
@@ -16,21 +16,33 @@ import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 import Icons from "../../lib/remixicon-react";
 import Mousetrap from "mousetrap";
-import getMimeType from "../../utils/mimetype";
+import mime from "mime";
 import { saveImageToFileSystem } from "../../utils/fileHandler";
 import { saveFileToFileSystem } from "../../utils/fileHandler";
-import { useExportDav } from "../../utils/Webdav/webDavUtil";
+import { useSyncDav } from "../../utils/Webdav/webDavUtil";
+import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
+import { WebviewPrint } from "capacitor-webview-print";
+import { useOnedriveSync } from "../../utils/Onedrive/oneDriveUtil";
+import { useExportiCloud } from "../../utils/iCloud/iCloudUtil";
+import { useDriveSync } from "../../utils/Google Drive/GDriveUtil";
 
 type Props = {
   note: Note;
   notesState: Record<string, Note>;
   setNotesState: (notes: Record<string, Note>) => void;
+  translations: any;
 };
 
-function EditorComponent({ note, notesState, setNotesState }: Props) {
+function EditorComponent({
+  note,
+  notesState,
+  setNotesState,
+  translations,
+}: Props) {
   const { activeNoteId, setActiveNoteId } = useNotesState();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const findRef = useRef<HTMLDivElement | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const { title, handleChangeNoteContent } = useNoteEditor(
     activeNoteId,
     notesState,
@@ -39,11 +51,17 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   const [previousContent, setPreviousContent] = useState<JSONContent | null>(
     null
   );
-  const { exportdata } = useExportDav();
   const [searchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
   const [sortingOption] = useState("updatedAt");
+
+  //Sync
+  const { syncDropBox } = useDropboxSync();
+  const { syncDav } = useSyncDav();
+  const { syncOneDrive } = useOnedriveSync();
+  const { exportdata: SyncIcloud } = useExportiCloud();
+  const { syncGdrive } = useDriveSync();
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
@@ -74,6 +92,16 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     }
   });
 
+  // Function to handle opening the dialog
+  const openDialog = () => {
+    setIsOpen(true);
+  };
+
+  // Function to handle closing the dialog
+  const closeDialog = () => {
+    setIsOpen(false);
+  };
+
   const [focusMode, setFocusMode] = useState(false);
   const [showFind, setShowFind] = useState(false);
   const [wd, setWd] = useState<boolean>(
@@ -95,6 +123,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   document.addEventListener("updateLabel", (event: Event) => {
     const customEvent = event as CustomEvent;
     const labelToAdd = customEvent.detail.props;
+    console.log(labelToAdd);
 
     // Ensure existingLabels is initialized correctly
     const existingLabels = note.labels || [];
@@ -121,10 +150,44 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     NoteLabelSuggestion.configure({
       uniqueLabels: uniqueLabels,
     }),
-    EditorSuggestion.configure({
+    Commands.configure({
       noteId: note.id,
     }),
   ];
+
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+
+  // Function to handle typing detection with throttling
+  const handleTyping = useCallback(() => {
+    // Reset the timeout if the user starts typing again within the limit
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set the user as currently typing
+    if (!isTyping) {
+      setIsTyping(true);
+    }
+
+    // Start a new timeout to detect when typing has stopped
+    typingTimeoutRef.current = setTimeout(async () => {
+      setIsTyping(false);
+
+      const syncValue = localStorage.getItem("sync");
+      if (syncValue === "dropbox") {
+        syncDropBox();
+      } else if (syncValue === "webdav") {
+        syncDav();
+      } else if (syncValue === "iCloud") {
+        SyncIcloud();
+      } else if (syncValue === "googledrive") {
+        syncGdrive();
+      } else if (syncValue === "onedrive") {
+        syncOneDrive();
+      }
+    }, 4000); // Adjust timeout limit as needed
+  }, [isTyping]);
 
   const editor = useEditor(
     {
@@ -135,6 +198,9 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
 
         // Handle note content change
         handleChangeNoteContent(editorContent || {}, title);
+
+        // Trigger typing detection
+        handleTyping();
 
         // Compare previous and current content
         if (previousContent) {
@@ -167,27 +233,6 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     },
     [note.id]
   );
-
-  useEffect(() => {
-    if (editor) {
-      editor.commands.focus();
-      editorRef.current = editor; // Store editor in ref
-    }
-  }, [editor]);
-
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === "f" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        setShowFind(true);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, []);
 
   document.addEventListener("showFind", () => {
     setShowFind((prevShowFind) => !prevShowFind);
@@ -223,21 +268,11 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     return labels;
   };
 
-  const handleshowFind = () => {
-    if (buttonRef.current) {
-      setShowFind(true);
-    }
-  };
-
   const handleKeyDownTitle = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
       editorRef.current?.commands.focus(); // Focus the editor
     }
-  };
-
-  const preventKeyboardToggle = (event: any) => {
-    event.preventDefault();
   };
 
   const setLink = useCallback(() => {
@@ -266,6 +301,10 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
   }, [editor]);
 
   useEffect(() => {
+    Mousetrap.bind("mod+f", (e) => {
+      e.preventDefault();
+      setShowFind(true);
+    });
     // Mousetrap key bindings
     Mousetrap.bind("mod+k", (e) => {
       e.preventDefault();
@@ -363,93 +402,13 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     await processItems(items);
   };
 
-  const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const items = event.clipboardData.items;
-    document.execCommand("insertText", false, " "); // Add space before pasting
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-
-      if (item.kind === "file") {
-        // Handle pasted file (like from file manager)
-        const file = item.getAsFile();
-        if (file) {
-          await handleFileByType(file); // Handle file processing as usual
-        }
-      } else if (item.kind === "string" && item.type === "text/html") {
-        // Handle HTML content (like pasting from a web page)
-        item.getAsString(async (htmlContent: string) => {
-          const imageUrl = extractImageUrlFromHtml(htmlContent);
-          if (imageUrl) {
-            editor?.chain().setImage({ src: imageUrl }).run(); // Insert image from URL
-          } else {
-            // If no image URL, fallback to pasting the content as plain HTML/text
-            editor?.chain().insertContent(htmlContent).run();
-          }
-        });
-      } else if (item.kind === "string" && item.type === "text/plain") {
-        // Handle plain text or URLs
-        item.getAsString(async (textContent: string) => {
-          if (isBase64Image(textContent)) {
-            // If the content is a base64 image, insert it directly
-            editor?.chain().setImage({ src: textContent }).run();
-          } else if (isValidUrl(textContent)) {
-            // If it's a valid URL, check if it's an image URL
-            if (isImageUrl(textContent)) {
-              editor?.chain().setImage({ src: textContent }).run(); // Insert image
-            } else {
-              // If it's not an image URL, insert it as plain text or link
-              editor?.chain().insertContent(textContent).run();
-            }
-          } else {
-            // If neither base64 nor a valid URL, insert it as plain text
-            editor?.chain().insertContent(textContent).run();
-          }
-        });
-      }
-    }
-  };
-
-  // Helper to check if the pasted content is a base64 image
-  const isBase64Image = (str: string): boolean => {
-    return str.startsWith("data:image/") && str.includes("base64,");
-  };
-
-  // Helper to extract image URL from pasted HTML content
-  const extractImageUrlFromHtml = (htmlContent: string): string | null => {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlContent;
-    const imgTag = tempDiv.querySelector("img");
-
-    return imgTag ? imgTag.src : null;
-  };
-
-  // Helper to validate if a string is a valid URL
-  const isValidUrl = (string: string): boolean => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
-
-  // Helper to check if a URL is an image URL (jpg, png, gif, etc.)
-  const isImageUrl = (url: string): boolean => {
-    const imagePattern = /\.(jpeg|jpg|gif|png|bmp|webp)$/i;
-    return imagePattern.test(url);
-  };
-
   const processItems = async (items: DataTransferItemList) => {
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       if (item.kind === "file") {
         const file = item.getAsFile();
         if (file) {
-          const fileType = getMimeType(file.name);
+          const fileType = mime.getType(file.name);
           if (fileType) {
             await handleFileByType(file);
           } else {
@@ -487,6 +446,30 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     }
   };
 
+  const handlePrint = async (fileName: string) => {
+    const html = document.documentElement;
+    const darkModeActive = html.classList.contains("dark");
+
+    // Temporarily force light mode by removing the "dark" class
+    if (darkModeActive) html.classList.remove("dark");
+
+    const restoreClass = () => {
+      if (darkModeActive) html.classList.add("dark");
+      window.removeEventListener("afterprint", restoreClass); // Clean up listener
+    };
+
+    // Restore dark mode after printing is done
+    window.addEventListener("afterprint", restoreClass);
+
+    try {
+      await WebviewPrint.print({ name: fileName });
+      console.log("Print triggered for file:", fileName);
+    } catch (error) {
+      console.error("Error printing webview:", error);
+      restoreClass(); // Restore immediately on error
+    }
+  };
+
   const goBack = () => {
     const syncValue = localStorage.getItem("sync");
 
@@ -495,7 +478,7 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
         const dropboxExport = new CustomEvent("dropboxExport");
         document.dispatchEvent(dropboxExport);
       } else if (syncValue === "webdav") {
-        exportdata(); // Safe hook usage
+        syncDav();
       } else if (syncValue === "iCloud") {
         const iCloudExport = new CustomEvent("iCloudExport");
         document.dispatchEvent(iCloudExport);
@@ -513,40 +496,88 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
     }
   };
 
+  function toggleFocusMode() {
+    try {
+      if (!focusMode) {
+        // Enable focus mode
+        editor?.setOptions({ editable: false });
+        editor?.view.update(editor.view.props);
+        setFocusMode(true);
+      } else {
+        // Disable focus mode
+        editor?.setOptions({ editable: true });
+        editor?.view.update(editor.view.props);
+        setFocusMode(false);
+      }
+    } catch (error) {
+      // Log the error with a message
+      console.error("Error while toggling focus mode:", error);
+    }
+  }
+
   return (
-    <div>
-      <div
-        className={`editor overflow-auto h-full justify-center items-start px-4 ${
-          wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
-        } text-black dark:text-[color:var(--selected-dark-text)]`}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={handleDrop}
-      >
-        <Toolbar note={note} noteId={note.id} editor={editor} />
-        <div
-          className={`sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] fixed inset-x-0 overflow-auto h-auto w-full z-40 no-scrollbar flex justify-between`}
-        >
+    <div
+      className="relative h-screen"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={handleDrop}
+    >
+      {/* Fixed Header */}
+      <div>
+        <Toolbar
+          note={note}
+          noteId={note.id}
+          editor={editor}
+          openDialog={openDialog}
+          toggleFocusMode={toggleFocusMode}
+          focusMode={focusMode}
+          wd={wd}
+        />
+        <div className="sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] w-full no-scrollbar flex justify-between print:hidden">
           <button
             className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
             onClick={goBack}
           >
             <Icons.ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
           </button>
+
           <div className="flex">
             <button
+              aria-label="Open dialog"
               className="p-2 rounded-md text-white bg-transparent cursor-pointer"
-              onClick={() => setFocusMode((prevFocusMode) => !prevFocusMode)}
+              onClick={openDialog}
             >
-              <Icons.Focus3LineIcon
+              <Icons.ShareLineIcon className="border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+            </button>
+
+            <SDialog
+              translations={translations}
+              isOpen={isOpen}
+              closeDialog={closeDialog}
+              notesState={notesState}
+              handlePrint={handlePrint}
+              note={note}
+            />
+
+            <button
+              className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+              onClick={toggleFocusMode}
+            >
+              <Icons.FileArticleLine
                 className={`border-none ${
-                  focusMode ? "text-amber-400" : "text-neutral-800"
-                } dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7`}
+                  focusMode
+                    ? "text-primary"
+                    : "text-neutral-800 dark:text-[color:var(--selected-dark-text)]"
+                } text-xl w-7 h-7`}
               />
             </button>
 
             <button
               className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
-              onClick={handleshowFind}
+              onClick={() => {
+                if (buttonRef.current) {
+                  setShowFind(true);
+                }
+              }}
               ref={buttonRef}
             >
               <Icons.Search2LineIcon
@@ -556,51 +587,46 @@ function EditorComponent({ note, notesState, setNotesState }: Props) {
               />
             </button>
           </div>
+
           {/* Portal appears below the button */}
           {showFind && (
-            <div
-              ref={findRef}
-              className={`fixed ${showFind ? "block" : "hidden"}`}
-              style={{
-                zIndex: 80,
-              }}
-            >
-              <div className="fixed inset-x-0 flex justify-center">
-                <div className="w-full bg-white px-4 sm:px-10 md:px-20 lg:px-60">
-                  <Find editor={editor} setShowFind={setShowFind} />
-                </div>
-              </div>
+            <div ref={findRef} className="fixed" style={{ zIndex: 80 }}>
+              <Find editor={editor} setShowFind={setShowFind} />
             </div>
           )}
         </div>
+      </div>
 
+      <div
+        id="content"
+        className={`absolute inset-x-0 top-12 bottom-16 overflow-auto editor px-4 ${
+          wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
+        } text-black dark:text-[color:var(--selected-dark-text)]`}
+      >
         <div
           contentEditable
           onPaste={handleTitlePaste}
           suppressContentEditableWarning
-          onTouchStart={preventKeyboardToggle}
-          className={`text-3xl font-bold overflow-y-scroll outline-none ${
-            isPlatform("android") ? "mt-10 sm:pt-14" : "md:pt-14"
-          } ${isPlatform("ios") ? "mt-10 sm:pt-14" : "md:pt-14"}`}
+          onTouchStart={event?.preventDefault}
+          className={`text-3xl font-bold overflow-y-scroll outline-none`}
           onBlur={handleTitleChange}
-          onKeyDown={handleKeyDownTitle} // Add onKeyDown to handle Enter key
+          onKeyDown={handleKeyDownTitle}
           dangerouslySetInnerHTML={{ __html: note.title }}
-          ref={titleRef} // Attach ref to title field
+          ref={titleRef}
         />
         <div>
           <div className="py-2 h-full w-full" id="container">
             <EditorContent
-              onPaste={handlePaste}
               editor={editor}
-              onTouchStart={preventKeyboardToggle}
-              className="prose dark:text-neutral-100 max-w-none prose-indigo mb-12"
+              onTouchStart={event?.preventDefault}
+              className="prose dark:text-neutral-100 max-w-none prose-indigo mb-[5em]"
             />
           </div>
         </div>
+      </div>
 
-        <div className={`${focusMode ? "hidden" : "block"} sm:hidden`}>
-          <Drawer noteId={note.id} note={note} editor={editor} />
-        </div>
+      <div className="fixed bottom-0 left-0 right-0 sm:hidden print:hidden bg-white dark:bg-[#232222] z-50">
+        <Drawer noteId={note.id} note={note} editor={editor} />
       </div>
     </div>
   );
