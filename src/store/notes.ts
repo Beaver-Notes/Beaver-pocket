@@ -6,78 +6,7 @@ import {
 import React from "react";
 import { Note } from "./types";
 const STORAGE_PATH = "notes/data.json";
-const CHANGE_LOG_PATH = "notes/change-log.json";
-
-// Log Change
-export const logChange = async (
-  action: "created" | "updated" | "deleted",
-  paths: string[]
-) => {
-  try {
-    let logData = [];
-
-    // Load existing log data
-    try {
-      const existingLog = await Filesystem.readFile({
-        path: CHANGE_LOG_PATH,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-      logData = JSON.parse(existingLog.data as string);
-    } catch {
-      // If the log file doesn't exist, initialize with an empty array
-      logData = [];
-    }
-
-    if (action === "deleted") {
-      // Remove entries from the log for the given paths
-      logData = logData.filter(
-        (entry: any) => !paths.includes(entry.path)
-      );
-    } else {
-      // Ensure no duplicate entries in the log
-      const existingPaths = new Set(logData.map((entry: any) => entry.path));
-
-      // Add new log entries
-      paths.forEach((path) => {
-        if (!existingPaths.has(path)) {
-          logData.push({
-            action,
-            path,
-            timestamp: new Date().toISOString(),
-          });
-        }
-      });
-    }
-
-    // Write the updated log back to the file
-    await Filesystem.writeFile({
-      path: CHANGE_LOG_PATH,
-      data: JSON.stringify(logData),
-      directory: Directory.Data,
-      encoding: FilesystemEncoding.UTF8,
-    });
-  } catch (error) {
-    console.error("Error logging change:", error);
-  }
-};
-
-// Get changelog
-
-export const getChangeLogs = async (): Promise<
-  { action: string; path: string; timestamp: string }[]
-> => {
-  try {
-    const logFile = await Filesystem.readFile({
-      path: CHANGE_LOG_PATH,
-      directory: Directory.Data,
-      encoding: FilesystemEncoding.UTF8,
-    });
-    return JSON.parse(logFile.data as string);
-  } catch {
-    return []; // Return an empty array if no log exists
-  }
-};
+import { trackChange } from "../composable/sync";
 
 // Create Directory
 
@@ -198,8 +127,6 @@ export const useSaveNote = (
         if (typeof note === "object" && note !== null) {
           const typedNote = note as Note;
 
-          const isUpdate = !!notes[typedNote.id];
-
           const updatedNote: Note = {
             ...typedNote,
             createdAt:
@@ -228,30 +155,8 @@ export const useSaveNote = (
             encoding: FilesystemEncoding.UTF8,
           });
 
-          // Determine related paths for logging
-          const relatedPaths = [`${STORAGE_PATH}`];
-
-          // Check for the existence of related folders and add to paths
-          const fileAssetsPath = `file-assets/${typedNote.id}`;
-          const noteAssetsPath = `note-assets/${typedNote.id}`;
-          try {
-            await Filesystem.stat({
-              path: fileAssetsPath,
-              directory: Directory.Data,
-            });
-            relatedPaths.push(fileAssetsPath);
-          } catch {}
-
-          try {
-            await Filesystem.stat({
-              path: noteAssetsPath,
-              directory: Directory.Data,
-            });
-            relatedPaths.push(noteAssetsPath);
-          } catch {}
-
-          // Log the action
-          await logChange(isUpdate ? "updated" : "created", relatedPaths);
+          // Track the change for notes
+          await trackChange("notes", updatedNotes);
 
           // Update the state
           setNotesState(updatedNotes);
@@ -311,8 +216,10 @@ export const useDeleteNote = (
           encoding: FilesystemEncoding.UTF8,
         });
 
+        // Track the change for notes
+        await trackChange("notes", notes);
+
         // Log the deletion
-        await logChange("deleted", relatedPaths);
 
         setNotesState(notes);
       } catch (error) {
@@ -340,6 +247,7 @@ export const useToggleBookmark = () => {
       // Update the note in the dictionary
       notes[noteId] = updatedNote;
 
+      // Write to storage
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({ data: { notes } }),
@@ -347,7 +255,8 @@ export const useToggleBookmark = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      await logChange("updated", [`${STORAGE_PATH}`]);
+      // Track the change for notes
+      await trackChange("notes", notes);
 
       return notes; // Return the updated notes
     } catch (error) {
@@ -379,7 +288,8 @@ export const useToggleArchive = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      await logChange("updated", [`${STORAGE_PATH}`]);
+      // Track the change for notes
+      await trackChange("notes", notes);
 
       return notes; // Return the updated notes
     } catch (error) {

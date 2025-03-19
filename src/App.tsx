@@ -16,7 +16,6 @@ import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
 import Sync from "./components/Settings/sync";
 import Editor from "./Editor";
-import { useImportDav } from "./utils/Webdav/webDavUtil";
 import "./assets/css/main.css";
 import "./assets/css/fonts.css";
 import BottomNavBar from "./components/App/BottomNavBar";
@@ -30,16 +29,14 @@ import { isPlatform } from "@ionic/react";
 import Icons from "./components/Settings/icons";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
-import { useDropboxImport } from "./utils/Dropbox/DropboxUtil";
-import { useImportOneDrive } from "./utils/Onedrive/oneDriveUtil";
-import { useImportiCloud } from "./utils/iCloud/iCloudUtil";
-import { useDriveImport } from "./utils/Google Drive/GDriveUtil";
 import { StatusBar, Style } from "@capacitor/status-bar";
+import useDropboxSync from "./utils/Dropbox/DropboxSync";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
+  const { syncDropbox, syncState, progress } = useDropboxSync();
   const { notesState, setNotesState } = useNotesState();
   const [themeMode, setThemeMode] = useState<string>(
     localStorage.getItem("themeMode") || "auto"
@@ -52,7 +49,6 @@ const App: React.FC = () => {
     ).matches;
     return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
   });
-  // Effect to update the classList and localStorage when darkMode or themeMode changes
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
     localStorage.setItem("themeMode", themeMode);
@@ -82,6 +78,15 @@ const App: React.FC = () => {
     };
 
     loadNotesFromStorage();
+  });
+
+  document.addEventListener("sync", () => {
+    const syncValue = localStorage.getItem("sync");
+    if (syncValue === "dropbox") {
+      syncDropbox();
+      console.log(syncState);
+      console.log(progress);
+    }
   });
 
   document.addEventListener("notelink", (event: Event) => {
@@ -142,38 +147,6 @@ const App: React.FC = () => {
   }
 
   styleStatusBar(darkMode).catch(console.error);
-
-  const { handleImportData } = useImportDav(setNotesState);
-  const { importData: DropboxImport } = useDropboxImport(
-    darkMode,
-    setNotesState
-  );
-  const { importData: OneDriveImport } = useImportOneDrive(
-    darkMode,
-    setNotesState
-  );
-  const { importData: IcloudImport } = useImportiCloud(setNotesState);
-  const { importData: DriveImport } = useDriveImport(darkMode, setNotesState);
-
-  useEffect(() => {
-    const handleSync = () => {
-      const syncValue = localStorage.getItem("sync");
-
-      if (syncValue === "dropbox") {
-        DropboxImport();
-      } else if (syncValue === "webdav") {
-        handleImportData(); // now safely called
-      } else if (syncValue === "iCloud") {
-        IcloudImport();
-      } else if (syncValue === "googledrive") {
-        DriveImport();
-      } else if (syncValue === "onedrive") {
-        OneDriveImport();
-      }
-    };
-
-    handleSync();
-  }, []);
 
   const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
 

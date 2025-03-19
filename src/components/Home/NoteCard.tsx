@@ -23,11 +23,6 @@ import dayjs from "dayjs";
 import "dayjs/locale/en";
 import "dayjs/locale/de";
 import "dayjs/locale/zh-cn";
-import { useSyncDav } from "../../utils/Webdav/webDavUtil";
-import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
-import { useOnedriveSync } from "../../utils/Onedrive/oneDriveUtil";
-import { useExportiCloud } from "../../utils/iCloud/iCloudUtil";
-import { useDriveSync } from "../../utils/Google Drive/GDriveUtil";
 
 interface BookmarkedProps {
   note: Note;
@@ -48,13 +43,6 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   const { toggleArchive } = useToggleArchive();
   const { toggleBookmark } = useToggleBookmark();
   const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
-
-  //Sync
-  const { syncDropBox } = useDropboxSync();
-  const { syncDav } = useSyncDav();
-  const { syncOneDrive } = useOnedriveSync();
-  const { exportdata:SyncIcloud } = useExportiCloud();
-  const { syncGdrive } = useDriveSync();
 
   // Translations
   const [translations, setTranslations] = useState({
@@ -90,38 +78,11 @@ const NoteCard: React.FC<BookmarkedProps> = ({
     loadTranslations();
   }, []);
 
-  let timeoutId: any = null;
-
-  function SyncAction() {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
-    timeoutId = setTimeout(() => {
-      const syncValue = localStorage.getItem("sync");
-
-      if (syncValue === "dropbox") {
-        syncDropBox();
-      } else if (syncValue === "webdav") {
-        syncDav();
-      } else if (syncValue === "iCloud") {
-        SyncIcloud();
-      } else if (syncValue === "googledrive") {
-        syncGdrive();
-      } else if (syncValue === "onedrive") {
-        syncOneDrive();
-      }
-
-      timeoutId = null;
-    }, 5000);
-  }
-
   const handleToggleBookmark = async (
     noteId: string,
     event: React.MouseEvent
   ) => {
     event.stopPropagation();
-    SyncAction();
 
     try {
       const updatedNotes = await toggleBookmark(noteId);
@@ -136,7 +97,6 @@ const NoteCard: React.FC<BookmarkedProps> = ({
     event: React.MouseEvent
   ) => {
     event.stopPropagation();
-    SyncAction();
 
     try {
       const updatedNotes = await toggleArchive(noteId);
@@ -149,7 +109,6 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 
   const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    SyncAction();
     const isConfirmed = window.confirm(translations.card.confirmDelete);
 
     if (isConfirmed) {
@@ -169,7 +128,6 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    SyncAction();
 
     try {
       let password: string | null = null;

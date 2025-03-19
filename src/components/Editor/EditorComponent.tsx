@@ -19,12 +19,7 @@ import Mousetrap from "mousetrap";
 import mime from "mime";
 import { saveImageToFileSystem } from "../../utils/fileHandler";
 import { saveFileToFileSystem } from "../../utils/fileHandler";
-import { useSyncDav } from "../../utils/Webdav/webDavUtil";
-import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
 import { WebviewPrint } from "capacitor-webview-print";
-import { useOnedriveSync } from "../../utils/Onedrive/oneDriveUtil";
-import { useExportiCloud } from "../../utils/iCloud/iCloudUtil";
-import { useDriveSync } from "../../utils/Google Drive/GDriveUtil";
 
 type Props = {
   note: Note;
@@ -55,13 +50,6 @@ function EditorComponent({
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
   const [sortingOption] = useState("updatedAt");
-
-  //Sync
-  const { syncDropBox } = useDropboxSync();
-  const { syncDav } = useSyncDav();
-  const { syncOneDrive } = useOnedriveSync();
-  const { exportdata: SyncIcloud } = useExportiCloud();
-  const { syncGdrive } = useDriveSync();
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
@@ -155,40 +143,6 @@ function EditorComponent({
     }),
   ];
 
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
-
-  // Function to handle typing detection with throttling
-  const handleTyping = useCallback(() => {
-    // Reset the timeout if the user starts typing again within the limit
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    // Set the user as currently typing
-    if (!isTyping) {
-      setIsTyping(true);
-    }
-
-    // Start a new timeout to detect when typing has stopped
-    typingTimeoutRef.current = setTimeout(async () => {
-      setIsTyping(false);
-
-      const syncValue = localStorage.getItem("sync");
-      if (syncValue === "dropbox") {
-        syncDropBox();
-      } else if (syncValue === "webdav") {
-        syncDav();
-      } else if (syncValue === "iCloud") {
-        SyncIcloud();
-      } else if (syncValue === "googledrive") {
-        syncGdrive();
-      } else if (syncValue === "onedrive") {
-        syncOneDrive();
-      }
-    }, 4000); // Adjust timeout limit as needed
-  }, [isTyping]);
-
   const editor = useEditor(
     {
       extensions: exts,
@@ -198,9 +152,6 @@ function EditorComponent({
 
         // Handle note content change
         handleChangeNoteContent(editorContent || {}, title);
-
-        // Trigger typing detection
-        handleTyping();
 
         // Compare previous and current content
         if (previousContent) {
@@ -471,29 +422,7 @@ function EditorComponent({
   };
 
   const goBack = () => {
-    const syncValue = localStorage.getItem("sync");
-
-    try {
-      if (syncValue === "dropbox") {
-        const dropboxExport = new CustomEvent("dropboxExport");
-        document.dispatchEvent(dropboxExport);
-      } else if (syncValue === "webdav") {
-        syncDav();
-      } else if (syncValue === "iCloud") {
-        const iCloudExport = new CustomEvent("iCloudExport");
-        document.dispatchEvent(iCloudExport);
-      } else if (syncValue === "googledrive") {
-        const driveExport = new CustomEvent("driveExport");
-        document.dispatchEvent(driveExport);
-      } else if (syncValue === "onedrive") {
-        const onedriveExport = new CustomEvent("onedriveExport");
-        document.dispatchEvent(onedriveExport);
-      }
-    } catch (error) {
-      console.error("An error occurred during export:", error);
-    } finally {
-      navigate("/"); // Always navigate back, even if an error occurs
-    }
+    navigate("/");
   };
 
   function toggleFocusMode() {

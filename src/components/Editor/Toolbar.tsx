@@ -9,12 +9,7 @@ import AudioUploadComponent from "./AudioUpload";
 import VideoUploadComponent from "./VideoUpload";
 import { useNavigate } from "react-router-dom";
 import Mousetrap from "mousetrap";
-import { useSyncDav } from "../../utils/Webdav/webDavUtil";
 import Find from "./Find";
-import { useDropboxSync } from "../../utils/Dropbox/DropboxUtil";
-import { useOnedriveSync } from "../../utils/Onedrive/oneDriveUtil";
-import { useExportiCloud } from "../../utils/iCloud/iCloudUtil";
-import { useDriveSync } from "../../utils/Google Drive/GDriveUtil";
 
 interface ToolbarProps {
   note: Note;
@@ -56,13 +51,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const moreRef = useRef<HTMLButtonElement>(null);
   const moreDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-
-  //Sync
-  const { syncDropBox } = useDropboxSync();
-  const { syncDav } = useSyncDav();
-  const { syncOneDrive } = useOnedriveSync();
-  const { exportdata: SyncIcloud } = useExportiCloud();
-  const { syncGdrive } = useDriveSync();
 
   const [translations, setTranslations] = useState({
     editor: {
@@ -339,7 +327,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       ) {
         setDropdownOpen(false);
       }
-  
+
       if (
         moreDropdownRef.current &&
         !moreDropdownRef.current.contains(event.target as Node) &&
@@ -348,7 +336,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         setMoreOpen(false); // Reset or handle closing logic
       }
     };
-  
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -362,18 +350,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   const goBack = () => {
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      syncDropBox();
-    } else if (syncValue === "webdav") {
-      syncDav();
-    } else if (syncValue === "iCloud") {
-      SyncIcloud();
-    } else if (syncValue === "googledrive") {
-      syncGdrive();
-    } else if (syncValue === "onedrive") {
-      syncOneDrive();
-    }
     navigate("/");
   };
 
