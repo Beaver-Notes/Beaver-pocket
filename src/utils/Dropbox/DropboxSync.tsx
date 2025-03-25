@@ -121,7 +121,7 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
       const mergedNotes = mergeNotes(localNotes, remoteNotes);
 
       // Sync assets and collect logs
-      const assetSyncLogs = await syncDropboxAssets(dbx, SYNC_FOLDER_NAME);
+      const assetSyncLogs = await syncDropboxAssets(dbx, SYNC_FOLDER_NAME, accessToken);
 
       // Log asset sync results
       console.log("Asset Sync Results:", {
@@ -234,7 +234,8 @@ function mergeNotes(
 // Update syncDropboxAssets to handle note ID subfolders
 async function syncDropboxAssets(
   dbx: Dropbox,
-  syncFolderName: string
+  syncFolderName: string,
+  accessToken: string
 ): Promise<AssetSyncLog> {
   const assetTypes = [
     { local: "note-assets", remote: "assets" },
@@ -254,100 +255,250 @@ async function syncDropboxAssets(
     try {
       console.log(`Starting sync for ${assetType.local} assets`);
 
+      // Ensure local root folder exists
+      try {
+        await Filesystem.mkdir({
+          path: localRootPath,
+          directory: FilesystemDirectory.Data,
+          recursive: true,
+        });
+      } catch (error) {
+        console.log(
+          `Local root folder ${localRootPath} already exists or couldn't be created`
+        );
+      }
+
       // Ensure remote root folder exists
+      let remoteRootExists = true;
       try {
         await dbx.filesGetMetadata({ path: remoteRootPath });
       } catch (error: any) {
         if (error.status === 409) {
-          await dbx.filesCreateFolderV2({
-            path: remoteRootPath,
-            autorename: false,
-          });
+          // Folder doesn't exist, create it
+          try {
+            await dbx.filesCreateFolderV2({
+              path: remoteRootPath,
+              autorename: false,
+            });
+          } catch (e) {
+            console.error(
+              `Failed to create remote root folder: ${remoteRootPath}`,
+              e
+            );
+            remoteRootExists = false;
+          }
         } else {
-          throw error;
+          console.error(
+            `Error checking remote root folder: ${remoteRootPath}`,
+            error
+          );
+          remoteRootExists = false;
         }
       }
 
+      if (!remoteRootExists) {
+        console.error(
+          `Cannot proceed with sync for ${assetType.local} - remote folder issue`
+        );
+        continue; // Skip to next asset type
+      }
+
+      // Get list of note ID subfolders from Dropbox
+      let remoteSubfolders: string[] = [];
+      try {
+        const remoteFoldersResponse = await dbx.filesListFolder({
+          path: remoteRootPath,
+        });
+        remoteSubfolders = remoteFoldersResponse.result.entries
+          .filter((entry) => entry[".tag"] === "folder")
+          .map((entry) => entry.name);
+
+        console.log(
+          `Found ${remoteSubfolders.length} remote subfolders for ${
+            assetType.local
+          }: ${remoteSubfolders.join(", ")}`
+        );
+      } catch (error: any) {
+        console.error(
+          `Error listing remote folders in ${remoteRootPath}:`,
+          error
+        );
+        // Continue even with errors - we'll just use an empty array
+        remoteSubfolders = [];
+      }
+
       // Get list of note ID subfolders locally
-      let localSubfolders;
+      let localSubfolders: { files: { name: string }[] } = { files: [] };
       try {
         localSubfolders = await Filesystem.readdir({
           path: localRootPath,
           directory: FilesystemDirectory.Data,
         });
-      } catch {
-        localSubfolders = { files: [] };
+        console.log(
+          `Found ${localSubfolders.files.length} local subfolders for ${assetType.local}`
+        );
+      } catch (error) {
+        console.log(
+          `No local subfolders found for ${localRootPath} or directory doesn't exist`
+        );
+        // Continue with empty array
       }
 
-      for (const subfolder of localSubfolders.files) {
-        const noteId = subfolder.name;
+      // Convert localSubfolders.files to an array of folder names
+      const localFolderNames = localSubfolders.files.map((file) => file.name);
+
+      // Process all unique noteIds from both local and remote
+      const allNoteIds = [
+        ...new Set([...localFolderNames, ...remoteSubfolders]),
+      ];
+      console.log(
+        `Processing ${allNoteIds.length} unique note IDs for ${assetType.local}`
+      );
+
+      for (const noteId of allNoteIds) {
         const localFolderPath = `${localRootPath}/${noteId}`;
         const remoteFolderPath = `${remoteRootPath}/${noteId}`;
 
-        try {
-          // Ensure remote subfolder exists
-          try {
-            await dbx.filesGetMetadata({ path: remoteFolderPath });
-          } catch (error: any) {
-            if (error.status === 409) {
-              await dbx.filesCreateFolderV2({
-                path: remoteFolderPath,
-                autorename: false,
-              });
-            } else {
-              throw error;
-            }
-          }
+        console.log(`Processing note ID: ${noteId}`);
+        console.log(`Local path: ${localFolderPath}`);
+        console.log(`Remote path: ${remoteFolderPath}`);
 
-          // List local files in subfolder
-          let localFiles;
+        // Ensure local subfolder exists
+        if (!localFolderNames.includes(noteId)) {
+          console.log(`Creating missing local folder: ${localFolderPath}`);
           try {
-            localFiles = await Filesystem.readdir({
+            await Filesystem.mkdir({
               path: localFolderPath,
               directory: FilesystemDirectory.Data,
+              recursive: true,
             });
-          } catch {
-            localFiles = { files: [] };
+          } catch (error) {
+            console.error(
+              `Error creating local folder ${localFolderPath}:`,
+              error
+            );
+            // Continue anyway - the folder might already exist or be created during file writes
           }
+        }
 
-          // List remote files in subfolder
-          let remoteFiles: string[] = [];
+        // Check if remote subfolder exists and create if needed
+        let remoteSubfolderExists = remoteSubfolders.includes(noteId);
+        if (!remoteSubfolderExists) {
           try {
-            const remoteFilesResponse = await dbx.filesListFolder({
+            console.log(`Creating remote folder ${remoteFolderPath}`);
+            await dbx.filesCreateFolderV2({
               path: remoteFolderPath,
+              autorename: false,
             });
-            remoteFiles = remoteFilesResponse.result.entries
-              .filter((entry) => entry[".tag"] === "file")
-              .map((entry) => entry.name);
+            remoteSubfolderExists = true;
           } catch (error: any) {
-            if (error.status !== 409) throw error;
+            if (error.status === 409) {
+              // 409 means the folder already exists, which is fine
+              remoteSubfolderExists = true;
+            } else {
+              console.error(
+                `Error creating remote folder ${remoteFolderPath}:`,
+                error
+              );
+              // Continue anyway - we'll try to list files in case the folder exists but had another error
+            }
           }
+        }
 
-          // Download new files from Dropbox
+        // List local files in subfolder
+        let localFiles: { files: { name: string }[] } = { files: [] };
+        try {
+          localFiles = await Filesystem.readdir({
+            path: localFolderPath,
+            directory: FilesystemDirectory.Data,
+          });
+          console.log(
+            `Found ${localFiles.files.length} local files in ${localFolderPath}`
+          );
+        } catch (error) {
+          console.log(
+            `No local files found in ${localFolderPath} or directory doesn't exist yet`
+          );
+          // Continue with empty array
+        }
+
+        // List remote files in subfolder
+        let remoteFiles: string[] = [];
+        try {
+          const remoteFilesResponse = await dbx.filesListFolder({
+            path: remoteFolderPath,
+          });
+          remoteFiles = remoteFilesResponse.result.entries
+            .filter((entry) => entry[".tag"] === "file")
+            .map((entry) => entry.name);
+
+          console.log(
+            `Found ${
+              remoteFiles.length
+            } remote files in ${remoteFolderPath}: ${remoteFiles.join(", ")}`
+          );
+        } catch (error: any) {
+          // If status is 409, it means folder not found - we can skip
+          // Any other error, log it but try to continue
+          if (error.status !== 409) {
+            console.error(
+              `Error listing remote files for ${remoteFolderPath}:`,
+              error
+            );
+          } else {
+            console.log(`Remote folder ${remoteFolderPath} doesn't exist`);
+          }
+          // We'll continue with an empty array
+        }
+
+        // Download new files from Dropbox - only if we found remote files
+        if (remoteFiles.length > 0) {
           const filesToDownload = remoteFiles.filter(
             (file) =>
               !localFiles.files.some((localFile) => localFile.name === file)
           );
 
+          console.log(
+            `Need to download ${filesToDownload.length} files from ${remoteFolderPath}`
+          );
+
+          // Replace the existing download code block with this
           for (const file of filesToDownload) {
             const remoteFilePath = `${remoteFolderPath}/${file}`;
             const localFilePath = `${localFolderPath}/${file}`;
 
-            try {
-              const downloadResponse = await dbx.filesDownload({
-                path: remoteFilePath,
-              });
-              const fileBlob = (downloadResponse.result as any).fileBlob;
-              const fileBuffer = await fileBlob.arrayBuffer();
+            console.log(`Downloading ${remoteFilePath} to ${localFilePath}`);
+            alert(`Downloading ${remoteFilePath} to ${localFilePath}`);
 
-              await Filesystem.writeFile({
+            try {
+              // Ensure local directory exists before writing file
+              try {
+                await Filesystem.mkdir({
+                  path: localFolderPath,
+                  directory: FilesystemDirectory.Data,
+                  recursive: true,
+                });
+              } catch (e) {
+                // Ignore error if directory already exists
+              }
+
+              // Use direct API access with Filesystem.downloadFile
+              await Filesystem.downloadFile({
+                url: `https://content.dropboxapi.com/2/files/download`,
                 path: localFilePath,
-                data: fileBuffer,
                 directory: FilesystemDirectory.Data,
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Dropbox-API-Arg": JSON.stringify({ path: remoteFilePath }),
+                },
               });
 
               syncLog.downloaded.push(`${assetType.remote}/${noteId}/${file}`);
+              console.log(
+                `Successfully downloaded: ${assetType.remote}/${noteId}/${file}`
+              );
             } catch (error) {
+              console.error(`Error downloading ${remoteFilePath}:`, error);
               syncLog.errors.push({
                 file: `${assetType.remote}/${noteId}/${file}`,
                 error: error instanceof Error ? error.message : "Unknown error",
@@ -355,15 +506,23 @@ async function syncDropboxAssets(
               });
             }
           }
+        }
 
-          // Upload new local files to Dropbox
+        // Upload new local files to Dropbox - only if we have local files
+        if (localFiles.files.length > 0 && remoteSubfolderExists) {
           const filesToUpload = localFiles.files.filter(
             (localFile) => !remoteFiles.includes(localFile.name)
+          );
+
+          console.log(
+            `Need to upload ${filesToUpload.length} files to ${remoteFolderPath}`
           );
 
           for (const file of filesToUpload) {
             const localFilePath = `${localFolderPath}/${file.name}`;
             const remoteFilePath = `${remoteFolderPath}/${file.name}`;
+
+            console.log(`Uploading ${localFilePath} to ${remoteFilePath}`);
 
             try {
               const fileData = await Filesystem.readFile({
@@ -395,7 +554,11 @@ async function syncDropboxAssets(
               syncLog.uploaded.push(
                 `${assetType.local}/${noteId}/${file.name}`
               );
+              console.log(
+                `Successfully uploaded: ${assetType.local}/${noteId}/${file.name}`
+              );
             } catch (error) {
+              console.error(`Error uploading ${localFilePath}:`, error);
               syncLog.errors.push({
                 file: `${assetType.local}/${noteId}/${file.name}`,
                 error: error instanceof Error ? error.message : "Unknown error",
@@ -403,8 +566,6 @@ async function syncDropboxAssets(
               });
             }
           }
-        } catch (error) {
-          console.error(`Error syncing assets for note ${noteId}:`, error);
         }
       }
 

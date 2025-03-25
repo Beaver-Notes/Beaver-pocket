@@ -39,6 +39,7 @@
     "purple": "purple",
     "pink": "pink",
     "red": "red",
+    "gray": "gray",
     "subscript": "Subscript",
     "superscript": "Superscript",
     "link": "Link",
@@ -293,7 +294,7 @@
     "code": "Code Block",
     "table": "Table",
     "bulletList": "Bullet List",
-    "orderedList": "Ordered List",
+    "orderedlist": "Ordered List",
     "checklist": "Checklist",
     "blackCallout": "Black Callout",
     "blueCallout": "Blue Callout",
@@ -304,7 +305,9 @@
     "mathBlock": "Math Block",
     "mermaidBlock": "Mermaid Block",
     "embed": "Embed Block",
-    "drawingBlock": "Drawing Block"
+    "drawingBlock": "Drawing Block",
+    "textColor": "Text Color",
+    "highlighterColor": "Highlighter Color"
   },
   "tiptap": {
     "placeholder": "Write something... or type \"/\" for commands."

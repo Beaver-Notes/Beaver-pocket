@@ -107,7 +107,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
           <button
             onClick={triggerFileInput}
             className="flex items-center cursor-pointer"
-            aria-label={translations.menuItems.imageLabel}
+            aria-label={translations.menu.image}
           >
             {/* Icon */}
             <icons.ImageLineIcon
@@ -118,7 +118,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
             {/* Text Container */}
             <div className="flex flex-col text-left">
               <h3 className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]">
-                {translations.menuItems.imageLabel}
+                {translations.menu.image}
               </h3>
             </div>
           </button>
@@ -137,7 +137,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
         <div className="flex items-center justify-between p-1 rounded-md  bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
           <button
             onClick={triggerFileInput}
-            aria-label={translations.menuItems.imageLabel}
+            aria-label={translations.menu.image}
           >
             <icons.ImageLineIcon
               className="text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer"

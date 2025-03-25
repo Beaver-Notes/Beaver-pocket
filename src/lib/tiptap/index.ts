@@ -33,6 +33,8 @@ import MermaidDiagram from "./exts/mermaid-block";
 import labels from "./exts/labels";
 import markdownEngine from "./exts/markdown-engine";
 import { Paste } from "./exts/markdown-engine/paste";
+import TextStyle from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 
 // Callouts
 import {
@@ -69,7 +71,11 @@ const extensions = [
   Placeholder.configure({
     placeholder: translations.tiptap.placeholder,
   }),
-  Highlight,
+  Highlight.extend({ priority: 1000 }).configure({
+    multicolor: true,
+  }),
+  Color,
+  TextStyle,
   Underline,
   OrderedList,
   TaskList,

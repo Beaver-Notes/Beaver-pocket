@@ -60,21 +60,21 @@ const Toolbar: React.FC<ToolbarProps> = ({
       searchPage: "editor.searchPage",
       deleteTable: "editor.deleteTable",
     },
-    menuItems: {
-      paragraphLabel: "menuItems.paragraphLabel",
-      heading1Label: "menuItems.heading1Label",
-      heading2Label: "menuItems.heading2Label",
-      bulletListLabel: "menuItems.bulletListLabel",
-      orderedListLabel: "menuItems.orderedListLabel",
-      checklistLabel: "menuItems.checklistLabel",
-      quoteLabel: "menuItems.quoteLabel",
-      codeLabel: "menuItems.codeLabel",
-      embedLabel: "menuItems.embedLabel",
-      tableLabel: "menuItems.tableLabel",
-      drawLabel: "menuItems.drawLabel",
-      drawingBlockLabel: "menuItems.drawingBlockLabel",
-      imageLabel: "menuItems.imageLabel",
-      imageDescription: "menuItems.imageDescription",
+    menu: {
+      paragraphLabel: "menu.paragraphLabel",
+      heading1Label: "menu.heading1Label",
+      heading2Label: "menu.heading2Label",
+      bulletListLabel: "menu.bulletListLabel",
+      orderedListLabel: "menu.orderedListLabel",
+      checklistLabel: "menu.checklistLabel",
+      quoteLabel: "menu.quoteLabel",
+      codeLabel: "menu.codeLabel",
+      embedLabel: "menu.embedLabel",
+      tableLabel: "menu.tableLabel",
+      drawLabel: "menu.drawLabel",
+      drawingBlockLabel: "menu.drawingBlockLabel",
+      imageLabel: "menu.imageLabel",
+      imageDescription: "menu.imageDescription",
     },
     accessibility: {
       insertRowAfter: "accessibility.insertRowAfter",
@@ -355,7 +355,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   const draw = [
     {
-      label: translations.menuItems.drawLabel,
+      label: translations.menu.drawLabel,
       active: "paper",
       icon: <icons.Brush2Fill className="border-none text-xl w-7 h-7" />,
       action: (editor: any) => editor?.chain().focus().insertPaper().run(),
@@ -571,7 +571,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onMouseDown={handleMouseDown}
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                aria-label={translations.menuItems.bulletListLabel}
+                aria-label={translations.menu.bulletListLabel}
               >
                 <icons.ListUnorderedIcon className="border-none text-xl w-7 h-7" />
               </button>
@@ -585,7 +585,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 onClick={() =>
                   editor?.chain().focus().toggleOrderedList().run()
                 }
-                aria-label={translations.menuItems.orderedListLabel}
+                aria-label={translations.menu.orderedListLabel}
               >
                 <icons.ListOrderedIcon className="border-none text-xl w-7 h-7" />
               </button>
@@ -597,7 +597,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onMouseDown={handleMouseDown}
                 onClick={() => editor?.chain().focus().toggleTaskList().run()}
-                aria-label={translations.menuItems.bulletListLabel}
+                aria-label={translations.menu.bulletListLabel}
               >
                 <icons.ListCheck2Icon className="border-none text-xl w-7 h-7" />
               </button>
@@ -609,7 +609,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onMouseDown={handleMouseDown}
                 onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-                aria-label={translations.menuItems.quoteLabel}
+                aria-label={translations.menu.quoteLabel}
               >
                 <icons.DoubleQuotesLIcon className="border-none text-xl w-7 h-7" />
               </button>
@@ -621,7 +621,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onMouseDown={handleMouseDown}
                 onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-                aria-label={translations.menuItems.codeLabel}
+                aria-label={translations.menu.codeLabel}
               >
                 <icons.CodeBoxLineIcon className="border-none text-xl w-7 h-7" />
               </button>
@@ -669,7 +669,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 withHeaderRow: true,
               })
             }
-            aria-label={translations.menuItems.tableLabel}
+            aria-label={translations.menu.tableLabel}
           >
             <icons.Table2Icon className="border-none text-xl w-7 h-7" />
           </button>
@@ -708,7 +708,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   } cursor-pointer flex-1`}
                   onMouseDown={handleMouseDown}
                   onClick={handleAddIframe}
-                  aria-label={translations.menuItems.embedLabel}
+                  aria-label={translations.menu.embedLabel}
                 >
                   <icons.PagesLineIcon className="border-none text-xl w-7 h-7" />
                 </button>

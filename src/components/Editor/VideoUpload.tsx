@@ -94,7 +94,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
               }
             }}
             className="flex items-center"
-            aria-label={translations.menuItems.videoLabel} // Aria label for screen readers
+            aria-label={translations.menu.video} // Aria label for screen readers
           >
             {/* Icon */}
             <icons.VideoIcon
@@ -105,7 +105,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
             {/* Text Container */}
             <div className="flex flex-col text-left">
               <h3 className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]">
-                {translations.menuItems.videoLabel}
+                {translations.menu.video}
               </h3>
             </div>
           </button>
@@ -116,7 +116,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
             onChange={handleVideoInputChange}
             id="video-upload-input"
             className="hidden"
-            aria-label={translations.accessibility.uploadVideo} // Accessibility label for file input
+            aria-label={translations.menu.video}
           />
         </div>
       ) : (
@@ -130,7 +130,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
                 inputElement.click(); // Safely click the input element
               }
             }}
-            aria-label={translations.accessibility.uploadVideo} // Accessibility label for the button
+            aria-label={translations.menu.video}
           >
             <icons.VideoIcon
               className=" text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"
@@ -142,7 +142,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
             onChange={handleVideoInputChange}
             id="video-upload-input"
             className="hidden"
-            aria-label={translations.accessibility.uploadVideo} // Accessibility label for file input
+            aria-label={translations.menu.video}
           />
         </div>
       )}

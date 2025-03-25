@@ -108,18 +108,6 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
     }
   });
 
-  // catching note-link's emits
-
-  document.addEventListener("notelink", (event: Event) => {
-    const customEvent = event as CustomEvent;
-    const noteId = customEvent.detail.noteId;
-    if (notesState[noteId]) {
-      setActiveNoteId(noteId);
-    } else {
-      console.warn(`Note with ID ${noteId} does not exist.`);
-    }
-  });
-
   // catching file-embed's emits
 
   document.addEventListener("fileEmbedClick", async (event: Event) => {

@@ -86,36 +86,36 @@ const Commands: React.FC<SlashMenuProps> = ({
       embedUrl: "editorembedUrl",
     },
     menu: {
-      file: "menuItems.file",
-      image: "menuItems.image",
-      video: "menuItems.video",
-      paragraph: "menuItems.paragraph",
-      heading1: "menuItems.heading1",
-      heading2: "menuItems.heading2",
-      heading3: "menuItems.heading3",
-      heading4: "menuItems.heading4",
-      heading5: "menuItems.heading5",
-      heading6: "menuItems.heading6",
-      quote: "menuItems.quote",
-      code: "menuItems.code",
-      table: "menuItems.table",
-      bulletList: "menuItems.bulletList",
-      orderedList: "menuItems.orderedList",
-      checklist: "menuItems.checklist",
-      blackCallout: "menuItems.blackCallout",
-      blueCallout: "menuItems.blueCallout",
-      greenCallout: "menuItems.greenCallout",
-      purpleCallout: "menuItems.purpleCallout",
-      redCallout: "menuItems.redCallout",
-      yellowCallout: "menuItems.yellowCallout",
-      mathBlock: "menuItems.mathBlock",
-      mermaidBlock: "menuItems.mermaidBlock",
-      embed: "menuItems.embed",
-      drawingBlock: "menuItems.drawingBlock",
+      file: "menu.file",
+      image: "menu.image",
+      video: "menu.video",
+      paragraph: "menu.paragraph",
+      heading1: "menu.heading1",
+      heading2: "menu.heading2",
+      heading3: "menu.heading3",
+      heading4: "menu.heading4",
+      heading5: "menu.heading5",
+      heading6: "menu.heading6",
+      quote: "menu.quote",
+      code: "menu.code",
+      table: "menu.table",
+      bulletList: "menu.bulletList",
+      orderedList: "menu.orderedList",
+      checklist: "menu.checklist",
+      blackCallout: "menu.blackCallout",
+      blueCallout: "menu.blueCallout",
+      greenCallout: "menu.greenCallout",
+      purpleCallout: "menu.purpleCallout",
+      redCallout: "menu.redCallout",
+      yellowCallout: "menu.yellowCallout",
+      mathBlock: "menu.mathBlock",
+      mermaidBlock: "menu.mermaidBlock",
+      embed: "menu.embed",
+      drawingBlock: "menu.drawingBlock",
     },
   });
 
-  const menuItems = [
+  const menu = [
     {
       icon: icons.ParagraphIcon,
       label: translations.menu.paragraph,
@@ -312,8 +312,9 @@ const Commands: React.FC<SlashMenuProps> = ({
   ];
 
   // Filter menu items by query
-  const filteredMenuItems = menuItems.filter((item) =>
-    item.label.toLowerCase().includes(query.toLowerCase())
+  const filteredmenu = menu.filter(
+    (item) =>
+      item.label && item.label.toLowerCase().includes(query.toLowerCase())
   );
 
   // Check if the query matches partial words for the upload components
@@ -371,7 +372,7 @@ const Commands: React.FC<SlashMenuProps> = ({
 
   // Combine filtered menu items and upload components, respecting the 5-item limit
   const combinedItems = [
-    ...filteredMenuItems.map((item, index) => ({
+    ...filteredmenu.map((item, index) => ({
       component: (
         <button
           key={index}

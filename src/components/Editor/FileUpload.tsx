@@ -91,12 +91,12 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
       {menu ? (
         <div
           className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
-          aria-label={translations.menuItems?.fileLabel || "Upload File"}
+          aria-label={translations.menu.file || "Upload File"}
         >
           <label
             htmlFor="file-upload-input"
             className="flex items-center cursor-pointer"
-            aria-label={translations.menuItems?.fileLabel || "Upload a file"}
+            aria-label={translations.menu.file || "Upload a file"}
           >
             {/* Icon */}
             <icons.FileIcon
@@ -110,7 +110,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
                 className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]"
                 aria-hidden="true" // Hidden from screen readers
               >
-                {translations.menuItems?.fileLabel || "Upload File"}
+                {translations.menu.file || "Upload File"}
               </h3>
             </div>
           </label>
@@ -121,19 +121,17 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             onChange={handleFileChange}
             id="file-upload-input"
             className="hidden"
-            aria-label={
-              translations.accessibility?.fileUploadInput || "Upload a file"
-            } // Use fallback
+            aria-label={translations.menu.file || "Upload a file"} // Use fallback
           />
         </div>
       ) : (
         <div
           className="flex items-center justify-between p-1 rounded-md  bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
-          aria-label={translations.accessibility?.fileUpload || "Upload File"} // Use fallback
+          aria-label={translations.menu.file || "Upload File"} // Use fallback
         >
           <label
             htmlFor="file-upload-input"
-            aria-label={translations.menuItems?.fileLabel || "Upload File"} // Use fallback
+            aria-label={translations.menu.file || "Upload File"} // Use fallback
           >
             <icons.FileIcon
               className=" text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer"
@@ -145,9 +143,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             onChange={handleFileChange}
             id="file-upload-input"
             className="hidden"
-            aria-label={
-              translations.accessibility?.fileUploadInput || "Upload a file"
-            } // Use fallback
+            aria-label={translations.menu.file || "Upload a file"} // Use fallback
           />
         </div>
       )}

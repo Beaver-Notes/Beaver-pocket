@@ -3,7 +3,6 @@ import {
   Directory,
   Encoding as FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { useNavigate } from "react-router-dom";
 import { Share } from "@capacitor/share";
 import { Note } from "../store/types";
 
@@ -209,7 +208,6 @@ export const useImportBea = () => {
     fileContent: string // UTF-8 file content
   ) => {
     try {
-      const navigate = useNavigate();
       const parsedData = JSON.parse(fileContent);
 
       // Debug parsed data
@@ -325,8 +323,9 @@ export const useImportBea = () => {
       setNotesState(mergedNotes);
 
       // Trigger UI update
-      document.dispatchEvent(new Event("reload"));
-      navigate(`/editor/${parsedData.data.idteId}`);
+      const noteId = parsedData.data.id;
+      const event = new CustomEvent("notelink", { detail: { noteId } });
+      document.dispatchEvent(event);
     } catch (error) {
       console.error(error);
     }

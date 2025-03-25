@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import icons from "./lib/remixicon-react";
 import ReactDOM from "react-dom";
 import * as CryptoJS from "crypto-js";
-import ModularPrompt from "./components/UI/Dialog";
+import ModularPrompt from "./components/UI/Password";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";

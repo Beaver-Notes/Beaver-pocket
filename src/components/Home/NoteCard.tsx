@@ -2,7 +2,7 @@ import { Note } from "../../store/types";
 import Icons from "../../lib/remixicon-react";
 import { useNotesState } from "../../store/Activenote";
 import ReactDOM from "react-dom/client";
-import ModularPrompt from "../UI/Dialog";
+import ModularPrompt from "../UI/Password";
 import * as CryptoJS from "crypto-js";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { NativeBiometric } from "capacitor-native-biometric";

@@ -36,7 +36,7 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
-  const { syncDropbox, syncState, progress } = useDropboxSync();
+  const { syncDropbox } = useDropboxSync();
   const { notesState, setNotesState } = useNotesState();
   const [themeMode, setThemeMode] = useState<string>(
     localStorage.getItem("themeMode") || "auto"
@@ -84,8 +84,6 @@ const App: React.FC = () => {
     const syncValue = localStorage.getItem("sync");
     if (syncValue === "dropbox") {
       syncDropbox();
-      console.log(syncState);
-      console.log(progress);
     }
   });
 

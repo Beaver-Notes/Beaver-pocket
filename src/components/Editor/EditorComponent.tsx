@@ -446,7 +446,7 @@ function EditorComponent({
 
   return (
     <div
-      className="relative h-screen"
+      className="relative h-auto"
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
@@ -528,7 +528,7 @@ function EditorComponent({
 
       <div
         id="content"
-        className={`absolute inset-x-0 top-12 bottom-16 overflow-auto editor px-4 ${
+        className={`inset-x-0 top-12 bottom-16 overflow-auto editor px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
         } text-black dark:text-[color:var(--selected-dark-text)]`}
       >
@@ -554,7 +554,11 @@ function EditorComponent({
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 sm:hidden print:hidden bg-white dark:bg-[#232222] z-50">
+      <div
+        className={`fixed bottom-0 left-0 right-0 sm:hidden print:hidden bg-white dark:bg-[#232222] z-50 ${
+          focusMode ? "hidden" : "block"
+        }`}
+      >
         <Drawer noteId={note.id} note={note} editor={editor} />
       </div>
     </div>

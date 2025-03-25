@@ -46,7 +46,6 @@ export default Extension.create<EditorSuggestionProps>({
         render: () => {
           let popup: any;
           let root: any;
-          console.log("child component", this.options.translations);
 
           return {
             onStart: (props: any) => {

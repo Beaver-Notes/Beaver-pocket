@@ -3,17 +3,9 @@ import { AppIcon } from "@capacitor-community/app-icon";
 
 // Cute names associated with each icon
 const iconNames = [
-  { name: "AppIcon 1", cuteName: "Gift Yellow" },
-  { name: "AppIcon 2", cuteName: "Gift Green" },
-  { name: "AppIcon 3", cuteName: "Inspiration Dark" },
-  { name: "AppIcon 4", cuteName: "Inspiration Light" },
-  { name: "AppIcon 6", cuteName: "Rainbow" },
-  { name: "AppIcon 8", cuteName: "Rainbow Light" },
-  { name: "AppIcon 5", cuteName: "Rainbow Dark" },
-  { name: "AppIcon 7", cuteName: "Matte" },
-  { name: "AppIcon 9", cuteName: "Dev" },
-  { name: "AppIcon 10", cuteName: "Reindeer" },
-  { name: "AppIcon 11", cuteName: "Christmas " },
+  { name: "AppIcon 1", cuteName: "Classic" },
+  { name: "AppIcon 2", cuteName: "Dev" },
+  { name: "AppIcon 3", cuteName: "Matte" },
 ];
 
 const App: React.FC = () => {
