@@ -31,12 +31,14 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import useDropboxSync from "./utils/Dropbox/DropboxSync";
+import useiCloudSync from "./utils/iCloud/iCloudSync";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { syncDropbox } = useDropboxSync();
+  const { synciCloud } = useiCloudSync();
   const { notesState, setNotesState } = useNotesState();
   const [themeMode, setThemeMode] = useState<string>(
     localStorage.getItem("themeMode") || "auto"
@@ -84,6 +86,8 @@ const App: React.FC = () => {
     const syncValue = localStorage.getItem("sync");
     if (syncValue === "dropbox") {
       syncDropbox();
+    } else if (syncValue === "iCloud") {
+      synciCloud();
     }
   });
 
