@@ -450,7 +450,6 @@ function EditorComponent({
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
-      {/* Fixed Header */}
       <div>
         <Toolbar
           note={note}
@@ -471,9 +470,9 @@ function EditorComponent({
 
           <div className="flex">
             <button
-              aria-label="Open dialog"
               className="p-2 rounded-md text-white bg-transparent cursor-pointer"
               onClick={openDialog}
+              aria-label={translations.editor.share}
             >
               <Icons.ShareLineIcon className="border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
             </button>
@@ -490,6 +489,7 @@ function EditorComponent({
             <button
               className="p-2 rounded-md text-white bg-transparent cursor-pointer"
               onClick={toggleFocusMode}
+              aria-label={translations.editor.ReadingMode}
             >
               <Icons.FileArticleLine
                 className={`border-none ${
@@ -501,6 +501,29 @@ function EditorComponent({
             </button>
 
             <button
+              className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+              onClick={() => editor?.chain().focus().undo().run()}
+              aria-label={translations.editor.undo}
+            >
+              <Icons.ArrowGoBackLineIcon
+                className={`border-none ${
+                  focusMode ? "hidden" : "block"
+                } dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
+              />
+            </button>
+            <button
+              className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+              onClick={() => editor?.chain().focus().redo().run()}
+              aria-label={translations.editor.redo}
+            >
+              <Icons.ArrowGoForwardLineIcon
+                className={`border-none ${
+                  focusMode ? "hidden" : "block"
+                } dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
+              />
+            </button>
+
+            <button
               className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
               onClick={() => {
                 if (buttonRef.current) {
@@ -508,6 +531,7 @@ function EditorComponent({
                 }
               }}
               ref={buttonRef}
+              aria-label={translations.editor.searchPage}
             >
               <Icons.Search2LineIcon
                 className={`border-none ${
@@ -528,7 +552,7 @@ function EditorComponent({
 
       <div
         id="content"
-        className={`inset-x-0 top-12 bottom-16 overflow-auto editor px-4 ${
+        className={`inset-x-0 pt-4 sm:pt-16 bottom-16 overflow-auto editor px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
         } text-black dark:text-[color:var(--selected-dark-text)]`}
       >

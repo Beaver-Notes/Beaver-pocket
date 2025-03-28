@@ -276,8 +276,10 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
       pencil: "paperBlock.pencil",
       highlighter: "paperBlock.highlighter",
       eraser: "paperBlock.eraser",
-      undo: "paperBlock.undo",
-      redo: "paperBlock.redo",
+    },
+    editor: {
+      undo: "editor.undo",
+      redo: "editor.redo",
     },
     accessibility: {
       close: "accessibility.close",
@@ -419,7 +421,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           </div>
           <button
             onClick={undo}
-            aria-label={translations.paperBlock.undo}
+            aria-label={translations.editor.undo}
             onMouseDown={(e) => e.preventDefault()}
             className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
           >
@@ -428,7 +430,7 @@ const DrawMode = ({ onClose, updateAttributes, node }) => {
           <button
             onClick={redo}
             onMouseDown={(e) => e.preventDefault()}
-            aria-label={translations.paperBlock.redo}
+            aria-label={translations.editor.redo}
             className="flex items-center justify-center p-2 border border-gray-300 dark:border-neutral-600 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
           >
             <Icons.ArrowGoForwardLineIcon className="w-6 h-6" />

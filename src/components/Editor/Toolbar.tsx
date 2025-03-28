@@ -8,6 +8,7 @@ import FileUploadComponent from "./FileUpload";
 import AudioUploadComponent from "./AudioUpload";
 import VideoUploadComponent from "./VideoUpload";
 import { useNavigate } from "react-router-dom";
+import Popover from "../UI/Popover";
 import Mousetrap from "mousetrap";
 import Find from "./Find";
 
@@ -32,10 +33,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [isMoreOpen, setMoreOpen] = useState<boolean>(false);
   const [showFind, setShowFind] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<{
-    top: number;
-    left: number;
-  }>({ top: 0, left: 0 });
   const [morePosition, setMorePosition] = useState<{
     top: number;
     left: number;
@@ -59,22 +56,25 @@ const Toolbar: React.FC<ToolbarProps> = ({
       ReadingMode: "editor.ReadingMode",
       searchPage: "editor.searchPage",
       deleteTable: "editor.deleteTable",
+      undo: "editor.undo",
+      redo: "editor.redo",
     },
     menu: {
-      paragraphLabel: "menu.paragraphLabel",
-      heading1Label: "menu.heading1Label",
-      heading2Label: "menu.heading2Label",
-      bulletListLabel: "menu.bulletListLabel",
-      orderedListLabel: "menu.orderedListLabel",
-      checklistLabel: "menu.checklistLabel",
-      quoteLabel: "menu.quoteLabel",
-      codeLabel: "menu.codeLabel",
-      embedLabel: "menu.embedLabel",
-      tableLabel: "menu.tableLabel",
-      drawLabel: "menu.drawLabel",
-      drawingBlockLabel: "menu.drawingBlockLabel",
-      imageLabel: "menu.imageLabel",
+      paragraph: "menu.paragraph",
+      heading1: "menu.heading1",
+      heading2: "menu.heading2",
+      bulletList: "menu.bulletList",
+      orderedList: "menu.orderedList",
+      checklist: "menu.checklist",
+      quote: "menu.quote",
+      code: "menu.code",
+      embed: "menu.embed",
+      table: "menu.table",
+      drawingBlock: "menu.drawingBlock",
+      image: "menu.image",
       imageDescription: "menu.imageDescription",
+      textColor: "menu.textColor",
+      highlighterColor: "menu.highlighterColor",
     },
     accessibility: {
       insertRowAfter: "accessibility.insertRowAfter",
@@ -273,16 +273,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     };
   }, []);
 
-  const colors = [
-    "bg-orange-200 dark:bg-orange-40",
-    "bg-yellow-200 dark:bg-yellow-100",
-    "bg-green-200 dark:bg-green-100",
-    "bg-blue-200 dark:bg-blue-100",
-    "bg-purple-200 dark:bg-purple-100",
-    "bg-pink-200 dark:bg-pink-100",
-    "bg-red-200 dark:bg-red-100",
-  ];
-
   const colorsTranslations = [
     translations.accessibility.orange,
     translations.accessibility.yellow,
@@ -292,18 +282,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     translations.accessibility.pink,
     translations.accessibility.red,
   ];
-
-  // Toggle dropdown visibility
-  const toggleDropdown = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect(); // Get the button's position
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-      }); // Set dropdown position relative to button
-    }
-    setDropdownOpen(!isDropdownOpen);
-  };
 
   // Toggle dropdown visibility
   const toggleMore = () => {
@@ -343,19 +321,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
     };
   }, []);
 
-  // Handle setting highlight color
-  const setHighlightColor = (color: string) => {
-    editor?.chain().focus().setHighlight({ color }).run();
-    setDropdownOpen(false); // Close dropdown after color is selected
-  };
-
   const goBack = () => {
     navigate("/");
   };
 
   const draw = [
     {
-      label: translations.menu.drawLabel,
+      label: translations.menu.drawingBlock,
       active: "paper",
       icon: <icons.Brush2Fill className="border-none text-xl w-7 h-7" />,
       action: (editor: any) => editor?.chain().focus().insertPaper().run(),
@@ -369,6 +341,44 @@ const Toolbar: React.FC<ToolbarProps> = ({
       action: goBack,
     },
   ];
+
+  const highlighterColors = [
+    "bg-[#FFD56B]/60 dark:bg-[#996B1F]/50 dark:text-white", // Soft Orange-Yellow
+    "bg-[#FFF78A]/60 dark:bg-[#B8A233]/50 dark:text-white", // Yellow
+    "bg-[#C5F6C7]/60 dark:bg-[#5A9E5D]/50 dark:text-white", // Green
+    "bg-[#A7DBFA]/60 dark:bg-[#4785A3]/50 dark:text-white", // Blue
+    "bg-[#D7B5F7]/60 dark:bg-[#7E5A9A]/50 dark:text-white", // Purple
+    "bg-[#F9C3D8]/60 dark:bg-[#B15A79]/50 dark:text-white", // Pink
+    "bg-[#FF9E9E]/60 dark:bg-[#B04C4C]/50 dark:text-white", // Red
+    "bg-[#E0E0E0]/60 dark:bg-[#6B6B6B]/50 dark:text-white", // Gray
+  ];
+
+  const textColors = [
+    "#DC8D42", // Soft Orange
+    "#E3B324", // Warm Yellow
+    "#4CAF50", // Natural Green
+    "#3A8EE6", // Soft Blue
+    "#9B5EE6", // Muted Purple
+    "#E67EA4", // Pastel Pink
+    "#E75C5C", // Warm Red
+    "#A3A3A3", // Soft Gray
+  ];
+
+  const setHighlightColor = (color: string) => {
+    if (editor?.isActive("highlight", { color })) {
+      editor.commands.unsetHighlight();
+    } else {
+      editor?.chain().focus().setHighlight({ color }).run();
+    }
+  };
+
+  function setTextColor(color: string) {
+    if (editor?.isActive("textStyle", { color })) {
+      editor?.chain().focus().unsetColor().run();
+    } else {
+      editor?.commands.setColor(color);
+    }
+  }
 
   return (
     <div
@@ -441,52 +451,55 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <icons.StrikethroughIcon className="border-none text-xl w-7 h-7" />
           </button>
-          <button
-            ref={buttonRef}
-            className={
-              editor?.isActive("highlight")
-                ? "p-1 rounded-md text-primary hoverable cursor-pointer"
-                : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={toggleDropdown}
-            aria-label={translations.accessibility.highlight}
-          >
-            <icons.MarkPenLineIcon className="border-none text-xl w-7 h-7" />
-          </button>
-          {isDropdownOpen &&
-            createPortal(
-              <div
-                ref={dropdownRef}
-                className="absolute p-1 bg-white dark:bg-neutral-800 border dark:border-neutral-600 shadow-lg rounded-md grid grid-cols-4"
-                style={{
-                  top: dropdownPosition.top,
-                  left: dropdownPosition.left,
-                  zIndex: 1000,
-                }}
+          <Popover
+            placement="top"
+            trigger="click"
+            modelValue={false}
+            onShow={() => console.log("Popover opened")}
+            onClose={() => console.log("Popover closed")}
+            triggerContent={
+              <button
+                className={`p-1 ${
+                  editor?.isActive("highlight")
+                    ? "text-primary"
+                    : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                } cursor-pointer flex-1`}
               >
-                {/* Option to remove highlight */}
-                <button
-                  className={
-                    editor?.isActive("highlight")
-                      ? "rounded-md text-primary cursor-pointer"
-                      : "rounded-md bg-transparent cursor-pointer"
-                  }
-                  onClick={() => {
-                    editor?.chain().focus().unsetHighlight().run();
-                    setDropdownOpen(false); // Close dropdown after removing highlight
-                  }}
-                >
-                  <icons.CloseLineIcon
-                    className={
-                      editor?.isActive("highlight")
-                        ? "border-none text-primary text-xl w-7 h-7"
-                        : "border-none text-neutral-800 dark:dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7"
-                    }
-                  />
-                </button>
-                {/* Color options */}
-                {colors.map((color, index) => (
+                {" "}
+                <icons.MarkPenLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+              </button>
+            }
+          >
+            <div
+              role="menu"
+              aria-label={translations.accessibility.highlightOptions}
+            >
+              <p className="text-sm py-2">
+                {translations.menu.textColor || "Text Color"}
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {textColors.map((color, index) => (
+                  <button
+                    key={index}
+                    role="menuitem"
+                    aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
+                    className={`w-8 h-8 cursor-pointer rounded${color}`}
+                    onClick={() => {
+                      setTextColor(color);
+                    }}
+                  >
+                    <icons.fontColor
+                      className="border-none text-xl w-8 h-8 cursor-pointer"
+                      style={{ color: color }}
+                    />
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm py-2">
+                {translations.menu.highlighterColor || "Highlighter Color"}
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {highlighterColors.map((color, index) => (
                   <button
                     key={index}
                     role="menuitem"
@@ -494,19 +507,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
                     className={`w-8 h-8 cursor-pointer ${color}`}
                     onClick={() => {
                       setHighlightColor(color);
-                      setDropdownOpen(false);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        setHighlightColor(color);
-                        setDropdownOpen(false);
-                      }
                     }}
                   />
                 ))}
-              </div>,
-              document.body // Mount the dropdown in the document body
-            )}
+              </div>
+            </div>
+          </Popover>
           {isTableActive && !isTextSelected && (
             <>
               <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />{" "}
@@ -571,7 +577,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onMouseDown={handleMouseDown}
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                aria-label={translations.menu.bulletListLabel}
+                aria-label={translations.menu.bulletList}
               >
                 <icons.ListUnorderedIcon className="border-none text-xl w-7 h-7" />
               </button>
@@ -585,7 +591,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 onClick={() =>
                   editor?.chain().focus().toggleOrderedList().run()
                 }
-                aria-label={translations.menu.orderedListLabel}
+                aria-label={translations.menu.orderedList}
               >
                 <icons.ListOrderedIcon className="border-none text-xl w-7 h-7" />
               </button>
@@ -597,7 +603,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onMouseDown={handleMouseDown}
                 onClick={() => editor?.chain().focus().toggleTaskList().run()}
-                aria-label={translations.menu.bulletListLabel}
+                aria-label={translations.menu.bulletList}
               >
                 <icons.ListCheck2Icon className="border-none text-xl w-7 h-7" />
               </button>
@@ -609,7 +615,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onMouseDown={handleMouseDown}
                 onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-                aria-label={translations.menu.quoteLabel}
+                aria-label={translations.menu.quote}
               >
                 <icons.DoubleQuotesLIcon className="border-none text-xl w-7 h-7" />
               </button>
@@ -621,7 +627,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 }
                 onMouseDown={handleMouseDown}
                 onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-                aria-label={translations.menu.codeLabel}
+                aria-label={translations.menu.code}
               >
                 <icons.CodeBoxLineIcon className="border-none text-xl w-7 h-7" />
               </button>
@@ -669,7 +675,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 withHeaderRow: true,
               })
             }
-            aria-label={translations.menu.tableLabel}
+            aria-label={translations.menu.table}
           >
             <icons.Table2Icon className="border-none text-xl w-7 h-7" />
           </button>
@@ -708,7 +714,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   } cursor-pointer flex-1`}
                   onMouseDown={handleMouseDown}
                   onClick={handleAddIframe}
-                  aria-label={translations.menu.embedLabel}
+                  aria-label={translations.menu.embed}
                 >
                   <icons.PagesLineIcon className="border-none text-xl w-7 h-7" />
                 </button>
@@ -747,6 +753,22 @@ const Toolbar: React.FC<ToolbarProps> = ({
               aria-label={translations.editor.ReadingMode}
             >
               <icons.FileArticleLine className="border-none text-xl w-7 h-7" />
+            </button>
+            <button
+              className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().undo().run()}
+              aria-label={translations.editor.undo}
+            >
+              <icons.ArrowGoBackLineIcon className="border-none text-xl w-7 h-7" />
+            </button>
+            <button
+              className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().redo().run()}
+              aria-label={translations.editor.redo}
+            >
+              <icons.ArrowGoForwardLineIcon className="border-none text-xl w-7 h-7" />
             </button>
             {!isTableActive && !isTextSelected && (
               <button

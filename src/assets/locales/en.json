@@ -194,7 +194,9 @@
     "share": "Share",
     "searchPage": "Search Page",
     "ReadingMode": "Reading Mode",
-    "deleteTable": "Delete Table"
+    "deleteTable": "Delete Table",
+    "undo": "Undo",
+    "redo": "Redo"
   },
   "archive": {
     "archived": "Archived",

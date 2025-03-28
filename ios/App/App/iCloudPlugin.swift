@@ -164,26 +164,51 @@ public class iCloudPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    @objc func downloadFile(_ call: CAPPluginCall) {
-        guard let fileName = call.getString("fileName") else {
-            call.reject("File name missing")
-            return
-        }
-        guard let url = ubiquityURL?.appendingPathComponent(fileName) else {
-            call.reject("iCloud URL is nil")
-            return
-        }
+     @objc func downloadFile(_ call: CAPPluginCall) {
+         guard let fileName = call.getString("fileName") else {
+             call.reject("File name missing")
+             return
+         }
+         
+         guard let ubiquityURL = ubiquityURL else {
+             call.reject("iCloud is unavailable")
+             return
+         }
+         
+         let fileURL = ubiquityURL.appendingPathComponent(fileName)
 
-        do {
-            let data = try Data(contentsOf: url)
-            let base64Data = data.base64EncodedString()
-            print("Downloaded file from: \(url)")
-            call.resolve(["fileData": base64Data])
-        } catch {
-            print("Error downloading file: \(error.localizedDescription)")
-            call.reject("Failed to download file: \(error.localizedDescription)")
-        }
-    }
+         DispatchQueue.global(qos: .utility).async {
+             do {
+                 if self.fileManager.ubiquityIdentityToken == nil {
+                     DispatchQueue.main.async {
+                         call.reject("iCloud account is unavailable")
+                     }
+                     return
+                 }
+
+                 guard self.fileManager.fileExists(atPath: fileURL.path) else {
+                     DispatchQueue.main.async {
+                         call.reject("File does not exist at path: \(fileURL.path)")
+                     }
+                     return
+                 }
+
+                 let data = try Data(contentsOf: fileURL)
+                 let base64Data = data.base64EncodedString()
+
+                 print("Downloaded file from: \(fileURL)")
+
+                 DispatchQueue.main.async {
+                     call.resolve(["fileData": base64Data])
+                 }
+             } catch { 
+                 DispatchQueue.main.async {
+                     print("Error downloading file: \(error.localizedDescription)")
+                     call.reject("Failed to download file: \(error.localizedDescription)")
+                 }
+             }
+         }
+     }
 
     private func forceSync(url: URL) {
         do {

@@ -57,6 +57,49 @@ const useiCloudSync = (): iCloudSyncHooks => {
     remoteVersion: 0,
   });
 
+  // Reverse asset path transformations before upload
+  function revertAssetPaths(notes: Record<string, Note>): Record<string, Note> {
+    const updatedNotes: Record<string, Note> = JSON.parse(
+      JSON.stringify(notes)
+    ); // Deep copy to avoid mutation
+
+    for (const noteId in updatedNotes) {
+      const note = updatedNotes[noteId];
+
+      if (
+        note.content &&
+        typeof note.content === "object" &&
+        "content" in note.content
+      ) {
+        if (note.content.content) {
+          note.content.content = note.content.content.map((node: any) => {
+            if (node.type === "image" && node.attrs && node.attrs.src) {
+              node.attrs.src = node.attrs.src.replace(
+                new RegExp(`note-assets/${noteId}/`, "g"),
+                "assets://"
+              );
+            }
+            if (
+              (node.type === "fileEmbed" ||
+                node.type === "Audio" ||
+                node.type === "Video") &&
+              node.attrs &&
+              node.attrs.src
+            ) {
+              node.attrs.src = node.attrs.src.replace(
+                new RegExp(`file-assets/${noteId}/`, "g"),
+                "file-assets://"
+              );
+            }
+            return node;
+          });
+        }
+      }
+    }
+
+    return updatedNotes;
+  }
+
   const synciCloud = async () => {
     setSyncState((prev) => ({
       ...prev,
@@ -115,9 +158,12 @@ const useiCloudSync = (): iCloudSyncHooks => {
         encoding: FilesystemEncoding.UTF8,
       });
 
+      const cleanedNotes = revertAssetPaths(mergedNotes); // Revert paths before upload
+
       const base64Data = base64Encode(
-        JSON.stringify({ data: { notes: mergedNotes } })
+        JSON.stringify({ data: { notes: cleanedNotes } })
       );
+
       await iCloud.uploadFile({
         fileName: `${SYNC_FOLDER_NAME}/data.json`,
         fileData: base64Data,
@@ -412,9 +458,6 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
             const remoteFilePath = `${remoteFolderPath}/${file}`;
             const localFilePath = `${localFolderPath}/${file}`;
 
-            console.log(`Downloading ${remoteFilePath} to ${localFilePath}`);
-            alert(`Downloading ${remoteFilePath} to ${localFilePath}`);
-
             try {
               try {
                 await Filesystem.mkdir({
@@ -475,10 +518,9 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
                 directory: Directory.Data,
               });
 
-              const fileType =
-                mime.getType(file.name);
+              const fileType = mime.getType(file.name);
               console.log(fileType);
-              
+
               await iCloud.uploadFile({
                 fileName: remoteFilePath,
                 fileData: String(fileData),

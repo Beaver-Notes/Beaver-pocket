@@ -53,6 +53,49 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
   });
   const [progress, setProgress] = useState(0);
 
+  // Reverse asset path transformations before uploading
+  function revertAssetPaths(notes: Record<string, Note>): Record<string, Note> {
+    const updatedNotes: Record<string, Note> = JSON.parse(
+      JSON.stringify(notes)
+    ); // Deep copy to avoid mutation
+
+    for (const noteId in updatedNotes) {
+      const note = updatedNotes[noteId];
+
+      if (
+        note.content &&
+        typeof note.content === "object" &&
+        "content" in note.content
+      ) {
+        if (note.content.content) {
+          note.content.content = note.content.content.map((node: any) => {
+            if (node.type === "image" && node.attrs && node.attrs.src) {
+              node.attrs.src = node.attrs.src.replace(
+                new RegExp(`note-assets/${noteId}/`, "g"),
+                "assets://"
+              );
+            }
+            if (
+              (node.type === "fileEmbed" ||
+                node.type === "Audio" ||
+                node.type === "Video") &&
+              node.attrs &&
+              node.attrs.src
+            ) {
+              node.attrs.src = node.attrs.src.replace(
+                new RegExp(`file-assets/${noteId}/`, "g"),
+                "file-assets://"
+              );
+            }
+            return node;
+          });
+        }
+      }
+    }
+
+    return updatedNotes;
+  }
+
   const syncDropbox = async () => {
     const { checkTokenExpiration, accessToken } = await useDropbox();
     setSyncState((prev) => ({
@@ -121,7 +164,11 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
       const mergedNotes = mergeNotes(localNotes, remoteNotes);
 
       // Sync assets and collect logs
-      const assetSyncLogs = await syncDropboxAssets(dbx, SYNC_FOLDER_NAME, accessToken);
+      const assetSyncLogs = await syncDropboxAssets(
+        dbx,
+        SYNC_FOLDER_NAME,
+        accessToken
+      );
 
       // Log asset sync results
       console.log("Asset Sync Results:", {
@@ -141,10 +188,12 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      // Upload merged data to Dropbox
+      // Reverse paths before uploading
+      const cleanedNotes = revertAssetPaths(mergedNotes);
+
       await dbx.filesUpload({
         path: `/${SYNC_FOLDER_NAME}/data.json`,
-        contents: JSON.stringify({ data: { notes: mergedNotes } }),
+        contents: JSON.stringify({ data: { notes: cleanedNotes } }),
         mode: { ".tag": "overwrite" },
       });
 
@@ -466,9 +515,6 @@ async function syncDropboxAssets(
           for (const file of filesToDownload) {
             const remoteFilePath = `${remoteFolderPath}/${file}`;
             const localFilePath = `${localFolderPath}/${file}`;
-
-            console.log(`Downloading ${remoteFilePath} to ${localFilePath}`);
-            alert(`Downloading ${remoteFilePath} to ${localFilePath}`);
 
             try {
               // Ensure local directory exists before writing file
