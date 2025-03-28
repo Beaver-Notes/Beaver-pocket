@@ -547,7 +547,6 @@ function EditorComponent({
           <div className="py-2 h-full w-full" id="container">
             <EditorContent
               editor={editor}
-              onTouchStart={event?.preventDefault}
               className="prose dark:text-neutral-100 max-w-none prose-indigo mb-[5em]"
             />
           </div>

@@ -60,29 +60,47 @@ public class iCloudPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    @objc func uploadFile(_ call: CAPPluginCall) {
-        guard let fileName = call.getString("fileName"), let fileData = call.getString("fileData") else {
-            call.reject("File name or data missing")
-            return
-        }
-        guard let url = ubiquityURL?.appendingPathComponent(fileName) else {
-            call.reject("iCloud URL is nil")
-            return
-        }
+     @objc func uploadFile(_ call: CAPPluginCall) {
+         guard let fileName = call.getString("fileName"), let fileData = call.getString("fileData") else {
+             call.reject("File name or data missing")
+             return
+         }
+         
+         guard let ubiquityURL = ubiquityURL else {
+             call.reject("iCloud is unavailable")
+             return
+         }
+         
+         guard let data = Data(base64Encoded: fileData) else {
+             call.reject("Invalid base64 data")
+             return
+         }
 
-        do {
-            guard let data = Data(base64Encoded: fileData) else {
-                call.reject("Invalid base64 data")
-                return
-            }
-            print("Uploading file to: \(url)")
-            try data.write(to: url)
-            call.resolve(["success": true])
-        } catch {
-            print("Error uploading file: \(error.localizedDescription)")
-            call.reject("Failed to upload file: \(error.localizedDescription)")
-        }
-    }
+         let destinationURL = ubiquityURL.appendingPathComponent(fileName)
+
+         DispatchQueue.global(qos: .utility).async {
+             do {
+                 if self.fileManager.ubiquityIdentityToken == nil {
+                     DispatchQueue.main.async {
+                         call.reject("iCloud account is unavailable")
+                     }
+                     return
+                 }
+
+                 print("Uploading file to: \(destinationURL)")
+                 try data.write(to: destinationURL, options: .atomic)
+
+                 DispatchQueue.main.async {
+                     call.resolve(["success": true])
+                 }
+             } catch {
+                 DispatchQueue.main.async {
+                     print("Error uploading file: \(error.localizedDescription)")
+                     call.reject("Failed to upload file: \(error.localizedDescription)")
+                 }
+             }
+         }
+     }
 
     @objc func checkFolderExists(_ call: CAPPluginCall) {
         guard let folderName = call.getString("folderName") else {

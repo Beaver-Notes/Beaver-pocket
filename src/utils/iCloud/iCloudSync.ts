@@ -476,13 +476,12 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
               });
 
               const fileType =
-                mime.getType(file.name) || "application/octet-stream";
-              const blob = base64ToBlob(String(fileData), String(fileType));
-              const base64FileData = await blobToBase64(blob);
-
+                mime.getType(file.name);
+              console.log(fileType);
+              
               await iCloud.uploadFile({
                 fileName: remoteFilePath,
-                fileData: base64FileData,
+                fileData: String(fileData),
               });
 
               syncLog.uploaded.push(
