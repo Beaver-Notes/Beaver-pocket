@@ -32,6 +32,7 @@ import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import useDropboxSync from "./utils/Dropbox/DropboxSync";
 import useiCloudSync from "./utils/iCloud/iCloudSync";
+import useOneDriveSync from "./utils/Onedrive/oneDriveSync";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ const App: React.FC = () => {
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { syncDropbox } = useDropboxSync();
   const { synciCloud } = useiCloudSync();
+  const { syncOneDrive } = useOneDriveSync();
   const { notesState, setNotesState } = useNotesState();
   const [themeMode, setThemeMode] = useState<string>(
     localStorage.getItem("themeMode") || "auto"
@@ -88,6 +90,8 @@ const App: React.FC = () => {
       syncDropbox();
     } else if (syncValue === "iCloud") {
       synciCloud();
+    } else if (syncValue === "onedrive") {
+      syncOneDrive();
     }
   });
 
