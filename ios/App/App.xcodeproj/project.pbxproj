@@ -18,6 +18,7 @@
 		AB18EA262C7D002400CCCCFC /* iCloudPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB18EA252C7D002400CCCCFC /* iCloudPlugin.swift */; };
 		AB18EA282C7D00E800CCCCFC /* MyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB18EA272C7D00E800CCCCFC /* MyViewController.swift */; };
 		AB2445C52D061EBC0047BA3E /* share.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AB2445BB2D061EBC0047BA3E /* share.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AB4EE7C12DA5303100B73431 /* WebDAVPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4EE7C02DA5302F00B73431 /* WebDAVPlugin.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 		AB18EA252C7D002400CCCCFC /* iCloudPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iCloudPlugin.swift; sourceTree = "<group>"; };
 		AB18EA272C7D00E800CCCCFC /* MyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyViewController.swift; sourceTree = "<group>"; };
 		AB2445BB2D061EBC0047BA3E /* share.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = share.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB4EE7C02DA5302F00B73431 /* WebDAVPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebDAVPlugin.swift; sourceTree = "<group>"; };
 		AB9760032C7D10AC007D098E /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				AB4EE7C02DA5302F00B73431 /* WebDAVPlugin.swift */,
 				AB18EA252C7D002400CCCCFC /* iCloudPlugin.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -290,8 +293,12 @@
 			);
 			inputFileListPaths = (
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -306,6 +313,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB18EA262C7D002400CCCCFC /* iCloudPlugin.swift in Sources */,
+				AB4EE7C12DA5303100B73431 /* WebDAVPlugin.swift in Sources */,
 				AB18EA282C7D00E800CCCCFC /* MyViewController.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 			);

@@ -7,7 +7,7 @@ import Toolbar from "./Toolbar";
 import Drawer from "./Drawer";
 import Find from "./Find";
 import "../../assets/css/editor.css";
-import extensions from "../../lib/tiptap/index";
+import { extensions } from "../../lib/tiptap/index";
 import Commands from "../../lib/tiptap/exts/commands";
 import NoteLinkExtension from "../../lib/tiptap/exts/suggestions/NoteLinkSuggestion";
 import NoteLabelSuggestion from "../../lib/tiptap/exts/suggestions/NoteLabelSuggestion";

@@ -1,6 +1,5 @@
-import { isPlatform } from "@ionic/react";
 import axios, { AxiosRequestConfig } from "axios";
-import WebDAV from "../Android/androidDavApi";
+import WebDAV from "./WebDAVPlugin";
 
 interface WebDavOptions {
   baseUrl: string;
@@ -39,56 +38,29 @@ export class WebDavService {
   }
 
   async createFolder(folderPath: string): Promise<void> {
-    if (isPlatform("android")) {
-      try {
-        await WebDAV.createFolder({
-          url: `${this.options.baseUrl}/${folderPath}`,
-          username: this.options.username,
-          password: this.options.password,
-        });
-      } catch (error) {
-        alert(`Failed to create folder on Android: ${error}`); // Display error message
-        throw new Error(`Failed to create folder on Android: ${error}`);
-      }
-    } else {
-      try {
-        const config = await this.createRequestConfig();
-        await axios.request({
-          method: "MKCOL",
-          url: `${this.options.baseUrl}/${folderPath}`,
-          headers: config.headers,
-        });
-      } catch (error) {
-        alert(`Failed to create folder at ${folderPath}: ${error}`); // Error alert
-        throw new Error(`Failed to create folder at ${folderPath}: ${error}`);
-      }
+    try {
+      await WebDAV.createFolder({
+        url: `${this.options.baseUrl}/${folderPath}`,
+        username: this.options.username,
+        password: this.options.password,
+      });
+      console.log(`${this.options.baseUrl}/${folderPath}`);
+    } catch (error) {
+      alert(`Failed to create folder on Android: ${error}`); // Display error message
+      throw new Error(`Failed to create folder on Android: ${error}`);
     }
   }
 
   async folderExists(path: string): Promise<boolean> {
-    if (isPlatform("android")) {
-      try {
-        await WebDAV.checkFolderExists({
-          url: `${this.options.baseUrl}/${path}`,
-          username: this.options.username,
-          password: this.options.password,
-        });
-        return true;
-      } catch (error) {
-        return false; // If an error occurs, assume the folder doesn't exist
-      }
-    } else {
-      try {
-        const config = await this.createRequestConfig();
-        const response = await axios.get(
-          `${this.options.baseUrl}/${path}`,
-          config
-        );
-        return response.status !== 404;
-      } catch (error) {
-        alert(`Folder does not exist at ${path}`); // Error message
-        return false;
-      }
+    try {
+      await WebDAV.checkFolderExists({
+        url: `${this.options.baseUrl}/${path}`,
+        username: this.options.username,
+        password: this.options.password,
+      });
+      return true;
+    } catch (error) {
+      return false; // If an error occurs, assume the folder doesn't exist
     }
   }
 
@@ -116,50 +88,17 @@ export class WebDavService {
     }
   }
 
-  async getDirectoryContent(path: string): Promise<any> {
-    if (isPlatform("android")) {
-      try {
-        // Make the call to WebDAV to get directory contents as raw XML
-        const result = await WebDAV.listContents({
-          url: `${this.options.baseUrl}/${path}`,
-          username: this.options.username,
-          password: this.options.password,
-        });
-        return result.data;
-      } catch (error) {
-        console.error("Error getting directory contents on Android:", error);
-        throw new Error(`Failed to get directory content on Android: ${error}`);
-      }
-    } else {
-      try {
-        const config = await this.createRequestConfig();
-        const requestBody = `
-          <propfind xmlns="DAV:">
-            <prop>
-              <getlastmodified xmlns="DAV:"/>
-              <getcontentlength xmlns="DAV:"/>
-              <executable xmlns="http://apache.org/dav/props/"/>
-              <resourcetype xmlns="DAV:"/>
-            </prop>
-          </propfind>`;
-        const headers = {
-          ...config.headers,
-          "Content-Type": "application/xml",
-          Accept: "application/xml",
-          Depth: "infinity",
-        };
-        const response = await axios.request({
-          method: "PROPFIND",
-          url: `${this.options.baseUrl}/${path}`,
-          data: requestBody,
-          headers,
-        });
-        return response.data;
-      } catch (error: any) {
-        throw new Error(
-          `Failed to get content of directory at ${path}: ${error.message}`
-        );
-      }
+  async getDirectoryContent(path: string): Promise<any[]> {
+    try {
+      const result = await WebDAV.listContents({
+        url: `${this.options.baseUrl}/${path}`,
+        username: this.options.username,
+        password: this.options.password,
+      });
+      return JSON.parse(result.data);
+    } catch (error) {
+      console.error("Error getting directory contents on Android:", error);
+      throw new Error(`Failed to get directory content on Android: ${error}`);
     }
   }
 }

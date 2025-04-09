@@ -33,10 +33,11 @@ import MermaidDiagram from "./exts/mermaid-block";
 import labels from "./exts/labels";
 import markdownEngine from "./exts/markdown-engine";
 import { Paste } from "./exts/markdown-engine/paste";
-import TextStyle from '@tiptap/extension-text-style';
-import { Color } from '@tiptap/extension-color';
-
-// Callouts
+import TextStyle from "@tiptap/extension-text-style";
+import { Color } from "@tiptap/extension-color";
+import Footnote from './exts/footnote-block/footnote';
+import Footnotes from './exts/footnote-block/footnotes';
+import FootnoteReference from './exts/footnote-block/reference';
 import {
   blackCallout,
   blueCallout,
@@ -49,9 +50,6 @@ import {
 // Languages
 import enTranslations from "../../assets/locales/en.json";
 import deTranslations from "../../assets/locales/de.json";
-import Footnote from "./exts/footnote-block/footnote";
-import Footnotes from "./exts/footnote-block/footnotes";
-import FootnoteReference from "./exts/footnote-block/reference";
 
 let translations: any = enTranslations;
 
@@ -64,7 +62,8 @@ if (selectedLanguage === "de") {
 
 const extensions = [
   Document.extend({
-    content: "block+ footnotes?",
+    content: "block+ (footnotes)?",
+    allowGapCursor: true,
   }),
   CodeBlock,
   StarterKit,
@@ -127,14 +126,14 @@ const extensions = [
   Audio,
   Subscript,
   Superscript,
-  Footnote,
   Footnotes,
-  Paper,
   FootnoteReference,
+  Footnote,
+  Paper,
   Video,
   markdownEngine,
   Paste,
   Image,
 ];
 
-export default extensions;
+export { extensions };

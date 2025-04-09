@@ -1,4 +1,12 @@
 import { useState } from "react";
+import { WebDavService } from "./webDavApi";
+import {
+  Directory,
+  Filesystem,
+  FilesystemDirectory,
+  FilesystemEncoding,
+} from "@capacitor/filesystem";
+import { Note } from "../../store/types";
 import {
   base64Encode,
   base64ToBlob,
@@ -6,15 +14,7 @@ import {
   blobToString,
 } from "../base64";
 import mime from "mime";
-import iCloud from "./iCloud";
-import {
-  Directory,
-  Filesystem,
-  FilesystemDirectory,
-  FilesystemEncoding,
-} from "@capacitor/filesystem";
 import { mergeNotes, revertAssetPaths } from "../merge";
-import { Note } from "../../store/types";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -24,12 +24,11 @@ interface SyncState {
   remoteVersion: number;
 }
 
-interface iCloudSyncHooks {
-  synciCloud: () => Promise<void>;
+interface WebDAVSyncHookReturn {
+  syncWebDAV: () => Promise<void>;
   syncState: SyncState;
   progress: number;
 }
-
 
 interface AssetSyncLog {
   downloaded: string[];
@@ -44,8 +43,8 @@ interface AssetSyncLog {
 const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useiCloudSync = (): iCloudSyncHooks => {
-  const [progress, setProgress] = useState(0);
+const useWebDAVSync = (): WebDAVSyncHookReturn => {
+  const [progress, setProgress] = useState<number>(0);
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
     syncError: null,
@@ -53,16 +52,26 @@ const useiCloudSync = (): iCloudSyncHooks => {
     localVersion: 0,
     remoteVersion: 0,
   });
+  
+  // Move these hooks to the top level
+  const baseUrl = localStorage.getItem("baseUrl") || "";
+  const username = localStorage.getItem("username") || "";
+  const password = localStorage.getItem("password") || "";
+  const webDavService = new WebDavService({ baseUrl, username, password });
 
-  const synciCloud = async () => {
+  const syncWebDAV = async () => {
+    alert("Function started"); // Debug alert
+    
     setSyncState((prev) => ({
       ...prev,
       syncInProgress: true,
       syncError: null,
     }));
     setProgress(0);
+
     try {
-      await iCloud.createFolder({ folderName: `${SYNC_FOLDER_NAME}` });
+      await webDavService.createFolder(`${SYNC_FOLDER_NAME}`);
+      alert("Sync folder created or already exists");
 
       let localData: { data?: { notes?: Record<string, Note> } } = {};
       try {
@@ -78,15 +87,18 @@ const useiCloudSync = (): iCloudSyncHooks => {
 
       let remoteData: { data?: { notes?: Record<string, Note> } } = {};
       try {
-        const { fileData: base64Data } = await iCloud.downloadFile({
-          fileName: `${SYNC_FOLDER_NAME}/data.json`,
-        });
-        const fileBlob = base64ToBlob(base64Data, "application/json");
+        const fileData = await webDavService.get(
+          `${SYNC_FOLDER_NAME}/data.json`
+        );
+        const fileBlob = base64ToBlob(fileData, "application/json");
         const fileString = await blobToString(fileBlob);
         remoteData = JSON.parse(fileString);
       } catch {
         // No remote data, use empty object
       }
+
+      alert(localData);
+      alert(remoteData);
 
       setProgress(20);
 
@@ -94,7 +106,10 @@ const useiCloudSync = (): iCloudSyncHooks => {
       const remoteNotes = remoteData.data?.notes || {};
       const mergedNotes = mergeNotes(localNotes, remoteNotes);
 
-      const assetSyncLogs = await synciCloudAssets(SYNC_FOLDER_NAME);
+      const assetSyncLogs = await syncWebDAVAssets(
+        SYNC_FOLDER_NAME,
+        webDavService
+      );
 
       console.log("Asset Sync Results:", {
         downloaded: assetSyncLogs.downloaded.length,
@@ -112,16 +127,13 @@ const useiCloudSync = (): iCloudSyncHooks => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      const cleanedNotes = revertAssetPaths(mergedNotes); // Revert paths before upload
+      const cleanedNotes = revertAssetPaths(mergedNotes);
 
       const base64Data = base64Encode(
         JSON.stringify({ data: { notes: cleanedNotes } })
       );
 
-      await iCloud.uploadFile({
-        fileName: `${SYNC_FOLDER_NAME}/data.json`,
-        fileData: base64Data,
-      });
+      await webDavService.upload(`${SYNC_FOLDER_NAME}/data.json`, base64Data);
 
       setSyncState((prev) => ({
         ...prev,
@@ -143,14 +155,17 @@ const useiCloudSync = (): iCloudSyncHooks => {
     }
   };
 
-  return { synciCloud, syncState, progress };
+  return { syncWebDAV, syncState, progress };
 };
 
-async function getFolderMetadata(folderPath: string) {
+async function getFolderMetadata(
+  folderPath: string,
+  webDavService: WebDavService
+) {
   try {
-    const response = await iCloud.checkFolderExists({ folderName: folderPath });
+    const response = await webDavService.folderExists(folderPath);
 
-    if (response.exists) {
+    if (response) {
       return { exists: true, path: folderPath, type: "directory" };
     } else {
       return { exists: false };
@@ -161,7 +176,10 @@ async function getFolderMetadata(folderPath: string) {
   }
 }
 
-async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
+async function syncWebDAVAssets(
+  syncFolderName: string,
+  webDavService: WebDavService
+): Promise<AssetSyncLog> {
   const assetTypes = [
     { local: "note-assets", remote: "assets" },
     { local: "file-assets", remote: "file-assets" },
@@ -194,15 +212,15 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
 
       let remoteRootExists = true;
       try {
-        const metadata = await getFolderMetadata(remoteRootPath);
+        const metadata = await getFolderMetadata(remoteRootPath, webDavService);
         if (!metadata.exists) {
           console.log(`Creating missing folder: ${remoteRootPath}`);
-          await iCloud.createFolder({ folderName: remoteRootPath });
+          await webDavService.createFolder(remoteRootPath);
         }
         console.log(`Remote root folder ${remoteRootPath} exists`);
       } catch (error) {
         try {
-          await iCloud.createFolder({ folderName: remoteRootPath });
+          await webDavService.createFolder(remoteRootPath);
         } catch (error) {
           console.error(
             `Error creating remote root folder ${remoteRootPath}:`,
@@ -221,10 +239,10 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
 
       let remoteSubfolders: string[] = [];
       try {
-        const remoteFolderResponse = await iCloud.listContents({
-          folderName: remoteRootPath,
-        });
-        remoteSubfolders = remoteFolderResponse.files
+        const remoteFolderResponse = await webDavService.getDirectoryContent(
+          remoteRootPath
+        );
+        remoteSubfolders = remoteFolderResponse
           .filter((file) => file.type === "directory")
           .map((file) => file.name);
 
@@ -290,7 +308,7 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
         if (!remoteSubfolderExists) {
           try {
             console.log(`Creating remote folder ${remoteFolderPath}`);
-            await iCloud.createFolder({ folderName: remoteFolderPath });
+            await webDavService.createFolder(remoteFolderPath);
             remoteSubfolderExists = true;
           } catch (error: any) {
             if (error.status === 409) {
@@ -323,10 +341,10 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
 
         let remoteFiles: string[] = [];
         try {
-          const remoteFilesResponse = await iCloud.listContents({
-            folderName: remoteFolderPath,
-          });
-          remoteFiles = remoteFilesResponse.files
+          const remoteFilesResponse = await webDavService.getDirectoryContent(
+            remoteFolderPath
+          );
+          remoteFiles = remoteFilesResponse
             .filter((file) => file.type === "file")
             .map((file) => file.name);
 
@@ -362,11 +380,9 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
                 });
               } catch (e) {}
 
-              const { fileData: base64FileData } = await iCloud.downloadFile({
-                fileName: remoteFilePath,
-              });
+              const fileData = await webDavService.get(remoteFilePath);
               const fileBlob = base64ToBlob(
-                base64FileData,
+                fileData,
                 mime.getType(remoteFilePath) as string
               );
               const fileBase64String = await blobToBase64(fileBlob);
@@ -416,10 +432,7 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
               const fileType = mime.getType(file.name);
               console.log(fileType);
 
-              await iCloud.uploadFile({
-                fileName: remoteFilePath,
-                fileData: String(fileData),
-              });
+              await webDavService.upload(remoteFilePath, String(fileData));
 
               syncLog.uploaded.push(
                 `${assetType.local}/${noteId}/${file.name}`
@@ -448,4 +461,4 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
   return syncLog;
 }
 
-export default useiCloudSync;
+export default useWebDAVSync;

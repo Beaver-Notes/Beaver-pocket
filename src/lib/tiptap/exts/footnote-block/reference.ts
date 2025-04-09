@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { NodeSelection, Plugin, PluginKey } from "@tiptap/pm/state";
 import { v4 as uuid } from "uuid";
 
 const REFNUM_ATTR = "data-reference-number";
@@ -83,13 +83,27 @@ const FootnoteReference = Node.create({
         key: new PluginKey("footnoteRefClick"),
 
         props: {
-          // click the footnote to scroll to it
+          // on double-click, focus on the footnote
           // @ts-ignore
-          handleClickOn(view, pos, node, nodePos, event) {
+          handleDoubleClickOn(view, pos, node, nodePos, event) {
             if (node.type.name != "footnoteReference") return false;
             event.preventDefault();
             const id = node.attrs["data-id"];
             return editor.commands.focusFootnote(id);
+          },
+          // click the footnote reference once to get focus, click twice to scroll to the footnote
+          // @ts-ignore
+          handleClickOn(view, pos, node, nodePos, event) {
+            if (node.type.name != "footnoteReference") return false;
+            event.preventDefault();
+            const { selection } = editor.state.tr;
+            if (selection instanceof NodeSelection && selection.node.eq(node)) {
+              const id = node.attrs["data-id"];
+              return editor.commands.focusFootnote(id);
+            } else {
+              editor.chain().setNodeSelection(nodePos).run();
+              return true;
+            }
           },
 
           // Handle paste events

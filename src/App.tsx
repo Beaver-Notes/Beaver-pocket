@@ -33,6 +33,7 @@ import { StatusBar, Style } from "@capacitor/status-bar";
 import useDropboxSync from "./utils/Dropbox/DropboxSync";
 import useiCloudSync from "./utils/iCloud/iCloudSync";
 import useOneDriveSync from "./utils/Onedrive/oneDriveSync";
+import useWebDAVSync from "./utils/Webdav/webDavSync";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const App: React.FC = () => {
   const { syncDropbox } = useDropboxSync();
   const { synciCloud } = useiCloudSync();
   const { syncOneDrive } = useOneDriveSync();
+  const { syncWebDAV } = useWebDAVSync();
   const { notesState, setNotesState } = useNotesState();
   const [themeMode, setThemeMode] = useState<string>(
     localStorage.getItem("themeMode") || "auto"
@@ -92,6 +94,8 @@ const App: React.FC = () => {
       synciCloud();
     } else if (syncValue === "onedrive") {
       syncOneDrive();
+    } else if (syncValue === "webdav") {
+      syncWebDAV();
     }
   });
 
