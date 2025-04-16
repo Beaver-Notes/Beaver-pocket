@@ -16,7 +16,7 @@ import {
   Filesystem,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { JSONContent } from "@tiptap/react";
 import dayjs from "dayjs";
@@ -362,13 +362,14 @@ const NoteCard: React.FC<BookmarkedProps> = ({
                 <div className="flex flex-col gap-1 overflow-hidden">
                   <div className="flex flex-wrap gap-1">
                     {note.labels.map((label) => (
-                      <span
+                      <Link
+                        to={`/?label=${label}`}
                         key={label}
                         className="text-primary text-opacity-100 px-1 py-0.5 rounded-md"
                         aria-label={`Label: ${label}`}
                       >
                         #{label}
-                      </span>
+                      </Link>
                     ))}
                   </div>
                 </div>

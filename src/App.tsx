@@ -79,7 +79,7 @@ const App: React.FC = () => {
 
   document.addEventListener("reload", () => {
     const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
+      const notes = await (await loadNotes()).notes;
       setNotesState(notes);
     };
 
@@ -99,12 +99,6 @@ const App: React.FC = () => {
     }
   });
 
-  document.addEventListener("notelink", (event: Event) => {
-    const customEvent = event as CustomEvent;
-    const noteId = customEvent.detail.noteId;
-    navigate(`/editor/${noteId}`);
-  });
-
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -116,7 +110,7 @@ const App: React.FC = () => {
         setStoreRemotePath(Capacitor.convertFileSrc(uri));
 
         // Load notes from storage
-        const notes = await loadNotes();
+        const notes = (await loadNotes()).notes;
         setNotesState(notes);
       } catch (error) {
         console.error("Error initializing data:", error);

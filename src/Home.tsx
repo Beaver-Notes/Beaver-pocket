@@ -88,10 +88,6 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
     }
   });
 
-  const uniqueLabels = Array.from(
-    new Set(Object.values(notesState).flatMap((note) => note.labels))
-  );
-
   const handleLabelFilterChange = (selectedLabel: string) => {
     setSelectedLabel(selectedLabel); // This updates the label filter
   };
@@ -202,13 +198,21 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
               .then((content) => {
                 if (typeof content.data === "string") {
                   // Safe to use as a string
-                  importUtils(setNotesState, loadNotes, content.data);
+                  importUtils(
+                    setNotesState,
+                    async () => (await loadNotes()).notes,
+                    content.data
+                  );
                 } else if (content.data instanceof Blob) {
                   // Convert Blob to a string
                   const reader = new FileReader();
                   reader.onload = (event) => {
                     const textContent = event.target?.result as string;
-                    importUtils(setNotesState, loadNotes, textContent);
+                    importUtils(
+                      setNotesState,
+                      async () => (await loadNotes()).notes,
+                      textContent
+                    );
                   };
                   reader.onerror = (error) => {
                     console.error("Error reading Blob content:", error);
@@ -261,7 +265,6 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
               setSearchQuery={setSearchQuery}
               handleLabelFilterChange={handleLabelFilterChange}
               setSortingOption={setSortingOption}
-              uniqueLabels={uniqueLabels}
             />
             <div className="py-2 p-2 mx-4 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
               {notesList.filter((note) => note.isBookmarked && !note.isArchived)
@@ -275,6 +278,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
                   .filter((note) => note.isBookmarked && !note.isArchived)
                   .map((note) => (
                     <NoteCard
+                      key={note.id}
                       note={note}
                       setNotesState={setNotesState}
                       notesState={notesState}
@@ -303,6 +307,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
                   .filter((note) => !note.isBookmarked && !note.isArchived)
                   .map((note) => (
                     <NoteCard
+                      key={note.id}
                       note={note}
                       setNotesState={setNotesState}
                       notesState={notesState}

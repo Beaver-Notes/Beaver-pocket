@@ -2,7 +2,7 @@ import { Extension } from "@tiptap/core";
 import Suggestion from "@tiptap/suggestion";
 import tippy from "tippy.js";
 import { createRoot } from "react-dom/client";
-import NoteLabels from "../../../../components/Editor/BubblemenuLabel"; // Adjust the path accordingly
+import NoteLabels from "../../../../components/Editor/BubblemenuLabel";
 import { PluginKey } from "prosemirror-state";
 
 interface LabelSuggestionOptions {
@@ -17,7 +17,7 @@ export default Extension.create<LabelSuggestionOptions>({
       uniqueLabels: [],
       handleAddLabel: () => {},
       suggestion: {
-        char: "#", // Trigger character for suggestions
+        char: "#",
         pluginKey: new PluginKey("label"),
       },
     };
@@ -28,16 +28,11 @@ export default Extension.create<LabelSuggestionOptions>({
       Suggestion({
         editor: this.editor,
         pluginKey: new PluginKey("label-suggestion"),
-        char: "#", // Listening for the '#' character
+        char: "#",
         items: ({ query }) => {
           console.log("Suggestion items called with query:", query);
           const queryText = query.startsWith("@@") ? query.slice(2) : query;
 
-          // Debugging: Check the availability of uniqueLabels
-          console.log("Unique Labels:", this.options.uniqueLabels);
-          console.log("Query Text:", queryText);
-
-          // Ensure uniqueLabels is an array and filter it
           const filteredLabels = (
             Array.isArray(this.options.uniqueLabels)
               ? this.options.uniqueLabels
@@ -50,13 +45,9 @@ export default Extension.create<LabelSuggestionOptions>({
             )
             .slice(0, 5);
 
-          // Debugging: Log the filtered results
-          console.log("Filtered labels:", filteredLabels);
-
           return filteredLabels;
         },
         command: ({ editor, range, props }) => {
-          alert(range);
           editor?.chain().focus().deleteRange(range).run();
           editor?.commands.insertContent(
             `<noteLabel id="${props}" label="${props}"></noteLabel>`
@@ -70,9 +61,6 @@ export default Extension.create<LabelSuggestionOptions>({
 
           return {
             onStart: (props: any) => {
-              console.log("Render onStart called with props:", props);
-
-              // Create and configure the Tippy.js popup
               popup = tippy("body", {
                 getReferenceClientRect: props.clientRect,
                 appendTo: () => document.body,
@@ -80,13 +68,12 @@ export default Extension.create<LabelSuggestionOptions>({
                   const element = document.createElement("div");
                   root = createRoot(element);
 
-                  // Render the NoteLabels component with the current query and unique labels
                   root.render(
                     <NoteLabels
                       uniqueLabels={this.options.uniqueLabels}
                       onClickLabel={(label) => {
-                        props.command(label); // Insert the selected label
-                        popup[0].hide(); // Hide the suggestion popup
+                        props.command(label);
+                        popup[0].hide();
                       }}
                       textAfterHash={props.query}
                     />
@@ -101,16 +88,13 @@ export default Extension.create<LabelSuggestionOptions>({
               });
             },
             onUpdate: (props: any) => {
-              console.log("Render onUpdate called with props:", props);
-
               if (root) {
-                // Update the NoteLabels component when the props change
                 root.render(
                   <NoteLabels
                     uniqueLabels={this.options.uniqueLabels}
                     onClickLabel={(label) => {
-                      props.command(label); // Insert the selected label
-                      popup[0].hide(); // Hide the suggestion popup
+                      props.command(label);
+                      popup[0].hide();
                     }}
                     textAfterHash={props.query}
                   />
@@ -118,19 +102,17 @@ export default Extension.create<LabelSuggestionOptions>({
               }
             },
             onKeyDown: (props: any) => {
-              console.log("Render onKeyDown called with props:", props);
               if (props.event.key === "Escape") {
-                popup[0].hide(); // Hide the popup on Escape key
+                popup[0].hide();
                 return true;
               }
               return false;
             },
             onExit: () => {
-              console.log("Render onExit called");
               if (root) {
-                root.unmount(); // Unmount the React component
+                root.unmount();
               }
-              popup[0].destroy(); // Destroy the Tippy.js instance
+              popup[0].destroy();
             },
           };
         },

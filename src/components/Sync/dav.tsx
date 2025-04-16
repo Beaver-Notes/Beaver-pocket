@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { WebDavService } from "../../utils/Webdav/webDavApi";
-import { useExportDav, useImportDav } from "../../utils/Webdav/webDavUtil";
 import icons from "../../lib/remixicon-react";
-import CircularProgress from "../UI/ProgressBar";
 import { Note } from "../../store/types";
 
 interface WebdavProps {
@@ -10,7 +8,7 @@ interface WebdavProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
+const Webdav: React.FC<WebdavProps> = () => {
   // Correctly destructuring props
   const [baseUrl, setBaseUrl] = useState<string>(
     () => localStorage.getItem("baseUrl") || ""
@@ -85,17 +83,6 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
     }
   };
 
-  const {
-    exportdata,
-    progress: exportProgress,
-    progressColor: exportProgressColor,
-  } = useExportDav();
-  const {
-    handleImportData,
-    progress: importProgress,
-    progressColor: importProgressColor,
-  } = useImportDav(setNotesState);
-
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
     return storedSync === "webdav";
@@ -157,24 +144,6 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
               >
                 {translations.webdav.title || "-"}
               </p>
-              <div className="flex justify-center items-center">
-                <CircularProgress
-                  progress={importProgress || exportProgress}
-                  color={importProgressColor || exportProgressColor}
-                  size={144}
-                  strokeWidth={8}
-                >
-                  {importProgress || exportProgress ? (
-                    <span className="text-primary text-xl font-semibold">
-                      {importProgress || exportProgress}%
-                    </span>
-                  ) : (
-                    <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
-                      <icons.ServerLineIcon className="w-32 h-32 text-neutral-800 dark:text-neutral-200 p-3" />
-                    </div>
-                  )}
-                </CircularProgress>
-              </div>
               <input
                 type="text"
                 className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-primary focus:border-primary focus:outline-none focus:border-secondary border-2 p-2 rounded-xl pr-10"
@@ -222,20 +191,6 @@ const Webdav: React.FC<WebdavProps> = ({ setNotesState }) => {
                 aria-label={translations.webdav.login}
               >
                 {translations.webdav.login || "-"}
-              </button>
-              <button
-                className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
-                onClick={exportdata}
-                aria-label={translations.webdav.export}
-              >
-                {translations.webdav.export || "-"}
-              </button>
-              <button
-                className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
-                onClick={handleImportData}
-                aria-label={translations.webdav.import}
-              >
-                {translations.webdav.import || "-"}
               </button>
               <div className="flex items-center py-2 justify-between">
                 <div>

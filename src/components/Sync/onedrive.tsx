@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plugins } from "@capacitor/core";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import icons from "../../lib/remixicon-react";
-import CircularProgress from "../UI/ProgressBar";
 import { Note } from "../../store/types";
-import {
-  useExport,
-  useImportOneDrive,
-} from "../../utils/Onedrive/oneDriveUtil";
 
 const { MsAuthPlugin } = Plugins;
 
@@ -15,7 +9,7 @@ interface OneDriveProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
+const OneDriveAuth: React.FC<OneDriveProps> = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -174,18 +168,6 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
     setAutoSync(!autoSync);
   };
 
-  const {
-    exportData,
-    progress: exportProgress,
-    progressColor: exportProgressColor,
-  } = useExport(darkMode);
-
-  const {
-    importData,
-    progress: importProgress,
-    progressColor: importProgressColor,
-  } = useImportOneDrive(darkMode, setNotesState);
-
   return (
     <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
@@ -198,22 +180,6 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
               {translations.onedrive.title || "-"}
             </p>
             <div className="flex justify-center items-center">
-              <CircularProgress
-                progress={importProgress || exportProgress}
-                color={importProgressColor || exportProgressColor}
-                size={144}
-                strokeWidth={8}
-              >
-                {importProgress || exportProgress ? (
-                  <span className="text-primary text-xl font-semibold">
-                    {importProgress || exportProgress}%
-                  </span>
-                ) : (
-                  <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
-                    <icons.OneDrive className="w-32 h-32 text-neutral-800 dark:text-neutral-200 p-1" />
-                  </div>
-                )}
-              </CircularProgress>
             </div>
           </div>
         </div>
@@ -222,25 +188,6 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ setNotesState }) => {
             <section>
               <div className="flex flex-col">
                 <div className="space-y-2">
-                  <button
-                    className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
-                    onClick={importData}
-                    aria-label={
-                      translations.onedrive.import ||
-                      "Import data from OneDrive"
-                    }
-                  >
-                    {translations.onedrive.import || "-"}
-                  </button>
-                  <button
-                    className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
-                    onClick={exportData}
-                    aria-label={
-                      translations.onedrive.export || "Export data to OneDrive"
-                    }
-                  >
-                    {translations.onedrive.export || "-"}
-                  </button>
                   <button
                     className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                     onClick={logout}

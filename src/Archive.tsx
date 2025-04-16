@@ -69,10 +69,6 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
     }
   });
 
-  const uniqueLabels = Array.from(
-    new Set(Object.values(notesState).flatMap((note) => note.labels))
-  );
-
   const handleLabelFilterChange = (selectedLabel: string) => {
     setSelectedLabel(selectedLabel); // This updates the label filter
   };
@@ -119,7 +115,6 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
                 setSearchQuery={setSearchQuery}
                 handleLabelFilterChange={handleLabelFilterChange}
                 setSortingOption={handleLabelFilterChange}
-                uniqueLabels={uniqueLabels}
               />
               <div className="py-2 p-2 mx-4 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
                 <h2 className="text-3xl font-bold">
@@ -144,6 +139,7 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
                     .filter((note) => note.isArchived)
                     .map((note) => (
                       <NoteCard
+                        key={note.id}
                         note={note}
                         setNotesState={setNotesState}
                         notesState={notesState}

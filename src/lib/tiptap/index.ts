@@ -22,7 +22,7 @@ import TableRow from "@tiptap/extension-table-row";
 import BulletList from "@tiptap/extension-bullet-list";
 import MathInline from "./exts/math-inline";
 import { NoteLabel } from "./exts/NoteLabel";
-import { LinkNote } from "./exts/note-link";
+import { linkNote } from "./exts/note-link";
 import FileEmbed from "./exts/file-block";
 import SearchAndReplace from "@sereneinserenade/tiptap-search-and-replace";
 import Mathblock from "./exts/math-block/Index";
@@ -35,9 +35,9 @@ import markdownEngine from "./exts/markdown-engine";
 import { Paste } from "./exts/markdown-engine/paste";
 import TextStyle from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
-import Footnote from './exts/footnote-block/footnote';
-import Footnotes from './exts/footnote-block/footnotes';
-import FootnoteReference from './exts/footnote-block/reference';
+import Footnote from "./exts/footnote-block/footnote";
+import Footnotes from "./exts/footnote-block/footnotes";
+import FootnoteReference from "./exts/footnote-block/reference";
 import {
   blackCallout,
   blueCallout,
@@ -61,12 +61,12 @@ if (selectedLanguage === "de") {
 }
 
 const extensions = [
+  StarterKit,
   Document.extend({
     content: "block+ (footnotes)?",
     allowGapCursor: true,
   }),
   CodeBlock,
-  StarterKit,
   Placeholder.configure({
     placeholder: translations.tiptap.placeholder,
   }),
@@ -81,24 +81,13 @@ const extensions = [
   TaskItem.configure({
     nested: true,
   }),
-  Link.extend({
-    addAttributes() {
-      return {
-        ...this.parent?.(),
-        href: {
-          default: null,
-          parseHTML: (element) => {
-            let href = element.getAttribute("href");
-            if (href && !href.startsWith("http")) {
-              href = `https://${href}`; // Auto-fix missing "https://"
-            }
-            return href;
-          },
-          renderHTML: (attributes) => {
-            return attributes.href ? { href: attributes.href } : {};
-          },
-        },
-      };
+  Link.configure({
+    openOnClick: false,
+    protocols: ['http', 'https', 'mailto', 'note'],
+    HTMLAttributes: {
+      target: "_blank",
+      rel: "noopener noreferrer nofollow",
+      "tiptap-url": "true",
     },
   }),
   Text,
@@ -110,7 +99,7 @@ const extensions = [
   BulletList,
   MathInline,
   NoteLabel,
-  LinkNote,
+  linkNote,
   FileEmbed,
   SearchAndReplace,
   Mathblock,

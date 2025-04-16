@@ -5,7 +5,7 @@ import {
   FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { Note } from "../../store/types";
-import { useDropbox } from "./DropboxUtil";
+import { useDropbox } from "./DropboxApi";
 import { useState } from "react";
 import { base64ToBlob } from "../../utils/base64";
 import mime from "mime";

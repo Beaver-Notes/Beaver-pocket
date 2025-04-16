@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "../../store/types";
 import { Browser } from "@capacitor/browser";
-import CircularProgress from "../UI/ProgressBar";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import icons from "../../lib/remixicon-react";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
-import {
-  useExport,
-  useDropboxImport,
-} from "../../utils/Dropbox/DropboxUtil";
 
 interface DropboxProps {
   notesState: Record<string, Note>;
@@ -18,7 +12,7 @@ interface DropboxProps {
   themeMode: any;
 }
 
-const DropboxSync: React.FC<DropboxProps> = ({ setNotesState, darkMode }) => {
+const DropboxSync: React.FC<DropboxProps> = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [authorizationCode, setAuthorizationCode] = useState<string>("");
@@ -40,18 +34,6 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState, darkMode }) => {
       existingFolder: "sync.existingFolder",
     }
   });
-
-  const {
-    exportdata,
-    progress: exportProgress,
-    progressColor: exportProgressColor,
-  } = useExport(darkMode, translations);
-
-  const {
-    importData,
-    progress: importProgress,
-    progressColor: importProgressColor,
-  } = useDropboxImport(darkMode, setNotesState);
 
   useEffect(() => {
     // Load translations
@@ -300,22 +282,6 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState, darkMode }) => {
               {translations.dropbox.title || "-"}
             </p>
             <div className="flex justify-center items-center">
-              <CircularProgress
-                progress={importProgress || exportProgress}
-                color={importProgressColor || exportProgressColor}
-                size={144}
-                strokeWidth={8}
-              >
-                {importProgress || exportProgress ? (
-                  <span className="text-primary text-xl font-semibold">
-                    {importProgress || exportProgress}%
-                  </span>
-                ) : (
-                  <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
-                    <icons.DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
-                  </div>
-                )}
-              </CircularProgress>
             </div>
           </div>
         </div>
@@ -323,24 +289,6 @@ const DropboxSync: React.FC<DropboxProps> = ({ setNotesState, darkMode }) => {
           <section>
             <div className="flex flex-col">
               <div className="space-y-2">
-                <button
-                  className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
-                  onClick={importData}
-                  aria-label={
-                    translations.dropbox.import || "Import data from Dropbox"
-                  }
-                >
-                  {translations.dropbox.import || "-"}
-                </button>
-                <button
-                  className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
-                  onClick={exportdata}
-                  aria-label={
-                    translations.dropbox.export || "Export data to Dropbox"
-                  }
-                >
-                  {translations.dropbox.export || "-"}
-                </button>
                 <button
                   className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
                   onClick={Logout}

@@ -1,18 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "../../store/types";
-import CircularProgress from "../UI/ProgressBar";
-import icons from "../../lib/remixicon-react";
-import {
-  useExportiCloud,
-  useImportiCloud,
-} from "../../utils/iCloud/iCloudUtil";
-
 interface iCloudProps {
   notesState: Record<string, Note>;
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
+const iCloudSync: React.FC<iCloudProps> = () => {
   // Translations
   const [translations, setTranslations] = useState({
     icloud: {
@@ -47,18 +40,6 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
 
     loadTranslations();
   }, []);
-
-  const {
-    exportdata,
-    progress: exportProgress,
-    progressColor: exportProgressColor,
-  } = useExportiCloud();
-
-  const {
-    importData,
-    progress: importProgress,
-    progressColor: importProgressColor,
-  } = useImportiCloud(setNotesState);
 
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
@@ -116,47 +97,11 @@ const iCloudSync: React.FC<iCloudProps> = ({ setNotesState }) => {
             >
               {translations.icloud.title || "-"}
             </p>
-            <div className="flex justify-center items-center">
-              <CircularProgress
-                progress={importProgress || exportProgress}
-                color={importProgressColor || exportProgressColor}
-                size={144}
-                strokeWidth={8}
-              >
-                {importProgress || exportProgress ? (
-                  <span className="text-primary text-xl font-semibold">
-                    {importProgress || exportProgress}%
-                  </span>
-                ) : (
-                  <div className="relative bg-neutral-200 dark:bg-[#2D2C2C] bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
-                    <icons.iCloud className="w-32 h-32 text-neutral-800 dark:text-neutral-200 p-1" />
-                  </div>
-                )}
-              </CircularProgress>
-            </div>
           </div>
         </div>
         <section>
           <div className="flex flex-col">
             <div className="space-y-2">
-              <button
-                className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] p-3 bg-opacity-40 w-full text-black p-2 text-lg font-bold rounded-xl"
-                onClick={importData}
-                aria-label={
-                  translations.icloud.import || "Import data from iCloud"
-                }
-              >
-                {translations.icloud.import || "-"}
-              </button>
-              <button
-                className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
-                onClick={exportdata}
-                aria-label={
-                  translations.icloud.export || "Export data to iCloud"
-                }
-              >
-                {translations.icloud.export || "-"}
-              </button>
             </div>
           </div>
           <div className="flex items-center py-2 justify-between">

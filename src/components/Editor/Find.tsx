@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "../../utils/translations";
 import icons from "../../lib/remixicon-react";
 
 interface SearchReplaceBarProps {
@@ -10,32 +11,18 @@ const Find: React.FC<SearchReplaceBarProps> = ({ editor, setShowFind }) => {
   const [query, setQuery] = useState("");
   const [replaceWith, setReplaceWith] = useState("");
   const [caseSensitive, setCaseSensitive] = useState(false);
-  const [translations, setTranslations] = useState({
-    search: {
-      findnext: "Find Next",
-      findprevious: "Find Previous",
-      replace: "Replace",
-      replaceall: "Replace All",
-      searchplaceholder: "Search...",
-      replaceplaceholder: "Replace...",
-      useRegex: "Use Regex",
-      clear: "Clear Search",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    search: {},
   });
 
   useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../../pages/settings/locales/${selectedLanguage}.json`
-        );
-        setTranslations(translationModule.default);
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   useEffect(() => {

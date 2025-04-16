@@ -16,10 +16,8 @@ import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 import Icons from "../../lib/remixicon-react";
 import Mousetrap from "mousetrap";
-import mime from "mime";
-import { saveImageToFileSystem } from "../../utils/fileHandler";
-import { saveFileToFileSystem } from "../../utils/fileHandler";
 import { WebviewPrint } from "capacitor-webview-print";
+import { uselabelStore } from "../../store/label";
 
 type Props = {
   note: Note;
@@ -50,6 +48,7 @@ function EditorComponent({
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
   const [sortingOption] = useState("updatedAt");
+  const labelStore = uselabelStore();
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
@@ -63,6 +62,13 @@ function EditorComponent({
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
   }, [searchQuery, notesState]);
+
+  useEffect(() => {
+    const load = async () => {
+      await labelStore.retrieve();
+    };
+    load();
+  }, []);
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     switch (sortingOption) {
@@ -80,12 +86,10 @@ function EditorComponent({
     }
   });
 
-  // Function to handle opening the dialog
   const openDialog = () => {
     setIsOpen(true);
   };
 
-  // Function to handle closing the dialog
   const closeDialog = () => {
     setIsOpen(false);
   };
@@ -104,29 +108,23 @@ function EditorComponent({
     setActiveNoteId(note.id);
   }, [note.id, setActiveNoteId]);
 
-  const uniqueLabels = Array.from(
-    new Set(Object.values(notesState).flatMap((note) => note.labels))
-  );
-
   document.addEventListener("updateLabel", (event: Event) => {
     const customEvent = event as CustomEvent;
     const labelToAdd = customEvent.detail.props;
     console.log(labelToAdd);
 
-    // Ensure existingLabels is initialized correctly
     const existingLabels = note.labels || [];
 
-    // Check if the label already exists
     const labelExists = existingLabels.includes(labelToAdd);
 
-    // Only add the label if it doesn't already exist
     const updatedLabels = labelExists
       ? existingLabels
       : [...existingLabels, labelToAdd];
 
+    labelStore.add(labelToAdd);
+
     const jsonContent = editor?.getJSON() || {};
 
-    // Update the note content with the new list of labels
     handleChangeNoteContent(jsonContent, note.title, updatedLabels);
   });
 
@@ -136,7 +134,7 @@ function EditorComponent({
       notes: notesList,
     }),
     NoteLabelSuggestion.configure({
-      uniqueLabels: uniqueLabels,
+      uniqueLabels: labelStore.labels,
     }),
     Commands.configure({
       noteId: note.id,
@@ -150,15 +148,12 @@ function EditorComponent({
       onUpdate: ({ editor }) => {
         const editorContent = editor.getJSON();
 
-        // Handle note content change
         handleChangeNoteContent(editorContent || {}, title);
 
-        // Compare previous and current content
         if (previousContent) {
           const previousLabels = findNoteLabels(previousContent);
           const currentLabels = findNoteLabels(editorContent);
 
-          // Check for deleted labels
           previousLabels.forEach((label) => {
             if (
               !currentLabels.some(
@@ -167,23 +162,64 @@ function EditorComponent({
             ) {
               console.log(`Label deleted: ${label.attrs.label}`);
 
-              // Remove the deleted label from the labels array
               const updatedLabels = note.labels.filter(
                 (noteLabel) => noteLabel !== label.attrs.label
               );
 
-              // Update the note content with the new labels
               handleChangeNoteContent(editorContent, note.title, updatedLabels);
             }
           });
         }
 
-        // Update previous content
         setPreviousContent(editorContent);
       },
     },
-    [note.id]
+    [note.id, labelStore.labels]
   );
+
+  useEffect(() => {
+    function handleClick(event: MouseEvent | TouchEvent) {
+      const target = event.target as HTMLElement | null;
+      const closestAnchor = target?.closest("a");
+
+      const isTiptapURL = closestAnchor?.hasAttribute("tiptap-url");
+      const isMentionURL = target?.hasAttribute("data-mention");
+
+      if (isTiptapURL) {
+        if (closestAnchor && closestAnchor.href.startsWith("note://")) {
+          const noteId = closestAnchor.href.split("note://")[1];
+          navigate(`/editor/${noteId}`);
+          return;
+        } else if (closestAnchor) {
+          window.open(closestAnchor.href, "_blank", "noopener");
+          event.preventDefault();
+        }
+      } else if (isMentionURL) {
+        event.preventDefault();
+        navigate(`/?label=${encodeURIComponent(target?.dataset.id || "")}`);
+      }
+    }
+
+    const editorElement = document.querySelector(".ProseMirror");
+
+    if (editorElement) {
+      editorElement.addEventListener("click", handleClick as EventListener);
+      editorElement.addEventListener("touchend", handleClick as EventListener);
+    }
+
+    return () => {
+      if (editorElement) {
+        editorElement.removeEventListener(
+          "click",
+          handleClick as EventListener
+        );
+        editorElement.removeEventListener(
+          "touchend",
+          handleClick as EventListener
+        );
+      }
+    };
+  }, [editor]);
 
   document.addEventListener("showFind", () => {
     setShowFind((prevShowFind) => !prevShowFind);
@@ -204,7 +240,6 @@ function EditorComponent({
     document.execCommand("insertText", false, text);
   };
 
-  // Utility function to find all noteLabel objects in the JSON content
   const findNoteLabels = (content: JSONContent) => {
     const labels: any[] = [];
     const traverse = (node: any) => {
@@ -222,7 +257,7 @@ function EditorComponent({
   const handleKeyDownTitle = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      editorRef.current?.commands.focus(); // Focus the editor
+      editorRef.current?.commands.focus();
     }
   };
 
@@ -230,19 +265,16 @@ function EditorComponent({
     const previousUrl = editor?.getAttributes("link").href;
     const url = window.prompt("URL", previousUrl);
 
-    // cancelled
     if (url === null) {
       return;
     }
 
-    // empty
     if (url === "") {
       editor?.chain().focus().extendMarkRange("link").unsetLink().run();
 
       return;
     }
 
-    // update link
     editor
       ?.chain()
       .focus()
@@ -256,7 +288,7 @@ function EditorComponent({
       e.preventDefault();
       setShowFind(true);
     });
-    // Mousetrap key bindings
+
     Mousetrap.bind("mod+k", (e) => {
       e.preventDefault();
       setLink();
@@ -326,7 +358,6 @@ function EditorComponent({
       editor?.chain().focus().toggleCodeBlock().run();
     });
 
-    // Cleanup all key bindings on unmount
     return () => {
       Mousetrap.unbind("mod+k");
       Mousetrap.unbind("mod+shift+x");
@@ -347,77 +378,45 @@ function EditorComponent({
     };
   }, [editor, setLink]);
 
-  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const items = event.dataTransfer.items;
-    await processItems(items);
-  };
-
-  const processItems = async (items: DataTransferItemList) => {
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.kind === "file") {
-        const file = item.getAsFile();
-        if (file) {
-          const fileType = mime.getType(file.name);
-          if (fileType) {
-            await handleFileByType(file);
-          } else {
-            console.warn(`Unsupported file type: ${file.type}`);
-          }
-        }
-      }
-    }
-  };
-
-  const handleFileByType = async (file: File) => {
-    try {
-      let fileUrl = "",
-        fileName = "";
-      const mimeType = file.type;
-
-      if (mimeType.startsWith("image/")) {
-        const { imageUrl } = await saveImageToFileSystem(file, note.id);
-        editor?.chain().setImage({ src: imageUrl }).run();
-      } else if (mimeType.startsWith("video/")) {
-        ({ fileUrl, fileName } = await saveFileToFileSystem(file, note.id));
-        //@ts-ignore
-        editor?.chain().setVideo({ src: fileUrl }).run();
-      } else if (mimeType.startsWith("audio/")) {
-        ({ fileUrl, fileName } = await saveFileToFileSystem(file, note.id));
-        //@ts-ignore
-        editor?.chain().setAudio({ src: fileUrl }).run();
-      } else {
-        ({ fileUrl, fileName } = await saveFileToFileSystem(file, note.id));
-        //@ts-ignore
-        editor?.chain().setFileEmbed(fileUrl, fileName).run();
-      }
-    } catch (error) {
-      console.error(`Error handling file: ${file.name}`, error);
-    }
-  };
-
   const handlePrint = async (fileName: string) => {
     const html = document.documentElement;
     const darkModeActive = html.classList.contains("dark");
+    const content = document.getElementById("content");
 
-    // Temporarily force light mode by removing the "dark" class
     if (darkModeActive) html.classList.remove("dark");
 
-    const restoreClass = () => {
-      if (darkModeActive) html.classList.add("dark");
-      window.removeEventListener("afterprint", restoreClass); // Clean up listener
+    const originalStyles = {
+      overflow: content?.style.overflow,
+      height: content?.style.height,
+      maxHeight: content?.style.maxHeight,
     };
 
-    // Restore dark mode after printing is done
-    window.addEventListener("afterprint", restoreClass);
+    if (content) {
+      content.style.overflow = "visible";
+      content.style.height = "auto";
+      content.style.maxHeight = "none";
+    }
+
+    const restore = () => {
+      if (darkModeActive) html.classList.add("dark");
+
+      if (content) {
+        content.style.overflow = originalStyles.overflow || "";
+        content.style.height = originalStyles.height || "";
+        content.style.maxHeight = originalStyles.maxHeight || "";
+      }
+
+      window.removeEventListener("afterprint", restore);
+    };
+
+    window.addEventListener("afterprint", restore);
 
     try {
       await WebviewPrint.print({ name: fileName });
       console.log("Print triggered for file:", fileName);
     } catch (error) {
       console.error("Error printing webview:", error);
-      restoreClass(); // Restore immediately on error
+      restore();
     }
   };
 
@@ -428,28 +427,21 @@ function EditorComponent({
   function toggleFocusMode() {
     try {
       if (!focusMode) {
-        // Enable focus mode
         editor?.setOptions({ editable: false });
         editor?.view.update(editor.view.props);
         setFocusMode(true);
       } else {
-        // Disable focus mode
         editor?.setOptions({ editable: true });
         editor?.view.update(editor.view.props);
         setFocusMode(false);
       }
     } catch (error) {
-      // Log the error with a message
       console.error("Error while toggling focus mode:", error);
     }
   }
 
   return (
-    <div
-      className="relative h-auto"
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={handleDrop}
-    >
+    <div className="relative h-auto" onDragOver={(e) => e.preventDefault()}>
       <div>
         <Toolbar
           note={note}
@@ -501,30 +493,32 @@ function EditorComponent({
             </button>
 
             <button
-              className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+              className={`${
+                focusMode ? "hidden" : "block"
+              } p-2 align-end rounded-md text-white bg-transparent cursor-pointer`}
               onClick={() => editor?.chain().focus().undo().run()}
               aria-label={translations.editor.undo}
             >
               <Icons.ArrowGoBackLineIcon
-                className={`border-none ${
-                  focusMode ? "hidden" : "block"
-                } dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
+                className={`border-none  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
               />
             </button>
             <button
-              className="p-2 rounded-md text-white bg-transparent cursor-pointer"
+              className={`${
+                focusMode ? "hidden" : "block"
+              } p-2 align-end rounded-md text-white bg-transparent cursor-pointer`}
               onClick={() => editor?.chain().focus().redo().run()}
               aria-label={translations.editor.redo}
             >
               <Icons.ArrowGoForwardLineIcon
-                className={`border-none ${
-                  focusMode ? "hidden" : "block"
-                } dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
+                className={`border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
               />
             </button>
 
             <button
-              className="p-2 align-end rounded-md text-white bg-transparent cursor-pointer"
+              className={`${
+                focusMode ? "hidden" : "block"
+              } p-2 align-end rounded-md text-white bg-transparent cursor-pointer`}
               onClick={() => {
                 if (buttonRef.current) {
                   setShowFind(true);
@@ -534,9 +528,7 @@ function EditorComponent({
               aria-label={translations.editor.searchPage}
             >
               <Icons.Search2LineIcon
-                className={`border-none ${
-                  focusMode ? "hidden" : "block"
-                } dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
+                className={`border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
               />
             </button>
           </div>
