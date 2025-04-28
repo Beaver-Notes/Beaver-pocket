@@ -12,7 +12,7 @@ export const shareNote = async (
 ) => {
   try {
     const currentDate = new Date();
-    const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+    const formattedDate = currentDate.toISOString().split("T")[0];
     const exportFolderName = `Beaver Notes ${formattedDate}`;
     const exportFolderPath = `export/${exportFolderName}`;
 
@@ -32,21 +32,18 @@ export const shareNote = async (
       recursive: true,
     });
 
-    // Find the specific note by ID
     const note = notesState[noteId];
 
     if (!note) {
       throw new Error(`Note with ID ${noteId} not found.`);
     }
 
-    // Prepare data for export
     const exportedData: any = {
       data: {
         id: noteId,
         title: note.title,
         content: note.content,
         lockedNotes: {},
-        // This will hold locked note status, if any
         assets: {
           notesAssets: {},
           fileAssets: {},
@@ -55,12 +52,10 @@ export const shareNote = async (
       },
     };
 
-    // Include locked note status
     if (note.isLocked) {
       exportedData.data.lockedNotes[noteId] = true;
     }
 
-    // Update asset paths in note content
     if (
       note.content &&
       typeof note.content === "object" &&
@@ -69,7 +64,6 @@ export const shareNote = async (
       if (note.content.content) {
         const updatedContent = note.content.content.map((node) => {
           if (node.type === "image" && node.attrs?.src) {
-            // Replace asset paths with proper scheme
             node.attrs.src = node.attrs.src.replace(
               "note-assets/",
               "assets://"
@@ -86,17 +80,13 @@ export const shareNote = async (
       }
     }
 
-    // Read and encode assets from note-assets and file-assets folders
     const noteAssetsPath = `note-assets/${noteId}`;
     const fileAssetsPath = `file-assets/${noteId}`;
 
-    // Encode assets from note-assets
     exportedData.data.assets.notesAssets = await encodeAssets(noteAssetsPath);
 
-    // Encode assets from file-assets
     exportedData.data.assets.fileAssets = await encodeAssets(fileAssetsPath);
 
-    // Save exported data as .bea file
     const jsonData = JSON.stringify(exportedData, null, 2);
     const beaFilePath = `${exportFolderPath}/${note.title}.bea`;
 
@@ -107,9 +97,6 @@ export const shareNote = async (
       encoding: FilesystemEncoding.UTF8,
     });
 
-    // Notify the user of success
-    console.log("Note exported successfully!");
-
     const result = await Filesystem.getUri({
       directory: Directory.Data,
       path: beaFilePath,
@@ -117,7 +104,6 @@ export const shareNote = async (
 
     const resolvedFolderPath = result.uri;
 
-    // Share the exported .bea file
     await Share.share({
       url: resolvedFolderPath,
     });
@@ -130,19 +116,15 @@ const encodeAssets = async (sourcePath: string) => {
   const assets: Record<string, string> = {};
 
   try {
-    // List all files in the directory
     const result = await Filesystem.readdir({
       path: sourcePath,
       directory: Directory.Data,
     });
 
-    // Loop through the files array in ReaddirResult
     for (const fileInfo of result.files) {
-      // Make sure we're only dealing with files, not directories
       if (fileInfo.type === "file") {
         const filePath = `${sourcePath}/${fileInfo.name}`;
 
-        // Read the file and encode it as Base64
         const fileData = await Filesystem.readFile({
           path: filePath,
           directory: Directory.Data,
@@ -150,16 +132,13 @@ const encodeAssets = async (sourcePath: string) => {
 
         let encodedData: string;
         if (typeof fileData.data === "string") {
-          // If fileData.data is a string, use it directly
           encodedData = fileData.data;
         } else if (fileData.data instanceof Blob) {
-          // If fileData.data is a Blob, convert it to a Base64 string
           encodedData = await blobToBase64(fileData.data);
         } else {
           throw new Error("Unsupported file data type");
         }
 
-        // Store base64-encoded file data in assets
         assets[fileInfo.name] = encodedData;
       }
     }
@@ -170,14 +149,13 @@ const encodeAssets = async (sourcePath: string) => {
   return assets;
 };
 
-// Utility function to convert a Blob to a Base64 string
 const blobToBase64 = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result;
       if (typeof base64String === "string") {
-        resolve(base64String.split(",")[1]); // Remove the data URI prefix if present
+        resolve(base64String.split(",")[1]);
       } else {
         reject(new Error("Failed to convert Blob to Base64 string"));
       }
@@ -193,7 +171,7 @@ const base64ToFile = async (base64Data: string, filePath: string) => {
   try {
     await Filesystem.writeFile({
       path: filePath,
-      data: base64Data, // Direct binary string
+      data: base64Data,
       directory: Directory.Data,
     });
   } catch (error) {
@@ -204,16 +182,18 @@ const base64ToFile = async (base64Data: string, filePath: string) => {
 export const useImportBea = () => {
   const importUtils = async (
     setNotesState: (notes: Record<string, Note>) => void,
-    loadNotes: () => Promise<Record<string, Note>>, // Existing notes loader
-    fileContent: string // UTF-8 file content
+    loadNotes: () => Promise<{
+      notes: Record<string, Note>;
+      labels: string[];
+      lockStatus: Record<string, boolean>;
+      isLocked: Record<string, boolean>;
+      deletedIds: Record<string, boolean>;
+    }>,
+    fileContent: string
   ) => {
     try {
       const parsedData = JSON.parse(fileContent);
 
-      // Debug parsed data
-      console.log("Parsed Data:", JSON.stringify(parsedData, null, 2));
-
-      // Replace assets:// and file-assets:// prefixes in the parsed data
       const updateAssetLinks = (obj: any) => {
         for (const key in obj) {
           if (typeof obj[key] === "object" && obj[key] !== null) {
@@ -230,7 +210,6 @@ export const useImportBea = () => {
 
       updateAssetLinks(parsedData);
 
-      // Validate the parsed data structure
       if (
         !parsedData.data ||
         !parsedData.data.id ||
@@ -242,92 +221,98 @@ export const useImportBea = () => {
         );
       }
 
-      // Structure the note for merging
-      const importedNotes = { [parsedData.data.id]: parsedData.data };
+      const noteId = parsedData.data.id;
 
-      // Handle assets for the note (but don't include them in the data.json)
-      for (const noteId in importedNotes) {
-        const note = importedNotes[noteId];
+      const importedNote = {
+        id: noteId,
+        title: parsedData.data.title,
+        content: parsedData.data.content,
+      };
 
-        const noteAssetsFolder = `note-assets/${noteId}`;
-        const fileAssetsFolder = `file-assets/${noteId}`;
+      const noteAssetsFolder = `note-assets/${noteId}`;
+      const fileAssetsFolder = `file-assets/${noteId}`;
 
-        // Create folders for note assets
-        await Filesystem.mkdir({
-          path: noteAssetsFolder,
-          directory: Directory.Data,
-          recursive: true,
-        });
+      await Filesystem.mkdir({
+        path: noteAssetsFolder,
+        directory: Directory.Data,
+        recursive: true,
+      });
 
-        await Filesystem.mkdir({
-          path: fileAssetsFolder,
-          directory: Directory.Data,
-          recursive: true,
-        });
+      await Filesystem.mkdir({
+        path: fileAssetsFolder,
+        directory: Directory.Data,
+        recursive: true,
+      });
 
-        // Save assets if available (but don't add them to the note in data.json)
-        if (note.assets) {
-          // Save note-specific assets (e.g., images)
-          if (note.assets.notesAssets) {
-            for (const assetName in note.assets.notesAssets) {
-              const base64Data = note.assets.notesAssets[assetName];
-              await base64ToFile(
-                base64Data,
-                `${noteAssetsFolder}/${assetName}`
-              );
-            }
+      if (parsedData.data.assets) {
+        if (parsedData.data.assets.notesAssets) {
+          for (const assetName in parsedData.data.assets.notesAssets) {
+            const base64Data = parsedData.data.assets.notesAssets[assetName];
+            await base64ToFile(base64Data, `${noteAssetsFolder}/${assetName}`);
           }
+        }
 
-          // Save file-specific assets (e.g., PDFs, etc.)
-          if (note.assets.fileAssets) {
-            for (const assetName in note.assets.fileAssets) {
-              const base64Data = note.assets.fileAssets[assetName];
-              await base64ToFile(
-                base64Data,
-                `${fileAssetsFolder}/${assetName}`
-              );
-            }
+        if (parsedData.data.assets.fileAssets) {
+          for (const assetName in parsedData.data.assets.fileAssets) {
+            const base64Data = parsedData.data.assets.fileAssets[assetName];
+            await base64ToFile(base64Data, `${fileAssetsFolder}/${assetName}`);
           }
-
-          // Remove assets field from the note (do not include in data.json)
-          delete note.assets;
         }
       }
 
-      // Modify the content links of the notes that are about to be merged (import mode)
-      const notesToMerge = Object.keys(importedNotes).reduce((acc) => {
-        const note = { ...importedNotes };
+      const existingData = await loadNotes();
 
-        acc = note;
-        return acc;
-      }, {});
+      const mergedNotes = {
+        ...existingData.notes,
+        [noteId]: importedNote,
+      };
 
-      // Merge with existing notes (without assets and with modified links)
-      const existingNotes = await loadNotes();
-      console.log("Existing Notes:", JSON.stringify(existingNotes, null, 2));
+      let mergedLabels = [...existingData.labels];
+      if (parsedData.data.labels && Array.isArray(parsedData.data.labels)) {
+        parsedData.data.labels.forEach((label: string) => {
+          if (!mergedLabels.includes(label)) {
+            mergedLabels.push(label);
+          }
+        });
+      }
 
-      const mergedNotes = { ...existingNotes, ...notesToMerge };
+      const mergedLockStatus = { ...existingData.lockStatus };
+      const mergedIsLocked = { ...existingData.isLocked };
+      if (parsedData.data.lockedNotes && parsedData.data.lockedNotes[noteId]) {
+        mergedLockStatus[noteId] = true;
+        mergedIsLocked[noteId] = true;
+      }
 
-      // Write updated notes back to data.json (without assets)
+      const updatedData = {
+        notes: mergedNotes,
+        labels: mergedLabels,
+        lockStatus: mergedLockStatus,
+        isLocked: mergedIsLocked,
+        deletedIds: existingData.deletedIds,
+      };
+
       await Filesystem.writeFile({
         path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes: mergedNotes } }),
+        data: JSON.stringify(updatedData),
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
-      // Debug merged notes
-      console.log("Merged Notes:", JSON.stringify(mergedNotes, null, 2));
-
-      // Update application state
       setNotesState(mergedNotes);
 
-      // Trigger UI update
-      const noteId = parsedData.data.id;
       const event = new CustomEvent("notelink", { detail: { noteId } });
       document.dispatchEvent(event);
+
+      return {
+        success: true,
+        noteId,
+      };
     } catch (error) {
-      console.error(error);
+      console.error("Import error:", error);
+      return {
+        success: false,
+        error: error,
+      };
     }
   };
 

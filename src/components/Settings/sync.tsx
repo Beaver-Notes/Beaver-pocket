@@ -6,7 +6,6 @@ import { useExportData } from "../../utils/exportUtils";
 import { useHandleImportData } from "../../utils/importUtils";
 import { useNavigate } from "react-router-dom";
 import icons from "../../lib/remixicon-react";
-import { loadNotes } from "../../store/notes";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { Zip } from "capa-zip";
 
@@ -87,7 +86,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
         };
       });
     }
-    importUtils(setNotesState, loadNotes); // Pass notesState as an argument
+    importUtils(setNotesState); // Pass notesState as an argument
   };
 
   // @ts-ignore

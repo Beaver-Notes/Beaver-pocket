@@ -200,7 +200,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
                   // Safe to use as a string
                   importUtils(
                     setNotesState,
-                    async () => (await loadNotes()).notes,
+                    async () => (await loadNotes()),
                     content.data
                   );
                 } else if (content.data instanceof Blob) {
@@ -210,7 +210,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
                     const textContent = event.target?.result as string;
                     importUtils(
                       setNotesState,
-                      async () => (await loadNotes()).notes,
+                      async () => (await loadNotes()),
                       textContent
                     );
                   };

@@ -75,12 +75,11 @@ export const useExportData = () => {
       });
 
       const exportedData: any = {
-        data: {
-          notes: {},
-          lockStatus: {},
-          isLocked: {},
-        },
+        notes: {},
         labels: [],
+        lockStatus: {},
+        isLocked: {},
+        deletedIds: {},
       };
 
       Object.values(notesState).forEach((note) => {
@@ -119,13 +118,13 @@ export const useExportData = () => {
             note.content.content = updatedFileContent;
 
             // Add the modified note to exportedData
-            exportedData.data.notes[note.id] = note;
+            exportedData.notes[note.id] = note;
 
             exportedData.labels = exportedData.labels.concat(note.labels);
 
             if (note.isLocked) {
-              exportedData.data.lockStatus[note.id] = "locked";
-              exportedData.data.isLocked[note.id] = true;
+              exportedData.lockStatus[note.id] = "locked";
+              exportedData.isLocked[note.id] = true;
             }
           }
         }

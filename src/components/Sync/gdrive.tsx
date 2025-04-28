@@ -3,18 +3,13 @@ import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import icons from "../../lib/remixicon-react";
 import CircularProgress from "../UI/ProgressBar";
-import { Note } from "../../store/types";
 import { isPlatform } from "@ionic/react";
 import { useDriveImport, useExport } from "../../utils/Google Drive/GDriveUtil";
-
-interface GdriveProps {
-  setNotesState: (notes: Record<string, Note>) => void;
-}
 
 const IOS_CLIENT_ID = import.meta.env.VITE_IOS_GOOGLE_CLIENT_ID;
 const ANDROID_CLIENT_ID = import.meta.env.VITE_ANDROID_GOOGLE_CLIENT_ID;
 
-const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
+const GoogleDriveExportPage: React.FC = () => {
   const [user, setUser] = useState<any | null>(null);
 
   useEffect(() => {
@@ -121,7 +116,7 @@ const GoogleDriveExportPage: React.FC<GdriveProps> = ({ setNotesState }) => {
     importData,
     progress: importProgress,
     progressColor: importProgressColor,
-  } = useDriveImport(darkMode, setNotesState);
+  } = useDriveImport(darkMode);
 
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");

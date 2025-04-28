@@ -6,7 +6,6 @@ import {
   FilesystemDirectory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { Note } from "../../store/types";
 import {
   base64Encode,
   base64ToBlob,
@@ -14,7 +13,7 @@ import {
   blobToString,
 } from "../base64";
 import mime from "mime";
-import { mergeNotes, revertAssetPaths } from "../merge";
+import { mergeData, revertAssetPaths, SyncData } from "../merge";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -52,7 +51,7 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
     localVersion: 0,
     remoteVersion: 0,
   });
-  
+
   // Move these hooks to the top level
   const baseUrl = localStorage.getItem("baseUrl") || "";
   const username = localStorage.getItem("username") || "";
@@ -61,7 +60,7 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
 
   const syncWebDAV = async () => {
     alert("Function started"); // Debug alert
-    
+
     setSyncState((prev) => ({
       ...prev,
       syncInProgress: true,
@@ -73,7 +72,7 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
       await webDavService.createFolder(`${SYNC_FOLDER_NAME}`);
       alert("Sync folder created or already exists");
 
-      let localData: { data?: { notes?: Record<string, Note> } } = {};
+      let localData: SyncData = { notes: {} };
       try {
         const localFileData = await Filesystem.readFile({
           path: STORAGE_PATH,
@@ -85,7 +84,7 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
         // No local data, use empty object
       }
 
-      let remoteData: { data?: { notes?: Record<string, Note> } } = {};
+      let remoteData: SyncData = { notes: {} };
       try {
         const fileData = await webDavService.get(
           `${SYNC_FOLDER_NAME}/data.json`
@@ -102,9 +101,7 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
 
       setProgress(20);
 
-      const localNotes = localData.data?.notes || {};
-      const remoteNotes = remoteData.data?.notes || {};
-      const mergedNotes = mergeNotes(localNotes, remoteNotes);
+      const mergedData = mergeData(localData, remoteData);
 
       const assetSyncLogs = await syncWebDAVAssets(
         SYNC_FOLDER_NAME,
@@ -122,16 +119,16 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
 
       await Filesystem.writeFile({
         path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes: mergedNotes } }),
+        data: JSON.stringify(mergedData),
         directory: FilesystemDirectory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
-      const cleanedNotes = revertAssetPaths(mergedNotes);
+      // Prepare data for remote storage - revert asset paths
+      const cleanedData = { ...mergedData };
+      cleanedData.notes = revertAssetPaths(mergedData.notes);
 
-      const base64Data = base64Encode(
-        JSON.stringify({ data: { notes: cleanedNotes } })
-      );
+      const base64Data = base64Encode(JSON.stringify(cleanedData));
 
       await webDavService.upload(`${SYNC_FOLDER_NAME}/data.json`, base64Data);
 

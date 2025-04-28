@@ -4,12 +4,11 @@ import {
   FilesystemDirectory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { Note } from "../../store/types";
 import { useDropbox } from "./DropboxApi";
 import { useState } from "react";
 import { base64ToBlob } from "../../utils/base64";
 import mime from "mime";
-import { mergeNotes, revertAssetPaths } from "../merge";
+import { mergeData, revertAssetPaths, SyncData } from "../merge";
 
 // Types for improved type safety
 interface SyncState {
@@ -39,7 +38,7 @@ interface AssetSyncLog {
 const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync"; // Fixed folder name instead of date-based
 
-const useDropboxSync = (): DropboxSyncHookReturn => {
+const useDropboxSync = (setNotesState:any): DropboxSyncHookReturn => {
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
     syncError: null,
@@ -57,16 +56,14 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
       syncError: null,
     }));
     setProgress(0);
-
+    
     try {
       checkTokenExpiration();
-
       if (!accessToken) {
         throw new Error("Dropbox access token not found");
       }
-
       const dbx = new Dropbox({ accessToken });
-
+      
       // Create sync folder if it doesn't exist
       try {
         await dbx.filesGetMetadata({ path: `/${SYNC_FOLDER_NAME}` });
@@ -81,9 +78,9 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
           throw error;
         }
       }
-
+      
       // Read local data
-      let localData: { data?: { notes?: Record<string, Note> } } = {};
+      let localData: SyncData = { notes: {} };
       try {
         const localFileData = await Filesystem.readFile({
           path: STORAGE_PATH,
@@ -94,9 +91,9 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
       } catch {
         // No local data, use empty object
       }
-
+      
       // Read remote data
-      let remoteData: { data?: { notes?: Record<string, Note> } } = {};
+      let remoteData: SyncData = { notes: {} };
       try {
         const remoteMetadataResponse = await dbx.filesDownload({
           path: `/${SYNC_FOLDER_NAME}/data.json`,
@@ -108,21 +105,19 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
       } catch {
         // No remote data, use empty object
       }
-
+      
       setProgress(20);
-
-      // Merge notes
-      const localNotes = localData.data?.notes || {};
-      const remoteNotes = remoteData.data?.notes || {};
-      const mergedNotes = mergeNotes(localNotes, remoteNotes);
-
+      
+      // Merge all data
+      const mergedData = mergeData(localData, remoteData);
+      
       // Sync assets and collect logs
       const assetSyncLogs = await syncDropboxAssets(
         dbx,
         SYNC_FOLDER_NAME,
         accessToken
       );
-
+      
       // Log asset sync results
       console.log("Asset Sync Results:", {
         downloaded: assetSyncLogs.downloaded.length,
@@ -130,42 +125,44 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
         errors: assetSyncLogs.errors.length,
         details: assetSyncLogs,
       });
-
+      
       setProgress(80);
-
-      // Write merged data
+      
+      // Save merged data locally
       await Filesystem.writeFile({
         path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes: mergedNotes } }),
+        data: JSON.stringify(mergedData),
         directory: FilesystemDirectory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
-      // Reverse paths before uploading
-      const cleanedNotes = revertAssetPaths(mergedNotes);
-
+      setNotesState(mergedData.notes);
+      document.dispatchEvent(new Event("reload"));
+      
+      // Prepare data for remote storage - revert asset paths
+      const cleanedData = { ...mergedData };
+      cleanedData.notes = revertAssetPaths(mergedData.notes);
+      
+      // Upload to Dropbox
       await dbx.filesUpload({
         path: `/${SYNC_FOLDER_NAME}/data.json`,
-        contents: JSON.stringify({ data: { notes: cleanedNotes } }),
+        contents: JSON.stringify(cleanedData),
         mode: { ".tag": "overwrite" },
       });
-
+      
       setSyncState((prev) => ({
         ...prev,
         syncInProgress: false,
         lastSyncTime: Date.now(),
       }));
-
       setProgress(100);
     } catch (error) {
       console.error("Dropbox Sync Error:", error);
-
       setSyncState((prev) => ({
         ...prev,
         syncInProgress: false,
         syncError: error instanceof Error ? error.message : "Unknown error",
       }));
-
       setProgress(0);
     }
   };

@@ -10,11 +10,7 @@ import {
   FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { base64ToBlob } from "../../utils/base64";
-import { loadNotes } from "../../store/notes";
-import { useHandleImportData } from "../importUtils";
 import mime from "mime";
-
-const { importUtils } = useHandleImportData();
 
 export const useDrive = () => {
   const [user, setUser] = useState<any | null>(null);
@@ -432,7 +428,7 @@ export const useDriveSync = () => {
   return { syncGdrive, progress, progressColor };
 };
 
-export const useDriveImport = (darkMode: boolean, setNotesState: any) => {
+export const useDriveImport = (darkMode: boolean) => {
   const { driveAPI, loadAccessToken } = useDrive();
   const [progress, setProgress] = useState(0);
   const [progressColor, setProgressColor] = useState("#e6e6e6");
@@ -538,7 +534,6 @@ export const useDriveImport = (darkMode: boolean, setNotesState: any) => {
       await downloadFolderContents(datedFolderId, localExportFolder);
 
       setProgress(100);
-      await importUtils(setNotesState, loadNotes);
     } catch (error) {
       console.error("Error importing data:", error);
       setProgressColor("#ff3333");

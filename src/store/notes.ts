@@ -34,6 +34,7 @@ export const loadNotes = async (): Promise<{
   deletedIds: Record<string, any>;
 }> => {
   try {
+    // Check if the file exists and create directory if it doesn't
     try {
       await Filesystem.stat({
         path: STORAGE_PATH,
@@ -50,30 +51,50 @@ export const loadNotes = async (): Promise<{
       };
     }
 
+    // Read the file content
     const data = await Filesystem.readFile({
       path: STORAGE_PATH,
       directory: Directory.Data,
       encoding: FilesystemEncoding.UTF8,
     });
 
-    const parsed = JSON.parse(typeof data.data === "string" ? data.data : await data.data.text());
+    // Parse the file content
+    const parsed = JSON.parse(
+      typeof data.data === "string" ? data.data : await data.data.text()
+    );
+
+    let finalData = parsed;
+
+    // Handle old structure: if parsed has "data" field, use it
+    if (parsed?.data) {
+      finalData = {
+        notes: parsed.data.notes || {}, // Extract notes from parsed.data
+        labels: parsed.data.labels || [],
+        lockStatus: parsed.data.lockStatus || {},
+        isLocked: parsed.data.isLocked || {},
+        deletedIds: parsed.data.deletedIds || {},
+      };
+    }
+
+    // Handling collapsible headings setting
     const collapsibleSetting = localStorage.getItem("collapsibleHeading");
-    const notes = parsed?.notes ?? {};
+    const notes = finalData.notes ?? {};
 
     for (const noteId in notes) {
       const note = notes[noteId];
-      note.title = note.title || "";
+      note.title = note.title || ""; // Ensure note title is not missing
       if (collapsibleSetting === "false" && note.content?.content) {
         note.content.content = uncollapseHeading(note.content.content);
       }
     }
 
+    // Return the final structured data
     return {
       notes,
-      labels: parsed?.labels ?? [],
-      lockStatus: parsed?.lockStatus ?? {},
-      isLocked: parsed?.isLocked ?? {},
-      deletedIds: parsed?.deletedIds ?? {},
+      labels: finalData.labels ?? [],
+      lockStatus: finalData.lockStatus ?? {},
+      isLocked: finalData.isLocked ?? {},
+      deletedIds: finalData.deletedIds ?? {},
     };
   } catch (error) {
     console.error("Error loading data:", error);
@@ -150,6 +171,11 @@ export const useDeleteNote = (
         const updatedNotes = { ...notesState };
         delete updatedNotes[noteId];
 
+        // Soft-delete tracking
+        if (!deletedIds[noteId]) {
+          deletedIds[noteId] = Date.now();
+        }
+
         const assetPaths = [`file-assets/${noteId}`, `note-assets/${noteId}`];
         for (const path of assetPaths) {
           try {
@@ -175,6 +201,9 @@ export const useDeleteNote = (
         });
 
         await trackChange("notes", updatedNotes);
+        await trackChange("deletedIds", deletedIds); // Track for sync
+
+        cleanupDeletedIds(30);
         setNotesState(updatedNotes);
       } catch (error) {
         console.error("Error deleting note:", error);
@@ -185,6 +214,39 @@ export const useDeleteNote = (
   );
 
   return { deleteNote };
+};
+
+// Cleanup Deleted IDs
+export const cleanupDeletedIds = async (days = 30) => {
+  try {
+    const { notes, labels, lockStatus, isLocked, deletedIds } =
+      await loadNotes();
+    const now = Date.now();
+    const cutoff = days * 24 * 60 * 60 * 1000;
+
+    const cleanedDeletedIds = Object.fromEntries(
+      Object.entries(deletedIds).filter(
+        ([_, timestamp]) => now - timestamp < cutoff
+      )
+    );
+
+    await Filesystem.writeFile({
+      path: STORAGE_PATH,
+      data: JSON.stringify({
+        notes,
+        labels,
+        lockStatus,
+        isLocked,
+        deletedIds: cleanedDeletedIds,
+      }),
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
+    });
+
+    await trackChange("deletedIds", cleanedDeletedIds);
+  } catch (error) {
+    console.error("Error during cleanup of deletedIds:", error);
+  }
 };
 
 // Toggle Bookmark

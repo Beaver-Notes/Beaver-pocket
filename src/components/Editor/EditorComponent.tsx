@@ -18,6 +18,7 @@ import Icons from "../../lib/remixicon-react";
 import Mousetrap from "mousetrap";
 import { WebviewPrint } from "capacitor-webview-print";
 import { uselabelStore } from "../../store/label";
+import { cleanEmptyParagraphs } from "../../utils/ediotor";
 
 type Props = {
   note: Note;
@@ -146,7 +147,9 @@ function EditorComponent({
       extensions: exts,
       content: note.content,
       onUpdate: ({ editor }) => {
-        const editorContent = editor.getJSON();
+        let editorContent = editor.getJSON();
+
+        editorContent = cleanEmptyParagraphs(editorContent); // 🧹 clean here
 
         handleChangeNoteContent(editorContent || {}, title);
 

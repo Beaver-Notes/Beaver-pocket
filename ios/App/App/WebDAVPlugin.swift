@@ -163,7 +163,7 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
     }
     
     private func getAuthHeader(username: String, password: String) -> String {
-        let credentialData = "\(username):\(password)".data(using: .utf8)!
+        let credentialData = "\(username):\(password)".data(using: .utf8)! 
         let base64Credentials = credentialData.base64EncodedString()
         return "Basic \(base64Credentials)"
     }

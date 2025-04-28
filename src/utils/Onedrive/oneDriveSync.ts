@@ -9,8 +9,7 @@ import {
 import { OneDriveAPI } from "./oneDriveApi";
 import { base64ToBlob } from "../../utils/base64";
 import mime from "mime";
-import { mergeNotes, revertAssetPaths } from "../merge";
-import { Note } from "../../store/types";
+import { mergeData, revertAssetPaths, SyncData } from "../merge";
 
 const { MsAuthPlugin } = Plugins;
 
@@ -124,7 +123,7 @@ const useOneDriveSync = (): OneDriveSyncHookReturn => {
     remoteVersion: 0,
   });
   const [progress, setProgress] = useState(0);
-  
+
   const syncOneDrive = async () => {
     const { getValidAccessToken } = useOneDrive();
     const accessToken = await getValidAccessToken();
@@ -155,7 +154,7 @@ const useOneDriveSync = (): OneDriveSyncHookReturn => {
       }
 
       // Read local data
-      let localData: { data?: { notes?: Record<string, Note> } } = {};
+      let localData: SyncData = { notes: {} };
       try {
         const localFileData = await Filesystem.readFile({
           path: STORAGE_PATH,
@@ -167,7 +166,7 @@ const useOneDriveSync = (): OneDriveSyncHookReturn => {
         // No local data, use empty object
       }
 
-      let remoteData: { data?: { notes?: Record<string, Note> } } = {};
+      let remoteData: SyncData = { notes: {} };
       try {
         const remoteMetadataResponse = await onedrive.downloadFile(
           `/${SYNC_FOLDER_NAME}/data.json`
@@ -183,9 +182,7 @@ const useOneDriveSync = (): OneDriveSyncHookReturn => {
       setProgress(20);
 
       // Merge notes
-      const localNotes = localData.data?.notes || {};
-      const remoteNotes = remoteData.data?.notes || {};
-      const mergedNotes = mergeNotes(localNotes, remoteNotes);
+      const mergedData = mergeData(localData, remoteData);
 
       // Sync assets and collect logs
       const assetSyncLogs = await syncOnedriveAssets(
@@ -207,17 +204,18 @@ const useOneDriveSync = (): OneDriveSyncHookReturn => {
       // Write merged data
       await Filesystem.writeFile({
         path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes: mergedNotes } }),
+        data: JSON.stringify(mergedData),
         directory: FilesystemDirectory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
       // Reverse paths before uploading
-      const cleanedNotes = revertAssetPaths(mergedNotes);
+      const cleanedData = { ...mergedData };
+      cleanedData.notes = revertAssetPaths(mergedData.notes);
 
       await onedrive.uploadFile(
         `/${SYNC_FOLDER_NAME}/data.json`,
-        JSON.stringify({ data: { notes: cleanedNotes } })
+        JSON.stringify(cleanedData)
       );
 
       setSyncState((prev) => ({

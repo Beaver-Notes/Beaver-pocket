@@ -4,6 +4,8 @@ import {
   Filesystem,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
+import { loadNotes } from "../store/notes"; // Update path as needed
+import { mergeData, revertAssetPaths } from "./merge"; // Update path as needed
 
 const STORAGE_PATH = "notes/data.json";
 
@@ -16,11 +18,7 @@ export const useHandleImportData = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      if (typeof fileContents.data === "string") {
-        return JSON.parse(fileContents.data);
-      } else {
-        throw new Error("File content is not a string");
-      }
+      return JSON.parse(fileContents.data as string);
     } catch (error) {
       console.error("Error reading JSON file:", error);
       throw new Error("Failed to read JSON file");
@@ -28,13 +26,11 @@ export const useHandleImportData = () => {
   };
 
   const importUtils = async (
-    setNotesState: (notes: Record<string, Note>) => void,
-    loadNotes: () => Promise<Record<string, Note>>
+    setNotesState: (notes: Record<string, Note>) => void
   ) => {
     try {
       const currentDate = new Date();
       const oneDayInMs = 24 * 60 * 60 * 1000;
-      let foundViableFolder = false;
       let importFolderPath = "";
 
       for (let i = 0; i < 30; i++) {
@@ -45,17 +41,12 @@ export const useHandleImportData = () => {
         const folderExists = await Filesystem.readdir({
           path: importFolderPath,
           directory: Directory.Data,
-        })
-          .then(() => true)
-          .catch(() => false);
+        }).then(() => true).catch(() => false);
 
-        if (folderExists) {
-          foundViableFolder = true;
-          break;
-        }
+        if (folderExists) break;
       }
 
-      if (!foundViableFolder) {
+      if (!importFolderPath) {
         throw new Error("No viable folder found for the past 30 days.");
       }
 
@@ -63,24 +54,19 @@ export const useHandleImportData = () => {
       const importAssetsPath = `${importFolderPath}/assets`;
       const importFileAssetsPath = `${importFolderPath}/file-assets`;
 
-      // Import note-assets
+      // Copy note-assets
       try {
-        const existingNoteAssets = await Filesystem.readdir({
-          path: "note-assets",
-          directory: Directory.Data,
-        });
-
-        const existingNoteFiles = new Set(
-          existingNoteAssets.files.map((file) => file.name)
+        const existingAssets = new Set(
+          (await Filesystem.readdir({ path: "note-assets", directory: Directory.Data })).files.map(f => f.name)
         );
 
-        const importedNoteAssets = await Filesystem.readdir({
+        const importedAssets = await Filesystem.readdir({
           path: importAssetsPath,
           directory: Directory.Data,
         });
 
-        for (const file of importedNoteAssets.files) {
-          if (!existingNoteFiles.has(file.name)) {
+        for (const file of importedAssets.files) {
+          if (!existingAssets.has(file.name)) {
             await Filesystem.copy({
               from: `${importAssetsPath}/${file.name}`,
               to: `note-assets/${file.name}`,
@@ -89,18 +75,13 @@ export const useHandleImportData = () => {
           }
         }
       } catch (error) {
-        console.warn(`Note-assets folder not found: ${error}`);
+        console.warn("Note-assets folder not found:", error);
       }
 
-      // Import file-assets
+      // Copy file-assets
       try {
-        const existingFileAssets = await Filesystem.readdir({
-          path: "file-assets",
-          directory: Directory.Data,
-        });
-
-        const existingFileFiles = new Set(
-          existingFileAssets.files.map((file) => file.name)
+        const existingFileAssets = new Set(
+          (await Filesystem.readdir({ path: "file-assets", directory: Directory.Data })).files.map(f => f.name)
         );
 
         const importedFileAssets = await Filesystem.readdir({
@@ -109,7 +90,7 @@ export const useHandleImportData = () => {
         });
 
         for (const file of importedFileAssets.files) {
-          if (!existingFileFiles.has(file.name)) {
+          if (!existingFileAssets.has(file.name)) {
             await Filesystem.copy({
               from: `${importFileAssetsPath}/${file.name}`,
               to: `file-assets/${file.name}`,
@@ -118,73 +99,58 @@ export const useHandleImportData = () => {
           }
         }
       } catch (error) {
-        console.warn(`File-assets folder not found: ${error}`);
+        console.warn("File-assets folder not found:", error);
       }
 
       const parsedData = await readJsonFile(importDataPath);
 
       const existingSharedKey = localStorage.getItem("sharedKey");
-      if (!existingSharedKey && parsedData && parsedData.sharedKey) {
+      if (!existingSharedKey && parsedData?.sharedKey) {
         localStorage.setItem("sharedKey", parsedData.sharedKey);
       }
 
-      if (parsedData && parsedData.data && parsedData.data.notes) {
-        const importedNotes = parsedData.data.notes;
+      if (parsedData?.data?.notes) {
+        // First load existing notes
+        const localData = await loadNotes();
 
-        Object.values<Note>(importedNotes).forEach((note) => {
-          if (
-            note.content &&
-            typeof note.content === "object" &&
-            "content" in note.content
-          ) {
-            if (note.content.content) {
-              note.content.content = note.content.content.map((node: any) => {
-                if (node.type === "image" && node.attrs && node.attrs.src) {
-                  node.attrs.src = node.attrs.src.replace(
-                    "assets://",
-                    "note-assets/"
-                  );
-                }
-                return node;
-              });
-
-              note.content.content = note.content.content.map((node: any) => {
-                if (
-                  (node.type === "fileEmbed" ||
-                    node.type === "Audio" ||
-                    node.type === "Video") &&
-                  node.attrs &&
-                  node.attrs.src
-                ) {
-                  node.attrs.src = node.attrs.src.replace(
-                    "file-assets://",
-                    "file-assets/"
-                  );
-                }
-                return node;
-              });
-            }
+        // Merge imported data (assumes imported notes are already in assets:// and file-assets:// format)
+        const merged = mergeData(
+          {
+            notes: localData.notes,
+            labels: localData.labels,
+            lockStatus: localData.lockStatus,
+            isLocked: localData.isLocked,
+            deletedIds: localData.deletedIds,
+          },
+          {
+            notes: parsedData.data.notes,
+            labels: parsedData?.labels || [],
+            lockStatus: parsedData?.lockStatus || {},
+            isLocked: parsedData?.isLocked || {},
+            deletedIds: parsedData?.deletedIds || {},
           }
-        });
+        );
 
-        const existingNotes = await loadNotes();
-        const mergedNotes = {
-          ...existingNotes,
-          ...importedNotes,
+        // Revert asset paths back to platform format before saving
+        const cleanedNotes = revertAssetPaths(merged.notes);
+
+        const mergedWithRevertedPaths = {
+          ...merged,
+          notes: cleanedNotes,
         };
 
         await Filesystem.writeFile({
           path: STORAGE_PATH,
-          data: JSON.stringify({ data: { notes: mergedNotes } }),
+          data: JSON.stringify(mergedWithRevertedPaths),
           directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
 
-        setNotesState(mergedNotes);
+        setNotesState(cleanedNotes);
         document.dispatchEvent(new Event("reload"));
       }
-    } catch (error: any) {
-      console.error(error);
+    } catch (error) {
+      console.error("Import error:", error);
     }
   };
 

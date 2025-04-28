@@ -3,67 +3,24 @@ import { Note } from "../store/types";
 export function revertAssetPaths(
   notes: Record<string, Note>
 ): Record<string, Note> {
-  const updatedNotes: Record<string, Note> = JSON.parse(JSON.stringify(notes));
+  const cleanedNotes: Record<string, Note> = {};
 
-  for (const noteId in updatedNotes) {
-    const note = updatedNotes[noteId];
+  for (const [noteId, note] of Object.entries(notes)) {
+    // Create a deep copy to avoid modifying the original
+    const cleanedNote = JSON.parse(JSON.stringify(note));
 
     if (
-      note.content &&
-      typeof note.content === "object" &&
-      "content" in note.content
+      cleanedNote.content &&
+      typeof cleanedNote.content === "object" &&
+      "content" in cleanedNote.content
     ) {
-      if (note.content.content) {
-        note.content.content = note.content.content.map((node: any) => {
-          if (node.type === "image" && node.attrs && node.attrs.src) {
-            node.attrs.src = node.attrs.src.replace(
-              new RegExp(`note-assets/${noteId}/`, "g"),
-              "assets://"
-            );
-          }
-          if (
-            (node.type === "fileEmbed" ||
-              node.type === "Audio" ||
-              node.type === "Video") &&
-            node.attrs &&
-            node.attrs.src
-          ) {
-            node.attrs.src = node.attrs.src.replace(
-              new RegExp(`file-assets/${noteId}/`, "g"),
-              "file-assets://"
-            );
-          }
-          return node;
-        });
-      }
-    }
-  }
-
-  return updatedNotes;
-}
-
-export function mergeNotes(
-  localNotes: Record<string, Note>,
-  remoteNotes: Record<string, Note>
-): Record<string, Note> {
-  const mergedNotes: Record<string, Note> = { ...localNotes };
-
-  for (const [noteId, remoteNote] of Object.entries(remoteNotes)) {
-    const localNote = mergedNotes[noteId];
-
-    // Adjust asset paths for imported notes
-    if (
-      remoteNote.content &&
-      typeof remoteNote.content === "object" &&
-      "content" in remoteNote.content
-    ) {
-      if (remoteNote.content.content) {
-        remoteNote.content.content = remoteNote.content.content.map(
+      if (cleanedNote.content.content) {
+        cleanedNote.content.content = cleanedNote.content.content.map(
           (node: any) => {
             if (node.type === "image" && node.attrs && node.attrs.src) {
               node.attrs.src = node.attrs.src.replace(
-                "assets://",
-                `note-assets/${noteId}/`
+                `note-assets/${noteId}/`,
+                "assets://"
               );
             }
             if (
@@ -74,8 +31,8 @@ export function mergeNotes(
               node.attrs.src
             ) {
               node.attrs.src = node.attrs.src.replace(
-                "file-assets://",
-                `file-assets/${noteId}/`
+                `file-assets/${noteId}/`,
+                "file-assets://"
               );
             }
             return node;
@@ -84,19 +41,138 @@ export function mergeNotes(
       }
     }
 
+    cleanedNotes[noteId] = cleanedNote;
+  }
+
+  return cleanedNotes;
+}
+
+export interface SyncData {
+  notes: Record<string, Note>;
+  labels?: string[];
+  lockStatus?: Record<string, any>;
+  isLocked?: Record<string, any>;
+  deletedIds?: Record<string, number>;
+}
+
+export function mergeData(localData: SyncData, remoteData: SyncData): SyncData {
+  // First merge deletedIds - keep the latest deletion timestamp
+  const mergedDeletedIds = { ...(localData.deletedIds || {}) };
+  for (const [id, timestamp] of Object.entries(remoteData.deletedIds || {})) {
+    if (!mergedDeletedIds[id] || timestamp > mergedDeletedIds[id]) {
+      mergedDeletedIds[id] = timestamp;
+    }
+  }
+
+  // Process notes, taking into account deletedIds
+  const mergedNotes = mergeNotesWithDeletedIds(
+    localData.notes || {},
+    remoteData.notes || {},
+    mergedDeletedIds
+  );
+
+  // Combine labels (remove duplicates)
+  const allLabels = [...(localData.labels || []), ...(remoteData.labels || [])];
+  const mergedLabels = [...new Set(allLabels)];
+
+  // Merge lockStatus - prefer remote in case of conflict
+  const mergedLockStatus = {
+    ...(localData.lockStatus || {}),
+    ...(remoteData.lockStatus || {}),
+  };
+
+  // Merge isLocked - prefer remote in case of conflict
+  const mergedIsLocked = {
+    ...(localData.isLocked || {}),
+    ...(remoteData.isLocked || {}),
+  };
+
+  return {
+    notes: mergedNotes,
+    labels: mergedLabels,
+    lockStatus: mergedLockStatus,
+    isLocked: mergedIsLocked,
+    deletedIds: mergedDeletedIds,
+  };
+}
+
+export function mergeNotesWithDeletedIds(
+  localNotes: Record<string, Note>,
+  remoteNotes: Record<string, Note>,
+  deletedIds: Record<string, number>
+): Record<string, Note> {
+  const mergedNotes: Record<string, Note> = {};
+
+  // Process all local notes that haven't been deleted
+  for (const [noteId, localNote] of Object.entries(localNotes)) {
+    // Skip if note has been deleted
+    if (deletedIds[noteId]) continue;
+
+    mergedNotes[noteId] = localNote;
+  }
+
+  // Process remote notes, adjusting paths and applying merge logic
+  for (const [noteId, remoteNote] of Object.entries(remoteNotes)) {
+    // Skip if note has been deleted
+    if (deletedIds[noteId]) continue;
+
+    const localNote = mergedNotes[noteId];
+
+    // Adjust asset paths for imported notes
+    const processedRemoteNote = processNotePaths(noteId, remoteNote);
+
     // Merge note logic
     if (!localNote) {
       // New note from remote
-      mergedNotes[noteId] = remoteNote;
+      mergedNotes[noteId] = processedRemoteNote;
     } else if (
-      remoteNote.updatedAt &&
+      processedRemoteNote.updatedAt &&
       localNote.updatedAt &&
-      new Date(remoteNote.updatedAt) > new Date(localNote.updatedAt)
+      new Date(processedRemoteNote.updatedAt) > new Date(localNote.updatedAt)
     ) {
       // Remote note is newer
-      mergedNotes[noteId] = remoteNote;
+      mergedNotes[noteId] = processedRemoteNote;
     }
   }
 
   return mergedNotes;
+}
+
+// Helper function to process note paths
+function processNotePaths(noteId: string, note: Note): Note {
+  const processedNote = { ...note };
+
+  if (
+    processedNote.content &&
+    typeof processedNote.content === "object" &&
+    "content" in processedNote.content
+  ) {
+    if (processedNote.content.content) {
+      processedNote.content.content = processedNote.content.content.map(
+        (node: any) => {
+          if (node.type === "image" && node.attrs && node.attrs.src) {
+            node.attrs.src = node.attrs.src.replace(
+              "assets://",
+              `note-assets/${noteId}/`
+            );
+          }
+          if (
+            (node.type === "fileEmbed" ||
+              node.type === "Audio" ||
+              node.type === "Video") &&
+            node.attrs &&
+            node.attrs.src
+          ) {
+            node.attrs.src = node.attrs.src.replace(
+              "file-assets://",
+              `file-assets/${noteId}/`
+            );
+          }
+          return node;
+        }
+      );
+    }
+  }
+
+  return processedNote;
 }

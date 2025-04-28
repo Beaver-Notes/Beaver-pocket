@@ -113,7 +113,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
             >
               <option value="">{translations.filter.selectlabel}</option>
-              {labels.map((label: string) => (
+              {labels?.map((label: string) => (
                 <option key={label} value={label}>
                   {label}
                 </option>
@@ -160,7 +160,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             className="rounded-full pr-10 p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none w-full"
           >
             <option value="">{translations.filter.selectlabel}</option>
-            {labels.map((label: string) => (
+            {labels?.map((label: string) => (
               <option key={label} value={label}>
                 {label}
               </option>

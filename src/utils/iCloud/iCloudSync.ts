@@ -13,8 +13,7 @@ import {
   FilesystemDirectory,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { mergeNotes, revertAssetPaths } from "../merge";
-import { Note } from "../../store/types";
+import { mergeData, revertAssetPaths, SyncData } from "../merge";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -29,7 +28,6 @@ interface iCloudSyncHooks {
   syncState: SyncState;
   progress: number;
 }
-
 
 interface AssetSyncLog {
   downloaded: string[];
@@ -64,7 +62,7 @@ const useiCloudSync = (): iCloudSyncHooks => {
     try {
       await iCloud.createFolder({ folderName: `${SYNC_FOLDER_NAME}` });
 
-      let localData: { data?: { notes?: Record<string, Note> } } = {};
+      let localData: SyncData = { notes: {} };
       try {
         const localFileData = await Filesystem.readFile({
           path: STORAGE_PATH,
@@ -76,7 +74,7 @@ const useiCloudSync = (): iCloudSyncHooks => {
         // No local data, use empty object
       }
 
-      let remoteData: { data?: { notes?: Record<string, Note> } } = {};
+      let remoteData: SyncData = { notes: {} };
       try {
         const { fileData: base64Data } = await iCloud.downloadFile({
           fileName: `${SYNC_FOLDER_NAME}/data.json`,
@@ -90,9 +88,7 @@ const useiCloudSync = (): iCloudSyncHooks => {
 
       setProgress(20);
 
-      const localNotes = localData.data?.notes || {};
-      const remoteNotes = remoteData.data?.notes || {};
-      const mergedNotes = mergeNotes(localNotes, remoteNotes);
+      const mergedData = mergeData(localData, remoteData);
 
       const assetSyncLogs = await synciCloudAssets(SYNC_FOLDER_NAME);
 
@@ -107,15 +103,16 @@ const useiCloudSync = (): iCloudSyncHooks => {
 
       await Filesystem.writeFile({
         path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes: mergedNotes } }),
+        data: JSON.stringify(mergedData),
         directory: FilesystemDirectory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
-      const cleanedNotes = revertAssetPaths(mergedNotes); // Revert paths before upload
+      const cleanedData = { ...mergedData };
+      cleanedData.notes = revertAssetPaths(mergedData.notes);
 
       const base64Data = base64Encode(
-        JSON.stringify({ data: { notes: cleanedNotes } })
+        JSON.stringify({ data: { notes: cleanedData } })
       );
 
       await iCloud.uploadFile({

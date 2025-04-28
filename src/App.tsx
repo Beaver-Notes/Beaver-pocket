@@ -39,11 +39,11 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
-  const { syncDropbox } = useDropboxSync();
+  const { notesState, setNotesState } = useNotesState();
+  const { syncDropbox } = useDropboxSync(setNotesState);
   const { synciCloud } = useiCloudSync();
   const { syncOneDrive } = useOneDriveSync();
   const { syncWebDAV } = useWebDAVSync();
-  const { notesState, setNotesState } = useNotesState();
   const [themeMode, setThemeMode] = useState<string>(
     localStorage.getItem("themeMode") || "auto"
   );
@@ -68,7 +68,6 @@ const App: React.FC = () => {
     setThemeMode(newMode ? "dark" : "light");
   };
 
-  // Function to set theme mode to auto based on device preference
   const setAutoMode = () => {
     const prefersDarkMode = window.matchMedia(
       "(prefers-color-scheme: dark)"
@@ -77,27 +76,39 @@ const App: React.FC = () => {
     setThemeMode("auto");
   };
 
-  document.addEventListener("reload", () => {
+  useEffect(() => {
     const loadNotesFromStorage = async () => {
       const notes = await (await loadNotes()).notes;
       setNotesState(notes);
     };
 
-    loadNotesFromStorage();
-  });
+    document.addEventListener("reload", loadNotesFromStorage);
 
-  document.addEventListener("sync", () => {
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      syncDropbox();
-    } else if (syncValue === "iCloud") {
-      synciCloud();
-    } else if (syncValue === "onedrive") {
-      syncOneDrive();
-    } else if (syncValue === "webdav") {
-      syncWebDAV();
-    }
-  });
+    return () => {
+      document.removeEventListener("reload", loadNotesFromStorage);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleSync = () => {
+      const syncValue = localStorage.getItem("sync");
+      if (syncValue === "dropbox") {
+        syncDropbox();
+      } else if (syncValue === "iCloud") {
+        synciCloud();
+      } else if (syncValue === "onedrive") {
+        syncOneDrive();
+      } else if (syncValue === "webdav") {
+        syncWebDAV();
+      }
+    };
+
+    document.addEventListener("sync", handleSync);
+
+    return () => {
+      document.removeEventListener("sync", handleSync);
+    };
+  }, []);
 
   useEffect(() => {
     const initialize = async () => {
@@ -283,10 +294,7 @@ const App: React.FC = () => {
               <Icloud notesState={notesState} setNotesState={setNotesState} />
             }
           />
-          <Route
-            path="/gdrive"
-            element={<Gdrive setNotesState={setNotesState} />}
-          />
+          <Route path="/gdrive" element={<Gdrive />} />
           <Route path="/onedrive" element={<Welcome />} />
           <Route path="/shortcuts" element={<Shortcuts />} />
           <Route path="/icons" element={<Icons />} />
