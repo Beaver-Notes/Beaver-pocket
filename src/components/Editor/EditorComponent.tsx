@@ -18,7 +18,7 @@ import Icons from "../../lib/remixicon-react";
 import Mousetrap from "mousetrap";
 import { WebviewPrint } from "capacitor-webview-print";
 import { uselabelStore } from "../../store/label";
-import { cleanEmptyParagraphs } from "../../utils/ediotor";
+import { cleanEmptyParagraphs } from "../../utils/editor";
 
 type Props = {
   note: Note;
