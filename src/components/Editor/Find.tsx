@@ -94,7 +94,7 @@ const Find: React.FC<SearchReplaceBarProps> = ({ editor, setShowFind }) => {
   };
 
   return (
-    <div className="fixed top-12 bg-white dark:bg-[#232222] flex items-center left-0 w-full z-30 px-4">
+    <div className="fixed sm:top-8 top-12 bg-white dark:bg-[#232222] flex items-center left-0 w-full z-30 px-4">
       <div className="flex items-center w-full space-x-2 justify-center">
         <div className="relative flex items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-primary text-neutral-800 overflow-hidden mr-2">
           <icons.Search2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] mr-2 w-8" />

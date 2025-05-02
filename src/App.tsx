@@ -9,7 +9,6 @@ import Shortcuts from "./components/Settings/shortcuts";
 import Welcome from "./Welcome";
 import Dropbox from "./components/Sync/dropbox";
 import Onedrive from "./components/Sync/onedrive";
-import Gdrive from "./components/Sync/gdrive";
 import Dav from "./components/Sync/dav";
 import Icloud from "./components/Sync/icloud";
 import { Auth0Provider } from "@auth0/auth0-react";
@@ -294,7 +293,6 @@ const App: React.FC = () => {
               <Icloud notesState={notesState} setNotesState={setNotesState} />
             }
           />
-          <Route path="/gdrive" element={<Gdrive />} />
           <Route path="/onedrive" element={<Welcome />} />
           <Route path="/shortcuts" element={<Shortcuts />} />
           <Route path="/icons" element={<Icons />} />

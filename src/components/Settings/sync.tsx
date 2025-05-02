@@ -173,16 +173,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     <icons.iCloud className="w-10 h-10" aria-hidden="true" />
                     <p className="text-2xl pl-2 py-1 font-bold">iCloud</p>
                   </button>
-
-                  <button
-                    className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
-                    onClick={() => navigate("/gdrive")}
-                    aria-label="Google Drive"
-                  >
-                    <icons.GDrive className="w-10 h-10" aria-hidden="true" />
-                    <p className="text-2xl pl-2 py-1 font-bold">Google Drive</p>
-                  </button>
-
+                  
                   <button
                     className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     onClick={() => navigate("/onedrive")}

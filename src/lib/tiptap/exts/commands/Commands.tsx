@@ -4,6 +4,7 @@ import ImageUploadComponent from "../../../../components/Editor/ImageUpload"; //
 import FileUploadComponent from "../../../../components/Editor/FileUpload"; // Adjust the path
 import VideoUploadComponent from "../../../../components/Editor/VideoUpload"; // Adjust the path
 import icons from "../../../remixicon-react";
+import Mousetrap from "mousetrap";
 
 interface SlashMenuProps {
   noteId: string;
@@ -17,70 +18,7 @@ const Commands: React.FC<SlashMenuProps> = ({
   query,
   range,
 }) => {
-  useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../../../assets/locales/${selectedLanguage}.json`
-        );
-        setTranslations((prev) => ({ ...prev, ...translationModule.default }));
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
-  }, []);
-
-  const handlefileUpload = (fileUrl: string, fileName: string) => {
-    editor.commands.deleteRange(range).run();
-
-    editor?.chain().setFileEmbed(fileUrl, fileName).run();
-  };
-
-  const handlevideoUpload = (fileUrl: string) => {
-    editor.commands.deleteRange(range).run();
-    editor?.chain().setVideo(fileUrl).run();
-  };
-
-  const handleImageUpload = (imageUrl: string) => {
-    editor.commands.deleteRange(range).run();
-
-    editor?.chain().setImage({ src: imageUrl }).run();
-  };
-
-  const handleAddIframe = () => {
-    const videoUrl = prompt(`${translations.editor.embedUrl}`);
-    if (!videoUrl || videoUrl.trim() === "") {
-      return;
-    }
-
-    let formattedUrl = videoUrl.trim();
-    if (formattedUrl.includes("youtube.com/watch?v=")) {
-      let videoId = formattedUrl.split("v=")[1];
-      const ampersandPosition = videoId.indexOf("&");
-      if (ampersandPosition !== -1) {
-        videoId = videoId.substring(0, ampersandPosition);
-      }
-      formattedUrl = `https://www.youtube.com/embed/${videoId}`;
-    } else if (formattedUrl.includes("youtu.be/")) {
-      let videoId = formattedUrl.split("youtu.be/")[1];
-      const ampersandPosition = videoId.indexOf("?");
-      if (ampersandPosition !== -1) {
-        videoId = videoId.substring(0, ampersandPosition);
-      }
-      formattedUrl = `https://www.youtube.com/embed/${videoId}`;
-    }
-
-    editor
-      ?.chain()
-      .focus()
-      .deleteRange(range)
-      .setIframe({ src: formattedUrl })
-      .run();
-  };
-
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [translations, setTranslations] = useState({
     editor: {
       embedUrl: "editorembedUrl",
@@ -114,6 +52,68 @@ const Commands: React.FC<SlashMenuProps> = ({
       drawingBlock: "menu.drawingBlock",
     },
   });
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../../../assets/locales/${selectedLanguage}.json`
+        );
+        setTranslations((prev) => ({ ...prev, ...translationModule.default }));
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+
+  const handlefileUpload = (fileUrl: string, fileName: string) => {
+    editor.commands.deleteRange(range).run();
+    editor?.chain().setFileEmbed(fileUrl, fileName).run();
+  };
+
+  const handlevideoUpload = (fileUrl: string) => {
+    editor.commands.deleteRange(range).run();
+    editor?.chain().setVideo(fileUrl).run();
+  };
+
+  const handleImageUpload = (imageUrl: string) => {
+    editor.commands.deleteRange(range).run();
+    editor?.chain().setImage({ src: imageUrl }).run();
+  };
+
+  const handleAddIframe = () => {
+    const videoUrl = prompt(`${translations.editor.embedUrl}`);
+    if (!videoUrl || videoUrl.trim() === "") {
+      return;
+    }
+
+    let formattedUrl = videoUrl.trim();
+    if (formattedUrl.includes("youtube.com/watch?v=")) {
+      let videoId = formattedUrl.split("v=")[1];
+      const ampersandPosition = videoId.indexOf("&");
+      if (ampersandPosition !== -1) {
+        videoId = videoId.substring(0, ampersandPosition);
+      }
+      formattedUrl = `https://www.youtube.com/embed/${videoId}`;
+    } else if (formattedUrl.includes("youtu.be/")) {
+      let videoId = formattedUrl.split("youtu.be/")[1];
+      const ampersandPosition = videoId.indexOf("?");
+      if (ampersandPosition !== -1) {
+        videoId = videoId.substring(0, ampersandPosition);
+      }
+      formattedUrl = `https://www.youtube.com/embed/${videoId}`;
+    }
+
+    editor
+      ?.chain()
+      .focus()
+      .deleteRange(range)
+      .setIframe({ src: formattedUrl })
+      .run();
+  };
 
   const menu = [
     {
@@ -263,7 +263,6 @@ const Commands: React.FC<SlashMenuProps> = ({
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menu.redCallout,
-
       className: "text-red-500 dark:text-red-500",
       //@ts-ignore
       action: () =>
@@ -272,17 +271,14 @@ const Commands: React.FC<SlashMenuProps> = ({
     {
       icon: icons.SingleQuotesLIcon,
       label: translations.menu.yellowCallout,
-
       className: "text-yellow-500 dark:text-yellow-500",
       //@ts-ignore
-
       action: () =>
         editor?.chain().focus().deleteRange(range).setYellowCallout().run(),
     },
     {
       icon: icons.CalculatorLineIcon,
       label: translations.menu.mathBlock,
-
       //@ts-ignore
       action: () =>
         editor?.chain().focus().deleteRange(range).setMathBlock().run(),
@@ -290,7 +286,6 @@ const Commands: React.FC<SlashMenuProps> = ({
     {
       icon: icons.PieChart2LineIcon,
       label: translations.menu.mermaidBlock,
-
       //@ts-ignore
       action: () =>
         editor?.chain().focus().deleteRange(range).setMermaidDiagram().run(),
@@ -298,13 +293,11 @@ const Commands: React.FC<SlashMenuProps> = ({
     {
       icon: icons.PagesLineIcon,
       label: translations.menu.embed,
-
       action: handleAddIframe,
     },
     {
       icon: icons.BrushLineIcon,
       label: translations.menu.drawingBlock,
-
       //@ts-ignore
       action: () =>
         editor?.chain().focus().deleteRange(range).insertPaper().run(),
@@ -377,7 +370,9 @@ const Commands: React.FC<SlashMenuProps> = ({
         <button
           key={index}
           onClick={item.action}
-          className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700 transition duration-200"
+          className={`flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700 transition duration-200 ${
+            index === selectedIndex ? "bg-neutral-200 dark:bg-neutral-600" : ""
+          }`}
         >
           <div className="text-left flex overflow-hidden text-ellipsis whitespace-nowrap">
             <item.icon
@@ -391,13 +386,66 @@ const Commands: React.FC<SlashMenuProps> = ({
           </div>
         </button>
       ),
+      action: item.action,
     })),
     ...uploadComponents,
   ].slice(0, 5);
 
+  // Handle item click for both keyboard and mouse selections
+  const handleItemClick = (index: number) => {
+    const selected = combinedItems[index];
+    if (selected) {
+      if ("action" in selected && selected.action) {
+        selected.action();
+      } else if (selected.component.props?.onClick) {
+        selected.component.props.onClick();
+      }
+    }
+  };
+
+  useEffect(() => {
+    Mousetrap.bind("up", (e) => {
+      e.preventDefault();
+      setSelectedIndex(
+        (prev) => (prev - 1 + combinedItems.length) % combinedItems.length
+      );
+    });
+
+    Mousetrap.bind("down", (e) => {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % combinedItems.length);
+    });
+
+    Mousetrap.bind("enter", (e) => {
+      e.preventDefault();
+      handleItemClick(selectedIndex);
+    });
+
+    Mousetrap.bind("esc", (e) => {
+      e.preventDefault();
+      editor?.commands.deleteRange(range).run();
+    });
+
+    return () => {
+      Mousetrap.unbind(["up", "down", "enter", "esc"]);
+    };
+  }, [combinedItems.length, selectedIndex]);
+
   return (
     <div className="z-50 fixed bg-white dark:bg-neutral-800 rounded-lg shadow-lg border shadow-xl dark:border-neutral-600 p-2">
-      {combinedItems.map((item) => item.component)}
+      {combinedItems.map((item, index) => (
+        <div
+          key={index}
+          onClick={() => handleItemClick(index)}
+          className={`cursor-pointer ${
+            index === selectedIndex
+              ? "bg-neutral-200 dark:bg-neutral-600 rounded-lg"
+              : ""
+          }`}
+        >
+          {item.component}
+        </div>
+      ))}
     </div>
   );
 };

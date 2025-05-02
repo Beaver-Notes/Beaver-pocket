@@ -57,7 +57,6 @@ export async function trackChange(key: string, data: any): Promise<string> {
 function scheduleSyncWithDebounce(): void {
   if (debounceTimeout) clearTimeout(debounceTimeout);
   debounceTimeout = window.setTimeout(() => {
-    alert("Syncing changes...");
     document.dispatchEvent(new Event("sync"));
   }, 500);
 }
