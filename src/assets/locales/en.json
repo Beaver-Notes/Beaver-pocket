@@ -103,7 +103,6 @@
     "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?"
   },
   "dropbox": {
-    "title": "Sync with Dropbox",
     "import": "Import",
     "export": "Export",
     "submit": "Submit",
@@ -115,7 +114,6 @@
     "icon": "Dropbox icon"
   },
   "gdrive": {
-    "title": "Sync with Google Drive",
     "import": "Import",
     "export": "Export",
     "autoSync": "Auto Sync",
@@ -124,13 +122,11 @@
     "refreshingToken": "Access token expired, refreshing..."
   },
   "icloud": {
-    "title": "Sync with iCloud",
     "import": "Import",
     "export": "Export",
     "autoSync": "Auto Sync"
   },
   "webdav": {
-    "title": "Sync with WebDAV",
     "login": "Login",
     "username": "Username",
     "password": "Password",
@@ -139,7 +135,6 @@
     "autoSync": "Auto Sync"
   },
   "onedrive": {
-    "title": "Sync with Onedrive",
     "import": "Import",
     "export": "Export",
     "login": "Login",

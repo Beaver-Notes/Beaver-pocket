@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plugins } from "@capacitor/core";
+import icons from "../../lib/remixicon-react";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { Note } from "../../store/types";
 
@@ -25,7 +26,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
     loadToken();
   }, []);
 
-  const decodeJwt = (token:string) => {
+  const decodeJwt = (token: string) => {
     try {
       const payload = token.split(".")[1]; // Extract the payload part of the JWT
       const decodedPayload = atob(payload); // Decode base64 string
@@ -117,9 +118,9 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
       login: "onedrive.login",
       refreshingToken: "onedrive.refreshingToken",
     },
-    sync : {
+    sync: {
       existingFolder: "sync.existingFolder",
-    }
+    },
   });
 
   useEffect(() => {
@@ -171,16 +172,12 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
   return (
     <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+        <p className="text-4xl text-left font-bold p-4" aria-label="onedrive">
+          Onedrive
+        </p>
         <div className="flex justify-center items-center">
-          <div className="flex flex-col items-center">
-            <p
-              className="text-4xl text-center font-bold p-4"
-              aria-label={translations.onedrive.title || "-"}
-            >
-              {translations.onedrive.title || "-"}
-            </p>
-            <div className="flex justify-center items-center">
-            </div>
+          <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
+            <icons.OneDrive className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
           </div>
         </div>
         {accessToken ? (

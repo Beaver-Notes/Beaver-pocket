@@ -139,11 +139,16 @@ const Webdav: React.FC<WebdavProps> = () => {
           <div className="flex flex-col">
             <div className="space-y-2">
               <p
-                className="text-4xl text-center font-bold p-4"
-                aria-label={translations.webdav.title || "-"}
+                className="text-4xl text-left font-bold p-4"
+                aria-label="Webdav"
               >
-                {translations.webdav.title || "-"}
+                Webdav
               </p>
+              <div className="flex justify-center items-center">
+                <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
+                  <icons.CloudLine className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
+                </div>
+              </div>
               <input
                 type="text"
                 className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-primary focus:border-primary focus:outline-none focus:border-secondary border-2 p-2 rounded-xl pr-10"

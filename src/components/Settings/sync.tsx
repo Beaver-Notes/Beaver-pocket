@@ -156,7 +156,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     onClick={() => navigate("/dav")}
                     aria-label="Webdav"
                   >
-                    <icons.ServerLineIcon
+                    <icons.CloudLine
                       className="w-10 h-10"
                       aria-hidden="true"
                     />

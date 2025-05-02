@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "../../store/types";
+import icons from "../../lib/remixicon-react";
 interface iCloudProps {
   notesState: Record<string, Note>;
   setNotesState: (notes: Record<string, Note>) => void;
@@ -18,9 +19,9 @@ const iCloudSync: React.FC<iCloudProps> = () => {
       logout: "icloud.logout",
       refreshingToken: "icloud.refreshingToken",
     },
-    sync : {
+    sync: {
       existingFolder: "sync.existingFolder",
-    }
+    },
   });
 
   useEffect(() => {
@@ -89,20 +90,17 @@ const iCloudSync: React.FC<iCloudProps> = () => {
   return (
     <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+        <p className="text-4xl text-left font-bold p-4" aria-label="icloud">
+          iCloud
+        </p>
         <div className="flex justify-center items-center">
-          <div className="flex flex-col items-center">
-            <p
-              className="text-4xl text-center font-bold p-4"
-              aria-label={translations.icloud.title || "-"}
-            >
-              {translations.icloud.title || "-"}
-            </p>
+          <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
+            <icons.iCloud className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
           </div>
         </div>
         <section>
           <div className="flex flex-col">
-            <div className="space-y-2">
-            </div>
+            <div className="space-y-2"></div>
           </div>
           <div className="flex items-center py-2 justify-between">
             <div>

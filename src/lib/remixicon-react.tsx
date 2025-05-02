@@ -34,7 +34,7 @@ import FileIcon from "remixicon-react/FileLineIcon";
 import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
 import CloseLineIcon from "remixicon-react/CloseLineIcon";
 import BoldIcon from "remixicon-react/BoldIcon";
-import ServerLineIcon from "remixicon-react/ServerLineIcon";
+import CloudLine from "remixicon-react/CloudyLineIcon";
 import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
 import ItalicIcon from "remixicon-react/ItalicIcon";
 import UnderlineIcon from "remixicon-react/UnderlineIcon";
@@ -331,7 +331,7 @@ const Icons = {
   LinkIcon,
   DoubleQuotesLIcon,
   DropboxFillIcon,
-  ServerLineIcon,
+  CloudLine,
   Edit2LineIcon,
   SubscriptIcon,
   SuperscriptIcon,

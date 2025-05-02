@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Note } from "../../store/types";
 import { Browser } from "@capacitor/browser";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
+import icons from "../../lib/remixicon-react";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 
@@ -30,9 +31,9 @@ const DropboxSync: React.FC<DropboxProps> = () => {
       refreshingToken: "dropbox.refreshingToken",
       placeholder: "dropbox.placeholder",
     },
-    sync : {
+    sync: {
       existingFolder: "sync.existingFolder",
-    }
+    },
   });
 
   useEffect(() => {
@@ -273,16 +274,12 @@ const DropboxSync: React.FC<DropboxProps> = () => {
   return (
     <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+        <p className="text-4xl text-left font-bold p-4" aria-label="dropbox">
+          Dropbox
+        </p>
         <div className="flex justify-center items-center">
-          <div className="flex flex-col items-center">
-            <p
-              className="text-4xl text-center font-bold p-4"
-              aria-label={translations.dropbox.title || "-"}
-            >
-              {translations.dropbox.title || "-"}
-            </p>
-            <div className="flex justify-center items-center">
-            </div>
+          <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
+            <icons.DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
           </div>
         </div>
         {accessToken ? (
