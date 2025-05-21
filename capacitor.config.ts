@@ -21,12 +21,17 @@ const config: CapacitorConfig = {
       layoutName: "launch_screen",
       useDialog: true,
     },
-    SocialLogin: {
-      google: {
-        webClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID,
-        iOSClientId: process.env.VITE_IOS_GOOGLE_CLIENT_ID,
-        mode: "offline",
-      },
+    GoogleAuth: {
+      clientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID, // Web app client ID (browser use)
+      iosClientId: process.env.VITE_IOS_GOOGLE_CLIENT_ID, // iOS client ID
+      androidClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID, // Android client ID
+      servserverClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID, // Android client ID
+      scopes: [
+        "profile",
+        "email",
+        "https://www.googleapis.com/auth/drive.file",
+      ],
+      forceCodeForRefreshToken: true,
     },
     Keyboard: {
       //@ts-ignore

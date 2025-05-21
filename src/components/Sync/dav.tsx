@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { WebDavService } from "../../utils/Webdav/webDavApi";
 import icons from "../../lib/remixicon-react";
 import { Note } from "../../store/types";
@@ -10,15 +11,25 @@ interface WebdavProps {
 
 const Webdav: React.FC<WebdavProps> = () => {
   // Correctly destructuring props
-  const [baseUrl, setBaseUrl] = useState<string>(
-    () => localStorage.getItem("baseUrl") || ""
-  );
-  const [username, setUsername] = useState<string>(
-    () => localStorage.getItem("username") || ""
-  );
-  const [password, setPassword] = useState<string>(
-    () => localStorage.getItem("password") || ""
-  );
+  const [baseUrl, setBaseUrl] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+
+  const initialize = async () => {
+    try {
+      const baseUrlResult = await SecureStoragePlugin.get({ key: "baseurl" });
+      setBaseUrl(baseUrlResult.value || "");
+      const usernameResult = await SecureStoragePlugin.get({ key: "username" });
+      setUsername(usernameResult.value || "");
+      const passwordResult = await SecureStoragePlugin.get({ key: "password" });
+      setPassword(passwordResult.value || "");
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    initialize();
+  }, []);
+
   const [] = useState(
     () =>
       new WebDavService({
@@ -38,6 +49,7 @@ const Webdav: React.FC<WebdavProps> = () => {
       export: "webdav.export",
       import: "webdav.import",
       autoSync: "wevdav.autoSync",
+      insecureMode: "webdav.insecureMode",
     },
     accessibility: {
       webdavUrl: "accessibility.webdavUrl",
@@ -67,17 +79,38 @@ const Webdav: React.FC<WebdavProps> = () => {
   const [showInputContent, setShowInputContent] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("baseUrl", baseUrl);
-    localStorage.setItem("username", username);
-    localStorage.setItem("password", password);
+    const saveCredentials = async () => {
+      await SecureStoragePlugin.set({
+        key: "baseurl",
+        value: baseUrl,
+      });
+      await SecureStoragePlugin.set({
+        key: "username",
+        value: username,
+      });
+      await SecureStoragePlugin.set({
+        key: "password",
+        value: password,
+      });
+    };
+    saveCredentials();
   }, [baseUrl, username, password]);
 
   const login = async () => {
     try {
-      localStorage.setItem("baseUrl", baseUrl);
-      localStorage.setItem("username", username);
-      localStorage.setItem("password", password);
-      location.reload();
+      await SecureStoragePlugin.set({
+        key: "baseUrl",
+        value: baseUrl,
+      });
+      await SecureStoragePlugin.set({
+        key: "username",
+        value: username,
+      });
+      await SecureStoragePlugin.set({
+        key: "password",
+        value: password,
+      });
+      initialize();
     } catch (error) {
       console.log("Error logging in");
     }

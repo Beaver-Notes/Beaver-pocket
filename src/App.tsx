@@ -9,6 +9,7 @@ import Shortcuts from "./components/Settings/shortcuts";
 import Welcome from "./Welcome";
 import Dropbox from "./components/Sync/dropbox";
 import Onedrive from "./components/Sync/onedrive";
+import Drive from "./components/Sync/drive";
 import Dav from "./components/Sync/dav";
 import Icloud from "./components/Sync/icloud";
 import { Auth0Provider } from "@auth0/auth0-react";
@@ -33,6 +34,7 @@ import useDropboxSync from "./utils/Dropbox/DropboxSync";
 import useiCloudSync from "./utils/iCloud/iCloudSync";
 import useOneDriveSync from "./utils/Onedrive/oneDriveSync";
 import useWebDAVSync from "./utils/Webdav/webDavSync";
+import useDriveSync from "./utils/Google Drive/GoogleDriveSync";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -43,6 +45,7 @@ const App: React.FC = () => {
   const { synciCloud } = useiCloudSync();
   const { syncOneDrive } = useOneDriveSync();
   const { syncWebDAV } = useWebDAVSync();
+  const { syncDrive } = useDriveSync(setNotesState);
   const [themeMode, setThemeMode] = useState<string>(
     localStorage.getItem("themeMode") || "auto"
   );
@@ -99,6 +102,9 @@ const App: React.FC = () => {
         syncOneDrive();
       } else if (syncValue === "webdav") {
         syncWebDAV();
+      } else if (syncValue === "googledrive") {
+        console.log("Syncing with Google Drive");
+        syncDrive();
       }
     };
 
@@ -293,7 +299,12 @@ const App: React.FC = () => {
               <Icloud notesState={notesState} setNotesState={setNotesState} />
             }
           />
-          <Route path="/onedrive" element={<Welcome />} />
+          <Route
+            path="/drive"
+            element={
+              <Drive />
+            }
+          />
           <Route path="/shortcuts" element={<Shortcuts />} />
           <Route path="/icons" element={<Icons />} />
           <Route path="/welcome" element={<Welcome />} />

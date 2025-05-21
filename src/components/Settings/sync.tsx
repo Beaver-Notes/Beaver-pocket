@@ -66,14 +66,16 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
 
             await Zip.unzip({
               sourceFile: filePath,
-              destinationPath: `export/${file.name.split('.').slice(0, -1).join('.')}`,
+              destinationPath: `export/${file.name
+                .split(".")
+                .slice(0, -1)
+                .join(".")}`,
             });
 
             await Filesystem.deleteFile({
               path: filePath,
               directory: FilesystemDirectory.Data,
             });
-
           } catch (error) {
             console.error("Error writing file to filesystem:", error);
             reject(error); // Reject promise on error
@@ -156,10 +158,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     onClick={() => navigate("/dav")}
                     aria-label="Webdav"
                   >
-                    <icons.CloudLine
-                      className="w-10 h-10"
-                      aria-hidden="true"
-                    />
+                    <icons.CloudLine className="w-10 h-10" aria-hidden="true" />
                     <p className="text-2xl pl-2 py-1 font-bold">Webdav</p>
                   </button>
 
@@ -173,7 +172,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     <icons.iCloud className="w-10 h-10" aria-hidden="true" />
                     <p className="text-2xl pl-2 py-1 font-bold">iCloud</p>
                   </button>
-                  
+
                   <button
                     className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     onClick={() => navigate("/onedrive")}
@@ -181,6 +180,15 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                   >
                     <icons.OneDrive className="w-10 h-10" aria-hidden="true" />
                     <p className="text-2xl pl-2 py-1 font-bold">OneDrive</p>
+                  </button>
+
+                  <button
+                    className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
+                    onClick={() => navigate("/drive")}
+                    aria-label="Google Drive"
+                  >
+                    <icons.GDrive className="w-10 h-10" aria-hidden="true" />
+                    <p className="text-2xl pl-2 py-1 font-bold">GDrive</p>
                   </button>
                 </div>
 
