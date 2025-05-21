@@ -14,6 +14,7 @@ import {
 } from "../base64";
 import mime from "mime";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
+import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -52,14 +53,16 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
     remoteVersion: 0,
   });
 
-  // Move these hooks to the top level
-  const baseUrl = localStorage.getItem("baseUrl") || "";
-  const username = localStorage.getItem("username") || "";
-  const password = localStorage.getItem("password") || "";
-  const webDavService = new WebDavService({ baseUrl, username, password });
-
   const syncWebDAV = async () => {
-    alert("Function started"); // Debug alert
+    const baseUrl = await SecureStoragePlugin.get({ key: "baseurl" });
+    const username = await SecureStoragePlugin.get({ key: "username" });
+    const password = await SecureStoragePlugin.get({ key: "password" });
+    const webDavService = new WebDavService({
+      baseUrl: baseUrl.value,
+      username: username.value,
+      password: password.value,
+    });
+    alert("Function started");
 
     setSyncState((prev) => ({
       ...prev,
@@ -95,9 +98,6 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
       } catch {
         // No remote data, use empty object
       }
-
-      alert(localData);
-      alert(remoteData);
 
       setProgress(20);
 
@@ -140,7 +140,7 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
 
       setProgress(100);
     } catch (error) {
-      console.error("Dropbox Sync Error:", error);
+      console.error("Sync Error:", error);
 
       setSyncState((prev) => ({
         ...prev,

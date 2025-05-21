@@ -46,8 +46,7 @@ export class WebDavService {
       });
       console.log(`${this.options.baseUrl}/${folderPath}`);
     } catch (error) {
-      alert(`Failed to create folder on Android: ${error}`); // Display error message
-      throw new Error(`Failed to create folder on Android: ${error}`);
+      throw new Error(`Failed to create folder: ${error}`);
     }
   }
 
@@ -69,7 +68,6 @@ export class WebDavService {
       const config = await this.createRequestConfig();
       await axios.put(`${this.options.baseUrl}/${fileName}`, content, config);
     } catch (error) {
-      alert(`Failed to upload file: ${fileName}`); // Error message
       throw new Error(`Failed to upload file: ${fileName}`);
     }
   }
@@ -83,7 +81,6 @@ export class WebDavService {
         headers: config.headers,
       });
     } catch (error) {
-      alert(`Failed to delete folder at ${folderPath}: ${error}`); // Error message
       throw new Error(`Failed to delete folder at ${folderPath}: ${error}`);
     }
   }
