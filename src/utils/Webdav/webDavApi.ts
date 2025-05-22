@@ -1,4 +1,3 @@
-import axios, { AxiosRequestConfig } from "axios";
 import WebDAV from "./WebDAVPlugin";
 
 interface WebDavOptions {
@@ -14,24 +13,37 @@ export class WebDavService {
     this.options = options;
   }
 
-  private async createRequestConfig(): Promise<AxiosRequestConfig> {
-    const { username, password } = this.options;
-    const authToken = btoa(`${username}:${password}`);
+  // Helper to build full URL
+  private buildUrl(path: string): string {
+    return `${this.options.baseUrl}/${path}`;
+  }
 
-    return {
-      headers: {
-        Authorization: `Basic ${authToken}`,
-        "Content-Type": "application/xml",
-      },
-    };
+  // Helper to convert Blob to base64 string (if needed)
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        // Remove prefix like "data:application/octet-stream;base64,"
+        const base64 = base64data.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   }
 
   async get(path: string): Promise<string> {
     try {
-      const config = await this.createRequestConfig();
-      const url = `${this.options.baseUrl}/${path}`;
-      const response = await axios.get(url, config);
-      return response.data; // Extract and return the file content
+      const url = this.buildUrl(path);
+      const result = await WebDAV.getFile({
+        url,
+        username: this.options.username,
+        password: this.options.password,
+      });
+      // result.content is base64 encoded, convert to utf8 string if needed
+      const decoded = atob(result.content);
+      return decoded;
     } catch (error) {
       throw new Error(`Failed to GET ${path}: ${error}`);
     }
@@ -39,12 +51,20 @@ export class WebDavService {
 
   async createFolder(folderPath: string): Promise<void> {
     try {
+      // First check if folder exists
+      const exists = await this.folderExists(folderPath);
+      if (exists) {
+        console.log(`Folder already exists at ${this.buildUrl(folderPath)}`);
+        return; // Early exit - no error, folder already there
+      }
+
+      // Folder does not exist, create it
       await WebDAV.createFolder({
-        url: `${this.options.baseUrl}/${folderPath}`,
+        url: this.buildUrl(folderPath),
         username: this.options.username,
         password: this.options.password,
       });
-      console.log(`${this.options.baseUrl}/${folderPath}`);
+      console.log(`Folder created at ${this.buildUrl(folderPath)}`);
     } catch (error) {
       throw new Error(`Failed to create folder: ${error}`);
     }
@@ -53,33 +73,46 @@ export class WebDavService {
   async folderExists(path: string): Promise<boolean> {
     try {
       await WebDAV.checkFolderExists({
-        url: `${this.options.baseUrl}/${path}`,
+        url: this.buildUrl(path),
         username: this.options.username,
         password: this.options.password,
       });
       return true;
-    } catch (error) {
-      return false; // If an error occurs, assume the folder doesn't exist
+    } catch {
+      return false; // Assume does not exist on error
     }
   }
 
   async upload(fileName: string, content: string | Blob): Promise<void> {
     try {
-      const config = await this.createRequestConfig();
-      await axios.put(`${this.options.baseUrl}/${fileName}`, content, config);
+      let base64Content: string;
+      if (typeof content === "string") {
+        // Assume it's already base64 encoded string
+        base64Content = content;
+      } else {
+        base64Content = await this.blobToBase64(content);
+      }
+
+      await WebDAV.uploadFile({
+        url: this.buildUrl(fileName),
+        username: this.options.username,
+        password: this.options.password,
+        content: base64Content,
+      });
+      console.log(`File uploaded: ${this.buildUrl(fileName)}`);
     } catch (error) {
-      throw new Error(`Failed to upload file: ${fileName}`);
+      throw new Error(`Failed to upload file: ${fileName} - ${error}`);
     }
   }
 
   async deleteFolder(folderPath: string): Promise<void> {
     try {
-      const config = await this.createRequestConfig();
-      await axios.request({
-        method: "DELETE",
-        url: `${this.options.baseUrl}/${folderPath}`,
-        headers: config.headers,
+      await WebDAV.deleteFolder({
+        url: this.buildUrl(folderPath),
+        username: this.options.username,
+        password: this.options.password,
       });
+      console.log(`Folder deleted at ${this.buildUrl(folderPath)}`);
     } catch (error) {
       throw new Error(`Failed to delete folder at ${folderPath}: ${error}`);
     }
@@ -88,14 +121,15 @@ export class WebDavService {
   async getDirectoryContent(path: string): Promise<any[]> {
     try {
       const result = await WebDAV.listContents({
-        url: `${this.options.baseUrl}/${path}`,
+        url: this.buildUrl(path),
         username: this.options.username,
         password: this.options.password,
       });
+      // Assuming the response data is JSON string
       return JSON.parse(result.data);
     } catch (error) {
-      console.error("Error getting directory contents on Android:", error);
-      throw new Error(`Failed to get directory content on Android: ${error}`);
+      console.error("Error getting directory contents:", error);
+      throw new Error(`Failed to get directory content: ${error}`);
     }
   }
 }

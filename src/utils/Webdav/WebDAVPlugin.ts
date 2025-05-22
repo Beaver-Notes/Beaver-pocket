@@ -1,6 +1,6 @@
 import { registerPlugin } from "@capacitor/core";
 
-// Define the interface for the WebDAV plugin
+// Define the interface for the WebDAV plugin with full endpoints and comments
 export interface WebDAVPlugin {
   /**
    * Creates a new folder at the specified WebDAV URL.
@@ -38,6 +38,43 @@ export interface WebDAVPlugin {
   }): Promise<{
     message: string;
     data: string;
+  }>;
+
+  /**
+   * Uploads a file to the specified WebDAV URL.
+   * Uses the current security mode set by setInsecureMode.
+   */
+  uploadFile(options: {
+    url: string;
+    username: string;
+    password: string;
+    content: string; // base64 encoded string
+  }): Promise<{
+    message: string;
+  }>;
+
+  /**
+   * Deletes a folder at the specified WebDAV URL.
+   * Uses the current security mode set by setInsecureMode.
+   */
+  deleteFolder(options: {
+    url: string;
+    username: string;
+    password: string;
+  }): Promise<{
+    message: string;
+  }>;
+
+  /**
+   * Retrieves a file from the specified WebDAV URL.
+   * Uses the current security mode set by setInsecureMode.
+   */
+  getFile(options: {
+    url: string;
+    username: string;
+    password: string;
+  }): Promise<{
+    content: string; // base64 encoded string
   }>;
 }
 
