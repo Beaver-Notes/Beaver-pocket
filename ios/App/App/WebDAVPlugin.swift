@@ -5,8 +5,10 @@ import Capacitor
 public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "WebDAVPlugin"
     public let jsName = "WebDAV"
-    
+
     public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "setInsecureMode", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "uploadCertificate", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "createFolder", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "checkFolderExists", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "listContents", returnType: CAPPluginReturnPromise),
@@ -14,10 +16,28 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "deleteFolder", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getFile", returnType: CAPPluginReturnPromise)
     ]
-    
+
+    private var useInsecure: Bool = false
+    private var trustedCertificate: SecCertificate?
+
     override public func load() {}
 
-    // MARK: - Custom Insecure Session
+    @objc func setInsecureMode(_ call: CAPPluginCall) {
+        useInsecure = call.getBool("insecure") ?? false
+        call.resolve(["message": "Insecure mode set to \(useInsecure)"])
+    }
+
+    @objc func uploadCertificate(_ call: CAPPluginCall) {
+        guard let base64Cert = call.getString("certificate"),
+              let certData = Data(base64Encoded: base64Cert),
+              let certificate = SecCertificateCreateWithData(nil, certData as CFData) else {
+            call.reject("Invalid certificate data")
+            return
+        }
+
+        self.trustedCertificate = certificate
+        call.resolve(["message": "Certificate uploaded successfully"])
+    }
 
     private class InsecureURLSessionDelegate: NSObject, URLSessionDelegate {
         func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge,
@@ -30,12 +50,54 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    private func createInsecureSession() -> URLSession {
-        let config = URLSessionConfiguration.default
-        return URLSession(configuration: config, delegate: InsecureURLSessionDelegate(), delegateQueue: nil)
+    private class CustomCertSessionDelegate: NSObject, URLSessionDelegate {
+        let trustedCert: SecCertificate?
+
+        init(cert: SecCertificate?) {
+            self.trustedCert = cert
+        }
+
+        func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge,
+                        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+            guard let serverTrust = challenge.protectionSpace.serverTrust,
+                  let trustedCert = trustedCert else {
+                completionHandler(.performDefaultHandling, nil)
+                return
+            }
+
+            let certCount = SecTrustGetCertificateCount(serverTrust)
+            if certCount > 0,
+               let serverCertificate = SecTrustGetCertificateAtIndex(serverTrust, 0) {
+                let serverCertData = SecCertificateCopyData(serverCertificate) as Data
+                let localCertData = SecCertificateCopyData(trustedCert) as Data
+
+                if serverCertData == localCertData {
+                    completionHandler(.useCredential, URLCredential(trust: serverTrust))
+                    return
+                }
+            }
+
+            completionHandler(.cancelAuthenticationChallenge, nil)
+        }
     }
 
-    // MARK: - Folder Operations
+    private func getSession() -> URLSession {
+        if useInsecure {
+            let config = URLSessionConfiguration.default
+            return URLSession(configuration: config, delegate: InsecureURLSessionDelegate(), delegateQueue: nil)
+        } else if let cert = trustedCertificate {
+            let config = URLSessionConfiguration.default
+            return URLSession(configuration: config, delegate: CustomCertSessionDelegate(cert: cert), delegateQueue: nil)
+        } else {
+            return URLSession.shared
+        }
+    }
+
+    private func getAuthHeader(username: String, password: String) -> String {
+        let credentialData = "\(username):\(password)".data(using: .utf8)!
+        let base64Credentials = credentialData.base64EncodedString()
+        return "Basic \(base64Credentials)"
+    }
 
     @objc func createFolder(_ call: CAPPluginCall) {
         guard let url = call.getString("url"),
@@ -50,7 +112,7 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
         request.httpMethod = "MKCOL"
         request.addValue(getAuthHeader(username: username, password: password), forHTTPHeaderField: "Authorization")
 
-        let task = createInsecureSession().dataTask(with: request) { data, response, error in
+        let task = getSession().dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     call.reject("Failed to create folder: \(error.localizedDescription)")
@@ -69,7 +131,6 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
             }
         }
-
         task.resume()
     }
 
@@ -86,7 +147,7 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
         request.httpMethod = "PROPFIND"
         request.addValue(getAuthHeader(username: username, password: password), forHTTPHeaderField: "Authorization")
 
-        let task = createInsecureSession().dataTask(with: request) { _, response, error in
+        let task = getSession().dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     call.reject("Failed to check folder existence: \(error.localizedDescription)")
@@ -105,7 +166,6 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
             }
         }
-
         task.resume()
     }
 
@@ -122,7 +182,7 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
         request.httpMethod = "DELETE"
         request.addValue(getAuthHeader(username: username, password: password), forHTTPHeaderField: "Authorization")
 
-        let task = createInsecureSession().dataTask(with: request) { _, response, error in
+        let task = getSession().dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     call.reject("Delete failed: \(error.localizedDescription)")
@@ -141,11 +201,8 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
             }
         }
-
         task.resume()
     }
-
-    // MARK: - File Operations
 
     @objc func uploadFile(_ call: CAPPluginCall) {
         guard let url = call.getString("url"),
@@ -163,7 +220,7 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
         request.addValue(getAuthHeader(username: username, password: password), forHTTPHeaderField: "Authorization")
         request.httpBody = data
 
-        let task = createInsecureSession().dataTask(with: request) { _, response, error in
+        let task = getSession().dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     call.reject("Upload failed: \(error.localizedDescription)")
@@ -182,7 +239,6 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
             }
         }
-
         task.resume()
     }
 
@@ -199,7 +255,7 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
         request.httpMethod = "GET"
         request.addValue(getAuthHeader(username: username, password: password), forHTTPHeaderField: "Authorization")
 
-        let task = createInsecureSession().dataTask(with: request) { data, response, error in
+        let task = getSession().dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     call.reject("GET failed: \(error.localizedDescription)")
@@ -220,7 +276,6 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
                 }
             }
         }
-
         task.resume()
     }
 
@@ -237,45 +292,30 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
         request.httpMethod = "PROPFIND"
         request.addValue(getAuthHeader(username: username, password: password), forHTTPHeaderField: "Authorization")
 
-        let task = createInsecureSession().dataTask(with: request) { data, response, error in
-            if let error = error {
-                DispatchQueue.main.async {
+        let task = getSession().dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
                     call.reject("Failed to list folder contents: \(error.localizedDescription)")
+                    return
                 }
-                return
-            }
 
-            guard let httpResponse = response as? HTTPURLResponse else {
-                DispatchQueue.main.async {
+                guard let httpResponse = response as? HTTPURLResponse else {
                     call.reject("Invalid response")
+                    return
                 }
-                return
-            }
 
-            if (200...299).contains(httpResponse.statusCode) {
-                DispatchQueue.main.async {
+                if (200...299).contains(httpResponse.statusCode) {
                     let xmlResponse = data != nil ? String(data: data!, encoding: .utf8) ?? "No response body" : "No response body"
                     call.resolve([
-                        "message": "Folder exists.",
+                        "message": "Folder contents retrieved.",
                         "data": xmlResponse
                     ])
-                }
-            } else {
-                DispatchQueue.main.async {
+                } else {
                     let responseString = data != nil ? String(data: data!, encoding: .utf8) ?? "No response body" : "No response body"
                     call.reject("Failed to list folder contents: \(httpResponse.statusCode) - \(responseString)")
                 }
             }
         }
-
         task.resume()
-    }
-
-    // MARK: - Auth Helper
-
-    private func getAuthHeader(username: String, password: String) -> String {
-        let credentialData = "\(username):\(password)".data(using: .utf8)!
-        let base64Credentials = credentialData.base64EncodedString()
-        return "Basic \(base64Credentials)"
     }
 }

@@ -132,7 +132,8 @@
     "password": "Password",
     "export": "Export",
     "import": "Import",
-    "autoSync": "Auto Sync"
+    "autoSync": "Auto Sync",
+    "insecureMode": "Insecure mode"
   },
   "onedrive": {
     "import": "Import",
