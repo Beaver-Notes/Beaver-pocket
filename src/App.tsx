@@ -42,9 +42,9 @@ const App: React.FC = () => {
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { notesState, setNotesState } = useNotesState();
   const { syncDropbox } = useDropboxSync(setNotesState);
-  const { synciCloud } = useiCloudSync();
-  const { syncOneDrive } = useOneDriveSync();
-  const { syncWebDAV } = useWebDAVSync();
+  const { synciCloud } = useiCloudSync(setNotesState);
+  const { syncOneDrive } = useOneDriveSync(setNotesState);
+  const { syncWebDAV } = useWebDAVSync(setNotesState);
   const { syncDrive } = useDriveSync(setNotesState);
   const [themeMode, setThemeMode] = useState<string>(
     localStorage.getItem("themeMode") || "auto"
@@ -299,12 +299,7 @@ const App: React.FC = () => {
               <Icloud notesState={notesState} setNotesState={setNotesState} />
             }
           />
-          <Route
-            path="/drive"
-            element={
-              <Drive />
-            }
-          />
+          <Route path="/drive" element={<Drive />} />
           <Route path="/shortcuts" element={<Shortcuts />} />
           <Route path="/icons" element={<Icons />} />
           <Route path="/welcome" element={<Welcome />} />

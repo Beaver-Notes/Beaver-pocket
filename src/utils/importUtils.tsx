@@ -4,8 +4,8 @@ import {
   Filesystem,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { loadNotes } from "../store/notes"; // Update path as needed
-import { mergeData, revertAssetPaths } from "./merge"; // Update path as needed
+import { loadNotes } from "../store/notes";
+import { mergeData, revertAssetPaths } from "./merge";
 
 const STORAGE_PATH = "notes/data.json";
 
@@ -132,7 +132,7 @@ export const useHandleImportData = () => {
         );
 
         // Revert asset paths back to platform format before saving
-        const cleanedNotes = revertAssetPaths(merged.notes);
+        const cleanedNotes = revertAssetPaths((await merged).notes);
 
         const mergedWithRevertedPaths = {
           ...merged,
@@ -146,7 +146,7 @@ export const useHandleImportData = () => {
           encoding: FilesystemEncoding.UTF8,
         });
 
-        setNotesState(cleanedNotes);
+        setNotesState(await cleanedNotes);
         document.dispatchEvent(new Event("reload"));
       }
     } catch (error) {

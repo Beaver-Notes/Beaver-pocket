@@ -6,6 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { getStroke } from "perfect-freehand";
+import * as d3 from "d3";
 import Icons from "../../../remixicon-react";
 import {
   getSvgPathFromStroke,
@@ -21,24 +22,106 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
   const [renderKey, setRenderKey] = useState(0);
   const [selectedElement, setSelectedElement] = useState(null);
   const [transformState, setTransformState] = useState(null);
-  const [state, setState] = useState({
-    lines: node.attrs.lines || [],
-    isDrawing: false,
-    tool: "pen",
-    penSettings: { color: "#000000", size: 2 },
-    eraserSettings: { size: 10 },
-    undoStack: [],
-    redoStack: [],
-    highlighterSettings: { color: "#ff0", size: 8 },
-    height: node.attrs.height || 400,
-    width: 500,
-    background: node.attrs.paperType,
+
+  const convertLegacyLines = (lines) => {
+    if (!lines || lines.length === 0) return [];
+
+    return lines.map((line) => {
+      if (line.points && Array.isArray(line.points)) {
+        return line;
+      }
+
+      if (line.path || line.d) {
+        const pathString = line.path || line.d;
+        const points = extractPointsFromPath(pathString);
+
+        return {
+          points: points,
+          tool: line.tool || "pen",
+          color: line.color || "#000000",
+          size: line.size || 2,
+
+          path: pathString,
+          d: pathString,
+        };
+      }
+
+      return {
+        points: line.points || [],
+        tool: line.tool || "pen",
+        color: line.color || "#000000",
+        size: line.size || 2,
+      };
+    });
+  };
+
+  const extractPointsFromPath = (pathString) => {
+    if (!pathString) return [];
+
+    const points = [];
+
+    const matches = pathString.match(/[-+]?[0-9]*\.?[0-9]+/g);
+
+    if (matches) {
+      for (let i = 0; i < matches.length; i += 2) {
+        if (matches[i + 1]) {
+          points.push([parseFloat(matches[i]), parseFloat(matches[i + 1])]);
+        }
+      }
+    }
+
+    return points;
+  };
+
+  const convertToLegacyFormat = (lines) => {
+    return lines.map((line) => {
+      const legacyLine = {
+        tool: line.tool,
+        color: line.color,
+        size: line.size,
+        points: line.points,
+      };
+
+      if (line.points && line.points.length > 0) {
+        const lineGenerator = d3
+          .line()
+          .x((d) => d[0])
+          .y((d) => d[1])
+          .curve(d3.curveBasis);
+
+        legacyLine.path = lineGenerator(line.points);
+        legacyLine.d = legacyLine.path;
+      }
+
+      return legacyLine;
+    });
+  };
+
+  const [state, setState] = useState(() => {
+    const initialLines = convertLegacyLines(node.attrs.lines || []);
+
+    return {
+      lines: initialLines,
+      isDrawing: false,
+      tool: "pen",
+      penSettings: { color: "#000000", size: 2 },
+      eraserSettings: { size: 10 },
+      undoStack: [],
+      redoStack: [],
+      highlighterSettings: { color: "#ff0", size: 8 },
+      height: node.attrs.height || 400,
+      width: 500,
+      background: node.attrs.paperType,
+    };
   });
 
   const [selectionBox, setSelectionBox] = useState(null);
 
   const getLineBounds = (line) => {
     const points = line.points;
+    if (!points || points.length === 0)
+      return { x: 0, y: 0, width: 0, height: 0 };
+
     let minX = Infinity,
       minY = Infinity,
       maxX = -Infinity,
@@ -59,31 +142,27 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
     };
   };
 
-  // Modified transformPoints function for proper scaling from center
   const transformPoints = (
     points,
     originalBounds,
     newBounds,
     transformType
   ) => {
-    // For move operations, just apply translation
+    if (!points || points.length === 0) return points;
+
     if (transformType === "move") {
       const dx = newBounds.x - originalBounds.x;
       const dy = newBounds.y - originalBounds.y;
       return points.map(([px, py]) => [px + dx, py + dy]);
     }
 
-    // For resize operations, use the relative position within the original bounds
-    // to determine the new position, preserving proportions
     const scaleX = newBounds.width / originalBounds.width;
     const scaleY = newBounds.height / originalBounds.height;
 
     return points.map(([px, py]) => {
-      // Calculate relative position in the original bounds (0-1)
       const relativeX = (px - originalBounds.x) / originalBounds.width;
       const relativeY = (py - originalBounds.y) / originalBounds.height;
 
-      // Apply that relative position to new bounds
       return [
         newBounds.x + relativeX * newBounds.width,
         newBounds.y + relativeY * newBounds.height,
@@ -91,7 +170,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
     });
   };
 
-  // Modified to check if the point is inside any existing selection
   const isPointInsideSelection = (x, y) => {
     if (!selectedElement) return false;
 
@@ -114,14 +192,11 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       isDrawing: true,
     }));
 
-    // Check if the click is inside the current selection
     if (selectedElement && isPointInsideSelection(x, y)) {
-      // Start moving the selection
       handleTransformStart(e, "move");
       return;
     }
 
-    // Otherwise, start a new selection
     setSelectionBox({
       startX: x,
       startY: y,
@@ -129,7 +204,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       currentY: y,
     });
 
-    // Clear any existing selection when starting a new one
     setSelectedElement(null);
   };
 
@@ -147,7 +221,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
   const handleSelectionEnd = () => {
     if (!selectionBox || state.tool !== "select") return;
 
-    // Calculate selection bounds
     const bounds = {
       x: Math.min(selectionBox.startX, selectionBox.currentX),
       y: Math.min(selectionBox.startY, selectionBox.currentY),
@@ -155,7 +228,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       height: Math.abs(selectionBox.currentY - selectionBox.startY),
     };
 
-    // Find selected lines
     const selectedLines = state.lines.filter((line) => {
       const lineBounds = getLineBounds(line);
       return (
@@ -182,7 +254,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
     }));
   };
 
-  // Transform handlers
   const handleTransformStart = (e, corner) => {
     if (!selectedElement && corner === "move") return;
 
@@ -194,7 +265,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       originalBounds: { ...selectedElement.bounds },
     });
 
-    // Set isDrawing to true to prevent scrolling
     setState((prev) => ({
       ...prev,
       isDrawing: true,
@@ -214,11 +284,9 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       let newBounds = { ...prev.bounds };
 
       if (transformState.corner === "move") {
-        // Move the entire selection box
         newBounds.x = transformState.originalBounds.x + dx;
         newBounds.y = transformState.originalBounds.y + dy;
       } else {
-        // Handle resizing
         if (transformState.corner.includes("n")) {
           newBounds.y = transformState.originalBounds.y + dy;
           newBounds.height = transformState.originalBounds.height - dy;
@@ -237,7 +305,7 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
 
       return {
         ...prev,
-        bounds: newBounds, // Apply new position
+        bounds: newBounds,
       };
     });
   };
@@ -245,38 +313,36 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
   const handleTransformEnd = () => {
     if (!transformState || !selectedElement) return;
 
-    // Determine the type of transformation being performed
     const transformType = transformState.corner === "move" ? "move" : "resize";
 
-    // First, transform the points using our improved transform function
     const transformedLines = state.lines.map((line) => {
       if (selectedElement.lines.includes(line)) {
+        const transformedPoints = transformPoints(
+          line.points,
+          transformState.originalBounds,
+          selectedElement.bounds,
+          transformType
+        );
+
         return {
           ...line,
-          points: transformPoints(
-            line.points,
-            transformState.originalBounds,
-            selectedElement.bounds,
-            transformType
-          ),
+          points: transformedPoints,
         };
       }
       return line;
     });
 
-    // Then update the state with the transformed lines
     setState((prev) => ({
       ...prev,
       lines: transformedLines,
       undoStack: [...prev.undoStack, prev.lines],
-      isDrawing: false, // Set isDrawing back to false
+      isDrawing: false,
     }));
 
-    // Finally, update selectedElement with the transformed lines
     const transformedSelectedLines = selectedElement.lines.map((line) => {
       const updatedLine = transformedLines.find(
         (tl) =>
-          tl.points === line.points ||
+          tl === line ||
           (tl.tool === line.tool &&
             tl.color === line.color &&
             tl.size === line.size)
@@ -333,7 +399,13 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
   }, [isDrawing, preventScrolling]);
 
   useEffect(() => {
-    updateAttributes({ lines, height });
+    const legacyLines = convertToLegacyFormat(lines);
+    updateAttributes({
+      lines: legacyLines,
+      height,
+
+      linesV2: lines,
+    });
   }, [lines, height, updateAttributes]);
 
   const getSettings = () => {
@@ -349,13 +421,11 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       const svgElem = e.currentTarget;
       svgElem.setPointerCapture(e.pointerId);
 
-      // If we're in select mode, handle selection and prevent drawing
       if (state.tool === "select") {
         handleSelectionStart(e);
         return;
       }
 
-      // If we're in another tool, and there's a current selection, clear it
       if (selectedElement) {
         setSelectedElement(null);
       }
@@ -380,7 +450,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
 
   const handlePointerMove = useCallback(
     (e) => {
-      // Handle selection/transform moves first
       if (state.tool === "select") {
         if (transformState) {
           handleTransformMove(e);
@@ -390,7 +459,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
         return;
       }
 
-      // Only proceed with drawing if we're actually drawing
       if (
         !isDrawing ||
         !(
@@ -401,14 +469,12 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       )
         return;
 
-      // Ignore touches with large radius, likely from a palm
       if (e.pointerType === "touch" && e.width > 20 && e.height > 20) {
         return;
       }
 
       const [x, y] = getPointerCoordinates(e, svgRef);
 
-      // Collect points more frequently
       currentPointsRef.current = [...currentPointsRef.current, [x, y]];
       setRenderKey((prev) => prev + 1);
 
@@ -424,7 +490,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
   );
 
   const handlePointerUp = (e) => {
-    // Handle selection/transform end first
     if (state.tool === "select") {
       if (transformState) {
         handleTransformEnd();
@@ -434,7 +499,6 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       return;
     }
 
-    // Handle drawing end
     if (!isDrawing || currentPointsRef.current.length < 2) {
       setState((prev) => ({
         ...prev,
@@ -451,6 +515,7 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       color: settings.color,
       size: settings.size,
     };
+
     if (tool === "eraser") {
       const eraserStroke = getStroke(
         currentPointsRef.current,
@@ -459,6 +524,8 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
 
       setState((prev) => {
         const newLines = prev.lines.filter((line) => {
+          if (!line.points || line.points.length === 0) return true;
+
           const lineStroke = getStroke(line.points, getStrokeOptions(line));
           return !lineStroke.some(([lx, ly]) =>
             eraserStroke.some(
@@ -501,7 +568,7 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       lines: previousLines,
       undoStack: prev.undoStack.slice(0, -1),
     }));
-    // Clear selection when undoing
+
     setSelectedElement(null);
   };
 
@@ -514,14 +581,16 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
       lines: nextLines,
       redoStack: prev.redoStack.slice(0, -1),
     }));
-    // Clear selection when redoing
+
     setSelectedElement(null);
   };
 
   return (
     <div className="draw w-full min-h-screen flex flex-col border-neutral-400 shadow-2xl">
       <div
-        className="drawing-container relative w-full rounded-lg "
+        className={`drawing-container relative w-full rounded-lg ${
+          isDrawing ? "touch-none" : ""
+        }`}
         style={{ height: `${height}px` }}
       >
         <svg
@@ -541,7 +610,7 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
             getStroke,
             getStrokeOptions,
             getSvgPathFromStroke
-          )}{" "}
+          )}
           {selectionBox && (
             <rect
               x={Math.min(selectionBox.startX, selectionBox.currentX)}
@@ -598,14 +667,18 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
         </svg>
       </div>
 
-        <DrawingToolBar
-          setState={setState}
-          state={state}
-          tool={state.tool}
-          setSelectedElement={setSelectedElement}
-          onClose={onClose}
-          updateAttributes={updateAttributes}
-        />
+      <DrawingToolBar
+        setState={setState}
+        state={state}
+        tool={state.tool}
+        setSelectedElement={setSelectedElement}
+        onClose={onClose}
+        updateAttributes={updateAttributes}
+        undo={undo}
+        redo={redo}
+        undoStack={undoStack}
+        redoStack={redoStack}
+      />
     </div>
   );
 };

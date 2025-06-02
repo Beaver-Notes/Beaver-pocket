@@ -1,4 +1,5 @@
 import WebDAV from "./WebDAVPlugin";
+import mime from "mime";
 
 interface WebDavOptions {
   baseUrl: string;
@@ -13,18 +14,15 @@ export class WebDavService {
     this.options = options;
   }
 
-  // Helper to build full URL
   private buildUrl(path: string): string {
     return `${this.options.baseUrl}/${path}`;
   }
 
-  // Helper to convert Blob to base64 string (if needed)
   private blobToBase64(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64data = reader.result as string;
-        // Remove prefix like "data:application/octet-stream;base64,"
         const base64 = base64data.split(",")[1];
         resolve(base64);
       };
@@ -33,7 +31,7 @@ export class WebDavService {
     });
   }
 
-  async get(path: string): Promise<string> {
+  async get(path: string): Promise<Blob> {
     try {
       const url = this.buildUrl(path);
       const result = await WebDAV.getFile({
@@ -41,9 +39,12 @@ export class WebDavService {
         username: this.options.username,
         password: this.options.password,
       });
-      // result.content is base64 encoded, convert to utf8 string if needed
-      const decoded = atob(result.content);
-      return decoded;
+
+      const byteArray = Uint8Array.from(atob(result.content), (c) =>
+        c.charCodeAt(0)
+      );
+      const mimeType = mime.getType(path) || undefined;
+      return new Blob([byteArray], { type: mimeType });
     } catch (error) {
       throw new Error(`Failed to GET ${path}: ${error}`);
     }
@@ -51,14 +52,12 @@ export class WebDavService {
 
   async createFolder(folderPath: string): Promise<void> {
     try {
-      // First check if folder exists
       const exists = await this.folderExists(folderPath);
       if (exists) {
         console.log(`Folder already exists at ${this.buildUrl(folderPath)}`);
-        return; // Early exit - no error, folder already there
+        return;
       }
 
-      // Folder does not exist, create it
       await WebDAV.createFolder({
         url: this.buildUrl(folderPath),
         username: this.options.username,
@@ -79,7 +78,7 @@ export class WebDavService {
       });
       return true;
     } catch {
-      return false; // Assume does not exist on error
+      return false;
     }
   }
 
@@ -87,7 +86,6 @@ export class WebDavService {
     try {
       let base64Content: string;
       if (typeof content === "string") {
-        // Assume it's already base64 encoded string
         base64Content = content;
       } else {
         base64Content = await this.blobToBase64(content);
@@ -118,15 +116,21 @@ export class WebDavService {
     }
   }
 
-  async getDirectoryContent(path: string): Promise<any[]> {
+  // THIS method is now using ONLY WebDAV plugin methods:
+  async getDirectoryContent(
+    path: string
+  ): Promise<{ name: string; type: "file" | "directory" }[]> {
     try {
-      const result = await WebDAV.listContents({
+      const items = await WebDAV.listContents({
         url: this.buildUrl(path),
         username: this.options.username,
         password: this.options.password,
       });
-      // Assuming the response data is JSON string
-      return JSON.parse(result.data);
+
+      return items.map((item: { name: string; isDirectory: boolean }) => ({
+        name: item.name,
+        type: item.isDirectory ? "directory" : "file",
+      }));
     } catch (error) {
       console.error("Error getting directory contents:", error);
       throw new Error(`Failed to get directory content: ${error}`);

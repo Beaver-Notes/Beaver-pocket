@@ -49,7 +49,6 @@ const refreshAccessToken = async (): Promise<string | null> => {
       value: expirationTime.toString(),
     });
 
-    console.log("Access token refreshed successfully.");
     return result.accessToken;
   } catch (error) {
     console.error("Error refreshing access token:", error);
@@ -72,7 +71,6 @@ const getValidAccessToken = async (): Promise<string | null> => {
       : 0;
 
     if (!accessToken || Date.now() >= expirationTime) {
-      console.log("Access token expired or not found. Refreshing...");
       return await refreshAccessToken();
     }
 
@@ -114,7 +112,7 @@ interface AssetSyncLog {
 const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useOneDriveSync = (): OneDriveSyncHookReturn => {
+const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
     syncError: null,
@@ -182,22 +180,12 @@ const useOneDriveSync = (): OneDriveSyncHookReturn => {
       setProgress(20);
 
       // Merge notes
-      const mergedData = mergeData(localData, remoteData);
+      const mergedData = await mergeData(localData, remoteData);
 
       // Sync assets and collect logs
-      const assetSyncLogs = await syncOnedriveAssets(
-        onedrive,
-        SYNC_FOLDER_NAME,
-        accessToken
-      );
+      await syncOnedriveAssets(onedrive, SYNC_FOLDER_NAME, accessToken);
 
       // Log asset sync results
-      console.log("Asset Sync Results:", {
-        downloaded: assetSyncLogs.downloaded.length,
-        uploaded: assetSyncLogs.uploaded.length,
-        errors: assetSyncLogs.errors.length,
-        details: assetSyncLogs,
-      });
 
       setProgress(80);
 
@@ -209,9 +197,11 @@ const useOneDriveSync = (): OneDriveSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
+      setNotesState(mergedData.notes);
+
       // Reverse paths before uploading
       const cleanedData = { ...mergedData };
-      cleanedData.notes = revertAssetPaths(mergedData.notes);
+      cleanedData.notes = await revertAssetPaths(mergedData.notes);
 
       await onedrive.uploadFile(
         `/${SYNC_FOLDER_NAME}/data.json`,
@@ -261,8 +251,6 @@ async function syncOnedriveAssets(
     const remoteRootPath = `/${syncFolderName}/${assetType.remote}`;
 
     try {
-      console.log(`Starting sync for ${assetType.local} assets`);
-
       // Ensure local root folder exists
       try {
         await Filesystem.mkdir({
@@ -271,7 +259,7 @@ async function syncOnedriveAssets(
           recursive: true,
         });
       } catch (error) {
-        console.log(
+        console.error(
           `Local root folder ${localRootPath} already exists or couldn't be created`
         );
       }
@@ -319,12 +307,6 @@ async function syncOnedriveAssets(
         remoteSubfolders = remoteFoldersResponse
           .filter((entry) => entry.mimeType === "folder") // Check for folders
           .map((entry) => entry.name);
-
-        console.log(
-          `Found ${remoteSubfolders.length} remote subfolders for ${
-            assetType.local
-          }: ${remoteSubfolders.join(", ")}`
-        );
       } catch (error: any) {
         console.error(
           `Error listing remote folders in ${remoteRootPath}:`,
@@ -341,11 +323,8 @@ async function syncOnedriveAssets(
           path: localRootPath,
           directory: FilesystemDirectory.Data,
         });
-        console.log(
-          `Found ${localSubfolders.files.length} local subfolders for ${assetType.local}`
-        );
       } catch (error) {
-        console.log(
+        console.error(
           `No local subfolders found for ${localRootPath} or directory doesn't exist`
         );
         // Continue with empty array
@@ -358,21 +337,13 @@ async function syncOnedriveAssets(
       const allNoteIds = [
         ...new Set([...localFolderNames, ...remoteSubfolders]),
       ];
-      console.log(
-        `Processing ${allNoteIds.length} unique note IDs for ${assetType.local}`
-      );
 
       for (const noteId of allNoteIds) {
         const localFolderPath = `${localRootPath}/${noteId}`;
         const remoteFolderPath = `${remoteRootPath}/${noteId}`;
 
-        console.log(`Processing note ID: ${noteId}`);
-        console.log(`Local path: ${localFolderPath}`);
-        console.log(`Remote path: ${remoteFolderPath}`);
-
         // Ensure local subfolder exists
         if (!localFolderNames.includes(noteId)) {
-          console.log(`Creating missing local folder: ${localFolderPath}`);
           try {
             await Filesystem.mkdir({
               path: localFolderPath,
@@ -392,7 +363,6 @@ async function syncOnedriveAssets(
         let remoteSubfolderExists = remoteSubfolders.includes(noteId);
         if (!remoteSubfolderExists) {
           try {
-            console.log(`Creating remote folder ${remoteFolderPath}`);
             await onedrive.createFolder(remoteFolderPath);
             remoteSubfolderExists = true;
           } catch (error: any) {
@@ -416,11 +386,8 @@ async function syncOnedriveAssets(
             path: localFolderPath,
             directory: FilesystemDirectory.Data,
           });
-          console.log(
-            `Found ${localFiles.files.length} local files in ${localFolderPath}`
-          );
         } catch (error) {
-          console.log(
+          console.error(
             `No local files found in ${localFolderPath} or directory doesn't exist yet`
           );
           // Continue with empty array
@@ -435,12 +402,6 @@ async function syncOnedriveAssets(
           remoteFiles = remoteFilesResponse
             .filter((entry) => entry.mimeType !== "folder") // Only include files
             .map((entry) => entry.name);
-
-          console.log(
-            `Found ${
-              remoteFiles.length
-            } remote files in ${remoteFolderPath}: ${remoteFiles.join(", ")}`
-          );
         } catch (error: any) {
           // If status is 409, it means folder not found - we can skip
           // Any other error, log it but try to continue
@@ -450,7 +411,7 @@ async function syncOnedriveAssets(
               error
             );
           } else {
-            console.log(`Remote folder ${remoteFolderPath} doesn't exist`);
+            console.error(`Remote folder ${remoteFolderPath} doesn't exist`);
           }
           // We'll continue with an empty array
         }
@@ -460,10 +421,6 @@ async function syncOnedriveAssets(
           const filesToDownload = remoteFiles.filter(
             (file) =>
               !localFiles.files.some((localFile) => localFile.name === file)
-          );
-
-          console.log(
-            `Need to download ${filesToDownload.length} files from ${remoteFolderPath}`
           );
 
           // Replace the existing download code block with this
@@ -495,9 +452,6 @@ async function syncOnedriveAssets(
               });
 
               syncLog.downloaded.push(`${assetType.remote}/${noteId}/${file}`);
-              console.log(
-                `Successfully downloaded: ${assetType.remote}/${noteId}/${file}`
-              );
             } catch (error) {
               console.error(`Error downloading ${remoteFilePath}:`, error);
               syncLog.errors.push({
@@ -515,15 +469,9 @@ async function syncOnedriveAssets(
             (localFile) => !remoteFiles.includes(localFile.name)
           );
 
-          console.log(
-            `Need to upload ${filesToUpload.length} files to ${remoteFolderPath}`
-          );
-
           for (const file of filesToUpload) {
             const localFilePath = `${localFolderPath}/${file.name}`;
             const remoteFilePath = `${remoteFolderPath}/${file.name}`;
-
-            console.log(`Uploading ${localFilePath} to ${remoteFilePath}`);
 
             try {
               const fileData = await Filesystem.readFile({
@@ -551,9 +499,6 @@ async function syncOnedriveAssets(
               syncLog.uploaded.push(
                 `${assetType.local}/${noteId}/${file.name}`
               );
-              console.log(
-                `Successfully uploaded: ${assetType.local}/${noteId}/${file.name}`
-              );
             } catch (error) {
               console.error(`Error uploading ${localFilePath}:`, error);
               syncLog.errors.push({
@@ -565,8 +510,6 @@ async function syncOnedriveAssets(
           }
         }
       }
-
-      console.log(`Completed sync for ${assetType.local} assets`);
     } catch (error) {
       console.error(`Error syncing ${assetType.local} assets:`, error);
     }

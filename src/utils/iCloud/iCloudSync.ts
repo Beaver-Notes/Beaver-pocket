@@ -42,7 +42,7 @@ interface AssetSyncLog {
 const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useiCloudSync = (): iCloudSyncHooks => {
+const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
   const [progress, setProgress] = useState(0);
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
@@ -88,16 +88,9 @@ const useiCloudSync = (): iCloudSyncHooks => {
 
       setProgress(20);
 
-      const mergedData = mergeData(localData, remoteData);
+      const mergedData = await mergeData(localData, remoteData);
 
-      const assetSyncLogs = await synciCloudAssets(SYNC_FOLDER_NAME);
-
-      console.log("Asset Sync Results:", {
-        downloaded: assetSyncLogs.downloaded.length,
-        uploaded: assetSyncLogs.uploaded.length,
-        errors: assetSyncLogs.errors.length,
-        details: assetSyncLogs,
-      });
+      await synciCloudAssets(SYNC_FOLDER_NAME);
 
       setProgress(80);
 
@@ -108,8 +101,11 @@ const useiCloudSync = (): iCloudSyncHooks => {
         encoding: FilesystemEncoding.UTF8,
       });
 
+      setNotesState(mergedData.notes);
+      document.dispatchEvent(new Event("reload"));
+
       const cleanedData = { ...mergedData };
-      cleanedData.notes = revertAssetPaths(mergedData.notes);
+      cleanedData.notes = await revertAssetPaths(mergedData.notes);
 
       const base64Data = base64Encode(
         JSON.stringify({ data: { notes: cleanedData } })
@@ -175,8 +171,6 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
     const remoteRootPath = `${syncFolderName}/${assetType.remote}`;
 
     try {
-      console.log(`Starting sync for ${assetType.local} assets`);
-
       try {
         await Filesystem.mkdir({
           path: localRootPath,
@@ -184,8 +178,9 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
           recursive: true,
         });
       } catch (error) {
-        console.log(
-          `Local root folder ${localRootPath} already exists or couldn't be created`
+        console.error(
+          `Error creating local root folder ${localRootPath}:`,
+          error
         );
       }
 
@@ -193,10 +188,8 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
       try {
         const metadata = await getFolderMetadata(remoteRootPath);
         if (!metadata.exists) {
-          console.log(`Creating missing folder: ${remoteRootPath}`);
           await iCloud.createFolder({ folderName: remoteRootPath });
         }
-        console.log(`Remote root folder ${remoteRootPath} exists`);
       } catch (error) {
         try {
           await iCloud.createFolder({ folderName: remoteRootPath });
@@ -224,12 +217,6 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
         remoteSubfolders = remoteFolderResponse.files
           .filter((file) => file.type === "directory")
           .map((file) => file.name);
-
-        console.log(
-          `Found ${remoteSubfolders.length} remote subfolders for ${
-            assetType.local
-          }: ${remoteSubfolders.join(", ")}`
-        );
       } catch (error: any) {
         console.error(
           `Error listing remote folders in ${remoteRootPath}:`,
@@ -244,9 +231,6 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
           path: localRootPath,
           directory: FilesystemDirectory.Data,
         });
-        console.log(
-          `Found ${localSubfolders.files.length} local subfolders for ${assetType.local}`
-        );
       } catch (error) {
         console.log(
           `No local subfolders found for ${localRootPath} or directory doesn't exist`
@@ -258,16 +242,12 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
       const allNoteIds = [
         ...new Set([...localFolderNames, ...remoteSubfolders]),
       ];
-      console.log(
-        `Processing ${allNoteIds.length} unique note IDs for ${assetType.local}`
-      );
 
       for (const noteId of allNoteIds) {
         const localFolderPath = `${localRootPath}/${noteId}`;
         const remoteFolderPath = `${remoteRootPath}/${noteId}`;
 
         if (!localFolderNames.includes(noteId)) {
-          console.log(`Creating missing local folder: ${localFolderPath}`);
           try {
             await Filesystem.mkdir({
               path: localFolderPath,
@@ -286,7 +266,6 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
         let remoteSubfolderExists = remoteSubfolders.includes(noteId);
         if (!remoteSubfolderExists) {
           try {
-            console.log(`Creating remote folder ${remoteFolderPath}`);
             await iCloud.createFolder({ folderName: remoteFolderPath });
             remoteSubfolderExists = true;
           } catch (error: any) {
@@ -309,11 +288,8 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
             path: localFolderPath,
             directory: FilesystemDirectory.Data,
           });
-          console.log(
-            `Found ${localFiles.files.length} local files in ${localFolderPath}`
-          );
         } catch (error) {
-          console.log(
+          console.error(
             `No local files found in ${localFolderPath} or directory doesn't exist yet`
           );
         }
@@ -326,24 +302,14 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
           remoteFiles = remoteFilesResponse.files
             .filter((file) => file.type === "file")
             .map((file) => file.name);
-
-          console.log(
-            `Found ${
-              remoteFiles.length
-            } remote files in ${remoteFolderPath}: ${remoteFiles.join(", ")}`
-          );
         } catch (error: any) {
-          console.log(`Remote folder ${remoteFolderPath} doesn't exist`);
+          console.error(`Remote folder ${remoteFolderPath} doesn't exist`);
         }
 
         if (remoteFiles.length > 0) {
           const filesToDownload = remoteFiles.filter(
             (file) =>
               !localFiles.files.some((localFile) => localFile.name === file)
-          );
-
-          console.log(
-            `Need to download ${filesToDownload.length} files from ${remoteFolderPath}`
           );
 
           for (const file of filesToDownload) {
@@ -375,9 +341,6 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
               });
 
               syncLog.downloaded.push(`${assetType.remote}/${noteId}/${file}`);
-              console.log(
-                `Successfully downloaded: ${assetType.remote}/${noteId}/${file}`
-              );
             } catch (error) {
               console.error(`Error downloading ${remoteFilePath}:`, error);
               syncLog.errors.push({
@@ -394,24 +357,15 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
             (localFile) => !remoteFiles.includes(localFile.name)
           );
 
-          console.log(
-            `Need to upload ${filesToUpload.length} files to ${remoteFolderPath}`
-          );
-
           for (const file of filesToUpload) {
             const localFilePath = `${localFolderPath}/${file.name}`;
             const remoteFilePath = `${remoteFolderPath}/${file.name}`;
-
-            console.log(`Uploading ${localFilePath} to ${remoteFilePath}`);
 
             try {
               const { data: fileData } = await Filesystem.readFile({
                 path: localFilePath,
                 directory: Directory.Data,
               });
-
-              const fileType = mime.getType(file.name);
-              console.log(fileType);
 
               await iCloud.uploadFile({
                 fileName: remoteFilePath,
@@ -420,9 +374,6 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
 
               syncLog.uploaded.push(
                 `${assetType.local}/${noteId}/${file.name}`
-              );
-              console.log(
-                `Successfully uploaded: ${assetType.local}/${noteId}/${file.name}`
               );
             } catch (error) {
               console.error(`Error uploading ${localFilePath}:`, error);
@@ -435,8 +386,6 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
           }
         }
       }
-
-      console.log(`Completed sync for ${assetType.local} assets`);
     } catch (error) {
       console.error(`Error syncing ${assetType.local} assets:`, error);
     }

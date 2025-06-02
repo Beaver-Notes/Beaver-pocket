@@ -279,43 +279,104 @@ public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
         task.resume()
     }
 
-    @objc func listContents(_ call: CAPPluginCall) {
-        guard let url = call.getString("url"),
-              let username = call.getString("username"),
-              let password = call.getString("password"),
-              let requestURL = URL(string: url) else {
-            call.reject("Missing or invalid parameters")
-            return
-        }
+     @objc func listContents(_ call: CAPPluginCall) {
+         guard let url = call.getString("url"),
+               let username = call.getString("username"),
+               let password = call.getString("password"),
+               let requestURL = URL(string: url) else {
+             call.reject("Missing or invalid parameters")
+             return
+         }
 
-        var request = URLRequest(url: requestURL)
-        request.httpMethod = "PROPFIND"
-        request.addValue(getAuthHeader(username: username, password: password), forHTTPHeaderField: "Authorization")
+         var request = URLRequest(url: requestURL)
+         request.httpMethod = "PROPFIND"
+         request.addValue(getAuthHeader(username: username, password: password), forHTTPHeaderField: "Authorization")
 
-        let task = getSession().dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    call.reject("Failed to list folder contents: \(error.localizedDescription)")
-                    return
-                }
+         let task = getSession().dataTask(with: request) { data, response, error in
+             DispatchQueue.main.async {
+                 if let error = error {
+                     call.reject("Failed to list folder contents: \(error.localizedDescription)")
+                     return
+                 }
 
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    call.reject("Invalid response")
-                    return
-                }
+                 guard let data = data,
+                       let httpResponse = response as? HTTPURLResponse,
+                       (200...299).contains(httpResponse.statusCode) else {
+                     let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+                     let errorString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "No response body"
+                     call.reject("Failed to list folder contents: \(statusCode) - \(errorString)")
+                     return
+                 }
 
-                if (200...299).contains(httpResponse.statusCode) {
-                    let xmlResponse = data != nil ? String(data: data!, encoding: .utf8) ?? "No response body" : "No response body"
-                    call.resolve([
-                        "message": "Folder contents retrieved.",
-                        "data": xmlResponse
-                    ])
-                } else {
-                    let responseString = data != nil ? String(data: data!, encoding: .utf8) ?? "No response body" : "No response body"
-                    call.reject("Failed to list folder contents: \(httpResponse.statusCode) - \(responseString)")
-                }
-            }
-        }
-        task.resume()
-    }
+                 let parser = WebDAVXMLParser()
+                 if parser.parse(data: data) {
+                     call.resolve(["items": parser.items])
+                 } else {
+                     call.reject("Failed to parse WebDAV XML response.")
+                 }
+             }
+         }
+         task.resume()
+     }
+
+     class WebDAVXMLParser: NSObject, XMLParserDelegate {
+         private var currentElement = ""
+         private var currentHref: String = ""
+         private var isInResourcetype = false
+         private var isDirectory = false
+         var items: [[String: Any]] = []
+
+         func parse(data: Data) -> Bool {
+             let parser = XMLParser(data: data)
+             parser.delegate = self
+             return parser.parse()
+         }
+
+         // MARK: - XMLParserDelegate methods
+
+         func parser(_ parser: XMLParser, didStartElement elementName: String,
+                     namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String]) {
+             currentElement = elementName
+             if elementName.lowercased() == "resourcetype" {
+                 isInResourcetype = true
+             } else if isInResourcetype && elementName.lowercased() == "collection" {
+                 isDirectory = true
+             }
+         }
+
+         func parser(_ parser: XMLParser, foundCharacters string: String) {
+             if currentElement.lowercased() == "href" {
+                 currentHref += string
+             }
+         }
+
+         func parser(_ parser: XMLParser, didEndElement elementName: String,
+                     namespaceURI: String?, qualifiedName qName: String?) {
+             if elementName.lowercased() == "response" {
+                 let name = decodeNameFromHref(currentHref)
+                 if !name.isEmpty {
+                     items.append([
+                         "name": name,
+                         "isDirectory": isDirectory
+                     ])
+                 }
+
+                 // Reset for next item
+                 currentHref = ""
+                 isDirectory = false
+             } else if elementName.lowercased() == "resourcetype" {
+                 isInResourcetype = false
+             }
+         }
+
+         private func decodeNameFromHref(_ href: String) -> String {
+             let parts = href.split(separator: "/").map(String.init)
+             for part in parts.reversed() {
+                 if !part.isEmpty {
+                     return part.removingPercentEncoding ?? part
+                 }
+             }
+             return ""
+         }
+     }
 }

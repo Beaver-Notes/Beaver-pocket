@@ -87,6 +87,8 @@ export function mergeData(localData: SyncData, remoteData: SyncData): SyncData {
     ...(remoteData.isLocked || {}),
   };
 
+  console.log("Data merged successfully");
+
   return {
     notes: mergedNotes,
     labels: mergedLabels,
@@ -173,6 +175,8 @@ function processNotePaths(noteId: string, note: Note): Note {
       );
     }
   }
+
+  console.log(`Processed note paths for note ID: ${noteId}`, processedNote);
 
   return processedNote;
 }

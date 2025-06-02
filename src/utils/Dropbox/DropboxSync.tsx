@@ -38,7 +38,7 @@ interface AssetSyncLog {
 const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync"; // Fixed folder name instead of date-based
 
-const useDropboxSync = (setNotesState:any): DropboxSyncHookReturn => {
+const useDropboxSync = (setNotesState: any): DropboxSyncHookReturn => {
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
     syncError: null,
@@ -56,14 +56,14 @@ const useDropboxSync = (setNotesState:any): DropboxSyncHookReturn => {
       syncError: null,
     }));
     setProgress(0);
-    
+
     try {
       checkTokenExpiration();
       if (!accessToken) {
         throw new Error("Dropbox access token not found");
       }
       const dbx = new Dropbox({ accessToken });
-      
+
       // Create sync folder if it doesn't exist
       try {
         await dbx.filesGetMetadata({ path: `/${SYNC_FOLDER_NAME}` });
@@ -78,7 +78,7 @@ const useDropboxSync = (setNotesState:any): DropboxSyncHookReturn => {
           throw error;
         }
       }
-      
+
       // Read local data
       let localData: SyncData = { notes: {} };
       try {
@@ -91,7 +91,7 @@ const useDropboxSync = (setNotesState:any): DropboxSyncHookReturn => {
       } catch {
         // No local data, use empty object
       }
-      
+
       // Read remote data
       let remoteData: SyncData = { notes: {} };
       try {
@@ -105,29 +105,17 @@ const useDropboxSync = (setNotesState:any): DropboxSyncHookReturn => {
       } catch {
         // No remote data, use empty object
       }
-      
+
       setProgress(20);
-      
+
       // Merge all data
-      const mergedData = mergeData(localData, remoteData);
-      
+      const mergedData = await mergeData(localData, remoteData);
+
       // Sync assets and collect logs
-      const assetSyncLogs = await syncDropboxAssets(
-        dbx,
-        SYNC_FOLDER_NAME,
-        accessToken
-      );
-      
-      // Log asset sync results
-      console.log("Asset Sync Results:", {
-        downloaded: assetSyncLogs.downloaded.length,
-        uploaded: assetSyncLogs.uploaded.length,
-        errors: assetSyncLogs.errors.length,
-        details: assetSyncLogs,
-      });
-      
+      await syncDropboxAssets(dbx, SYNC_FOLDER_NAME, accessToken);
+
       setProgress(80);
-      
+
       // Save merged data locally
       await Filesystem.writeFile({
         path: STORAGE_PATH,
@@ -138,18 +126,18 @@ const useDropboxSync = (setNotesState:any): DropboxSyncHookReturn => {
 
       setNotesState(mergedData.notes);
       document.dispatchEvent(new Event("reload"));
-      
+
       // Prepare data for remote storage - revert asset paths
       const cleanedData = { ...mergedData };
-      cleanedData.notes = revertAssetPaths(mergedData.notes);
-      
+      cleanedData.notes = await revertAssetPaths(mergedData.notes);
+
       // Upload to Dropbox
       await dbx.filesUpload({
         path: `/${SYNC_FOLDER_NAME}/data.json`,
         contents: JSON.stringify(cleanedData),
         mode: { ".tag": "overwrite" },
       });
-      
+
       setSyncState((prev) => ({
         ...prev,
         syncInProgress: false,

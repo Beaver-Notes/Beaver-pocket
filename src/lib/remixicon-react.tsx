@@ -1,4 +1,5 @@
 // icons.ts
+import ArrowUpSLineIcon from "remixicon-react/ArrowUpSLineIcon";
 import BallPenLine from "remixicon-react/BallPenLineIcon";
 import SingleQuotesLIcon from "remixicon-react/SingleQuotesLIcon";
 import BrushLineIcon from "remixicon-react/BrushLineIcon";
@@ -359,6 +360,7 @@ const Icons = {
   PieChart2LineIcon,
   BrushLineIcon,
   ShareLineIcon,
+  ArrowUpSLineIcon,
   FileTextLineIcon,
   FileArticleLine,
   SplitCellsHorizontalIcon,

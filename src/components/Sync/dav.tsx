@@ -3,6 +3,7 @@ import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { WebDavService } from "../../utils/Webdav/webDavApi";
 import icons from "../../lib/remixicon-react";
 import { Note } from "../../store/types";
+import WebDAV from "../../utils/Webdav/WebDAVPlugin";
 
 interface WebdavProps {
   notesState: Record<string, Note>;
@@ -10,10 +11,33 @@ interface WebdavProps {
 }
 
 const Webdav: React.FC<WebdavProps> = () => {
-  // Correctly destructuring props
+  const [autoSync, setAutoSync] = useState<boolean>(() => {
+    const storedSync = localStorage.getItem("sync");
+    return storedSync === "webdav";
+  });
+  const [insecureMode, setInsecureMode] = useState(() => {
+    const stored = localStorage.getItem("insecureWebDAV");
+    return stored === "true";
+  });
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [baseUrl, setBaseUrl] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (baseUrl.startsWith("http://") && !insecureMode) {
+      setSecurityWarning(
+        "Insecure WebDAV connection detected. Please enable 'Insecure Mode' to allow HTTP connections."
+      );
+    } else if (baseUrl.startsWith("http://") && insecureMode) {
+      setSecurityWarning(
+        "Warning: You are using an insecure HTTP connection. Data transmitted over HTTP is not encrypted and may be intercepted."
+      );
+    } else {
+      setSecurityWarning(null);
+    }
+  }, [baseUrl, insecureMode]);
 
   const initialize = async () => {
     try {
@@ -116,11 +140,6 @@ const Webdav: React.FC<WebdavProps> = () => {
     }
   };
 
-  const [autoSync, setAutoSync] = useState<boolean>(() => {
-    const storedSync = localStorage.getItem("sync");
-    return storedSync === "webdav";
-  });
-
   useEffect(() => {
     const handleStorageChange = () => {
       const storedSync = localStorage.getItem("sync");
@@ -144,6 +163,15 @@ const Webdav: React.FC<WebdavProps> = () => {
     setAutoSync(!autoSync);
   };
 
+  const handleInsecureToggle = async () => {
+    const currentStored = localStorage.getItem("insecureWebDAV") === "true";
+    const newMode = !currentStored;
+
+    localStorage.setItem("insecureWebDAV", String(newMode));
+    setInsecureMode(newMode);
+    await WebDAV.setInsecureMode({ insecure: newMode });
+  };
+
   const toggleInputContentVisibility = () => {
     setShowInputContent(!showInputContent);
   };
@@ -165,6 +193,25 @@ const Webdav: React.FC<WebdavProps> = () => {
     localStorage.setItem("themeMode", themeMode);
   }, [darkMode, themeMode]);
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64Cert = (reader.result as string).split(",")[1];
+      try {
+        await WebDAV.uploadCertificate({
+          certificate: base64Cert,
+          alias: file.name,
+        });
+      } catch (err: any) {
+        throw new Error(`Error uploading certificate: ${err.message}`);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
@@ -182,6 +229,11 @@ const Webdav: React.FC<WebdavProps> = () => {
                   <icons.CloudLine className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
                 </div>
               </div>
+              {securityWarning && (
+                <div className="text-red-600 dark:text-red-400 text-sm font-medium px-4">
+                  {securityWarning}
+                </div>
+              )}
               <input
                 type="text"
                 className="w-full p-3 dark:bg-neutral-800 border dark:border-neutral-600 dark:focus:border-primary focus:border-primary focus:outline-none focus:border-secondary border-2 p-2 rounded-xl pr-10"
@@ -230,30 +282,107 @@ const Webdav: React.FC<WebdavProps> = () => {
               >
                 {translations.webdav.login || "-"}
               </button>
-              <div className="flex items-center py-2 justify-between">
-                <div>
+              <div className="flex flex-col space-y-4 py-2">
+                {/* Auto Sync */}
+                <div className="flex items-center justify-between">
                   <p
-                    className="block text-lg align-left"
+                    className="text-lg"
                     aria-label={translations.webdav.autoSync}
+                    id="auto-sync-label"
                   >
                     {translations.webdav.autoSync || "-"}
                   </p>
+                  <label
+                    htmlFor="auto-sync-switch"
+                    className="relative inline-flex cursor-pointer items-center"
+                    aria-label={translations.webdav.autoSync}
+                  >
+                    <input
+                      id="auto-sync-switch"
+                      type="checkbox"
+                      checked={autoSync}
+                      onChange={handleSyncToggle}
+                      className="peer sr-only"
+                      aria-checked={autoSync}
+                      aria-labelledby="auto-sync-label"
+                    />
+                    <div
+                      className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333]
+        after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7
+        after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all
+        after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white
+        peer-focus:ring-green-300"
+                    ></div>
+                  </label>
                 </div>
-                <label
-                  className="relative inline-flex cursor-pointer items-center"
-                  aria-label={translations.webdav.autoSync}
-                >
-                  <input
-                    id="switch"
-                    type="checkbox"
-                    checked={autoSync}
-                    onChange={handleSyncToggle}
-                    className="peer sr-only"
-                    aria-checked={autoSync}
-                    aria-labelledby="auto-sync-toggle"
-                  />
-                  <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
-                </label>
+
+                <div className="w-full">
+                  <button
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    aria-expanded={showAdvanced}
+                    aria-controls="advanced-settings"
+                    className="flex items-center justify-between w-full"
+                  >
+                    <span>Advanced Settings</span>
+                    {showAdvanced ? (
+                      <icons.ArrowUpSLineIcon className="w-6 h-6 ml-2" />
+                    ) : (
+                      <icons.ArrowDownSLineIcon className="w-6 h-6 ml-2" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Advanced Settings Section */}
+                {showAdvanced && (
+                  <div
+                    id="advanced-settings"
+                    className="flex flex-col space-y-4"
+                  >
+                    {/* Insecure Mode */}
+                    <div className="flex items-center justify-between">
+                      <p
+                        className="text-lg"
+                        aria-label={translations.webdav.insecureMode}
+                        id="insecure-mode-label"
+                      >
+                        {translations.webdav.insecureMode || "-"}
+                      </p>
+                      <label
+                        htmlFor="insecure-mode-switch"
+                        className="relative inline-flex cursor-pointer items-center"
+                        aria-label={translations.webdav.insecureMode}
+                      >
+                        <input
+                          id="insecure-mode-switch"
+                          type="checkbox"
+                          checked={insecureMode}
+                          onChange={handleInsecureToggle}
+                          className="peer sr-only"
+                          aria-checked={insecureMode}
+                          aria-labelledby="insecure-mode-label"
+                        />
+                        <div
+                          className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333]
+            after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7
+            after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all
+            after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white
+            peer-focus:ring-green-300"
+                        ></div>
+                      </label>
+                    </div>
+
+                    {/* File Upload */}
+                    <label className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl">
+                      Upload Certificate
+                      <input
+                        type="file"
+                        accept=".crt,.pem,.cer,.der"
+                        onChange={handleUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
           </div>

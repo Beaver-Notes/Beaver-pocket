@@ -113,14 +113,17 @@ export const useDriveSync = (setNotesState: any): DriveSyncHookReturn => {
             ? localFileData.data
             : await localFileData.data.text()
         );
-        console.log("Local data read successfully.");
       } catch (e) {
-        console.log("No local data found or failed to read local data.");
+        // If local data file doesn't exist or is invalid, start with empty data
+        console.warn(
+          "Failed to read local data.json, starting with empty data:",
+          e
+        );
+        localData = { notes: {} };
       }
 
       // Read remote data safely
       let remoteData: SyncData = { notes: {} };
-      console.log("Listing contents of remote folder...");
       const contents = await driveAPI.listContents(folderId);
       const dataFile = contents.find(
         (file: { name: string }) => file.name === "data.json"
@@ -144,7 +147,7 @@ export const useDriveSync = (setNotesState: any): DriveSyncHookReturn => {
       setProgress(20);
 
       // Merge all data safely
-      const mergedData = mergeData(localData, remoteData);
+      const mergedData = await mergeData(localData, remoteData);
 
       await syncGoogleDriveAssets(driveAPI, folderId);
 
@@ -160,13 +163,11 @@ export const useDriveSync = (setNotesState: any): DriveSyncHookReturn => {
 
       setNotesState(mergedData.notes);
       document.dispatchEvent(new Event("reload"));
-      console.log("Local notes updated and event dispatched.");
 
       // Prepare cleaned data and upload
-      const cleanedData = {
-        ...mergedData,
-        notes: revertAssetPaths(mergedData.notes),
-      };
+      const cleanedData = { ...mergedData };
+
+      cleanedData.notes = await revertAssetPaths(mergedData.notes);
 
       await driveAPI.uploadFile(
         "data.json",
