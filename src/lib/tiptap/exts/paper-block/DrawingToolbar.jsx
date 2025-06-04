@@ -1,7 +1,13 @@
 import Icons from "../../../remixicon-react";
 import React, { useState } from "react";
 
-const DrawingToolBar = ({ setState, state, setSelectedElement, onClose, updateAttributes }) => {
+const DrawingToolBar = ({
+  setState,
+  state,
+  setSelectedElement,
+  onClose,
+  updateAttributes,
+}) => {
   const [showStyleOpt, setShowStyleOpt] = useState(false);
   const [activePicker, setActivePicker] = useState(null);
 
@@ -89,8 +95,8 @@ const DrawingToolBar = ({ setState, state, setSelectedElement, onClose, updateAt
           <Icons.CloseLineIcon className="w-8 h-8" />
         </button>
       </div>
-      <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2 bg-neutral-800 rounded-xl">
-        <div className="p-1 flex justify-between items-center rounded-xl shadow-md gap-2">
+      <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+        <div className="p-1 flex justify-between items-center bg-neutral-800 rounded-xl shadow-md gap-2">
           <button
             onClick={() => setState((prev) => ({ ...prev, tool: "select" }))}
             className={`flex items-center justify-center p-2 ${
@@ -133,6 +139,22 @@ const DrawingToolBar = ({ setState, state, setSelectedElement, onClose, updateAt
           >
             <Icons.EraserLineIcon className="w-8 h-8" />
           </button>
+          <button
+            onClick={undo}
+            disabled={undoStack.length === 0}
+            className="p-2 text-[color:var(--selected-dark-text)]"
+          >
+            <Icons.ArrowGoBackLineIcon className="w-8 h-8" />
+          </button>
+          <button
+            onClick={redo}
+            disabled={redoStack.length === 0}
+            className="p-2 text-[color:var(--selected-dark-text)]"
+          >
+            <Icons.ArrowGoForwardLineIcon className="w-8 h-8" />
+          </button>
+        </div>
+        <div className="p-1 flex justify-between items-center bg-neutral-800 rounded-xl shadow-md gap-2">
           {tool === "highlighter" && (
             <>
               <div className="relative inline-block">
@@ -155,7 +177,7 @@ const DrawingToolBar = ({ setState, state, setSelectedElement, onClose, updateAt
                     )
                   }
                   style={{ backgroundColor: highlighterSettings.color }}
-                  className="flex items-center justify-center p-1 h-8 w-8 rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+                  className="flex items-center justify-center p-1 h-8 w-8 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
                 />
               </div>
               <label className="flex items-center gap-1">
@@ -197,7 +219,7 @@ const DrawingToolBar = ({ setState, state, setSelectedElement, onClose, updateAt
                     setActivePicker(activePicker === "pen" ? null : "pen")
                   }
                   style={{ backgroundColor: penSettings.color }}
-                  className="flex items-center justify-center p-1 h-8 w-8 rounded-full hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
+                  className="flex items-center justify-center p-1 h-8 w-8 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-neutral-100 dark:bg-neutral-800"
                 />
               </div>
               <label className="flex items-center gap-1">
@@ -238,20 +260,6 @@ const DrawingToolBar = ({ setState, state, setSelectedElement, onClose, updateAt
               />
             </label>
           )}
-          <button
-            onClick={undo}
-            disabled={undoStack.length === 0}
-            className="p-2 text-[color:var(--selected-dark-text)]"
-          >
-            <Icons.ArrowGoBackLineIcon className="w-8 h-8" />
-          </button>
-          <button
-            onClick={redo}
-            disabled={redoStack.length === 0}
-            className="p-2 text-[color:var(--selected-dark-text)]"
-          >
-            <Icons.ArrowGoForwardLineIcon className="w-8 h-8" />
-          </button>
         </div>
       </div>
     </div>
