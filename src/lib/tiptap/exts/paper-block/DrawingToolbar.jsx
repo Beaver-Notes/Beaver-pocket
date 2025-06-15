@@ -60,6 +60,7 @@ const DrawingToolBar = ({
       },
     }));
   };
+
   return (
     <div>
       <div className="fixed top-6 right-0 transform -translate-x-1/2 z-10 p-2 flex justify-between items-center bg-neutral-800 rounded-xl shadow-md">
