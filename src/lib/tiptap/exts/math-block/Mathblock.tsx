@@ -167,7 +167,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
           ref={contentRef}
           contentEditable={useKatexMacros}
           suppressContentEditableWarning
-          className="break-words whitespace-pre-wrap"
+          className="overflow-x-auto whitespace-pre-wrap break-words text-wrap max-w-full katex-block"
         />
       </div>
       <Transition show={showModal} as={React.Fragment}>
