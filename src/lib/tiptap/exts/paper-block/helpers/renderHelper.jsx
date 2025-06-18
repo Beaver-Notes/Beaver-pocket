@@ -1,6 +1,7 @@
+// renderHelper
 import { useMemo, useCallback } from "react";
 
-export const renderedPaths = (
+export const renderHelper = (
   lines,
   width,
   height,

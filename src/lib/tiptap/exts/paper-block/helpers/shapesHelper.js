@@ -1,3 +1,4 @@
+// shapesHelper
 export const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 function fitCircle(points) {

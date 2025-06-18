@@ -1,3 +1,4 @@
+// drawHelper.js
 import * as d3 from "d3";
 
 /**
@@ -45,8 +46,8 @@ export function getSvgPathFromStroke(points) {
  * @param {{ current: SVGSVGElement }} svgRef - React ref to the SVG element.
  * @returns {[number, number]} Coordinates in SVG space.
  */
-export const getPointerCoordinates = (event, svgRef) => {
-  const svg = svgRef.current;
+export const getPointerCoordinates = (event, svgElement) => {
+  const svg = svgElement;
   const point = svg.createSVGPoint();
 
   point.x = event.clientX;
@@ -311,4 +312,56 @@ export const transformPoints = (
       newBounds.y + relativeY * newBounds.height,
     ];
   });
+};
+
+/**
+ * Check if pointer input is valid for drawing
+ */
+export const isPenInput = (e) => {
+  return e.pointerType === "pen" || e.pointerType === "mouse";
+};
+
+/**
+ * Check if input is palm touch (should be ignored)
+ */
+export const isPalmTouch = (e) => {
+  return e.pointerType === "touch";
+};
+
+/**
+ * Get tool settings based on current tool
+ */
+export const getToolSettings = (
+  tool,
+  penSettings,
+  eraserSettings,
+  highlighterSettings
+) => {
+  switch (tool) {
+    case "pen":
+      return penSettings;
+    case "eraser":
+      return eraserSettings;
+    case "highlighter":
+      return highlighterSettings;
+    default:
+      return penSettings;
+  }
+};
+
+/**
+ * Prevent touch scrolling on drawing canvas
+ */
+export const preventTouchScroll = (event, svgRef) => {
+  if (event.touches && event.touches.length > 1) {
+    return true;
+  }
+
+  const svgElement = svgRef.current;
+  if (
+    svgElement &&
+    (event.target === svgElement || svgElement.contains(event.target))
+  ) {
+    event.preventDefault();
+  }
 };

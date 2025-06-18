@@ -2,105 +2,17 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { getStroke } from "perfect-freehand";
 import "../../../../assets/css/paper.scss";
 import { createPortal } from "react-dom";
+import {
+  convertLegacyLines,
+  convertToLegacyFormat,
+  getSvgPathFromStroke,
+  getStrokeOptions,
+} from "./helpers/drawHelper";
 import { NodeViewWrapper } from "@tiptap/react";
 import Icons from "../../../remixicon-react";
 import { v4 as uuid } from "uuid";
 import DrawMode from "./DrawMode";
-import * as d3 from "d3"; 
-
-
-const extractPointsFromPath = (pathString) => {
-  if (!pathString) return [];
-
-  const points = [];
-  const matches = pathString.match(/[-+]?[0-9]*\.?[0-9]+/g);
-
-  if (matches) {
-    for (let i = 0; i < matches.length; i += 2) {
-      if (matches[i + 1]) {
-        points.push([parseFloat(matches[i]), parseFloat(matches[i + 1])]);
-      }
-    }
-  }
-
-  return points;
-};
-
-
-const convertLegacyLines = (lines) => {
-  if (!lines || lines.length === 0) return [];
-
-  return lines.map((line) => {
-    
-    if (line.points && Array.isArray(line.points)) return line;
-
-    
-    const pathString = line.path || line.d;
-    if (pathString) {
-      const points = extractPointsFromPath(pathString);
-
-      return {
-        points,
-        tool: line.tool || "pen",
-        color: line.color || "#000000",
-        size: line.size || 2,
-        path: pathString,
-        d: pathString,
-      };
-    }
-
-    
-    return {
-      points: line.points || [],
-      tool: line.tool || "pen",
-      color: line.color || "#000000",
-      size: line.size || 2,
-    };
-  });
-};
-
-
-const convertToLegacyFormat = (lines) => {
-  return lines.map((line) => {
-    const legacyLine = {
-      tool: line.tool,
-      color: line.color,
-      size: line.size,
-      points: line.points,
-    };
-
-    if (line.points && line.points.length > 0) {
-      const lineGenerator = d3
-        .line()
-        .x((d) => d[0])
-        .y((d) => d[1])
-        .curve(d3.curveBasis);
-
-      legacyLine.path = lineGenerator(line.points);
-      legacyLine.d = legacyLine.path;
-    }
-
-    return legacyLine;
-  });
-};
-
-
-const getSvgPathFromStroke = (stroke) => {
-  if (!stroke.length) return "";
-
-  const d = stroke.reduce(
-    (acc, [x0, y0], i, arr) => {
-      const [x1, y1] = arr[(i + 1) % arr.length];
-      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-      return acc;
-    },
-    ["M", ...stroke[0], "Q"]
-  );
-
-  d.push("Z");
-  return d.join(" ");
-};
-
+import * as d3 from "d3";
 
 const OverlayPortal = ({ children, onClose }) => {
   return createPortal(
@@ -112,7 +24,6 @@ const OverlayPortal = ({ children, onClose }) => {
 };
 
 const CustomNodeView = ({ node, updateAttributes }) => {
-  
   const [lines, setLines] = useState(() =>
     convertLegacyLines(node.attrs.lines || [])
   );
@@ -128,7 +39,6 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   });
 
   useEffect(() => {
-    
     const loadTranslations = async () => {
       const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
       try {
@@ -143,31 +53,16 @@ const CustomNodeView = ({ node, updateAttributes }) => {
     loadTranslations();
   }, []);
 
-  const getStrokeOptions = (settings) => ({
-    size: settings.size,
-    thinning: tool === "highlighter" ? 0 : 0.2,
-    smoothing: 0.75,
-    streamline: 0.7,
-    easing: (t) => t,
-    simulatePressure: false,
-    last: true,
-    start: { cap: true, taper: 0, easing: (t) => t },
-    end: { cap: true, taper: 0, easing: (t) => t },
-  });
-
-  
   const toggleDrawMode = () => {
     setIsDrawMode(!isDrawMode);
   };
 
-  
   const closeDrawMode = () => {
     setIsDrawMode(false);
     setLines(convertLegacyLines(node.attrs.lines || []));
     setBackground(node.attrs.paperType || []);
   };
 
-  
   const renderedPaths = useMemo(() => {
     return lines.map((line, lineIndex) => {
       const stroke = getStroke(line.points, getStrokeOptions(line));
@@ -186,7 +81,6 @@ const CustomNodeView = ({ node, updateAttributes }) => {
     });
   }, [lines, tool]);
 
-  
   const PreviewMode = () => (
     <div
       className="cursor-pointer hover:opacity-80 transition-opacity"
@@ -214,7 +108,6 @@ const CustomNodeView = ({ node, updateAttributes }) => {
         <OverlayPortal>
           <DrawMode
             onClose={() => {
-              
               updateAttributes({
                 lines: convertToLegacyFormat(lines),
               });
