@@ -140,7 +140,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
             aria-label={translations.menu.image}
           >
             <icons.ImageLineIcon
-              className="text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer"
+              className="text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7 cursor-pointer"
               aria-hidden="true"
             />
           </button>

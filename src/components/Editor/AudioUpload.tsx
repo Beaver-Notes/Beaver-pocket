@@ -84,9 +84,9 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
             aria-disabled={isProcessing}
           >
             {isProcessing ? (
-              <icons.Spinner className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer animate-spin" />
+              <icons.Spinner className="text-xl w-7 h-7 cursor-pointer animate-spin" />
             ) : (
-              <icons.MicLineIcon className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer" />
+              <icons.MicLineIcon className="text-xl w-7 h-7 cursor-pointer" />
             )}
           </button>
         ) : (
@@ -101,9 +101,9 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
             aria-disabled={isProcessing}
           >
             {isProcessing ? (
-              <icons.Spinner className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer animate-spin" />
+              <icons.Spinner className="text-xl w-7 h-7 cursor-pointer animate-spin" />
             ) : (
-              <icons.StopCircleLineIcon className="text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer" />
+              <icons.StopCircleLineIcon className="text-xl w-7 h-7 cursor-pointer" />
             )}
           </button>
         )}

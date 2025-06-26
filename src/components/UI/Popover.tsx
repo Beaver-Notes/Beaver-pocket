@@ -18,7 +18,7 @@ interface PopoverProps {
 const Popover: React.FC<PopoverProps> = ({
   placement = "bottom",
   trigger = "click",
-  padding = "p-4",
+  padding = "p-2",
   disabled = false,
   modelValue = false,
   onShow,

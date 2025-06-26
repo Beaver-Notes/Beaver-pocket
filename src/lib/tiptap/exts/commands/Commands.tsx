@@ -28,12 +28,7 @@ const Commands: React.FC<SlashMenuProps> = ({
       image: "menu.image",
       video: "menu.video",
       paragraph: "menu.paragraph",
-      heading1: "menu.heading1",
-      heading2: "menu.heading2",
-      heading3: "menu.heading3",
-      heading4: "menu.heading4",
-      heading5: "menu.heading5",
-      heading6: "menu.heading6",
+      heading: "menu.heading",
       quote: "menu.quote",
       code: "menu.code",
       table: "menu.table",
@@ -115,6 +110,24 @@ const Commands: React.FC<SlashMenuProps> = ({
       .run();
   };
 
+  const headingLevels = [1, 2, 3, 4, 5, 6];
+
+  const headingIcons = [
+    icons.Heading1Icon,
+    icons.Heading2Icon,
+    icons.Heading3Icon,
+    icons.Heading4Icon,
+    icons.Heading5Icon,
+    icons.Heading6Icon,
+  ];
+
+  const headings = headingLevels.map((level, idx) => ({
+    icon: headingIcons[idx],
+    label: `${translations.menu.heading} ${level}`,
+    action: () =>
+      editor.chain().focus().deleteRange(range).toggleHeading({ level }).run(),
+  }));
+
   const menu = [
     {
       icon: icons.ParagraphIcon,
@@ -122,72 +135,7 @@ const Commands: React.FC<SlashMenuProps> = ({
       action: () =>
         editor.chain().focus().deleteRange(range).setParagraph().run(),
     },
-    {
-      icon: icons.Heading1Icon,
-      label: translations.menu.heading1,
-      action: () =>
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .toggleHeading({ level: 1 })
-          .run(),
-    },
-    {
-      icon: icons.Heading2Icon,
-      label: translations.menu.heading2,
-      action: () =>
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .toggleHeading({ level: 2 })
-          .run(),
-    },
-    {
-      icon: icons.Heading3Icon,
-      label: translations.menu.heading3,
-      action: () =>
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .toggleHeading({ level: 3 })
-          .run(),
-    },
-    {
-      icon: icons.Heading4Icon,
-      label: translations.menu.heading4,
-      action: () =>
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .toggleHeading({ level: 4 })
-          .run(),
-    },
-    {
-      icon: icons.Heading5Icon,
-      label: translations.menu.heading5,
-      action: () =>
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .toggleHeading({ level: 5 })
-          .run(),
-    },
-    {
-      icon: icons.Heading6Icon,
-      label: translations.menu.heading6,
-      action: () =>
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .toggleHeading({ level: 6 })
-          .run(),
-    },
+    ...headings,
     {
       icon: icons.DoubleQuotesLIcon,
       label: translations.menu.quote,
@@ -377,7 +325,7 @@ const Commands: React.FC<SlashMenuProps> = ({
           <div className="text-left flex overflow-hidden text-ellipsis whitespace-nowrap">
             <item.icon
               className={`text-left overflow-hidden text-ellipsis whitespace-nowrap mr-2 ltr:ml-2 text-lg ${
-                item.className || ""
+                "className" in item && item.className ? item.className : ""
               }`}
             />
             <h3 className="text-lg font-medium text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
@@ -389,7 +337,7 @@ const Commands: React.FC<SlashMenuProps> = ({
       action: item.action,
     })),
     ...uploadComponents,
-  ].slice(0, 5);
+  ].slice(0, 6);
 
   // Handle item click for both keyboard and mouse selections
   const handleItemClick = (index: number) => {

@@ -1,4 +1,5 @@
 // icons.ts
+import HeadingIcon from "remixicon-react/HeadingIcon";
 import ArrowUpSLineIcon from "remixicon-react/ArrowUpSLineIcon";
 import BallPenLine from "remixicon-react/BallPenLineIcon";
 import SingleQuotesLIcon from "remixicon-react/SingleQuotesLIcon";
@@ -369,6 +370,7 @@ const Icons = {
   Brush3FillIcon,
   mdiRegex,
   fontColor,
+  HeadingIcon,
 };
 
 export default Icons;

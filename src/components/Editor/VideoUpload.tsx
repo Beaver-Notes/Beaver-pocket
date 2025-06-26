@@ -49,7 +49,6 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
       await createDirectory();
       const fileName = `${Date.now()}_${file.name}`;
 
-      // Read file contents as data URL
       const fileReader = new FileReader();
       fileReader.readAsDataURL(file);
 
@@ -57,11 +56,10 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
         fileReader.onload = async () => {
           const fileDataUrl = fileReader.result as string;
 
-          // Write file to filesystem under "note-assets/noteId" directory
           const filePath = `file-assets/${noteId}/${fileName}`;
           await Filesystem.writeFile({
             path: filePath,
-            data: fileDataUrl, // Write the data URL instead of the file object
+            data: fileDataUrl,
             directory: FilesystemDirectory.Data,
             recursive: true,
           });
@@ -90,16 +88,16 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
                 "video-upload-input"
               ) as HTMLInputElement | null;
               if (inputElement) {
-                inputElement.click(); // Safely click the input element
+                inputElement.click();
               }
             }}
             className="flex items-center"
-            aria-label={translations.menu.video} // Aria label for screen readers
+            aria-label={translations.menu.video}
           >
             {/* Icon */}
             <icons.VideoIcon
               className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3"
-              aria-hidden="true" // This icon doesn't need to be announced by screen readers
+              aria-hidden="true"
             />
 
             {/* Text Container */}
@@ -127,13 +125,13 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
                 "video-upload-input"
               ) as HTMLInputElement | null;
               if (inputElement) {
-                inputElement.click(); // Safely click the input element
+                inputElement.click();
               }
             }}
             aria-label={translations.menu.video}
           >
             <icons.VideoIcon
-              className=" text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"
+              className=" text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7"
               aria-hidden="true"
             />
           </button>

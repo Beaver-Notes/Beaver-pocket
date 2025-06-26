@@ -4,7 +4,6 @@ import { Note } from "../../store/types";
 import SDialog from "../UI/SDialog";
 import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
 import Toolbar from "./Toolbar";
-import Drawer from "./Drawer";
 import Find from "./Find";
 import "../../assets/css/editor.css";
 import { extensions } from "../../lib/tiptap/index";
@@ -494,30 +493,6 @@ function EditorComponent({
                 } text-xl w-7 h-7`}
               />
             </button>
-
-            <button
-              className={`${
-                focusMode ? "hidden" : "block"
-              } p-2 align-end rounded-md text-white bg-transparent cursor-pointer`}
-              onClick={() => editor?.chain().focus().undo().run()}
-              aria-label={translations.editor.undo}
-            >
-              <Icons.ArrowGoBackLineIcon
-                className={`border-none  dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
-              />
-            </button>
-            <button
-              className={`${
-                focusMode ? "hidden" : "block"
-              } p-2 align-end rounded-md text-white bg-transparent cursor-pointer`}
-              onClick={() => editor?.chain().focus().redo().run()}
-              aria-label={translations.editor.redo}
-            >
-              <Icons.ArrowGoForwardLineIcon
-                className={`border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
-              />
-            </button>
-
             <button
               className={`${
                 focusMode ? "hidden" : "block"
@@ -547,7 +522,7 @@ function EditorComponent({
 
       <div
         id="content"
-        className={`inset-x-0 pt-4 sm:pt-16 bottom-16 overflow-auto editor px-4 ${
+        className={`inset-x-0 pt-4 sm:pt-20 bottom-16 overflow-auto editor px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
         } text-black dark:text-[color:var(--selected-dark-text)]`}
       >
@@ -570,14 +545,6 @@ function EditorComponent({
             />
           </div>
         </div>
-      </div>
-
-      <div
-        className={`fixed bottom-0 left-0 right-0 sm:hidden print:hidden bg-white dark:bg-[#232222] z-50 ${
-          focusMode ? "hidden" : "block"
-        }`}
-      >
-        <Drawer noteId={note.id} note={note} editor={editor} />
       </div>
     </div>
   );
