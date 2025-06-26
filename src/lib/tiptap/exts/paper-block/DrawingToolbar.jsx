@@ -63,9 +63,9 @@ const DrawingToolBar = ({
 
   return (
     <div>
-      <div className="fixed top-6 right-0 transform -translate-x-1/2 z-10 p-2 flex justify-between items-center bg-neutral-800 rounded-xl shadow-md">
+      <div className="fixed top-6 right-0 transform -translate-x-1/2 z-10 p-2 hidden sm:flex justify-between items-center bg-neutral-800 rounded-xl shadow-md">
         <button
-          onClick={() => setShowStyleOpt(true)}
+          onClick={() => setShowStyleOpt((prev) => !prev)}
           className={`relative flex items-center justify-center p-2 text-[color:var(--selected-dark-text)] rounded focus:outline-none focus:ring-2 focus:ring-primary bg-neutral-800`}
         >
           <Icons.Brush3FillIcon className="w-6 h-6" />
@@ -96,8 +96,8 @@ const DrawingToolBar = ({
           <Icons.CloseLineIcon className="w-8 h-8" />
         </button>
       </div>
-      <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2">
-        <div className="p-1 flex justify-between items-center bg-neutral-800 rounded-xl shadow-md gap-2">
+      <div className="fixed top-12 sm:top-6 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+        <div className="p-2 flex justify-between items-center bg-neutral-800 rounded-xl shadow-md">
           <button
             onClick={() => setState((prev) => ({ ...prev, tool: "select" }))}
             className={`flex items-center justify-center p-2 ${
@@ -153,6 +153,12 @@ const DrawingToolBar = ({
             className="p-2 text-[color:var(--selected-dark-text)]"
           >
             <Icons.ArrowGoForwardLineIcon className="w-8 h-8" />
+          </button>
+          <button
+            onClick={onClose}
+            className="sm:hidden p-2 rounded-full text-[color:var(--selected-dark-text)] transition-colors"
+          >
+            <Icons.CloseLineIcon className="w-8 h-8" />
           </button>
         </div>
         <div className="p-1 flex justify-between items-center bg-neutral-800 rounded-xl shadow-md gap-2">
