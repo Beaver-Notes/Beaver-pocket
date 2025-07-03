@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { WebDavService } from "./webDavApi";
 import {
-  Directory,
   Filesystem,
   FilesystemDirectory,
   FilesystemEncoding,
@@ -67,7 +66,7 @@ const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
     try {
       await webDavService.createFolder(`${SYNC_FOLDER_NAME}`);
 
-      let localData: SyncData = { notes: {} };
+      let localData: SyncData = { data: { notes: {} } };
       try {
         const localFileData = await Filesystem.readFile({
           path: STORAGE_PATH,
@@ -79,7 +78,7 @@ const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
         // No local data, use empty object
       }
 
-      let remoteData: SyncData = { notes: {} };
+      let remoteData: SyncData = { data: { notes: {} } };
       try {
         const fileData = await webDavService.get(
           `${SYNC_FOLDER_NAME}/data.json`
@@ -105,10 +104,10 @@ const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.notes);
+      setNotesState(mergedData.data.notes);
 
       const cleanedData = { ...mergedData };
-      cleanedData.notes = await revertAssetPaths(mergedData.notes);
+      cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
 
       const base64Data = base64Encode(JSON.stringify(cleanedData));
 
@@ -333,7 +332,7 @@ async function syncWebDAVAssets(
 
               await Filesystem.writeFile({
                 path: localFilePath,
-                directory: Directory.Data,
+                directory: FilesystemDirectory.Data,
                 data: fileBase64String,
               });
 
@@ -361,7 +360,7 @@ async function syncWebDAVAssets(
             try {
               const { data: fileData } = await Filesystem.readFile({
                 path: localFilePath,
-                directory: Directory.Data,
+                directory: FilesystemDirectory.Data,
               });
 
               await webDavService.upload(remoteFilePath, String(fileData));
