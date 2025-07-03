@@ -62,7 +62,7 @@ const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
     try {
       await iCloud.createFolder({ folderName: `${SYNC_FOLDER_NAME}` });
 
-      let localData: SyncData = { notes: {} };
+      let localData: SyncData = { data: { notes: {} } };
       try {
         const localFileData = await Filesystem.readFile({
           path: STORAGE_PATH,
@@ -74,7 +74,7 @@ const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
         // No local data, use empty object
       }
 
-      let remoteData: SyncData = { notes: {} };
+      let remoteData: SyncData = { data: { notes: {} } };
       try {
         const { fileData: base64Data } = await iCloud.downloadFile({
           fileName: `${SYNC_FOLDER_NAME}/data.json`,
@@ -101,11 +101,10 @@ const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.notes);
-      document.dispatchEvent(new Event("reload"));
+      setNotesState(mergedData.data.notes);
 
       const cleanedData = { ...mergedData };
-      cleanedData.notes = await revertAssetPaths(mergedData.notes);
+      cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
 
       const base64Data = base64Encode(
         JSON.stringify({ data: { notes: cleanedData } })

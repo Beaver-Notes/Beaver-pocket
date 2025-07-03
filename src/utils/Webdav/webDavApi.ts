@@ -116,21 +116,63 @@ export class WebDavService {
     }
   }
 
-  // THIS method is now using ONLY WebDAV plugin methods:
   async getDirectoryContent(
     path: string
   ): Promise<{ name: string; type: "file" | "directory" }[]> {
     try {
-      const items = await WebDAV.listContents({
+      const response = await WebDAV.listContents({
         url: this.buildUrl(path),
         username: this.options.username,
         password: this.options.password,
       });
 
-      return items.map((item: { name: string; isDirectory: boolean }) => ({
-        name: item.name,
-        type: item.isDirectory ? "directory" : "file",
-      }));
+      const xmlString = response.data;
+
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+
+      const parserError = xmlDoc.querySelector("parsererror");
+      if (parserError) {
+        throw new Error("Error parsing XML response");
+      }
+
+      const responses = Array.from(xmlDoc.getElementsByTagName("D:response"));
+
+      if (responses.length === 0) {
+        const fallbackResponses = Array.from(
+          xmlDoc.getElementsByTagName("response")
+        );
+        console.log(
+          "Fallback to non-namespaced responses:",
+          fallbackResponses.length
+        );
+      }
+
+      const items = responses.map((responseElem) => {
+        let hrefElem =
+          responseElem.getElementsByTagName("D:href")[0] ||
+          responseElem.getElementsByTagName("href")[0];
+        const href = hrefElem?.textContent || "";
+
+        let resTypeElem =
+          responseElem.getElementsByTagName("D:resourcetype")[0] ||
+          responseElem.getElementsByTagName("resourcetype")[0];
+
+        const isDirectory = !!(
+          resTypeElem?.getElementsByTagName("D:collection")[0] ||
+          resTypeElem?.getElementsByTagName("collection")[0]
+        );
+
+        let name = decodeURIComponent(href).replace(/\/$/, "");
+        name = name.substring(name.lastIndexOf("/") + 1);
+
+        return {
+          name,
+          type: isDirectory ? ("directory" as const) : ("file" as const),
+        };
+      });
+
+      return items.slice(1).filter((item) => item.name.length > 0);
     } catch (error) {
       console.error("Error getting directory contents:", error);
       throw new Error(`Failed to get directory content: ${error}`);

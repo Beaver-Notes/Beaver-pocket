@@ -80,7 +80,7 @@ const useDropboxSync = (setNotesState: any): DropboxSyncHookReturn => {
       }
 
       // Read local data
-      let localData: SyncData = { notes: {} };
+      let localData: SyncData = { data: { notes: {} } };
       try {
         const localFileData = await Filesystem.readFile({
           path: STORAGE_PATH,
@@ -93,7 +93,7 @@ const useDropboxSync = (setNotesState: any): DropboxSyncHookReturn => {
       }
 
       // Read remote data
-      let remoteData: SyncData = { notes: {} };
+      let remoteData: SyncData = { data: { notes: {} } };
       try {
         const remoteMetadataResponse = await dbx.filesDownload({
           path: `/${SYNC_FOLDER_NAME}/data.json`,
@@ -124,12 +124,11 @@ const useDropboxSync = (setNotesState: any): DropboxSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.notes);
-      document.dispatchEvent(new Event("reload"));
+      setNotesState(mergedData.data.notes);
 
       // Prepare data for remote storage - revert asset paths
       const cleanedData = { ...mergedData };
-      cleanedData.notes = await revertAssetPaths(mergedData.notes);
+      cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
 
       // Upload to Dropbox
       await dbx.filesUpload({

@@ -227,14 +227,31 @@ public class WebDAVPlugin extends Plugin {
         String password = call.getString("password");
 
         if (url == null || username == null || password == null) {
-            call.reject("Missing parameters");
+            call.reject("Missing or invalid parameters");
             return;
         }
+
+        String propfindBody = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                "<D:propfind xmlns:D=\"DAV:\">\n" +
+                "    <D:prop>\n" +
+                "        <D:resourcetype/>\n" +
+                "        <D:getcontentlength/>\n" +
+                "        <D:getlastmodified/>\n" +
+                "        <D:creationdate/>\n" +
+                "    </D:prop>\n" +
+                "</D:propfind>";
+
+        RequestBody body = RequestBody.create(
+                propfindBody,
+                okhttp3.MediaType.parse("application/xml")
+        );
 
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("Authorization", getAuthHeader(username, password))
-                .method("PROPFIND", null)
+                .addHeader("Depth", "1")  // KEY FIX: include Depth header
+                .addHeader("Content-Type", "application/xml")
+                .method("PROPFIND", body)
                 .build();
 
         client.newCall(request).enqueue(new okhttp3.Callback() {
@@ -246,78 +263,17 @@ public class WebDAVPlugin extends Plugin {
             @Override
             public void onResponse(Call callInner, Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    String body = response.body() != null ? response.body().string() : "No response body";
-                    call.reject("Failed to list folder contents: " + response.code() + " - " + body);
+                    String errorBody = response.body() != null ? response.body().string() : "No response body";
+                    call.reject("Failed to list folder contents: " + response.code() + " - " + errorBody);
                     return;
                 }
 
-                String xmlResponse = response.body() != null ? response.body().string() : "";
+                String xmlResponse = response.body() != null ? response.body().string() : "No response body";
 
-                try {
-                    // Parse XML
-                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                    factory.setNamespaceAware(true); // needed for "d:" prefixes
-                    DocumentBuilder builder = factory.newDocumentBuilder();
-                    InputSource is = new InputSource(new StringReader(xmlResponse));
-                    Document doc = builder.parse(is);
-
-                    NodeList responses = doc.getElementsByTagNameNS("*", "response");
-                    JSONArray items = new JSONArray();
-
-                    for (int i = 0; i < responses.getLength(); i++) {
-                        Element responseElement = (Element) responses.item(i);
-
-                        String href = getTextContent(responseElement, "href");
-                        if (href == null || href.trim().isEmpty()) continue;
-
-                        String name = decodeFileNameFromHref(href);
-                        if (name.isEmpty()) continue;
-
-                        boolean isDirectory = false;
-                        NodeList resourcetypes = responseElement.getElementsByTagNameNS("*", "resourcetype");
-                        if (resourcetypes.getLength() > 0) {
-                            Element rtElement = (Element) resourcetypes.item(0);
-                            NodeList collection = rtElement.getElementsByTagNameNS("*", "collection");
-                            isDirectory = collection.getLength() > 0;
-                        }
-
-                        JSONObject item = new JSONObject();
-                        item.put("name", name);
-                        item.put("isDirectory", isDirectory);
-                        items.put(item);
-                    }
-
-                    JSObject result = new JSObject();
-                    result.put("items", items);
-                    call.resolve(result);
-
-                } catch (Exception e) {
-                    call.reject("Failed to parse WebDAV XML response: " + e.getMessage(), e);
-                }
-            }
-
-            private String getTextContent(Element parent, String tagName) {
-                NodeList list = parent.getElementsByTagNameNS("*", tagName);
-                if (list.getLength() > 0) {
-                    return list.item(0).getTextContent();
-                }
-                return null;
-            }
-
-            private String decodeFileNameFromHref(String href) {
-                // Remove trailing slash and decode
-                String[] parts = href.split("/");
-                for (int i = parts.length - 1; i >= 0; i--) {
-                    String part = parts[i].trim();
-                    if (!part.isEmpty()) {
-                        try {
-                            return java.net.URLDecoder.decode(part, "UTF-8");
-                        } catch (Exception e) {
-                            return part; // fallback
-                        }
-                    }
-                }
-                return "";
+                JSObject result = new JSObject();
+                result.put("message", "Folder contents retrieved.");
+                result.put("data", xmlResponse);
+                call.resolve(result);
             }
         });
     }

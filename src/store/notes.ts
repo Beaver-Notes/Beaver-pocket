@@ -25,7 +25,7 @@ async function createNotesDirectory() {
   }
 }
 
-// Load all data
+// Load all data (always return wrapped structure normalized to flat for internal use)
 export const loadNotes = async (): Promise<{
   notes: Record<string, Note>;
   labels: string[];
@@ -34,7 +34,6 @@ export const loadNotes = async (): Promise<{
   deletedIds: Record<string, any>;
 }> => {
   try {
-    // Check if the file exists and create directory if it doesn't
     try {
       await Filesystem.stat({
         path: STORAGE_PATH,
@@ -51,44 +50,37 @@ export const loadNotes = async (): Promise<{
       };
     }
 
-    // Read the file content
     const data = await Filesystem.readFile({
       path: STORAGE_PATH,
       directory: Directory.Data,
       encoding: FilesystemEncoding.UTF8,
     });
 
-    // Parse the file content
     const parsed = JSON.parse(
       typeof data.data === "string" ? data.data : await data.data.text()
     );
 
-    let finalData = parsed;
+    const finalData = parsed?.data
+      ? parsed.data
+      : {
+          notes: {},
+          labels: [],
+          lockStatus: {},
+          isLocked: {},
+          deletedIds: {},
+        };
 
-    // Handle old structure: if parsed has "data" field, use it
-    if (parsed?.data) {
-      finalData = {
-        notes: parsed.data.notes || {}, // Extract notes from parsed.data
-        labels: parsed.data.labels || [],
-        lockStatus: parsed.data.lockStatus || {},
-        isLocked: parsed.data.isLocked || {},
-        deletedIds: parsed.data.deletedIds || {},
-      };
-    }
-
-    // Handling collapsible headings setting
     const collapsibleSetting = localStorage.getItem("collapsibleHeading");
     const notes = finalData.notes ?? {};
 
     for (const noteId in notes) {
       const note = notes[noteId];
-      note.title = note.title || ""; // Ensure note title is not missing
+      note.title = note.title || "";
       if (collapsibleSetting === "false" && note.content?.content) {
         note.content.content = uncollapseHeading(note.content.content);
       }
     }
 
-    // Return the final structured data
     return {
       notes,
       labels: finalData.labels ?? [],
@@ -108,7 +100,7 @@ export const loadNotes = async (): Promise<{
   }
 };
 
-// Save Note
+// Save Note - now saves wrapped in `data`
 export const useSaveNote = (
   setNotesState: (notes: Record<string, Note>) => void
 ) => {
@@ -134,11 +126,13 @@ export const useSaveNote = (
           await Filesystem.writeFile({
             path: STORAGE_PATH,
             data: JSON.stringify({
-              notes: updatedNotes,
-              labels,
-              lockStatus,
-              isLocked,
-              deletedIds,
+              data: {
+                notes: updatedNotes,
+                labels,
+                lockStatus,
+                isLocked,
+                deletedIds,
+              },
             }),
             directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
@@ -159,7 +153,7 @@ export const useSaveNote = (
   return { saveNote };
 };
 
-// Delete Note
+// Delete Note - saves wrapped in `data`
 export const useDeleteNote = (
   setNotesState: (notes: Record<string, Note>) => void,
   notesState: Record<string, Note>
@@ -171,7 +165,6 @@ export const useDeleteNote = (
         const updatedNotes = { ...notesState };
         delete updatedNotes[noteId];
 
-        // Soft-delete tracking
         if (!deletedIds[noteId]) {
           deletedIds[noteId] = Date.now();
         }
@@ -190,18 +183,20 @@ export const useDeleteNote = (
         await Filesystem.writeFile({
           path: STORAGE_PATH,
           data: JSON.stringify({
-            notes: updatedNotes,
-            labels,
-            lockStatus,
-            isLocked,
-            deletedIds,
+            data: {
+              notes: updatedNotes,
+              labels,
+              lockStatus,
+              isLocked,
+              deletedIds,
+            },
           }),
           directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
 
         await trackChange("notes", updatedNotes);
-        await trackChange("deletedIds", deletedIds); // Track for sync
+        await trackChange("deletedIds", deletedIds);
 
         cleanupDeletedIds(30);
         setNotesState(updatedNotes);
@@ -216,7 +211,7 @@ export const useDeleteNote = (
   return { deleteNote };
 };
 
-// Cleanup Deleted IDs
+// Cleanup Deleted IDs - saves wrapped in `data`
 export const cleanupDeletedIds = async (days = 30) => {
   try {
     const { notes, labels, lockStatus, isLocked, deletedIds } =
@@ -233,11 +228,13 @@ export const cleanupDeletedIds = async (days = 30) => {
     await Filesystem.writeFile({
       path: STORAGE_PATH,
       data: JSON.stringify({
-        notes,
-        labels,
-        lockStatus,
-        isLocked,
-        deletedIds: cleanedDeletedIds,
+        data: {
+          notes,
+          labels,
+          lockStatus,
+          isLocked,
+          deletedIds: cleanedDeletedIds,
+        },
       }),
       directory: Directory.Data,
       encoding: FilesystemEncoding.UTF8,
@@ -249,7 +246,7 @@ export const cleanupDeletedIds = async (days = 30) => {
   }
 };
 
-// Toggle Bookmark
+// Toggle Bookmark - saves wrapped in `data`
 export const useToggleBookmark = () => {
   const toggleBookmark = async (noteId: string) => {
     try {
@@ -260,11 +257,13 @@ export const useToggleBookmark = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({
-          notes,
-          labels,
-          lockStatus,
-          isLocked,
-          deletedIds,
+          data: {
+            notes,
+            labels,
+            lockStatus,
+            isLocked,
+            deletedIds,
+          },
         }),
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
@@ -281,7 +280,7 @@ export const useToggleBookmark = () => {
   return { toggleBookmark };
 };
 
-// Toggle Archive
+// Toggle Archive - saves wrapped in `data`
 export const useToggleArchive = () => {
   const toggleArchive = async (noteId: string) => {
     try {
@@ -292,11 +291,13 @@ export const useToggleArchive = () => {
       await Filesystem.writeFile({
         path: STORAGE_PATH,
         data: JSON.stringify({
-          notes,
-          labels,
-          lockStatus,
-          isLocked,
-          deletedIds,
+          data: {
+            notes,
+            labels,
+            lockStatus,
+            isLocked,
+            deletedIds,
+          },
         }),
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
@@ -313,7 +314,7 @@ export const useToggleArchive = () => {
   return { toggleArchive };
 };
 
-// Uncollapse headings
+// Uncollapse headings (unchanged)
 function uncollapseHeading(contents: any[] = []): any[] {
   if (!Array.isArray(contents)) return contents;
 

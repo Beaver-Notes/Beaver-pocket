@@ -41,7 +41,9 @@ export const useHandleImportData = () => {
         const folderExists = await Filesystem.readdir({
           path: importFolderPath,
           directory: Directory.Data,
-        }).then(() => true).catch(() => false);
+        })
+          .then(() => true)
+          .catch(() => false);
 
         if (folderExists) break;
       }
@@ -57,7 +59,12 @@ export const useHandleImportData = () => {
       // Copy note-assets
       try {
         const existingAssets = new Set(
-          (await Filesystem.readdir({ path: "note-assets", directory: Directory.Data })).files.map(f => f.name)
+          (
+            await Filesystem.readdir({
+              path: "note-assets",
+              directory: Directory.Data,
+            })
+          ).files.map((f) => f.name)
         );
 
         const importedAssets = await Filesystem.readdir({
@@ -81,7 +88,12 @@ export const useHandleImportData = () => {
       // Copy file-assets
       try {
         const existingFileAssets = new Set(
-          (await Filesystem.readdir({ path: "file-assets", directory: Directory.Data })).files.map(f => f.name)
+          (
+            await Filesystem.readdir({
+              path: "file-assets",
+              directory: Directory.Data,
+            })
+          ).files.map((f) => f.name)
         );
 
         const importedFileAssets = await Filesystem.readdir({
@@ -116,23 +128,27 @@ export const useHandleImportData = () => {
         // Merge imported data (assumes imported notes are already in assets:// and file-assets:// format)
         const merged = mergeData(
           {
-            notes: localData.notes,
-            labels: localData.labels,
-            lockStatus: localData.lockStatus,
-            isLocked: localData.isLocked,
-            deletedIds: localData.deletedIds,
+            data: {
+              notes: localData.notes,
+              labels: localData.labels,
+              lockStatus: localData.lockStatus,
+              isLocked: localData.isLocked,
+              deletedIds: localData.deletedIds,
+            },
           },
           {
-            notes: parsedData.data.notes,
-            labels: parsedData?.labels || [],
-            lockStatus: parsedData?.lockStatus || {},
-            isLocked: parsedData?.isLocked || {},
-            deletedIds: parsedData?.deletedIds || {},
+            data: {
+              notes: parsedData.data.notes,
+              labels: parsedData?.labels || [],
+              lockStatus: parsedData?.lockStatus || {},
+              isLocked: parsedData?.isLocked || {},
+              deletedIds: parsedData?.deletedIds || {},
+            },
           }
         );
 
         // Revert asset paths back to platform format before saving
-        const cleanedNotes = revertAssetPaths((await merged).notes);
+        const cleanedNotes = revertAssetPaths(merged.data.notes);
 
         const mergedWithRevertedPaths = {
           ...merged,

@@ -36,9 +36,8 @@ export interface WebDAVPlugin {
     username: string;
     password: string;
   }): Promise<{
-    map(arg0: (item: { name: string; isDirectory: boolean; }) => { name: string; type: string; }): { name: string; type: "file" | "directory"; }[] | PromiseLike<{ name: string; type: "file" | "directory"; }[]>;
     message: string;
-    data: string;
+    data: string; // raw XML string from PROPFIND response
   }>;
 
   /**

@@ -101,7 +101,7 @@ export const useDriveSync = (setNotesState: any): DriveSyncHookReturn => {
       }
 
       // Read local data safely
-      let localData: SyncData = { notes: {} };
+      let localData: SyncData = { data: { notes: {} } };
       try {
         const localFileData = await Filesystem.readFile({
           path: STORAGE_PATH,
@@ -119,11 +119,11 @@ export const useDriveSync = (setNotesState: any): DriveSyncHookReturn => {
           "Failed to read local data.json, starting with empty data:",
           e
         );
-        localData = { notes: {} };
+        localData = { data: { notes: {} } };
       }
 
       // Read remote data safely
-      let remoteData: SyncData = { notes: {} };
+      let remoteData: SyncData = { data: { notes: {} } };
       const contents = await driveAPI.listContents(folderId);
       const dataFile = contents.find(
         (file: { name: string }) => file.name === "data.json"
@@ -161,13 +161,12 @@ export const useDriveSync = (setNotesState: any): DriveSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.notes);
-      document.dispatchEvent(new Event("reload"));
+      setNotesState(mergedData.data.notes);
 
       // Prepare cleaned data and upload
       const cleanedData = { ...mergedData };
 
-      cleanedData.notes = await revertAssetPaths(mergedData.notes);
+      cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
 
       await driveAPI.uploadFile(
         "data.json",

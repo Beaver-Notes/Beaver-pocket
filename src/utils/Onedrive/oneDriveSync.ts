@@ -152,7 +152,7 @@ const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
       }
 
       // Read local data
-      let localData: SyncData = { notes: {} };
+      let localData: SyncData = { data: { notes: {} } };
       try {
         const localFileData = await Filesystem.readFile({
           path: STORAGE_PATH,
@@ -164,7 +164,7 @@ const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
         // No local data, use empty object
       }
 
-      let remoteData: SyncData = { notes: {} };
+      let remoteData: SyncData = { data: { notes: {} } };
       try {
         const remoteMetadataResponse = await onedrive.downloadFile(
           `/${SYNC_FOLDER_NAME}/data.json`
@@ -197,11 +197,11 @@ const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.notes);
+      setNotesState(mergedData.data.notes);
 
       // Reverse paths before uploading
       const cleanedData = { ...mergedData };
-      cleanedData.notes = await revertAssetPaths(mergedData.notes);
+      cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
 
       await onedrive.uploadFile(
         `/${SYNC_FOLDER_NAME}/data.json`,
