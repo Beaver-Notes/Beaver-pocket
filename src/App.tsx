@@ -81,6 +81,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadNotesFromStorage = async () => {
       const notes = await (await loadNotes()).notes;
+      console.log(notes);
       setNotesState(notes);
     };
 

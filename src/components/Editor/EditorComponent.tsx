@@ -444,7 +444,11 @@ function EditorComponent({
 
   return (
     <div className="relative h-auto" onDragOver={(e) => e.preventDefault()}>
-      <div>
+      <div
+        className={`fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] sm:top-0 sm:bottom-auto print:hidden bg-white dark:bg-[#232222] z-50 ${
+          focusMode ? "hidden" : "block"
+        }`}
+      >
         <Toolbar
           note={note}
           noteId={note.id}
@@ -454,6 +458,8 @@ function EditorComponent({
           focusMode={focusMode}
           wd={wd}
         />
+      </div>
+      <div>
         <div className="sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] w-full no-scrollbar flex justify-between print:hidden">
           <button
             className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
