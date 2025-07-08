@@ -51,10 +51,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 23.x
+          node-version: 20
 
       - name: Install app dependencies
-        run: yarn install
+        run: yarn install --frozen-lockfile
 
       - name: Build project app
         run: yarn build
