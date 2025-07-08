@@ -26,7 +26,7 @@ jobs:
           node-version: 23.x
 
       - name: Install app dependencies
-        run: yarn
+        run: yarn install
 
       - name: Build Svelte app
         run: yarn build
