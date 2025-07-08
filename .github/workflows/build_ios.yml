@@ -54,10 +54,10 @@ jobs:
           node-version: 23.x
 
       - name: Install app dependencies
-        run: npm install
+        run: yarn
 
       - name: Build project app
-        run: npm run build
+        run: yarn build
 
       - name: Capacitor update
         run: npx cap update
