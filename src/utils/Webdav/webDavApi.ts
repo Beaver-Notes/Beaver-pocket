@@ -1,20 +1,10 @@
-import { isPlatform } from "@ionic/react";
-import axios, { AxiosRequestConfig } from "axios";
-import WebDAV from "../Android/androidDavApi";
+import WebDAV from "./WebDAVPlugin";
+import mime from "mime";
 
 interface WebDavOptions {
   baseUrl: string;
   username: string;
   password: string;
-}
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
 }
 
 export class WebDavService {
@@ -24,183 +14,168 @@ export class WebDavService {
     this.options = options;
   }
 
-  private async createRequestConfig(): Promise<AxiosRequestConfig> {
-    const { username, password } = this.options;
-    const authToken = btoa(`${username}:${password}`);
-
-    return {
-      headers: {
-        Authorization: `Basic ${authToken}`,
-        "Content-Type": "application/xml",
-      },
-    };
+  private buildUrl(path: string): string {
+    return `${this.options.baseUrl}/${path}`;
   }
 
-  async get(path: string): Promise<string> {
-    if (isPlatform("android")) {
-      try {
-        const result = await WebDAV.getFileContent({
-          url: `${this.options.baseUrl}/${path}`,
-          username: this.options.username,
-          password: this.options.password,
-        });
-        return result.fileContent; // Extract the file content from the plugin's response
-      } catch (error) {
-        throw new Error(`Failed to GET file from WebDAV on Android: ${error}`);
-      }
-    } else {
-      try {
-        const config = await this.createRequestConfig();
-        const url = `${this.options.baseUrl}/${path}`;
-        const response = await axios.get(url, config);
-        return response.data; // Extract and return the file content
-      } catch (error) {
-        throw new Error(`Failed to GET ${path}: ${error}`);
-      }
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        const base64 = base64data.split(",")[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async get(path: string): Promise<Blob> {
+    try {
+      const url = this.buildUrl(path);
+      const result = await WebDAV.getFile({
+        url,
+        username: this.options.username,
+        password: this.options.password,
+      });
+
+      const byteArray = Uint8Array.from(atob(result.content), (c) =>
+        c.charCodeAt(0)
+      );
+      const mimeType = mime.getType(path) || undefined;
+      return new Blob([byteArray], { type: mimeType });
+    } catch (error) {
+      throw new Error(`Failed to GET ${path}: ${error}`);
     }
   }
 
   async createFolder(folderPath: string): Promise<void> {
-    if (isPlatform("android")) {
-      try {
-        await WebDAV.createFolder({
-          url: `${this.options.baseUrl}/${folderPath}`,
-          username: this.options.username,
-          password: this.options.password,
-        });
-      } catch (error) {
-        throw new Error(`Failed to create folder on Android: ${error}`);
+    try {
+      const exists = await this.folderExists(folderPath);
+      if (exists) {
+        console.log(`Folder already exists at ${this.buildUrl(folderPath)}`);
+        return;
       }
-    } else {
-      try {
-        const config = await this.createRequestConfig();
-        await axios.request({
-          method: "MKCOL",
-          url: `${this.options.baseUrl}/${folderPath}`,
-          headers: config.headers,
-        });
-      } catch (error) {
-        throw new Error(`Failed to create folder at ${folderPath}: ${error}`);
-      }
+
+      await WebDAV.createFolder({
+        url: this.buildUrl(folderPath),
+        username: this.options.username,
+        password: this.options.password,
+      });
+      console.log(`Folder created at ${this.buildUrl(folderPath)}`);
+    } catch (error) {
+      throw new Error(`Failed to create folder: ${error}`);
     }
   }
 
   async folderExists(path: string): Promise<boolean> {
-    if (isPlatform("android")) {
-      try {
-        await WebDAV.checkFolderExists({
-          url: `${this.options.baseUrl}/${path}`,
-          username: this.options.username,
-          password: this.options.password,
-        });
-        return true;
-      } catch (error) {
-        return false; // If an error occurs, assume the folder doesn't exist
-      }
-    } else {
-      try {
-        const config = await this.createRequestConfig();
-        const response = await axios.get(
-          `${this.options.baseUrl}/${path}`,
-          config
-        );
-        return response.status !== 404;
-      } catch (error) {
-        return false;
-      }
+    try {
+      await WebDAV.checkFolderExists({
+        url: this.buildUrl(path),
+        username: this.options.username,
+        password: this.options.password,
+      });
+      return true;
+    } catch {
+      return false;
     }
   }
 
   async upload(fileName: string, content: string | Blob): Promise<void> {
-    if (isPlatform("android")) {
-      try {
-        // Android: Handle the upload based on whether it's a Blob or a string
-        await WebDAV.uploadFile({
-          url: `${this.options.baseUrl}/${fileName}`,
-          username: this.options.username,
-          password: this.options.password,
-          fileName: fileName,
-          content: typeof content === "string" 
-            ? content // For strings, use the current approach
-            : await blobToBase64(content), // For Blob, convert it to base64
-        });
-      } catch (error) {
-        throw new Error(`Failed to upload file on Android: ${error}`);
+    try {
+      let base64Content: string;
+      if (typeof content === "string") {
+        base64Content = content;
+      } else {
+        base64Content = await this.blobToBase64(content);
       }
-    } else {
-      // Web and other platforms
-      const config = await this.createRequestConfig();
-      await axios.put(`${this.options.baseUrl}/${fileName}`, content, config);
+
+      await WebDAV.uploadFile({
+        url: this.buildUrl(fileName),
+        username: this.options.username,
+        password: this.options.password,
+        content: base64Content,
+      });
+      console.log(`File uploaded: ${this.buildUrl(fileName)}`);
+    } catch (error) {
+      throw new Error(`Failed to upload file: ${fileName} - ${error}`);
     }
   }
 
   async deleteFolder(folderPath: string): Promise<void> {
-    if (isPlatform("android")) {
-      try {
-        await WebDAV.deleteFolder({
-          url: `${this.options.baseUrl}/${folderPath}`,
-          username: this.options.username,
-          password: this.options.password,
-        });
-      } catch (error) {
-        throw new Error(`Failed to delete folder on Android: ${error}`);
-      }
-    } else {
-      try {
-        const config = await this.createRequestConfig();
-        await axios.request({
-          method: "DELETE",
-          url: `${this.options.baseUrl}/${folderPath}`,
-          headers: config.headers,
-        });
-      } catch (error) {
-        throw new Error(`Failed to delete folder at ${folderPath}: ${error}`);
-      }
+    try {
+      await WebDAV.deleteFolder({
+        url: this.buildUrl(folderPath),
+        username: this.options.username,
+        password: this.options.password,
+      });
+      console.log(`Folder deleted at ${this.buildUrl(folderPath)}`);
+    } catch (error) {
+      throw new Error(`Failed to delete folder at ${folderPath}: ${error}`);
     }
   }
 
-  async getDirectoryContent(path: string): Promise<any> {
-    if (isPlatform("android")) {
-      try {
-        const result = await WebDAV.listContents({
-          url: `${this.options.baseUrl}/${path}`,
-          username: this.options.username,
-          password: this.options.password,
-        });
-        return result.contents;
-      } catch (error) {
-        throw new Error(`Failed to get directory content on Android: ${error}`);
+  async getDirectoryContent(
+    path: string
+  ): Promise<{ name: string; type: "file" | "directory" }[]> {
+    try {
+      const response = await WebDAV.listContents({
+        url: this.buildUrl(path),
+        username: this.options.username,
+        password: this.options.password,
+      });
+
+      const xmlString = response.data;
+
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+
+      const parserError = xmlDoc.querySelector("parsererror");
+      if (parserError) {
+        throw new Error("Error parsing XML response");
       }
-    } else {
-      try {
-        const config = await this.createRequestConfig();
-        const requestBody = `
-          <propfind xmlns="DAV:">
-            <prop>
-              <getlastmodified xmlns="DAV:"/>
-              <getcontentlength xmlns="DAV:"/>
-              <executable xmlns="http://apache.org/dav/props/"/>
-              <resourcetype xmlns="DAV:"/>
-            </prop>
-          </propfind>`;
-        const headers = {
-          ...config.headers,
-          "Content-Type": "application/xml",
-          Accept: "application/xml",
-          Depth: "infinity",
-        };
-        const response = await axios.request({
-          method: "PROPFIND",
-          url: `${this.options.baseUrl}/${path}`,
-          data: requestBody,
-          headers,
-        });
-        return response.data;
-      } catch (error: any) {
-        throw new Error(
-          `Failed to get content of directory at ${path}: ${error.message}`
+
+      const responses = Array.from(xmlDoc.getElementsByTagName("D:response"));
+
+      if (responses.length === 0) {
+        const fallbackResponses = Array.from(
+          xmlDoc.getElementsByTagName("response")
+        );
+        console.log(
+          "Fallback to non-namespaced responses:",
+          fallbackResponses.length
         );
       }
+
+      const items = responses.map((responseElem) => {
+        let hrefElem =
+          responseElem.getElementsByTagName("D:href")[0] ||
+          responseElem.getElementsByTagName("href")[0];
+        const href = hrefElem?.textContent || "";
+
+        let resTypeElem =
+          responseElem.getElementsByTagName("D:resourcetype")[0] ||
+          responseElem.getElementsByTagName("resourcetype")[0];
+
+        const isDirectory = !!(
+          resTypeElem?.getElementsByTagName("D:collection")[0] ||
+          resTypeElem?.getElementsByTagName("collection")[0]
+        );
+
+        let name = decodeURIComponent(href).replace(/\/$/, "");
+        name = name.substring(name.lastIndexOf("/") + 1);
+
+        return {
+          name,
+          type: isDirectory ? ("directory" as const) : ("file" as const),
+        };
+      });
+
+      return items.slice(1).filter((item) => item.name.length > 0);
+    } catch (error) {
+      console.error("Error getting directory contents:", error);
+      throw new Error(`Failed to get directory content: ${error}`);
     }
   }
 }

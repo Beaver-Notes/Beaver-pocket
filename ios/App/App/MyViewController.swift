@@ -8,5 +8,6 @@ class MyViewController: CAPBridgeViewController {
     }
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(iCloudPlugin())
+        bridge?.registerPluginInstance(WebDAVPlugin())
     }
 }

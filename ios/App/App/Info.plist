@@ -8,6 +8,102 @@
 	<string>Beaver Pocket</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>christmas</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>christmas</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>deer</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>deer</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>gift-green</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>gift-green</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>gift-yellow</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>gift-yellow</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>inspiration-dark</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>inspiration-dark</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>inspiration-light</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>inspiration-light</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>inspiration-matte</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>inspiration-matte</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>inspiration-rainbow-dark</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>inspiration-rainbow-dark</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>inspiration-rainbow-light</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>inspiration-rainbow-light</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+		</dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+			<key>UIPrerenderedIcon</key>
+			<false/>
+		</dict>
+	</dict>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -25,7 +121,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.462278481265-lepiac3eaoe2d7loo0jiu357chcp2r0a</string>
+				<string>com.googleusercontent.apps.462278481265-kugstu9sglncb5ms2vfi9glrkfqn531v</string>
 			</array>
 		</dict>
 		<dict>
@@ -34,6 +130,16 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>msauth.$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>beaver.notes.pocket</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>beaver-pocket</string>
 			</array>
 		</dict>
 	</array>
@@ -59,7 +165,7 @@
 	<string>To record audio notes</string>
 	<key>NSUbiquitousContainers</key>
 	<dict>
-		<key>iCloud.beavernotes.beaverpocket</key>
+		<key>iCloud.beaver.notes.pocket</key>
 		<dict>
 			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
 			<true/>
@@ -97,5 +203,29 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>BEA Custom File</string>
+			<key>UTTypeIconFiles</key>
+			<array/>
+			<key>UTTypeIdentifier</key>
+			<string>beaver.notes.pocket.bea</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>bea</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/json</string>
+			</dict>
+		</dict>
+	</array>
 </dict>
 </plist>

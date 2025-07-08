@@ -15,7 +15,7 @@ public class iCloudPlugin: CAPPlugin, CAPBridgedPlugin {
     ]
 
     private let fileManager = FileManager.default
-    private let containerIdentifier = "iCloud.beavernotes.beaverpocket"
+    private let containerIdentifier = "iCloud.beaver.notes.pocket"
 
     private var ubiquityURL: URL? {
         return fileManager.url(forUbiquityContainerIdentifier: containerIdentifier)?.appendingPathComponent("Documents")
@@ -60,29 +60,47 @@ public class iCloudPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    @objc func uploadFile(_ call: CAPPluginCall) {
-        guard let fileName = call.getString("fileName"), let fileData = call.getString("fileData") else {
-            call.reject("File name or data missing")
-            return
-        }
-        guard let url = ubiquityURL?.appendingPathComponent(fileName) else {
-            call.reject("iCloud URL is nil")
-            return
-        }
+     @objc func uploadFile(_ call: CAPPluginCall) {
+         guard let fileName = call.getString("fileName"), let fileData = call.getString("fileData") else {
+             call.reject("File name or data missing")
+             return
+         }
+         
+         guard let ubiquityURL = ubiquityURL else {
+             call.reject("iCloud is unavailable")
+             return
+         }
+         
+         guard let data = Data(base64Encoded: fileData) else {
+             call.reject("Invalid base64 data")
+             return
+         }
 
-        do {
-            guard let data = Data(base64Encoded: fileData) else {
-                call.reject("Invalid base64 data")
-                return
-            }
-            print("Uploading file to: \(url)")
-            try data.write(to: url)
-            call.resolve(["success": true])
-        } catch {
-            print("Error uploading file: \(error.localizedDescription)")
-            call.reject("Failed to upload file: \(error.localizedDescription)")
-        }
-    }
+         let destinationURL = ubiquityURL.appendingPathComponent(fileName)
+
+         DispatchQueue.global(qos: .utility).async {
+             do {
+                 if self.fileManager.ubiquityIdentityToken == nil {
+                     DispatchQueue.main.async {
+                         call.reject("iCloud account is unavailable")
+                     }
+                     return
+                 }
+
+                 print("Uploading file to: \(destinationURL)")
+                 try data.write(to: destinationURL, options: .atomic)
+
+                 DispatchQueue.main.async {
+                     call.resolve(["success": true])
+                 }
+             } catch {
+                 DispatchQueue.main.async {
+                     print("Error uploading file: \(error.localizedDescription)")
+                     call.reject("Failed to upload file: \(error.localizedDescription)")
+                 }
+             }
+         }
+     }
 
     @objc func checkFolderExists(_ call: CAPPluginCall) {
         guard let folderName = call.getString("folderName") else {
@@ -146,26 +164,51 @@ public class iCloudPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    @objc func downloadFile(_ call: CAPPluginCall) {
-        guard let fileName = call.getString("fileName") else {
-            call.reject("File name missing")
-            return
-        }
-        guard let url = ubiquityURL?.appendingPathComponent(fileName) else {
-            call.reject("iCloud URL is nil")
-            return
-        }
+     @objc func downloadFile(_ call: CAPPluginCall) {
+         guard let fileName = call.getString("fileName") else {
+             call.reject("File name missing")
+             return
+         }
+         
+         guard let ubiquityURL = ubiquityURL else {
+             call.reject("iCloud is unavailable")
+             return
+         }
+         
+         let fileURL = ubiquityURL.appendingPathComponent(fileName)
 
-        do {
-            let data = try Data(contentsOf: url)
-            let base64Data = data.base64EncodedString()
-            print("Downloaded file from: \(url)")
-            call.resolve(["fileData": base64Data])
-        } catch {
-            print("Error downloading file: \(error.localizedDescription)")
-            call.reject("Failed to download file: \(error.localizedDescription)")
-        }
-    }
+         DispatchQueue.global(qos: .utility).async {
+             do {
+                 if self.fileManager.ubiquityIdentityToken == nil {
+                     DispatchQueue.main.async {
+                         call.reject("iCloud account is unavailable")
+                     }
+                     return
+                 }
+
+                 guard self.fileManager.fileExists(atPath: fileURL.path) else {
+                     DispatchQueue.main.async {
+                         call.reject("File does not exist at path: \(fileURL.path)")
+                     }
+                     return
+                 }
+
+                 let data = try Data(contentsOf: fileURL)
+                 let base64Data = data.base64EncodedString()
+
+                 print("Downloaded file from: \(fileURL)")
+
+                 DispatchQueue.main.async {
+                     call.resolve(["fileData": base64Data])
+                 }
+             } catch { 
+                 DispatchQueue.main.async {
+                     print("Error downloading file: \(error.localizedDescription)")
+                     call.reject("Failed to download file: \(error.localizedDescription)")
+                 }
+             }
+         }
+     }
 
     private func forceSync(url: URL) {
         do {

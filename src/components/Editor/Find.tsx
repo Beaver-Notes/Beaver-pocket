@@ -1,165 +1,180 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "../../utils/translations";
 import icons from "../../lib/remixicon-react";
-import Icons from "../../lib/remixicon-react";
 
-interface FindProps {
+interface SearchReplaceBarProps {
   editor: any;
   setShowFind: any;
 }
 
-const Find: React.FC<FindProps> = ({ editor, setShowFind }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [replaceTerm, setReplaceTerm] = useState("");
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  console.log(searchTerm);
-  console.log(searchInputRef);
-
-  const handleSearch = () => {
-    if (searchTerm) {
-      editor
-        ?.chain()
-        .setSearchTerm(searchTerm)
-        .setReplaceTerm(replaceTerm)
-        .resetIndex()
-        .run();
-      focusEditor();
-    }
-  };
-
-  const handleReplace = () => {
-    if (searchTerm && replaceTerm) {
-      editor
-        ?.chain()
-        .setSearchTerm(searchTerm)
-        .setReplaceTerm(replaceTerm)
-        .resetIndex()
-        .replace()
-        .run();
-      focusEditor();
-    }
-  };
-
-  const focusEditor = () => {
-    editor?.commands.focus();
-  };
-
-  // Translations
-  const [translations, setTranslations] = useState({
-    editor: {
-      searchTerm: "editor.searchTerm",
-      replaceTerm: "editor.replaceTerm",
-      find: "editor.find",
-      replace: "editor.replace",
-      replaceAll: "editor.replaceAll",
-    },
+const Find: React.FC<SearchReplaceBarProps> = ({ editor, setShowFind }) => {
+  const [query, setQuery] = useState("");
+  const [replaceWith, setReplaceWith] = useState("");
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    search: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
-  const handleClose = () => {
-    setShowFind(false);
-    setSearchTerm("");  // Clear the search term
-    setReplaceTerm(""); // Clear the replace term
-    editor?.chain().setSearchTerm("").resetIndex().clea().run(); // Clear highlights
-    editor.commands.clearSearch();
-  };  
-  
   useEffect(() => {
-    if (searchTerm) {
-      editor?.chain()
-        .setSearchTerm(searchTerm)
-        .resetIndex()  // Reset any previous search index before starting a new search
-        .run();
-    } else {
-      editor?.chain().resetIndex().run();  // If no search term, reset the index
+    if (!editor) return;
+    const { from, to } = editor.state.selection;
+    const text = editor.state.doc.textBetween(from, to, " ");
+    if (text) setQuery(text);
+  }, [editor]);
+
+  const startSearch = () => {
+    if (!editor) return;
+    editor.commands.setSearchTerm(query);
+    editor.commands.setReplaceTerm(replaceWith);
+    editor.commands.setCaseSensitive(caseSensitive);
+    editor.commands.nextSearchResult();
+  };
+
+  const goToSelection = () => {
+    if (!editor) return;
+    const { results, resultIndex } = editor.storage?.searchAndReplace || {};
+    const position = results?.[resultIndex];
+
+    if (!position) return;
+
+    editor.commands.setTextSelection(position);
+
+    const { node } = editor.view.domAtPos(editor.state.selection.anchor);
+    if (node instanceof HTMLElement) {
+      node.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [searchTerm, editor]);
+  };
+
+  const findNextResult = () => {
+    if (!editor) return;
+    editor.commands.nextSearchResult();
+    goToSelection();
+  };
+
+  const findPreviousResult = () => {
+    if (!editor) return;
+    editor.commands.previousSearchResult();
+    goToSelection();
+  };
+
+  const replaceText = () => {
+    if (!editor || !replaceWith) return;
+    editor.commands.replace();
+  };
+
+  const replaceAllText = () => {
+    if (!editor || !replaceWith) return;
+    editor.commands.replaceAll();
+  };
+
+  const toggleCaseSensitive = () => {
+    if (!editor) return;
+    setCaseSensitive(!caseSensitive);
+    editor.commands.setCaseSensitive(caseSensitive);
+  };
+
+  const handleClose = () => {
+    if (!editor) return;
+    setShowFind(false);
+    setQuery("");
+    setReplaceWith("");
+    editor.commands.setSearchTerm("");
+    editor.commands.setReplaceTerm("");
+    editor.commands.resetIndex();
+  };
 
   return (
-    <div className="pt-4 bg-white dark:bg-[#232222] overflow-enabled h-auto w-full bg-transparent z-30 no-scrollbar">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 w-full">
-        {/* Search Input and Button */}
-        <div className="flex items-center sm:col-span-1 w-full space-x-2">
-          <div className="flex w-full px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-neutral-800">
-            <icons.Search2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6 mr-2" />
-            <input
-              className="text-lg text-neutral-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
-              ref={searchInputRef}
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={translations.editor.searchTerm || "-"}
-            />
-          </div>
-          <button
-            className="p-3 sm:hidden hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] rounded-lg text-lg bg-[#F8F8F7] dark:bg-[#353333]"
-            onClick={handleSearch}
-          >
-            <icons.Search2LineIcon />
-          </button>
-          <button
-            className="p-3 sm:hidden hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] rounded-lg text-lg bg-[#F8F8F7] dark:bg-[#353333]"
-            onClick={handleClose}
-          >
-            <Icons.CloseLineIcon
-              className={`border-none text-red-500 text-xl w-7 h-7`}
-            />
-          </button>
-        </div>
-
-        {/* Replace Input */}
-        <div className="hidden sm:flex items-center sm:col-span-1 w-full space-x-2">
-          <div className="flex w-full px-2 items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-amber-400 text-neutral-800">
-            <input
-              className="text-lg text-neutral-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
-              type="text"
-              value={replaceTerm}
-              onChange={(e) => setReplaceTerm(e.target.value)}
-              placeholder={translations.editor.replaceTerm || "-"}
-            />
+    <div className="fixed sm:top-8 top-12 bg-white dark:bg-[#232222] flex items-center left-0 w-full z-30 px-4">
+      <div className="flex items-center w-full space-x-2 justify-center">
+        <div className="relative flex items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-primary text-neutral-800 overflow-hidden mr-2">
+          <icons.Search2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] mr-2 w-8" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={translations.search.searchplaceholder}
+            className="text-lg text-neutral-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full truncate"
+            onKeyUp={startSearch}
+          />
+          <div className="absolute right-2 rtl:left-2 top-1/2 transform -translate-y-1/2 text-sm opacity-40 font-medium truncate">
+            {editor?.storage?.searchAndReplace?.resultIndex + 1 || 0} /
+            {editor?.storage?.searchAndReplace?.results?.length || 0}
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="hidden sm:flex items-center sm:col-span-1 w-full space-x-2">
+        <div className="hidden md:block flex items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-primary text-neutral-800">
+          <input
+            value={replaceWith}
+            onChange={(e) => setReplaceWith(e.target.value)}
+            placeholder={translations.search.replaceplaceholder}
+            className="text-lg text-neutral-800 bg-transparent dark:bg-transparent px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
+            onKeyUp={startSearch}
+          />
+        </div>
+        <div className="hidden md:flex">
           <button
-            className="flex-grow sm:flex-grow-0 p-3 w-full sm:w-auto hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] rounded-lg text-lg bg-[#F8F8F7] dark:bg-[#353333]"
-            onClick={handleSearch}
+            className={`p-3 hover:bg-opacity-25 rounded-md text-base bg-neutral-200 bg-opacity-20 
+      dark:bg-[#353333] bg-[#F8F8F7] dark:bg-[#353333] ${
+        caseSensitive ? "text-primary" : ""
+      }`}
+            onClick={toggleCaseSensitive}
           >
-            {translations.editor.find || "-"}
-          </button>
-          <button
-            className="flex-grow sm:flex-grow-0 p-3 w-full sm:w-auto rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
-            onClick={handleReplace}
-          >
-            {translations.editor.replace || "-"}
-          </button>
-          <button
-            className="flex-grow sm:flex-grow-0 p-3 w-full sm:w-auto rounded-lg text-lg hover:bg-[#EAEAEA] dark:hover:bg-[#413F3F] bg-[#F8F8F7] dark:bg-[#353333]"
-            onClick={handleClose}
-          >
-            <Icons.CloseLineIcon
-              className={`border-none text-red-500 text-xl w-7 h-7`}
-            />
+            <icons.FontSizeIcon />
           </button>
         </div>
+        <div className="hidden lg:flex items-center space-x-2">
+          <button
+            title="Alt+Enter"
+            disabled={!replaceWith}
+            onClick={replaceText}
+            className="p-3 hover:bg-opacity-25 rounded-md text-base bg-neutral-200 bg-opacity-20 
+      dark:bg-[#353333] bg-[#F8F8F7] dark:bg-[#353333]"
+          >
+            {translations.search.replace}
+          </button>
+          <button
+            title="Ctrl+Alt+Enter"
+            disabled={!replaceWith}
+            onClick={replaceAllText}
+            className="p-3 hover:bg-opacity-25 rounded-md text-base bg-neutral-200 bg-opacity-20 
+      dark:bg-[#353333] bg-[#F8F8F7] dark:bg-[#353333]"
+          >
+            {translations.search.replaceall}
+          </button>
+        </div>
+        {/* Find Previous Button */}
+        <button
+          disabled={!query}
+          onClick={findPreviousResult}
+          className="p-3  hover:bg-opacity-25 rounded-lg text-lg bg-neutral-200 bg-opacity-20 dark:bg-[#353333]"
+        >
+          <icons.ArrowUpIcon className="dark:text-neutral-200 text-neutral-600" />
+        </button>
+        {/* Find Next Button */}
+        <button
+          disabled={!query}
+          onClick={findNextResult}
+          className="p-3  hover:bg-opacity-25 rounded-lg text-lg bg-neutral-200 bg-opacity-20 dark:bg-[#353333]
+ bg-[#F8F8F7] dark:bg-[#353333]"
+        >
+          <icons.ArrowDownIcon className="dark:text-neutral-200 text-neutral-600" />
+        </button>
+        {/* Close Button */}
+        <button
+          onClick={handleClose}
+          className="p-3  hover:bg-opacity-25 rounded-lg text-lg bg-neutral-200 bg-opacity-20 dark:bg-[#353333]
+ bg-[#F8F8F7] dark:bg-[#353333]"
+        >
+          <icons.CloseLineIcon />
+        </button>
       </div>
     </div>
   );

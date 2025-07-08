@@ -49,7 +49,6 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
       await createDirectory();
       const fileName = `${Date.now()}_${file.name}`;
 
-      // Read file contents as data URL
       const fileReader = new FileReader();
       fileReader.readAsDataURL(file);
 
@@ -57,11 +56,10 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
         fileReader.onload = async () => {
           const fileDataUrl = fileReader.result as string;
 
-          // Write file to filesystem under "note-assets/noteId" directory
           const filePath = `file-assets/${noteId}/${fileName}`;
           await Filesystem.writeFile({
             path: filePath,
-            data: fileDataUrl, // Write the data URL instead of the file object
+            data: fileDataUrl,
             directory: FilesystemDirectory.Data,
             recursive: true,
           });
@@ -90,26 +88,23 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
                 "video-upload-input"
               ) as HTMLInputElement | null;
               if (inputElement) {
-                inputElement.click(); // Safely click the input element
+                inputElement.click();
               }
             }}
             className="flex items-center"
-            aria-label={translations.menuItems.videoLabel} // Aria label for screen readers
+            aria-label={translations.menu.video}
           >
             {/* Icon */}
             <icons.VideoIcon
               className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3"
-              aria-hidden="true" // This icon doesn't need to be announced by screen readers
+              aria-hidden="true"
             />
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
               <h3 className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]">
-                {translations.menuItems.videoLabel}
+                {translations.menu.video}
               </h3>
-              <p className="text-sm text-neutral-500">
-                {translations.menuItems.videoDescription}
-              </p>
             </div>
           </button>
 
@@ -119,24 +114,24 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
             onChange={handleVideoInputChange}
             id="video-upload-input"
             className="hidden"
-            aria-label={translations.accessibility.uploadVideo} // Accessibility label for file input
+            aria-label={translations.menu.video}
           />
         </div>
       ) : (
-        <div className="flex items-center justify-between sm:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
+        <div className="flex items-center justify-between p-1 rounded-md  bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]">
           <button
             onClick={() => {
               const inputElement = document.getElementById(
                 "video-upload-input"
               ) as HTMLInputElement | null;
               if (inputElement) {
-                inputElement.click(); // Safely click the input element
+                inputElement.click();
               }
             }}
-            aria-label={translations.accessibility.uploadVideo} // Accessibility label for the button
+            aria-label={translations.menu.video}
           >
             <icons.VideoIcon
-              className="sm:text-white text-xl sm:w-7 sm:h-7 border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"
+              className=" text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7"
               aria-hidden="true"
             />
           </button>
@@ -145,7 +140,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
             onChange={handleVideoInputChange}
             id="video-upload-input"
             className="hidden"
-            aria-label={translations.accessibility.uploadVideo} // Accessibility label for file input
+            aria-label={translations.menu.video}
           />
         </div>
       )}

@@ -301,8 +301,8 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                   <div
                     className={`note-item cursor-pointer rounded-lg p-2 ${
                       selectedIndex === 0
-                        ? "bg-amber-400 bg-opacity-10 text-amber-400"
-                        : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
+                        ? "bg-primary bg-opacity-10 text-primary"
+                        : "hover:bg-primary hover:bg-opacity-10 hover:text-primary"
                     }`}
                     onClick={handleCreateNewNote}
                     aria-label={translations.accessibility.createNew}
@@ -315,8 +315,8 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                   <div
                     className={`note-item cursor-pointer rounded-lg p-2 ${
                       selectedIndex === 1
-                        ? "bg-amber-400 bg-opacity-10 text-amber-400"
-                        : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
+                        ? "bg-primary bg-opacity-10 text-primary"
+                        : "hover:bg-primary hover:bg-opacity-10 hover:text-primary"
                     }`}
                     onClick={goToSettings}
                     aria-label={translations.accessibility.settings}
@@ -329,8 +329,8 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                   <div
                     className={`note-item cursor-pointer rounded-lg p-2 ${
                       selectedIndex === 2
-                        ? "bg-amber-400 bg-opacity-10 text-amber-400"
-                        : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
+                        ? "bg-primary bg-opacity-10 text-primary"
+                        : "hover:bg-primary hover:bg-opacity-10 hover:text-primary"
                     }`}
                     onClick={toggleTheme}
                     aria-label={translations.accessibility.toggleTheme}
@@ -347,8 +347,8 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                     key={note.id}
                     className={`note-item cursor-pointer rounded-lg p-2 ${
                       index === selectedIndex
-                        ? "bg-amber-400 bg-opacity-10 text-amber-400"
-                        : "hover:bg-amber-400 hover:bg-opacity-10 hover:text-amber-400"
+                        ? "bg-primary bg-opacity-10 text-primary"
+                        : "hover:bg-primary hover:bg-opacity-10 hover:text-primary"
                     }`}
                     onClick={() => handleClickNote(note)}
                     aria-label={`${translations.accessibility.openNote} ${note.title}`}

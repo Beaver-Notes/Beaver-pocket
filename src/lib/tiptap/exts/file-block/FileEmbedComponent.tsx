@@ -48,6 +48,9 @@ const FileEmbedComponent: React.FC<FileEmbedComponentProps> = ({ node }) => {
     }
   };
 
+  const truncatedFileName =
+    fileName.length > 20 ? `${fileName.slice(0, 17)}...` : fileName;
+
   return (
     <NodeViewWrapper>
       <div
@@ -57,7 +60,7 @@ const FileEmbedComponent: React.FC<FileEmbedComponentProps> = ({ node }) => {
       >
         <div className="flex items-center cursor-pointer" role="presentation">
           <icons.FileIcon className="w-6 h-6 mr-2" aria-hidden="true" />
-          <span>{fileName}</span>
+          <span>{truncatedFileName}</span>
         </div>
         <button
           className="download-button bg-input p-1 px-3 rounded-lg outline-none"

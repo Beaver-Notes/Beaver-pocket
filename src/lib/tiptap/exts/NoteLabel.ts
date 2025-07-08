@@ -1,21 +1,24 @@
-import { Node, nodeInputRule, RawCommands } from '@tiptap/react';
+import { Node, nodeInputRule, RawCommands } from "@tiptap/react";
 
 export interface NoteLabelOptions {
   HTMLAttributes: Record<string, any>;
 }
 
-declare module '@tiptap/core' {
+declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     noteLabel: {
-      setNoteLabel: (options: { id: string; label: string | null }) => ReturnType;
+      setNoteLabel: (options: {
+        id: string;
+        label: string | null;
+      }) => ReturnType;
     };
   }
 }
 
 export const NoteLabel = Node.create({
-  name: 'noteLabel',
+  name: "noteLabel",
 
-  group: 'inline',
+  group: "inline",
   inline: true,
   atom: true,
 
@@ -33,10 +36,10 @@ export const NoteLabel = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'noteLabel',
+        tag: "noteLabel",
         getAttrs: (dom) => ({
-          id: (dom as HTMLElement).getAttribute('id') || '',
-          label: (dom as HTMLElement).getAttribute('label') || '',
+          id: (dom as HTMLElement).getAttribute("id") || "",
+          label: (dom as HTMLElement).getAttribute("label") || "",
         }),
       },
     ];
@@ -45,18 +48,16 @@ export const NoteLabel = Node.create({
   renderHTML({ HTMLAttributes }) {
     const { id, label } = HTMLAttributes;
 
-    // Render a span element with a custom data attribute to differentiate from normal text
     return [
-      'noteLabel',
-      { id, label },
-      [
-        'a', 
-        {
-          href: `#${id}`, // or some other identifier
-          class: 'mention', // Apply your desired CSS class here
-        },
-        `#${label || id}`,
-      ],
+      "span",
+      {
+        ...HTMLAttributes,
+        "data-mention": "",
+        "data-id": id,
+        "data-label": label,
+        class: "mention",
+      },
+      `#${label || id}`,
     ];
   },
 
@@ -65,7 +66,9 @@ export const NoteLabel = Node.create({
       setNoteLabel:
         ({ id, label }: { id: string; label: string | null }) =>
         ({ commands }: { commands: any }) =>
-          commands.insertContent(`<noteLabel id="${id}" label="${label}">#${label || id}</noteLabel>`),
+          commands.insertContent(
+            `<noteLabel id="${id}" label="${label}">#${label || id}</noteLabel>`
+          ),
     } as Partial<RawCommands>;
   },
 

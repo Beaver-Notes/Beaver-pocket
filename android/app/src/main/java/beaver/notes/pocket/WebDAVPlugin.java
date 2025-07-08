@@ -1,23 +1,89 @@
 package beaver.notes.pocket;
 
-import android.os.Build;
-import androidx.annotation.RequiresApi;
-import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
-import android.util.Log;
 import com.getcapacitor.PluginMethod;
-import android.util.Base64;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import okhttp3.*;
 
-import java.io.*;
+import android.util.Base64;
+import android.util.Log;
+
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.util.concurrent.TimeUnit;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.w3c.dom.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.xml.sax.InputSource;
+import java.io.StringReader;
+
+import javax.net.ssl.*;
+
+import okhttp3.*;
 
 @CapacitorPlugin(name = "WebDAV")
 public class WebDAVPlugin extends Plugin {
 
-    private OkHttpClient client = new OkHttpClient();
+    private OkHttpClient client;
+    private boolean useInsecure = false;
+    private SSLSocketFactory sslSocketFactory;
+    private X509TrustManager trustManager;
+
+    @Override
+    public void load() {
+        rebuildClient();
+    }
+
+    // Rebuild OkHttpClient depending on secure/insecure mode
+    private void rebuildClient() {
+        try {
+            if (useInsecure) {
+                TrustManager[] trustAllCerts = new TrustManager[] {
+                        new X509TrustManager() {
+                            public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {}
+                            public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {}
+                            public java.security.cert.X509Certificate[] getAcceptedIssuers() { return new java.security.cert.X509Certificate[]{}; }
+                        }
+                };
+
+                SSLContext sslContext = SSLContext.getInstance("SSL");
+                sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+                sslSocketFactory = sslContext.getSocketFactory();
+
+                trustManager = (X509TrustManager) trustAllCerts[0];
+
+                client = new OkHttpClient.Builder()
+                        .sslSocketFactory(sslSocketFactory, trustManager)
+                        .hostnameVerifier((hostname, session) -> true)
+                        .connectTimeout(30, TimeUnit.SECONDS)
+                        .readTimeout(30, TimeUnit.SECONDS)
+                        .build();
+            } else if (sslSocketFactory != null && trustManager != null) {
+                // Custom cert uploaded (sslSocketFactory & trustManager set)
+                client = new OkHttpClient.Builder()
+                        .sslSocketFactory(sslSocketFactory, trustManager)
+                        .hostnameVerifier((hostname, session) -> true)
+                        .connectTimeout(30, TimeUnit.SECONDS)
+                        .readTimeout(30, TimeUnit.SECONDS)
+                        .build();
+            } else {
+                // Default OkHttpClient
+                client = new OkHttpClient.Builder()
+                        .connectTimeout(30, TimeUnit.SECONDS)
+                        .readTimeout(30, TimeUnit.SECONDS)
+                        .build();
+            }
+        } catch (Exception e) {
+            Log.e("WebDAVPlugin", "Error rebuilding client: " + e.getMessage());
+            client = new OkHttpClient();
+        }
+    }
 
     private String getAuthHeader(String username, String password) {
         String credential = username + ":" + password;
@@ -25,10 +91,70 @@ public class WebDAVPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void createFolder(PluginCall pluginCall) {
-        String url = pluginCall.getString("url");
-        String username = pluginCall.getString("username");
-        String password = pluginCall.getString("password");
+    public void setInsecureMode(PluginCall call) {
+        Boolean insecure = call.getBoolean("insecure");
+        if (insecure == null) {
+            call.reject("Missing 'insecure' parameter");
+            return;
+        }
+        this.useInsecure = insecure;
+        rebuildClient();
+        JSObject ret = new JSObject();
+        ret.put("message", "Insecure mode set to " + useInsecure);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void uploadCertificate(PluginCall call) {
+        String base64Cert = call.getString("certificate");
+        if (base64Cert == null) {
+            call.reject("Missing 'certificate' parameter");
+            return;
+        }
+        try {
+            byte[] certBytes = Base64.decode(base64Cert, Base64.DEFAULT);
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            Certificate cert = cf.generateCertificate(new java.io.ByteArrayInputStream(certBytes));
+
+            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+            ks.load(null);
+            ks.setCertificateEntry("ca", cert);
+
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(ks);
+
+            TrustManager[] trustManagers = tmf.getTrustManagers();
+            if (trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager)) {
+                call.reject("Unexpected default trust managers");
+                return;
+            }
+
+            trustManager = (X509TrustManager) trustManagers[0];
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, new TrustManager[]{trustManager}, null);
+            sslSocketFactory = sslContext.getSocketFactory();
+
+            rebuildClient();
+
+            JSObject ret = new JSObject();
+            ret.put("message", "Certificate uploaded successfully");
+            call.resolve(ret);
+        } catch (Exception e) {
+            call.reject("Invalid certificate data: " + e.getMessage());
+        }
+    }
+
+    @PluginMethod
+    public void createFolder(PluginCall call) {
+        String url = call.getString("url");
+        String username = call.getString("username");
+        String password = call.getString("password");
+
+        if (url == null || username == null || password == null) {
+            call.reject("Missing parameters");
+            return;
+        }
 
         Request request = new Request.Builder()
                 .url(url)
@@ -36,30 +162,36 @@ public class WebDAVPlugin extends Plugin {
                 .method("MKCOL", null)
                 .build();
 
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                pluginCall.reject("Failed to create folder: " + e.getMessage(), e);
+            public void onFailure(Call callInner, IOException e) {
+                call.reject("Failed to create folder: " + e.getMessage(), e);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Call callInner, Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    pluginCall.resolve();
+                    JSObject result = new JSObject();
+                    result.put("message", "Folder created successfully.");
+                    call.resolve(result);
                 } else {
-                    String responseBody = response.body() != null ? response.body().string() : "No response body";
-                    Log.e("WebDAVPlugin", "Error creating folder: " + responseBody);
-                    pluginCall.reject("Failed to create folder: " + response.message());
+                    String body = response.body() != null ? response.body().string() : "No response body";
+                    call.reject("Failed to create folder: " + response.code() + " - " + body);
                 }
             }
         });
     }
 
     @PluginMethod
-    public void checkFolderExists(PluginCall pluginCall) {
-        String url = pluginCall.getString("url");
-        String username = pluginCall.getString("username");
-        String password = pluginCall.getString("password");
+    public void checkFolderExists(PluginCall call) {
+        String url = call.getString("url");
+        String username = call.getString("username");
+        String password = call.getString("password");
+
+        if (url == null || username == null || password == null) {
+            call.reject("Missing parameters");
+            return;
+        }
 
         Request request = new Request.Builder()
                 .url(url)
@@ -67,30 +199,137 @@ public class WebDAVPlugin extends Plugin {
                 .method("PROPFIND", null)
                 .build();
 
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                pluginCall.reject("Failed to check folder existence: " + e.getMessage(), e);
+            public void onFailure(Call callInner, IOException e) {
+                call.reject("Failed to check folder existence: " + e.getMessage(), e);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Call callInner, Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    pluginCall.resolve();
+                    JSObject result = new JSObject();
+                    result.put("message", "Folder exists.");
+                    result.put("exists", true);
+                    call.resolve(result);
                 } else {
-                    String responseBody = response.body() != null ? response.body().string() : "No response body";
-                    Log.e("WebDAVPlugin", "Error checking folder: " + responseBody);
-                    pluginCall.reject("Folder does not exist: " + response.message());
+                    String body = response.body() != null ? response.body().string() : "No response body";
+                    call.reject("Folder does not exist: " + response.code() + " - " + body);
                 }
             }
         });
     }
 
     @PluginMethod
-    public void deleteFolder(PluginCall pluginCall) {
-        String url = pluginCall.getString("url");
-        String username = pluginCall.getString("username");
-        String password = pluginCall.getString("password");
+    public void listContents(PluginCall call) {
+        String url = call.getString("url");
+        String username = call.getString("username");
+        String password = call.getString("password");
+
+        if (url == null || username == null || password == null) {
+            call.reject("Missing or invalid parameters");
+            return;
+        }
+
+        String propfindBody = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                "<D:propfind xmlns:D=\"DAV:\">\n" +
+                "    <D:prop>\n" +
+                "        <D:resourcetype/>\n" +
+                "        <D:getcontentlength/>\n" +
+                "        <D:getlastmodified/>\n" +
+                "        <D:creationdate/>\n" +
+                "    </D:prop>\n" +
+                "</D:propfind>";
+
+        RequestBody body = RequestBody.create(
+                propfindBody,
+                okhttp3.MediaType.parse("application/xml")
+        );
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", getAuthHeader(username, password))
+                .addHeader("Depth", "1")  // KEY FIX: include Depth header
+                .addHeader("Content-Type", "application/xml")
+                .method("PROPFIND", body)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call callInner, IOException e) {
+                call.reject("Failed to list folder contents: " + e.getMessage(), e);
+            }
+
+            @Override
+            public void onResponse(Call callInner, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    String errorBody = response.body() != null ? response.body().string() : "No response body";
+                    call.reject("Failed to list folder contents: " + response.code() + " - " + errorBody);
+                    return;
+                }
+
+                String xmlResponse = response.body() != null ? response.body().string() : "No response body";
+
+                JSObject result = new JSObject();
+                result.put("message", "Folder contents retrieved.");
+                result.put("data", xmlResponse);
+                call.resolve(result);
+            }
+        });
+    }
+
+    @PluginMethod
+    public void uploadFile(PluginCall call) {
+        String url = call.getString("url");
+        String username = call.getString("username");
+        String password = call.getString("password");
+        String base64Content = call.getString("content");
+
+        if (url == null || username == null || password == null || base64Content == null) {
+            call.reject("Missing parameters");
+            return;
+        }
+
+        byte[] data = Base64.decode(base64Content, Base64.DEFAULT);
+
+        RequestBody requestBody = RequestBody.create(data);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", getAuthHeader(username, password))
+                .put(requestBody)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call callInner, IOException e) {
+                call.reject("Upload failed: " + e.getMessage(), e);
+            }
+
+            @Override
+            public void onResponse(Call callInner, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    JSObject result = new JSObject();
+                    result.put("message", "File uploaded");
+                    call.resolve(result);
+                } else {
+                    String body = response.body() != null ? response.body().string() : "No response body";
+                    call.reject("Upload failed with status: " + response.code() + " - " + body);
+                }
+            }
+        });
+    }
+
+    @PluginMethod
+    public void deleteFolder(PluginCall call) {
+        String url = call.getString("url");
+        String username = call.getString("username");
+        String password = call.getString("password");
+
+        if (url == null || username == null || password == null) {
+            call.reject("Missing parameters");
+            return;
+        }
 
         Request request = new Request.Builder()
                 .url(url)
@@ -98,179 +337,64 @@ public class WebDAVPlugin extends Plugin {
                 .delete()
                 .build();
 
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                pluginCall.reject("Failed to delete folder: " + e.getMessage(), e);
+            public void onFailure(Call callInner, IOException e) {
+                call.reject("Delete failed: " + e.getMessage(), e);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Call callInner, Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    pluginCall.resolve();
+                    JSObject result = new JSObject();
+                    result.put("message", "Folder deleted");
+                    call.resolve(result);
                 } else {
-                    String responseBody = response.body() != null ? response.body().string() : "No response body";
-                    Log.e("WebDAVPlugin", "Error deleting folder: " + responseBody);
-                    pluginCall.reject("Failed to delete folder: " + response.message());
+                    String body = response.body() != null ? response.body().string() : "No response body";
+                    call.reject("Delete failed with status: " + response.code() + " - " + body);
                 }
             }
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @PluginMethod
-    public void uploadFile(PluginCall pluginCall) {
-        String url = pluginCall.getString("url");
-        String username = pluginCall.getString("username");
-        String password = pluginCall.getString("password");
-        String fileName = pluginCall.getString("fileName");
-        String base64Content = pluginCall.getString("content"); // Base64 encoded content
+    public void getFile(PluginCall call) {
+        String url = call.getString("url");
+        String username = call.getString("username");
+        String password = call.getString("password");
 
-        try {
-            // Decode the base64 content into binary
-            byte[] fileData = Base64.decode(base64Content.split(",")[1], Base64.DEFAULT); // Remove Data URL prefix
-            File file = new File(getContext().getCacheDir(), fileName);
-
-            // Write the binary data to a file
-            try (FileOutputStream fos = new FileOutputStream(file)) {
-                fos.write(fileData);
-            }
-
-            // Now upload the binary file as before
-            RequestBody requestBody = RequestBody.create(file, MediaType.parse("application/octet-stream"));
-
-            Request request = new Request.Builder()
-                    .url(url)
-                    .addHeader("Authorization", getAuthHeader(username, password))
-                    .put(requestBody)
-                    .build();
-
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    pluginCall.reject("Failed to upload file: " + e.getMessage(), e);
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        pluginCall.resolve();
-                    } else {
-                        String responseBody = response.body() != null ? response.body().string() : "No response body";
-                        Log.e("WebDAVPlugin", "Error uploading file: " + responseBody);
-                        pluginCall.reject("Failed to upload file: " + response.message());
-                    }
-                }
-            });
-        } catch (IOException e) {
-            pluginCall.reject("Failed to write file content: " + e.getMessage(), e);
+        if (url == null || username == null || password == null) {
+            call.reject("Missing parameters");
+            return;
         }
-    }
-
-
-    @PluginMethod
-    public void listContents(PluginCall pluginCall) {
-        String url = pluginCall.getString("url");
-        String username = pluginCall.getString("username");
-        String password = pluginCall.getString("password");
 
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("Authorization", getAuthHeader(username, password))
-                .method("PROPFIND", null)
+                .get()
                 .build();
 
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                pluginCall.reject("Failed to list folder contents: " + e.getMessage(), e);
+            public void onFailure(Call callInner, IOException e) {
+                call.reject("GET failed: " + e.getMessage(), e);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Call callInner, Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    // Implement parsing logic for the response body
-                    JSArray contents = new JSArray();
-                    // Add parsed contents to JSArray
-                    JSObject result = new JSObject();
-                    result.put("contents", contents);
-                    pluginCall.resolve(result);
-                } else {
-                    String responseBody = response.body() != null ? response.body().string() : "No response body";
-                    Log.e("WebDAVPlugin", "Error listing contents: " + responseBody);
-                    pluginCall.reject("Failed to list folder contents: " + response.message());
-                }
-            }
-        });
-    }
-
-    @PluginMethod
-    public void downloadFile(PluginCall pluginCall) {
-        String url = pluginCall.getString("url");
-        String username = pluginCall.getString("username");
-        String password = pluginCall.getString("password");
-        String destinationPath = pluginCall.getString("destinationPath");
-
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("Authorization", getAuthHeader(username, password))
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                pluginCall.reject("Failed to download file: " + e.getMessage(), e);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    try (InputStream inputStream = response.body().byteStream();
-                         FileOutputStream outputStream = new FileOutputStream(new File(destinationPath))) {
-                        byte[] buffer = new byte[1024];
-                        int bytesRead;
-                        while ((bytesRead = inputStream.read(buffer)) != -1) {
-                            outputStream.write(buffer, 0, bytesRead);
-                        }
-                        pluginCall.resolve();
+                    byte[] bytes = response.body() != null ? response.body().bytes() : null;
+                    if (bytes != null) {
+                        String base64Data = Base64.encodeToString(bytes, Base64.NO_WRAP);
+                        JSObject result = new JSObject();
+                        result.put("content", base64Data);
+                        call.resolve(result);
+                    } else {
+                        call.reject("Empty response body");
                     }
                 } else {
-                    String responseBody = response.body() != null ? response.body().string() : "No response body";
-                    Log.e("WebDAVPlugin", "Error downloading file: " + responseBody);
-                    pluginCall.reject("Failed to download file: " + response.message());
-                }
-            }
-        });
-    }
-
-    @PluginMethod
-    public void getFileContent(PluginCall pluginCall) {
-        String url = pluginCall.getString("url");
-        String username = pluginCall.getString("username");
-        String password = pluginCall.getString("password");
-
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("Authorization", getAuthHeader(username, password))
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                pluginCall.reject("Failed to get file content: " + e.getMessage(), e);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    String fileContent = response.body().string();
-                    JSObject result = new JSObject();
-                    result.put("fileContent", fileContent);
-                    pluginCall.resolve(result);
-                } else {
-                    String responseBody = response.body() != null ? response.body().string() : "No response body";
-                    Log.e("WebDAVPlugin", "Error getting file content: " + responseBody);
-                    pluginCall.reject("Failed to get file content: " + response.message());
+                    String body = response.body() != null ? response.body().string() : "No response body";
+                    call.reject("GET failed with status: " + response.code() + " - " + body);
                 }
             }
         });

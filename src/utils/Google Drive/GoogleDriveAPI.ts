@@ -1,3 +1,5 @@
+import axios, { AxiosInstance, AxiosError } from "axios";
+
 export type FileMetadata = {
   id: string;
   name: string;
@@ -5,18 +7,41 @@ export type FileMetadata = {
   createdTime?: string;
 };
 
+export type GoogleDriveError = {
+  message: string;
+  status?: number;
+  details?: unknown;
+};
+
 export class GoogleDriveAPI {
   private accessToken: string;
+  private readonly axiosInstance: AxiosInstance;
 
   constructor(accessToken: string) {
     this.accessToken = accessToken;
+    this.axiosInstance = axios.create({
+      baseURL: "https://www.googleapis.com/drive/v3",
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+      },
+    });
   }
 
-  // Create a folder in Google Drive
+  /**
+   * Updates the access token and refreshes the axios instance headers
+   */
+  updateAccessToken(newToken: string): void {
+    this.accessToken = newToken;
+    this.axiosInstance.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+  }
+
+  /**
+   * Creates a new folder in Google Drive
+   */
   async createFolder(
     folderName: string,
     parentId: string | null = null
-  ): Promise<string | null> {
+  ): Promise<string> {
     const metadata = {
       name: folderName,
       mimeType: "application/vnd.google-apps.folder",
@@ -24,197 +49,208 @@ export class GoogleDriveAPI {
     };
 
     try {
-      const response = await fetch(
-        "https://www.googleapis.com/drive/v3/files",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(metadata),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error creating folder:", error);
-        throw new Error(`Error creating folder: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.id || null; // Return folder ID if successful
+      const response = await this.axiosInstance.post("/files", metadata);
+      return response.data.id;
     } catch (error) {
-      console.error("Exception in createFolder:", error);
-      throw error;
+      throw this.handleError(error, "creating folder");
     }
   }
 
-  // Check if a folder exists in the root or specified folder
+  /**
+   * Checks if a folder exists and returns its ID if found
+   */
   async checkFolderExists(
     folderName: string,
     parentId: string | null = null
   ): Promise<string | null> {
-    const query =
-      `name='${folderName}' and mimeType='application/vnd.google-apps.folder'` +
-      (parentId ? ` and '${parentId}' in parents` : ` and 'root' in parents`);
+    const parentClause = parentId
+      ? ` and '${parentId}' in parents`
+      : ` and 'root' in parents`;
+
+    const query = `name='${folderName}' and mimeType='application/vnd.google-apps.folder'${parentClause}`;
 
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
-          query
-        )}&fields=files(id,name)`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
-      );
+      const response = await this.axiosInstance.get("/files", {
+        params: {
+          q: query,
+          fields: "files(id,name)",
+        },
+      });
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error checking folder existence:", error);
-        throw new Error(
-          `Error checking folder existence: ${response.statusText}`
-        );
-      }
-
-      const data = await response.json();
-      if (data.files && data.files.length > 0) {
-        return data.files[0].id; // Return folder ID if found
-      }
-
-      return null; // Folder does not exist
+      const files = response.data.files || [];
+      return files.length > 0 ? files[0].id : null;
     } catch (error) {
-      console.error("Exception in checkFolderExists:", error);
-      throw error;
+      throw this.handleError(error, "checking folder existence");
     }
   }
 
-  // Delete a folder by its ID
-  async deleteFolder(folderId: string): Promise<void> {
-    try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${folderId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
-      );
+  /**
+   * Creates a folder if it doesn't exist, returns the ID either way
+   */
+  async getOrCreateFolder(
+    folderName: string,
+    parentId: string | null = null
+  ): Promise<string> {
+    const existingId = await this.checkFolderExists(folderName, parentId);
+    if (existingId) return existingId;
+    return this.createFolder(folderName, parentId);
+  }
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error deleting folder:", error);
-        throw new Error(`Error deleting folder: ${response.statusText}`);
-      }
+  /**
+   * Deletes a file or folder by ID
+   */
+  async delete(fileId: string): Promise<void> {
+    try {
+      await this.axiosInstance.delete(`/files/${fileId}`);
     } catch (error) {
-      console.error("Exception in deleteFolder:", error);
-      throw error;
+      throw this.handleError(error, "deleting file/folder");
     }
   }
 
-  // Upload a file to a specific folder
   async uploadFile(
     fileName: string,
     content: Blob | string,
     parentId: string,
-    mimeType: string
-  ): Promise<void> {
-    const metadata = {
-      name: fileName,
-      parents: [parentId],
-    };
+    mimeType = "text/plain"
+  ): Promise<string> {
+    // 1. Check if file with the same name exists in the folder
+    const existingFileId = await this.findFileIdByName(fileName, parentId);
+
+    // Prepare file content blob
+    const fileBlob =
+      typeof content === "string"
+        ? new Blob([content], { type: mimeType })
+        : content;
+
+    // 2. Prepare metadata
+    const metadata = existingFileId
+      ? { name: fileName } // Exclude 'parents' when updating
+      : { name: fileName, parents: [parentId] };
 
     const form = new FormData();
     form.append(
       "metadata",
       new Blob([JSON.stringify(metadata)], { type: "application/json" })
     );
-
-    // Dynamically set the MIME type based on the file type
-    const fileBlob =
-      typeof content === "string"
-        ? new Blob([content], { type: mimeType || "text/plain" }) // Fallback to 'text/plain' for strings
-        : content; // If content is already a Blob, use it directly
-
     form.append("file", fileBlob);
 
     try {
-      const response = await fetch(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-          body: form,
-        }
-      );
+      let response: Response;
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error uploading file:", error);
-        throw new Error(`Error uploading file: ${response.statusText}`);
+      if (existingFileId) {
+        // 3a. Update existing file
+        response = await fetch(
+          `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=multipart`,
+          {
+            method: "PATCH",
+            headers: { Authorization: `Bearer ${this.accessToken}` },
+            body: form,
+          }
+        );
+      } else {
+        // 3b. Create new file
+        response = await fetch(
+          "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${this.accessToken}` },
+            body: form,
+          }
+        );
       }
-    } catch (error) {
-      console.error("Exception in uploadFile:", error);
-      throw error;
-    }
-  }
-
-  // List contents of a folder
-  async listContents(folderId: string): Promise<FileMetadata[]> {
-    try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents&fields=files(id,name,mimeType,createdTime)`, // Add createdTime to the fields
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
-      );
 
       if (!response.ok) {
-        const error = await response.text();
-        console.error("Error listing contents:", error);
-        throw new Error(`Error listing contents: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      return data.files || [];
+      return data.id;
     } catch (error) {
-      console.error("Exception in listContents:", error);
-      throw error;
+      throw this.handleError(error, "uploading file");
     }
   }
 
-  // Download a file by its ID
-  async downloadFile(fileId: string): Promise<string> {
+  /**
+   * Helper method to find a file by name in a folder, returns file ID or null
+   */
+  async findFileIdByName(
+    fileName: string,
+    parentId: string
+  ): Promise<string | null> {
+    const query = `name='${fileName}' and '${parentId}' in parents and trashed=false`;
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error("Error downloading file:", error);
-        throw new Error(`Error downloading file: ${response.statusText}`);
-      }
-
-      return await response.text(); // Assuming the file is a text file
+      const response = await this.axiosInstance.get("/files", {
+        params: {
+          q: query,
+          fields: "files(id, name)",
+        },
+      });
+      const files = response.data.files || [];
+      return files.length > 0 ? files[0].id : null;
     } catch (error) {
-      console.error("Exception in downloadFile:", error);
-      throw error;
+      throw this.handleError(error, "finding existing file");
     }
+  }
+
+  /**
+   * Lists contents of a folder
+   */
+  async listContents(folderId: string): Promise<FileMetadata[]> {
+    try {
+      const response = await this.axiosInstance.get("/files", {
+        params: {
+          q: `'${folderId}' in parents`,
+          fields: "files(id,name,mimeType,createdTime)",
+          pageSize: 1000, // Increase default page size
+        },
+      });
+
+      return response.data.files || [];
+    } catch (error) {
+      throw this.handleError(error, "listing contents");
+    }
+  }
+
+  /**
+   * Downloads a file by ID
+   */
+  async downloadFile(
+    fileId: string,
+    responseType: "text" | "blob" | "arraybuffer" = "text"
+  ): Promise<string | Blob | ArrayBuffer> {
+    try {
+      const response = await this.axiosInstance.get(`/files/${fileId}`, {
+        params: { alt: "media" },
+        responseType,
+      });
+
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error, "downloading file");
+    }
+  }
+
+  /**
+   * Common error handler for consistent error formatting
+   */
+  private handleError(error: unknown, operation: string): GoogleDriveError {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      return {
+        message: `Error ${operation}: ${
+          axiosError.response?.statusText || axiosError.message
+        }`,
+        status: axiosError.response?.status,
+        details: axiosError.response?.data,
+      };
+    }
+
+    // Handle fetch or other errors
+    return {
+      message: `Error ${operation}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
   }
 }

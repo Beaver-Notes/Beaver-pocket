@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import { createPortal } from "react-dom";
+import React, { useEffect, useState, useCallback } from "react";
 import { Editor } from "@tiptap/react";
 import { Note } from "../../store/types";
 import ImageUploadComponent from "./ImageUpload";
@@ -8,6 +7,7 @@ import AudioUploadComponent from "./AudioUpload";
 import VideoUploadComponent from "./VideoUpload";
 import icons from "../../lib/remixicon-react";
 import { Keyboard } from "@capacitor/keyboard";
+import Popover from "../UI/Popover";
 
 interface DrawerProps {
   note: Note;
@@ -16,32 +16,26 @@ interface DrawerProps {
 }
 
 const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
-  const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
-  const [dropdownPosition, setDropdownPosition] = useState<{
-    top: number;
-    left: number;
-  }>({ top: 0, left: 0 });
-  const buttonRef = useRef<HTMLButtonElement>(null); // Reference to the trigger button
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [translations, setTranslations] = useState({
     editor: {
       embedUrl: "editor.embedUrl",
     },
-    menuItems: {
-      paragraphLabel: "menuItems.paragraphLabel",
-      heading1Label: "menuItems.heading1Label",
-      heading2Label: "menuItems.heading2Label",
-      bulletListLabel: "menuItems.bulletListLabel",
-      orderedListLabel: "menuItems.orderedListLabel",
-      checklistLabel: "menuItems.checklistLabel",
-      quoteLabel: "menuItems.quoteLabel",
-      codeLabel: "menuItems.codeLabel",
-      embedLabel: "menuItems.embedLabel",
-      tableLabel: "menuItems.tableLabel",
-      drawingBlockLabel: "menuItems.drawingBlockLabel",
-      imageLabel: "menuItems.imageLabel",
-      imageDescription: "menuItems.imageDescription",
-      drawLabel: "menuItems.drawLabel",
+    menu: {
+      paragraph: "menu.paragraph",
+      heading1: "menu.heading1",
+      heading2: "menu.heading2",
+      bulletList: "menu.bulletList",
+      orderedList: "menu.orderedList",
+      checklist: "menu.checklist",
+      quote: "menu.quote",
+      code: "menu.code",
+      embed: "menu.embed",
+      table: "menu.table",
+      drawingBlock: "menu.drawingBlock",
+      image: "menu.image",
+      imageDescription: "menu.imageDescription",
+      textColor: "menu.textColor",
+      highlighterColor: "menu.highlighterColor",
     },
     accessibility: {
       insertRowAfter: "accessibility.insertRowAfter",
@@ -65,6 +59,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       purple: "accessibility.purple",
       pink: "accessibility.pink",
       red: "accessibility.red",
+      gray: "accessibility.grey",
       setColor: "accessibility.setColor",
       subscript: "accessibility.subscript",
       superscript: "accessibility.superscript",
@@ -75,6 +70,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       startRecording: "accessibility.startRecording",
       stopRecording: "accessibility.stopRecording",
       videoUpload: "accessibility.videoUpload",
+      mergeorSplit: "accessibility.mergeorSplit",
     },
   });
 
@@ -216,14 +212,26 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
     event.preventDefault();
   };
 
-  const colors = [
-    "bg-orange-200 dark:bg-orange-40",
-    "bg-yellow-200 dark:bg-yellow-100",
-    "bg-green-200 dark:bg-green-100",
-    "bg-blue-200 dark:bg-blue-100",
-    "bg-purple-200 dark:bg-purple-100",
-    "bg-pink-200 dark:bg-pink-100",
-    "bg-red-200 dark:bg-red-100",
+  const highlighterColors = [
+    "bg-[#FFD56B]/60 dark:bg-[#996B1F]/50 dark:text-white", // Soft Orange-Yellow
+    "bg-[#FFF78A]/60 dark:bg-[#B8A233]/50 dark:text-white", // Yellow
+    "bg-[#C5F6C7]/60 dark:bg-[#5A9E5D]/50 dark:text-white", // Green
+    "bg-[#A7DBFA]/60 dark:bg-[#4785A3]/50 dark:text-white", // Blue
+    "bg-[#D7B5F7]/60 dark:bg-[#7E5A9A]/50 dark:text-white", // Purple
+    "bg-[#F9C3D8]/60 dark:bg-[#B15A79]/50 dark:text-white", // Pink
+    "bg-[#FF9E9E]/60 dark:bg-[#B04C4C]/50 dark:text-white", // Red
+    "bg-[#E0E0E0]/60 dark:bg-[#6B6B6B]/50 dark:text-white", // Gray
+  ];
+
+  const textColors = [
+    "#DC8D42", // Soft Orange
+    "#E3B324", // Warm Yellow
+    "#4CAF50", // Natural Green
+    "#3A8EE6", // Soft Blue
+    "#9B5EE6", // Muted Purple
+    "#E67EA4", // Pastel Pink
+    "#E75C5C", // Warm Red
+    "#A3A3A3", // Soft Gray
   ];
 
   const colorsTranslations = [
@@ -234,81 +242,51 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
     translations.accessibility.purple,
     translations.accessibility.pink,
     translations.accessibility.red,
+    translations.accessibility.gray,
   ];
-
-  // Toggle dropdown visibility
-  const toggleDropdown = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect(); // Get the button's position
-      const dropdownHeight = 80; // Adjust based on your dropdown height
-      let top = rect.top + window.scrollY - dropdownHeight;
-
-      // Adjust top if the dropdown goes off the top of the viewport
-      if (top < 0) {
-        top = rect.bottom + window.scrollY; // Position below if above would go off-screen
-      }
-
-      // Check for right overflow
-      let left = rect.left + window.scrollX;
-      const dropdownWidth = 200; // Set a fixed width for your dropdown
-
-      if (left + dropdownWidth > window.innerWidth) {
-        left = window.innerWidth - dropdownWidth; // Position it to the left if it goes off the screen
-      }
-
-      setDropdownPosition({ top, left });
-    }
-    setDropdownOpen(!isDropdownOpen);
-  };
-
-  // Close the dropdown if clicked outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        !buttonRef.current?.contains(event.target as Node)
-      ) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   // Handle setting highlight color
   const setHighlightColor = (color: string) => {
-    editor?.chain().focus().setHighlight({ color }).run();
-    setDropdownOpen(false); // Close dropdown after color is selected
+    if (editor?.isActive("highlight", { color })) {
+      editor.commands.unsetHighlight();
+    } else {
+      editor?.chain().focus().setHighlight({ color }).run();
+    }
   };
+
+  function setTextColor(color: string) {
+    if (editor?.isActive("textStyle", { color })) {
+      editor?.chain().focus().unsetColor().run();
+    } else {
+      editor?.commands.setColor(color);
+    }
+  }
 
   const formatting = [
     {
-      label: translations.menuItems.paragraphLabel,
-      active: "Pragraph",
+      label: translations.menu.paragraph,
+      active: "paragraph",
       icon: (
-        <icons.ParagraphIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.ParagraphIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) => editor?.chain().focus().setParagraph().run(),
     },
     {
-      label: translations.menuItems.heading1Label,
+      label: translations.menu.heading1,
       active: "heading",
       level: 1,
       icon: (
-        <icons.Heading1Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.Heading1Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) =>
         editor?.chain().focus().toggleHeading({ level: 1 }).run(),
     },
     {
-      label: translations.menuItems.heading2Label,
+      label: translations.menu.heading2,
       active: "heading",
       level: 2,
       icon: (
-        <icons.Heading2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.Heading2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) =>
         editor?.chain().focus().toggleHeading({ level: 2 }).run(),
@@ -318,26 +296,26 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
   const lists = [
     {
       active: "bulletList",
-      label: translations.menuItems.bulletListLabel,
+      label: translations.menu.bulletList,
       icon: (
-        <icons.ListUnorderedIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.ListUnorderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) => editor?.chain().focus().toggleBulletList().run(),
     },
     {
       active: "orderedList",
-      label: translations.menuItems.orderedListLabel,
+      label: translations.menu.bulletList,
       icon: (
-        <icons.ListOrderedIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.ListOrderedIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) =>
         editor?.chain().focus().toggleOrderedList().run(),
     },
     {
-      active: "TaskList",
-      label: translations.menuItems.bulletListLabel,
+      active: "tasklist",
+      label: translations.menu.bulletList,
       icon: (
-        <icons.ListCheck2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+        <icons.ListCheck2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
       ),
       action: (editor: any) => editor?.chain().focus().toggleTaskList().run(),
     },
@@ -348,7 +326,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
       className={`drawer sm:hidden shadow-t-md block bottom-0 fixed left-0 right-0 ${
         isKeyboardVisible
           ? "bg-[#F8F8F7] dark:bg-[#2D2C2C]"
-          : "bg-white dark:bg-[#232222] p-1 pb-2"
+          : "bg-white dark:bg-neutral-800 p-1 pb-2"
       } cursor-grab overflow-y-auto transition-height duration-200 ease-in-out`}
       style={{ maxHeight: "50vh" }}
     >
@@ -363,8 +341,12 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           {formatting.map((item) => (
             <button
               className={`p-1 ${
-                editor?.isActive(item.active.toLowerCase(), item.level)
-                  ? "text-amber-400"
+                item.level
+                  ? editor?.isActive("heading", { level: item.level }) // Strictly check both type and level for headings
+                    ? "text-primary"
+                    : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                  : editor?.isActive(item.active.toLowerCase()) // For non-headings, check only the type
+                  ? "text-primary"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
@@ -377,39 +359,35 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("blockquote")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-            aria-label={translations.menuItems.quoteLabel}
+            aria-label={translations.menu.quote}
           >
-            <icons.DoubleQuotesLIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.DoubleQuotesLIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
-            className={
-              editor?.isActive("paper")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
+            className="text-neutral-700 dark:text-[color:var(--selected-dark-text)] "
             onMouseDown={handleMouseDown}
             //@ts-ignore
             onClick={() => editor?.chain().focus().insertPaper().run()}
-            aria-label={translations.menuItems.drawLabel}
+            aria-label={translations.menu.drawingBlock}
           >
-            <icons.Brush2Fill className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.Brush2Fill className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("codeBlock")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-            aria-label={translations.menuItems.codeLabel}
+            aria-label={translations.menu.code}
           >
-            <icons.CodeBoxLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.CodeBoxLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
 
           {/* Media and File Upload Options */}
@@ -421,14 +399,14 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("Embed")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
-            aria-label={translations.menuItems.embedLabel}
+            aria-label={translations.menu.embed}
           >
-            <icons.PagesLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
@@ -449,7 +427,7 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("table")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
@@ -460,15 +438,15 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                 withHeaderRow: true,
               })
             }
-            aria-label={translations.menuItems.tableLabel}
+            aria-label={translations.menu.table}
           >
-            <icons.Table2Icon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.Table2Icon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           {lists.map((item) => (
             <button
               className={`p-1 ${
                 editor?.isActive(item.active.toLowerCase())
-                  ? "text-amber-400"
+                  ? "text-primary"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
@@ -492,79 +470,91 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
             onClick={() => editor?.chain().focus().addRowAfter().run()}
             aria-label={translations.accessibility.insertRowAfter}
           >
-            <icons.InsertRowBottomIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.InsertRowBottomIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("heading", { level: 1 })
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addRowBefore().run()}
             aria-label={translations.accessibility.insertRowBefore}
           >
-            <icons.InsertRowTopIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.InsertRowTopIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("heading", { level: 2 })
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteRow().run()}
             aria-label={translations.accessibility.deleteRow}
           >
-            <icons.DeleteRow className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.DeleteRow className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("blockquote")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnBefore().run()}
             aria-label={translations.accessibility.insertColumnLeft}
           >
-            <icons.InsertColumnLeftIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.InsertColumnLeftIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("codeBlock")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().addColumnAfter().run()}
             aria-label={translations.accessibility.insertColumnRight}
           >
-            <icons.InsertColumnRightIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.InsertColumnRightIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("Embed")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteColumn().run()}
             aria-label={translations.accessibility.deleteColumn}
           >
-            <icons.DeleteColumn className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.DeleteColumn className="border-none text-xl w-8 h-8 cursor-pointer" />
+          </button>
+          <button
+            className={`p-1 ${
+              editor?.isActive("codeBlock")
+                ? "text-primary"
+                : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+            } cursor-pointer flex-1`}
+            onMouseDown={handleMouseDown}
+            onClick={() => editor?.chain().focus().mergeOrSplit().run()}
+            aria-label={translations.accessibility.mergeorSplit}
+          >
+            <icons.SplitCellsHorizontalIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("Tasklist")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleHeaderCell().run()}
-            aria-label={translations.menuItems.drawingBlockLabel}
+            aria-label={translations.menu.drawingBlock}
           >
-            <icons.Brush2Fill className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.Brush2Fill className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           {/* Media and File Upload Options */}
           <ImageUploadComponent
@@ -575,14 +565,14 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("Embed")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={handleAddIframe}
-            aria-label={translations.menuItems.embedLabel}
+            aria-label={translations.menu.embed}
           >
-            <icons.PagesLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.PagesLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <FileUploadComponent
             onFileUpload={handlefileUpload}
@@ -597,14 +587,14 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("Tasklist")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1 pr-6`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().deleteTable().run()}
             aria-label={translations.accessibility.deleteTable}
           >
-            <icons.DeleteBinLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.DeleteBinLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
         </div>
         <div
@@ -616,8 +606,12 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           {formatting.map((item) => (
             <button
               className={`p-1 ${
-                editor?.isActive(item.active.toLowerCase(), item.level)
-                  ? "text-amber-400"
+                item.level
+                  ? editor?.isActive("heading", { level: item.level }) // Strictly check both type and level for headings
+                    ? "text-primary"
+                    : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                  : editor?.isActive(item.active.toLowerCase()) // For non-headings, check only the type
+                  ? "text-primary"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
@@ -630,99 +624,100 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("bold")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleBold().run()}
             aria-label={translations.accessibility.bold}
           >
-            <icons.BoldIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.BoldIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("italic")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleItalic().run()}
             aria-label={translations.accessibility.italic}
           >
-            <icons.ItalicIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.ItalicIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("underline")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
             aria-label={translations.accessibility.underline}
           >
-            <icons.UnderlineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.UnderlineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("strike")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.chain().focus().toggleStrike().run()}
             aria-label={translations.accessibility.strikethrough}
           >
-            <icons.StrikethroughIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.StrikethroughIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
-          <button
-            ref={buttonRef}
-            className={`p-1 ${
-              editor?.isActive("highlight")
-                ? "text-amber-400"
-                : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
-            } cursor-pointer flex-1`}
-            onMouseDown={handleMouseDown}
-            onClick={toggleDropdown}
-            aria-label={translations.accessibility.highlight}
-          >
-            <icons.MarkPenLineIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
-          </button>
-          {isDropdownOpen &&
-            createPortal(
-              <div
-                ref={dropdownRef}
-                className="absolute p-2 bg-white dark:bg-[#353333] shadow-lg rounded-md grid grid-cols-4 gap-2"
-                role="menu"
-                aria-label={translations.accessibility.highlightOptions}
-                style={{
-                  top: dropdownPosition.top,
-                  left: dropdownPosition.left,
-                  zIndex: 1000,
-                }}
+          <Popover
+            placement="top"
+            trigger="click"
+            modelValue={false}
+            onShow={() => console.log("Popover opened")}
+            onClose={() => console.log("Popover closed")}
+            triggerContent={
+              <button
+                className={`p-1 ${
+                  editor?.isActive("highlight")
+                    ? "text-primary"
+                    : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                } cursor-pointer flex-1`}
               >
-                <button
-                  aria-label={translations.accessibility.removehighlight}
-                  role="menuitem"
-                  className={
-                    editor?.isActive("highlight")
-                      ? "rounded-md text-amber-400 cursor-pointer"
-                      : "rounded-md bg-transparent cursor-pointer"
-                  }
-                  onClick={() => {
-                    editor?.chain().focus().unsetHighlight().run();
-                    setDropdownOpen(false); // Close dropdown after removing highlight
-                  }}
-                >
-                  <icons.CloseLineIcon
-                    className={
-                      editor?.isActive("highlight")
-                        ? "border-none text-amber-400 text-xl w-8 h-8"
-                        : "border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8"
-                    }
-                  />
-                </button>
-                {colors.map((color, index) => (
+                {" "}
+                <icons.MarkPenLineIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
+              </button>
+            }
+          >
+            <div
+              role="menu"
+              aria-label={translations.accessibility.highlightOptions}
+            >
+              <p className="text-sm py-2">
+                {translations.menu.textColor || "Text Color"}
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {textColors.map((color, index) => (
+                  <button
+                    key={index}
+                    role="menuitem"
+                    aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
+                    className={`w-8 h-8 cursor-pointer rounded${color}`}
+                    onClick={() => {
+                      setTextColor(color);
+                    }}
+                  >
+                    <icons.fontColor
+                      className="border-none text-xl w-8 h-8 cursor-pointer"
+                      style={{ color: color }}
+                    />
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm py-2">
+                {translations.menu.highlighterColor || "Highlighter Color"}
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {highlighterColors.map((color, index) => (
                   <button
                     key={index}
                     role="menuitem"
@@ -730,25 +725,17 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
                     className={`w-8 h-8 cursor-pointer ${color}`}
                     onClick={() => {
                       setHighlightColor(color);
-                      setDropdownOpen(false);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        setHighlightColor(color);
-                        setDropdownOpen(false);
-                      }
                     }}
                   />
                 ))}
-              </div>,
-              document.body
-            )}
-
+              </div>
+            </div>
+          </Popover>
           {lists.map((item) => (
             <button
               className={`p-1 ${
                 editor?.isActive(item.active.toLowerCase())
-                  ? "text-amber-400"
+                  ? "text-primary"
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1 pl-3`}
               onMouseDown={handleMouseDown}
@@ -761,38 +748,38 @@ const Drawer: React.FC<DrawerProps> = ({ editor, noteId }) => {
           <button
             className={`p-1 ${
               editor?.isActive("subscript")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSubscript()}
             aria-label={translations.accessibility.subscript}
           >
-            <icons.SubscriptIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.SubscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
               editor?.isActive("superscript")
-                ? "text-amber-400"
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1`}
             onMouseDown={handleMouseDown}
             onClick={() => editor?.commands.toggleSuperscript()}
             aria-label={translations.accessibility.superscript}
           >
-            <icons.SuperscriptIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.SuperscriptIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
           <button
             className={`p-1 ${
-              editor?.isActive("highlight")
-                ? "text-amber-400"
+              editor?.isActive("link")
+                ? "text-primary"
                 : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
             } cursor-pointer flex-1 pr-6`}
             onMouseDown={handleMouseDown}
             onClick={setLink}
             aria-label={translations.accessibility.link}
           >
-            <icons.LinkIcon className="border-none text-xl text-neutral-700 dark:text-[color:var(--selected-dark-text)] w-8 h-8 cursor-pointer" />
+            <icons.LinkIcon className="border-none text-xl w-8 h-8 cursor-pointer" />
           </button>
         </div>
       </div>

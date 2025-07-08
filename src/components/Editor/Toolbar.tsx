@@ -1,33 +1,48 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "../../utils/translations";
 import { createPortal } from "react-dom";
 import icons from "../../lib/remixicon-react";
 import ImageUploadComponent from "./ImageUpload";
 import { Editor } from "@tiptap/react";
 import { Note } from "../../store/types";
+import { Keyboard } from "@capacitor/keyboard";
 import FileUploadComponent from "./FileUpload";
 import AudioUploadComponent from "./AudioUpload";
 import VideoUploadComponent from "./VideoUpload";
 import { useNavigate } from "react-router-dom";
+import Popover from "../UI/Popover";
 import Mousetrap from "mousetrap";
-import { useExportDav } from "../../utils/Webdav/webDavUtil";
 import Find from "./Find";
 
 interface ToolbarProps {
   note: Note;
   noteId: string;
   editor: Editor | null;
+  openDialog: any;
+  toggleFocusMode: any;
+  focusMode: boolean;
+  wd: boolean;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
   editor,
   noteId,
+  openDialog,
+  toggleFocusMode,
+  focusMode,
 }) => {
+  const headings = [1, 2, 3, 4];
+  const headingIcons: Record<
+    number,
+    React.ComponentType<{ className?: string }>
+  > = {
+    1: icons.Heading1Icon,
+    2: icons.Heading2Icon,
+    3: icons.Heading3Icon,
+    4: icons.Heading4Icon,
+  };
   const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [showFind, setShowFind] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<{
-    top: number;
-    left: number;
-  }>({ top: 0, left: 0 });
   const [FindPosition, setFindPosition] = useState<{
     top: number;
     left: number;
@@ -37,82 +52,22 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const FindRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const [translations, setTranslations] = useState({
-    editor: {
-      embedUrl: "editor.embedUrl",
-    },
-    menuItems: {
-      paragraphLabel: "menuItems.paragraphLabel",
-      heading1Label: "menuItems.heading1Label",
-      heading2Label: "menuItems.heading2Label",
-      bulletListLabel: "menuItems.bulletListLabel",
-      orderedListLabel: "menuItems.orderedListLabel",
-      checklistLabel: "menuItems.checklistLabel",
-      quoteLabel: "menuItems.quoteLabel",
-      codeLabel: "menuItems.codeLabel",
-      embedLabel: "menuItems.embedLabel",
-      tableLabel: "menuItems.tableLabel",
-      drawLabel: "menuItems.drawLabel",
-      drawingBlockLabel: "menuItems.drawingBlockLabel",
-      imageLabel: "menuItems.imageLabel",
-      imageDescription: "menuItems.imageDescription",
-    },
-    accessibility: {
-      insertRowAfter: "accessibility.insertRowAfter",
-      insertRowBefore: "accessibility.insertRowBefore",
-      deleteRow: "accessibility.deleteRow",
-      insertColumnLeft: "accessibility.insertColumnLeft",
-      insertColumnRight: "accessibility.insertColumnRight",
-      deleteColumn: "accessibility.deleteColumn",
-      deleteTable: "accessibility.deleteTable",
-      bold: "accessibility.bold",
-      italic: "accessibility.italic",
-      underline: "accessibility.underline",
-      strikethrough: "accessibility.strikethrough",
-      highlight: "accessibility.highlight",
-      highlightOptions: "accessibility.highlightOptions",
-      removehighlight: "accessibility.removeHighlight",
-      orange: "accessibility.orange",
-      yellow: "accessibility.yellow",
-      green: "accessibility.green",
-      blue: "accessibility.blue",
-      purple: "accessibility.purple",
-      pink: "accessibility.pink",
-      red: "accessibility.red",
-      setColor: "accessibility.setColor",
-      subscript: "accessibility.subscript",
-      superscript: "accessibility.superscript",
-      link: "accessibility.link",
-      fileUploadInput: "accessibility.fileUploadInput",
-      fileUpload: "accessibility.fileUpload",
-      processing: "accessibility.processing",
-      startRecording: "accessibility.startRecording",
-      stopRecording: "accessibility.stopRecording",
-      searchContent: "accessibility.searchContent",
-      back: "accessibility.back",
-      videoUpload: "accessibility.videoUpload"
-    },
+
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    editor: {},
+    menu: {},
+    accessibility: {},
   });
 
   useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
-  const [wd] = useState<boolean>(
-    localStorage.getItem("expand-editor") === "true"
-  );
 
   const handleImageUpload = (imageUrl: string) => {
     editor?.chain().setImage({ src: imageUrl }).run();
@@ -257,16 +212,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     };
   }, []);
 
-  const colors = [
-    "bg-orange-200 dark:bg-orange-40",
-    "bg-yellow-200 dark:bg-yellow-100",
-    "bg-green-200 dark:bg-green-100",
-    "bg-blue-200 dark:bg-blue-100",
-    "bg-purple-200 dark:bg-purple-100",
-    "bg-pink-200 dark:bg-pink-100",
-    "bg-red-200 dark:bg-red-100",
-  ];
-
   const colorsTranslations = [
     translations.accessibility.orange,
     translations.accessibility.yellow,
@@ -276,18 +221,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     translations.accessibility.pink,
     translations.accessibility.red,
   ];
-
-  // Toggle dropdown visibility
-  const toggleDropdown = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect(); // Get the button's position
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-      }); // Set dropdown position relative to button
-    }
-    setDropdownOpen(!isDropdownOpen);
-  };
 
   // Close the dropdown if clicked outside
   useEffect(() => {
@@ -300,613 +233,592 @@ const Toolbar: React.FC<ToolbarProps> = ({
         setDropdownOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  // Handle setting highlight color
-  const setHighlightColor = (color: string) => {
-    editor?.chain().focus().setHighlight({ color }).run();
-    setDropdownOpen(false); // Close dropdown after color is selected
-  };
-
   const goBack = () => {
-    const syncValue = localStorage.getItem("sync");
-    if (syncValue === "dropbox") {
-      const dropboxExport = new CustomEvent("dropboxExport");
-      document.dispatchEvent(dropboxExport);
-    } else if (syncValue === "webdav") {
-      const { exportdata } = useExportDav();
-      exportdata();
-    } else if (syncValue === "iCloud") {
-      const iCloudExport = new CustomEvent("iCloudExport");
-      document.dispatchEvent(iCloudExport);
-    } else if (syncValue === "googledrive") {
-      const driveExport = new CustomEvent("driveExport");
-      document.dispatchEvent(driveExport);
-    } else if (syncValue === "onedrive") {
-      const onedriveExport = new CustomEvent("onedriveExport");
-      document.dispatchEvent(onedriveExport);
-    }
     navigate("/");
   };
 
-  const formatting = [
-    {
-      label: translations.menuItems.paragraphLabel,
-      active: "Pragraph",
-      icon: (
-        <icons.ParagraphIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) => editor?.chain().focus().setParagraph().run(),
-    },
-    {
-      label: translations.menuItems.heading1Label,
-      active: "heading",
-      level: 1,
-      icon: (
-        <icons.Heading1Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) =>
-        editor?.chain().focus().toggleHeading({ level: 1 }).run(),
-    },
-    {
-      label: translations.menuItems.heading2Label,
-      active: "heading",
-      level: 2,
-      icon: (
-        <icons.Heading2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) =>
-        editor?.chain().focus().toggleHeading({ level: 2 }).run(),
-    },
-  ];
-
-  const lists = [
-    {
-      active: "bulletList",
-      label: translations.menuItems.bulletListLabel,
-      icon: (
-        <icons.ListUnorderedIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) => editor?.chain().focus().toggleBulletList().run(),
-    },
-    {
-      active: "orderedList",
-      label: translations.menuItems.orderedListLabel,
-      icon: (
-        <icons.ListOrderedIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) =>
-        editor?.chain().focus().toggleOrderedList().run(),
-    },
-    {
-      active: "TaskList",
-      label: translations.menuItems.bulletListLabel,
-      icon: (
-        <icons.ListCheck2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: (editor: any) => editor?.chain().focus().toggleTaskList().run(),
-    },
-  ];
-
   const draw = [
     {
-      label: translations.menuItems.drawLabel,
+      label: translations.menu.drawingBlock,
       active: "paper",
-      icon: (
-        <icons.Brush2Fill className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
+      icon: <icons.Brush2Fill className="border-none text-xl w-7 h-7" />,
       action: (editor: any) => editor?.chain().focus().insertPaper().run(),
-    },
-  ];
-
-  const search = [
-    {
-      label: translations.accessibility.searchContent,
-      icon: (
-        <icons.Search2LineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
-      action: handleshowFind,
     },
   ];
 
   const back = [
     {
       label: translations.accessibility.back,
-      icon: (
-        <icons.ArrowLeftLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-      ),
+      icon: <icons.ArrowLeftLineIcon className="border-none text-xl w-7 h-7" />,
       action: goBack,
+    },
+  ];
+
+  const highlighterColors = [
+    "bg-[#DC8D42]/30 dark:bg-[#DC8D42]/40 dark:text-[color:var(--selected-dark-text)]",
+    "bg-[#E3B324]/30 dark:bg-[#E3B324]/40 dark:text-[color:var(--selected-dark-text)]",
+    "bg-[#4CAF50]/30 dark:bg-[#4CAF50]/40 dark:text-[color:var(--selected-dark-text)]",
+    "bg-[#3A8EE6]/30 dark:bg-[#3A8EE6]/40 dark:text-[color:var(--selected-dark-text)]",
+    "bg-[#9B5EE6]/30 dark:bg-[#9B5EE6]/40 dark:text-[color:var(--selected-dark-text)]",
+    "bg-[#E67EA4]/30 dark:bg-[#E67EA4]/40 dark:text-[color:var(--selected-dark-text)]",
+    "bg-[#E75C5C]/30 dark:bg-[#E75C5C]/40 dark:text-[color:var(--selected-dark-text)]",
+    "bg-[#A3A3A3]/30 dark:bg-[#A3A3A3]/40 dark:text-[color:var(--selected-dark-text)]",
+  ];
+
+  const textColors = [
+    "#DC8D42",
+    "#E3B324",
+    "#4CAF50",
+    "#3A8EE6",
+    "#9B5EE6",
+    "#E67EA4",
+    "#E75C5C",
+    "#A3A3A3",
+  ];
+
+  const setHighlightColor = (color: string) => {
+    if (editor?.isActive("highlight", { color })) {
+      editor.commands.unsetHighlight();
+    } else {
+      editor?.chain().focus().setHighlight({ color }).run();
+    }
+  };
+
+  function setTextColor(color: string) {
+    if (editor?.isActive("textStyle", { color })) {
+      editor?.chain().focus().unsetColor().run();
+    } else {
+      editor?.commands.setColor(color);
+    }
+  }
+
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardShowListener = Keyboard.addListener("keyboardDidShow", () => {
+      setIsKeyboardVisible(true);
+    }) as any;
+
+    const keyboardHideListener = Keyboard.addListener("keyboardDidHide", () => {
+      setIsKeyboardVisible(false);
+    }) as any;
+
+    return () => {
+      keyboardShowListener.remove();
+      keyboardHideListener.remove();
+    };
+  }, []);
+
+  const lists = [
+    {
+      active: "bulletList",
+      label: translations.menu.bulletList,
+      icon: (
+        <icons.ListUnorderedIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
+      ),
+      action: (editor: any) => editor?.chain().focus().toggleBulletList().run(),
+    },
+    {
+      active: "orderedList",
+      label: translations.menu.bulletList,
+      icon: (
+        <icons.ListOrderedIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
+      ),
+      action: (editor: any) =>
+        editor?.chain().focus().toggleOrderedList().run(),
+    },
+    {
+      active: "tasklist",
+      label: translations.menu.bulletList,
+      icon: (
+        <icons.ListCheck2Icon className="border-none text-xl w-7 h-7 cursor-pointer" />
+      ),
+      action: (editor: any) => editor?.chain().focus().toggleTaskList().run(),
     },
   ];
 
   return (
     <div
-      className={`drawer hidden sm:block fixed top-6 left-0 right-0 z-20 bg-[#FFFFFF] dark:bg-[#232222] dark:text-neutral-50 overflow-x-auto sm:overflow-x-none py-1 ${
-        wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
-      }`}
+      className={`print:hidden fixed z-20 pointer-events-none bg-white dark:bg-[#232222] dark:text-[color:var(--selected-dark-text)] mx-2 transition overflow-auto no-scrollbar flex justify-center items-center
+    ${focusMode ? "opacity-0 hover:opacity-100" : ""}
+    ${isKeyboardVisible ? "pb-2 sm:pb-0" : "pb-5 sm:pb-0"}
+    sm:pt-6 left-0 right-0 bottom-0 sm:bottom-auto`}
     >
-      <div
-        className={`w-full h-full flex items-center justify-between bg-[#2D2C2C] rounded-full  ${
-          isTableActive ? "hidden" : "block"
-        } ${isTextSelected ? "hidden" : "block"}`}
-      >
-        {back.map((item) => (
-          <button
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
-        <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-          {formatting.map((item) => (
+      <div className="flex items-center justify-center sm:border-b sm:dark:border-b-neutral-600 whitespace-nowrap w-max">
+        {/* Back button */}
+        <div className="hidden sm:flex items-center">
+          {back.map((item) => (
             <button
-              className={
-                editor?.isActive(item.active.toLowerCase(), item.level)
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
+              key={item.label}
+              className="p-1 dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
               onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
-          <button
-            className={
-              editor?.isActive("blockquote")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-            aria-label={translations.menuItems.quoteLabel}
-          >
-            <icons.DoubleQuotesLIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          {/* Media and File Upload Options */}
-          <ImageUploadComponent
-            onImageUpload={handleImageUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <button
-            className={`p-1 ${
-              editor?.isActive("Embed")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
-            onMouseDown={handleMouseDown}
-            onClick={handleAddIframe}
-            aria-label={translations.menuItems.embedLabel}
-          >
-            <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
-          <FileUploadComponent
-            onFileUpload={handlefileUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <VideoUploadComponent
-            onVideoUpload={handlevideoUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <AudioUploadComponent
-            onAudioUpload={handleaudioUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          {draw.map((item) => (
-            <button
-              className={
-                editor?.isActive(item.active.toLowerCase())
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
-          {/* List and Table Options */}
-          <button
-            className={
-              editor?.isActive("table")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() =>
-              editor?.commands.insertTable({
-                rows: 3,
-                cols: 3,
-                withHeaderRow: true,
-              })
-            }
-            aria-label={translations.menuItems.tableLabel}
-          >
-            <icons.Table2Icon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          {lists.map((item) => (
-            <button
-              className={
-                editor?.isActive(item.active.toLowerCase())
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
+              onClick={() => item.action()}
               aria-label={item.label}
             >
               {item.icon}
             </button>
           ))}
         </div>
-        {search.map((item) => (
+        <div className="sm:hidden flex items-center">
           <button
-            ref={searchRef}
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
+            className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
+            onClick={() => editor?.chain().focus().undo().run()}
+            aria-label={translations.editor.undo}
           >
-            {item.icon}
-          </button>
-        ))}
-      </div>
-      <div
-        className={`w-full h-full flex items-center justify-between bg-[#2D2C2C] rounded-full  ${
-          isTableActive ? "block" : "hidden"
-        } ${isTextSelected ? "hidden" : "block"}`}
-      >
-        {back.map((item) => (
-          <button
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
-        <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-          <button
-            className="p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().addRowAfter().run()}
-            aria-label={translations.accessibility.insertRowAfter}
-          >
-            <icons.InsertRowBottomIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+            <icons.ArrowGoBackLineIcon className="border-none text-xl w-7 h-7" />
           </button>
           <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+            className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().addRowBefore().run()}
-            aria-label={translations.accessibility.insertRowBefore}
+            onClick={() => editor?.chain().focus().redo().run()}
+            aria-label={translations.editor.redo}
           >
-            <icons.InsertRowTopIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+            <icons.ArrowGoForwardLineIcon className="border-none text-xl w-7 h-7" />
           </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().deleteRow().run()}
-            aria-label={translations.accessibility.deleteRow}
-          >
-            <icons.DeleteRow className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().addColumnBefore().run()}
-            aria-label={translations.accessibility.insertColumnLeft}
-          >
-            <icons.InsertColumnLeftIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().addColumnAfter().run()}
-            aria-label={translations.accessibility.insertColumnRight}
-          >
-            <icons.InsertColumnRightIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className="p-2 hidden sm:block sm:align-end rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().deleteColumn().run()}
-            aria-label={translations.accessibility.deleteColumn}
-          >
-            <icons.DeleteColumn className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          {draw.map((item) => (
-            <button
-              className={
-                editor?.isActive(item.active.toLowerCase())
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
-          {/* Media and File Upload Options */}
-          <ImageUploadComponent
-            onImageUpload={handleImageUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <button
-            className={`p-1 ${
-              editor?.isActive("Embed")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
-            onMouseDown={handleMouseDown}
-            onClick={handleAddIframe}
-            aria-label={translations.menuItems.embedLabel}
-          >
-            <icons.PagesLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
-          <FileUploadComponent
-            onFileUpload={handlefileUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <VideoUploadComponent
-            onVideoUpload={handlevideoUpload}
-            noteId={noteId}
-            translations={translations}
-          />
-          <button
-            className={`p-1 ${
-              editor?.isActive("Tasklist")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1 pr-6`}
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().deleteTable().run()}
-            aria-label={translations.accessibility.deleteTable}
-          >
-            <icons.DeleteBinLineIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
         </div>
-        {search.map((item) => (
-          <button
-            ref={searchRef}
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
-      </div>
-      <div
-        className={`w-full h-full flex items-center justify-between bg-[#2D2C2C] rounded-full  ${
-          isTextSelected ? "block" : "hidden"
-        }`}
-      >
-        {back.map((item) => (
-          <button
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
-        <div className="sm:mx-auto flex overflow-y-hidden w-fit">
-          {formatting.map((item) => (
+        <button
+          className={
+            editor?.isActive("paragraph")
+              ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+              : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+          }
+          onMouseDown={handleMouseDown}
+          onClick={() => editor?.chain().focus().setParagraph().run()}
+          aria-label={translations.menu.paragraph}
+        >
+          <icons.ParagraphIcon className="border-none text-xl w-7 h-7" />
+        </button>
+        <Popover
+          placement="top"
+          trigger="click"
+          modelValue={false}
+          triggerContent={
             <button
-              className={
-                editor?.isActive(item.active.toLowerCase(), item.level)
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-              }
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
+              className={`p-1 ${
+                editor?.isActive("highlight")
+                  ? "text-primary"
+                  : "flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
+              } cursor-pointer flex`}
             >
-              {item.icon}
+              <icons.HeadingIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
+              <icons.ArrowDownS className="border-none w-4 h-4 cursor-pointer" />
             </button>
-          ))}
-          <button
-            className={
-              editor?.isActive("bold")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-            aria-label={translations.accessibility.bold}
-          >
-            <icons.BoldIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("italic")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
-            aria-label={translations.accessibility.italic}
-          >
-            <icons.ItalicIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("underline")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleUnderline().run()}
-            aria-label={translations.accessibility.underline}
-          >
-            <icons.UnderlineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            className={
-              editor?.isActive("strike")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={() => editor?.chain().focus().toggleStrike().run()}
-            aria-label={translations.accessibility.strikethrough}
-          >
-            <icons.StrikethroughIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          <button
-            ref={buttonRef}
-            className={
-              editor?.isActive("highlight")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            }
-            onMouseDown={handleMouseDown}
-            onClick={toggleDropdown}
-            aria-label={translations.accessibility.highlight}
-          >
-            <icons.MarkPenLineIcon className="border-none text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
-          </button>
-          {isDropdownOpen &&
-            createPortal(
-              <div
-                ref={dropdownRef}
-                className="absolute p-2 bg-white dark:bg-[#353333] shadow-lg rounded-md grid grid-cols-4 gap-2"
-                style={{
-                  top: dropdownPosition.top,
-                  left: dropdownPosition.left,
-                  zIndex: 1000,
+          }
+          aria-label={translations.accessibility.highlight}
+        >
+          <>
+            {headings.map((heading) => (
+              <button
+                aria-label={`${translations.menu.heading} ${heading}`} // v-tooltip replacement
+                className={`flex items-center p-1 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200 ${
+                  editor?.isActive("heading", { level: heading })
+                    ? "is-active"
+                    : ""
+                }`}
+                onClick={() => {
+                  editor
+                    ?.chain()
+                    .focus()
+                    .toggleHeading({ level: heading as 1 | 2 | 3 | 4 })
+                    .run();
                 }}
               >
-                {/* Option to remove highlight */}
+                {React.createElement(headingIcons[heading], {
+                  className: "border-none text-xl w-7 h-7",
+                })}
+                <div className="text-left overflow-hidden text-ellipsis whitespace-nowrap">
+                  <p className="font-medium text-neutral-800 dark:text-[color:var(--selected-dark-text)] pl-2">
+                    {translations.menu.heading} {heading}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </>
+        </Popover>
+        <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+        <button
+          className={
+            editor?.isActive("bold")
+              ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+              : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+          }
+          onMouseDown={handleMouseDown}
+          onClick={() => editor?.chain().focus().toggleBold().run()}
+          aria-label={translations.accessibility.bold}
+        >
+          <icons.BoldIcon className="border-none text-xl w-7 h-7" />
+        </button>
+        <button
+          className={
+            editor?.isActive("italic")
+              ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+              : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+          }
+          onMouseDown={handleMouseDown}
+          onClick={() => editor?.chain().focus().toggleItalic().run()}
+          aria-label={translations.accessibility.italic}
+        >
+          <icons.ItalicIcon className="border-none text-xl w-7 h-7" />
+        </button>
+        <button
+          className={
+            editor?.isActive("underline")
+              ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+              : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+          }
+          onMouseDown={handleMouseDown}
+          onClick={() => editor?.chain().focus().toggleUnderline().run()}
+          aria-label={translations.accessibility.underline}
+        >
+          <icons.UnderlineIcon className="border-none text-xl w-7 h-7" />
+        </button>
+        <button
+          className={
+            editor?.isActive("strike")
+              ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+              : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+          }
+          onMouseDown={handleMouseDown}
+          onClick={() => editor?.chain().focus().toggleStrike().run()}
+          aria-label={translations.accessibility.strikethrough}
+        >
+          <icons.StrikethroughIcon className="border-none text-xl w-7 h-7" />
+        </button>
+        <Popover
+          placement="top"
+          trigger="click"
+          modelValue={false}
+          triggerContent={
+            <button
+              className={`p-1 ${
+                editor?.isActive("highlight")
+                  ? "text-primary"
+                  : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+              } cursor-pointer flex-1`}
+            >
+              <icons.MarkPenLineIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
+            </button>
+          }
+          aria-label={translations.accessibility.highlight}
+        >
+          <div
+            role="menu"
+            aria-label={translations.accessibility.highlightOptions}
+          >
+            <p className="text-sm py-2">
+              {translations.menu.textColor || "Text Color"}
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              {textColors.map((color, index) => (
                 <button
-                  className={
-                    editor?.isActive("highlight")
-                      ? "rounded-md text-amber-400 cursor-pointer"
-                      : "rounded-md bg-transparent cursor-pointer"
-                  }
+                  key={index}
+                  role="menuitem"
+                  aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
+                  className={`w-7 h-7 cursor-pointer rounded${color}`}
                   onClick={() => {
-                    editor?.chain().focus().unsetHighlight().run();
-                    setDropdownOpen(false); // Close dropdown after removing highlight
+                    setTextColor(color);
                   }}
                 >
-                  <icons.CloseLineIcon
-                    className={
-                      editor?.isActive("highlight")
-                        ? "border-none text-amber-400 text-xl w-7 h-7"
-                        : "border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7"
-                    }
+                  <icons.fontColor
+                    className="border-none text-xl w-7 h-7 cursor-pointer"
+                    style={{ color: color }}
                   />
                 </button>
-                {/* Color options */}
-                {colors.map((color, index) => (
+              ))}
+            </div>
+            <p className="text-sm py-2">
+              {translations.menu.highlighterColor || "Highlighter Color"}
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              {highlighterColors.map((color, index) => (
+                <button
+                  key={index}
+                  role="menuitem"
+                  aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
+                  className={`w-7 h-7 cursor-pointer ${color}`}
+                  onClick={() => {
+                    setHighlightColor(color);
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </Popover>
+        {isTableActive && !isTextSelected && (
+          <>
+            <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />{" "}
+            <button
+              className="p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().addRowAfter().run()}
+              aria-label={translations.accessibility.insertRowAfter}
+            >
+              <icons.InsertRowBottomIcon className="border-none text-xl w-7 h-7" />
+            </button>
+            <button
+              className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().addRowBefore().run()}
+              aria-label={translations.accessibility.insertRowBefore}
+            >
+              <icons.InsertRowTopIcon className="border-none text-xl w-7 h-7" />
+            </button>
+            <button
+              className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().deleteRow().run()}
+              aria-label={translations.accessibility.deleteRow}
+            >
+              <icons.DeleteRow className="border-none text-xl w-7 h-7" />
+            </button>
+            <button
+              className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().addColumnBefore().run()}
+              aria-label={translations.accessibility.insertColumnLeft}
+            >
+              <icons.InsertColumnLeftIcon className="border-none text-xl w-7 h-7" />
+            </button>
+            <button
+              className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().addColumnAfter().run()}
+              aria-label={translations.accessibility.insertColumnRight}
+            >
+              <icons.InsertColumnRightIcon className="border-none text-xl w-7 h-7" />
+            </button>
+            <button
+              className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().deleteColumn().run()}
+              aria-label={translations.accessibility.deleteColumn}
+            >
+              <icons.DeleteColumn className="border-none text-xl w-7 h-7" />
+            </button>
+          </>
+        )}
+        {!isTableActive && (
+          <>
+            <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />{" "}
+            <Popover
+              placement="top"
+              trigger="click"
+              modelValue={false}
+              triggerContent={
+                <button
+                  className={`p-1 ${
+                    editor?.isActive("highlight")
+                      ? "text-primary"
+                      : "flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
+                  } cursor-pointer flex`}
+                >
+                  <icons.ListUnorderedIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
+                  <icons.ArrowDownS className="border-none w-4 h-4 cursor-pointer" />
+                </button>
+              }
+              aria-label={translations.accessibility.highlight}
+            >
+              <>
+                {lists.map((item) => (
                   <button
-                    key={index}
-                    role="menuitem"
-                    aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
-                    className={`w-8 h-8 cursor-pointer ${color}`}
-                    onClick={() => {
-                      setHighlightColor(color);
-                      setDropdownOpen(false);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        setHighlightColor(color);
-                        setDropdownOpen(false);
-                      }
-                    }}
-                  />
+                    className={`flex items-center p-1 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200 ${
+                      editor?.isActive(item.active.toLowerCase())
+                        ? "text-primary"
+                        : ""
+                    } cursor-pointer flex-1 pl-3`}
+                    onMouseDown={handleMouseDown}
+                    onClick={() => item.action(editor)}
+                    aria-label={item.label}
+                  >
+                    {item.icon}
+                    <div className="text-left overflow-hidden text-ellipsis whitespace-nowrap">
+                      <p className="font-medium text-neutral-800 dark:text-[color:var(--selected-dark-text)] pl-2">
+                        {item.label}
+                      </p>
+                    </div>
+                  </button>
                 ))}
-              </div>,
-              document.body // Mount the dropdown in the document body
-            )}
-          {lists.map((item) => (
+              </>
+            </Popover>
             <button
               className={
-                editor?.isActive(item.active.toLowerCase())
-                  ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                  : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
+                editor?.isActive("blockquote")
+                  ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                  : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
               }
               onMouseDown={handleMouseDown}
-              onClick={() => item.action(editor)}
-              aria-label={item.label}
+              onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+              aria-label={translations.menu.quote}
             >
-              {item.icon}
+              <icons.DoubleQuotesLIcon className="border-none text-xl w-7 h-7" />
             </button>
-          ))}
+            <button
+              className={
+                editor?.isActive("codeBlock")
+                  ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                  : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+              }
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+              aria-label={translations.menu.code}
+            >
+              <icons.CodeBoxLineIcon className="border-none text-xl w-7 h-7" />
+            </button>
+          </>
+        )}
+        <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+        <ImageUploadComponent
+          onImageUpload={handleImageUpload}
+          noteId={noteId}
+          translations={translations}
+        />{" "}
+        <AudioUploadComponent
+          onAudioUpload={handleaudioUpload}
+          noteId={noteId}
+          translations={translations}
+        />
+        <button
+          className={`p-1 ${
+            editor?.isActive("link")
+              ? "p-1 rounded-md text-primary  cursor-pointer"
+              : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+          }`}
+          onMouseDown={handleMouseDown}
+          onClick={setLink}
+          aria-label={translations.accessibility.link}
+        >
+          <icons.LinkIcon className="border-none text-xl w-7 h-7" />
+        </button>
+        <FileUploadComponent
+          onFileUpload={handlefileUpload}
+          noteId={noteId}
+          translations={translations}
+        />
+        <button
+          className={
+            editor?.isActive("table")
+              ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+              : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+          }
+          onMouseDown={handleMouseDown}
+          onClick={() =>
+            editor?.commands.insertTable({
+              rows: 3,
+              cols: 3,
+              withHeaderRow: true,
+            })
+          }
+          aria-label={translations.menu.table}
+        >
+          <icons.Table2Icon className="border-none text-xl w-7 h-7" />
+        </button>
+        <Popover
+          placement="top"
+          trigger="click"
+          modelValue={false}
+          triggerContent={
+            <button
+              className={
+                "p-1 rounded-md text-neutral-800 dark:text-[color:var(--selected-dark-text)]  hoverable cursor-pointer"
+              }
+              aria-label={translations.accessibility.highlight}
+            >
+              <icons.MoreLineIcon className="border-none text-xl w-7 h-7" />
+            </button>
+          }
+        >
+          <div className="flex">
+            <VideoUploadComponent
+              onVideoUpload={handlevideoUpload}
+              noteId={noteId}
+              translations={translations}
+            />
+            <button
+              className={`p-1 ${
+                editor?.isActive("Embed")
+                  ? "p-1 rounded-md text-primary  cursor-pointer"
+                  : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+              } cursor-pointer flex-1`}
+              onMouseDown={handleMouseDown}
+              onClick={handleAddIframe}
+              aria-label={translations.menu.embed}
+            >
+              <icons.PagesLineIcon className="border-none text-xl w-7 h-7" />
+            </button>
+            {draw.map((item) => (
+              <button
+                className={
+                  editor?.isActive(item.active.toLowerCase())
+                    ? "p-1 rounded-md text-primary hoverable cursor-pointer"
+                    : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+                }
+                onMouseDown={handleMouseDown}
+                onClick={() => item.action(editor)}
+                aria-label={item.label}
+              >
+                {item.icon}
+              </button>
+            ))}
+          </div>
+        </Popover>
+        <div className="sm:flex items-center hidden">
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
           <button
-            className={`p-1 ${
-              editor?.isActive("subscript")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
+            className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
-            onClick={() => editor?.commands.toggleSubscript()}
-            aria-label={translations.accessibility.subscript}
+            onClick={() => openDialog()}
+            aria-label={translations.editor.share}
           >
-            <icons.SubscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
+            <icons.ShareLineIcon className="border-none text-xl w-7 h-7" />
           </button>
+          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
           <button
-            className={`p-1 ${
-              editor?.isActive("superscript")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1`}
+            className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
-            onClick={() => editor?.commands.toggleSuperscript()}
-            aria-label={translations.accessibility.superscript}
+            onClick={() => toggleFocusMode()}
+            aria-label={translations.editor.ReadingMode}
           >
-            <icons.SuperscriptIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
+            <icons.FileArticleLine className="border-none text-xl w-7 h-7" />
           </button>
-          <button
-            className={`p-1 ${
-              editor?.isActive("link")
-                ? "p-2 rounded-md text-amber-400 bg-[#353333] cursor-pointer"
-                : "p-2 rounded-md text-[color:var(--selected-dark-text)] bg-transparent cursor-pointer"
-            } cursor-pointer flex-1 pr-6`}
-            onMouseDown={handleMouseDown}
-            onClick={setLink}
-            aria-label={translations.accessibility.link}
-          >
-            <icons.LinkIcon className="border-none text-xl text-[color:var(--selected-dark-text)] w-7 h-7 cursor-pointer" />
-          </button>
+          {!isTableActive && !isTextSelected && (
+            <button
+              className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => handleshowFind()}
+              aria-label={translations.editor.searchPage}
+            >
+              <icons.Search2LineIcon className="border-none text-xl w-7 h-7" />
+            </button>
+          )}
         </div>
-        {search.map((item) => (
-          <button
-            ref={searchRef}
-            className="p-2 hidden sm:block sm:align-start text-[color:var(--selected-dark-text)] rounded-md bg-transparent cursor-pointer"
-            onMouseDown={handleMouseDown}
-            onClick={() => item.action()}
-            aria-label={item.label}
-          >
-            {item.icon}
-          </button>
-        ))}
+        {isTableActive && !isTextSelected && (
+          <>
+            <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+            <button
+              className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+              onMouseDown={handleMouseDown}
+              onClick={() => editor?.chain().focus().deleteTable().run()}
+              aria-label={translations.editor.deleteTable}
+            >
+              <icons.DeleteBinLineIcon className="border-none text-xl w-7 h-7" />
+            </button>
+          </>
+        )}
       </div>
       {showFind &&
         createPortal(
           <div
             ref={FindRef}
-            className="absolute p-2"
+            className="absolute p-1"
             style={{
               top: FindPosition.top,
               left: FindPosition.left,

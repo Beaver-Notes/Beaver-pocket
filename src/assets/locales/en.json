@@ -14,8 +14,8 @@
     "openNote": "Open note",
     "untitled": "Unitled note",
     "lockedNote": "Locked note",
-    "labelSuggestion": "Filtered label suggestions",
-    "selectLabel": "Select label",
+    "Suggestion": "Filtered  suggestions",
+    "select": "Select ",
     "filterednotes": "Filtered notes",
     "insertRowAfter": "Insert row after",
     "insertRowBefore": "Insert row before",
@@ -39,6 +39,7 @@
     "purple": "purple",
     "pink": "pink",
     "red": "red",
+    "gray": "gray",
     "subscript": "Subscript",
     "superscript": "Superscript",
     "link": "Link",
@@ -64,7 +65,8 @@
     "editMermaid": "Edit Mermaid Block",
     "webdavUrl": "Webdav URL",
     "hidePasswd": "Hide Password",
-    "showPasswd": "Show Password"
+    "showPasswd": "Show Password",
+    "mergeorSplit": "Merge or split"
   },
   "settings": {
     "title": "Settings",
@@ -82,7 +84,9 @@
     "Sync": "Sync",
     "expandPage": "Expand Page",
     "CollapsibleHeading": "Collapsible Heading",
-    "scribbleCompatibility": "Scribble compatibility"
+    "scribbleCompatibility": "Scribble compatibility",
+    "appIcon": "App Icon",
+    "colorScheme": "Color Scheme"
   },
   "sync": {
     "Dropbox": "Dropbox",
@@ -95,15 +99,14 @@
     "shareError": "The following error accured while trying to share your notes: ",
     "importSuccess": "Notes imported successfully!",
     "importInvalid": "Invalid data format",
-    "Sync": "Sync"
+    "Sync": "Sync",
+    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?"
   },
   "dropbox": {
-    "title": "Sync with Dropbox",
     "import": "Import",
     "export": "Export",
     "submit": "Submit",
     "refreshingToken": "Access token expired, refreshing...",
-    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
     "getToken": "Get Access Token",
     "autoSync": "Auto Sync",
     "logout": "Logout",
@@ -111,38 +114,33 @@
     "icon": "Dropbox icon"
   },
   "gdrive": {
-    "title": "Sync with Google Drive",
     "import": "Import",
     "export": "Export",
     "autoSync": "Auto Sync",
     "logout": "Logout",
     "login": "Login",
-    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
     "refreshingToken": "Access token expired, refreshing..."
   },
   "icloud": {
-    "title": "Sync with iCloud",
     "import": "Import",
     "export": "Export",
     "autoSync": "Auto Sync"
   },
   "webdav": {
-    "title": "Sync with WebDAV",
     "login": "Login",
     "username": "Username",
     "password": "Password",
     "export": "Export",
     "import": "Import",
-    "autoSync": "Auto Sync"
+    "autoSync": "Auto Sync",
+    "insecureMode": "Insecure mode"
   },
   "onedrive": {
-    "title": "Sync with Onedrive",
     "import": "Import",
     "export": "Export",
     "login": "Login",
     "logout": "Logout",
     "autoSync": "Auto Sync",
-    "existingFolder": "The folder ${folderPath} already exists. Do you want to delete it and create a new one?",
     "refreshingToken": "Access token expired, refreshing..."
   },
   "welcome": {
@@ -169,7 +167,7 @@
     "wrongpasswd": "Incorrect password. Note cannot be unlocked.",
     "unlock": "Unlock",
     "cancel": "cancel",
-    "addLabel": "Add Label",
+    "add": "Add ",
     "searchHeadings": "Search Headings",
     "close": "Close",
     "mermaidContent": "Enter Mermaid code here...",
@@ -187,7 +185,14 @@
     "biometricTitle": "Lock/Unlock with Biometrics",
     "noteNotFound": "Note not found",
     "noNoteId": "No note ID provided",
-    "noNotes": "No notes found"
+    "noNotes": "No notes found",
+    "exportas": "Export as",
+    "share": "Share",
+    "searchPage": "Search Page",
+    "ReadingMode": "Reading Mode",
+    "deleteTable": "Delete Table",
+    "undo": "Undo",
+    "redo": "Redo"
   },
   "archive": {
     "archived": "Archived",
@@ -208,12 +213,22 @@
     "biometricReason": "Lock/Unlock notes",
     "biometricTitle": "Lock/Unlock with Biometrics"
   },
-  "search": {
+  "filter": {
     "searchNotes": "Search Notes",
-    "selectlabel": "Select Label",
+    "select": "Select ",
     "lastUpdated": "Last Updated",
     "creationDate": "Creation Date",
-    "alphabetical": "Alphabetical"
+    "alphabetical": "Alphabetical",
+    "selectlabel": "Select label"
+  },
+  "search": {
+    "clear": "Clear",
+    "find": "Find",
+    "replace": "Replace",
+    "replaceall": "Replace all",
+    "replaceplaceholder": "Replace...",
+    "searchplaceholder": "Search...",
+    "useRegex": "Use regex (Alt+R)"
   },
   "shortcuts": {
     "General": "General shortcuts",
@@ -262,61 +277,48 @@
     "license": "License",
     "legal": "Legal"
   },
-  "menuItems": {
-    "fileLabel": "File",
-    "fileDescription": "Attach a file.",
-    "imageLabel": "Image",
-    "imageDescription": "Insert an image.",
-    "videoLabel": "Video",
-    "videoDescription": "Embed a video.",
-    "paragraphLabel": "Paragraph",
-    "paragraphDescription": "Create a standard paragraph.",
-    "heading1Label": "Heading 1",
-    "heading1Description": "Largest heading for main titles.",
-    "heading2Label": "Heading 2",
-    "heading2Description": "Subheading for major sections.",
-    "heading3Label": "Heading 3",
-    "heading3Description": "Subsections under Heading 2.",
-    "heading4Label": "Heading 4",
-    "heading4Description": "Smaller subsection titles.",
-    "heading5Label": "Heading 5",
-    "heading5Description": "Detailed subsections.",
-    "heading6Label": "Heading 6",
-    "heading6Description": "Smallest heading for notes.",
-    "quoteLabel": "Quote Block",
-    "quoteDescription": "Format text as a quote.",
-    "codeLabel": "Code Block",
-    "codeDescription": "Insert a code block.",
-    "tableLabel": "Table",
-    "tableDescription": "Insert a structured data table.",
-    "bulletListLabel": "Bullet List",
-    "bulletListDescription": "Create a bulleted list.",
-    "orderedListLabel": "Ordered List",
-    "orderedListDescription": "Create a numbered list.",
-    "checklistLabel": "Checklist",
-    "checklistDescription": "Add a checklist for tasks.",
-    "blackCalloutLabel": "Black Callout",
-    "blackCalloutDescription": "Add a black callout.",
-    "blueCalloutLabel": "Blue Callout",
-    "blueCalloutDescription": "Add a blue callout.",
-    "greenCalloutLabel": "Green Callout",
-    "greenCalloutDescription": "Add a green callout.",
-    "purpleCalloutLabel": "Purple Callout",
-    "purpleCalloutDescription": "Add a purple callout.",
-    "redCalloutLabel": "Red Callout",
-    "redCalloutDescription": "Add a red callout.",
-    "yellowCalloutLabel": "Yellow Callout",
-    "yellowCalloutDescription": "Add a yellow callout.",
-    "mathBlockLabel": "Math Block",
-    "mathBlockDescription": "Insert a math block.",
-    "mermaidBlockLabel": "Mermaid Block",
-    "mermaidBlockDescription": "Insert a Mermaid diagram.",
-    "embedLabel": "Embed Block",
-    "embedDescription": "Embed a website.",
-    "drawingBlockLabel": "Drawing Block",
-    "drawingBlockDescription": "Insert a drawing block."
+  "menu": {
+    "file": "File",
+    "image": "Image",
+    "video": "Video",
+    "paragraph": "Paragraph",
+    "heading": "Heading",
+    "quote": "Quote Block",
+    "code": "Code Block",
+    "table": "Table",
+    "bulletList": "Bullet List",
+    "orderedlist": "Ordered List",
+    "checklist": "Checklist",
+    "blackCallout": "Black Callout",
+    "blueCallout": "Blue Callout",
+    "greenCallout": "Green Callout",
+    "purpleCallout": "Purple Callout",
+    "redCallout": "Red Callout",
+    "yellowCallout": "Yellow Callout",
+    "mathBlock": "Math Block",
+    "mermaidBlock": "Mermaid Block",
+    "embed": "Embed Block",
+    "drawingBlock": "Drawing Block",
+    "textColor": "Text Color",
+    "highlighterColor": "Highlighter Color"
   },
   "tiptap": {
     "placeholder": "Write something... or type \"/\" for commands."
+  },
+  "paperBlock": {
+    "thin": "Thin",
+    "medium": "Medium",
+    "thick": "Thick",
+    "thicker": "Thicker",
+    "none": "None",
+    "grid": "Grid",
+    "ruled": "Ruled",
+    "dotted": "Dotted",
+    "pencil": "Pencil",
+    "highlighter": "Highlighter",
+    "eraser": "Eraser",
+    "undo": "Undo",
+    "redo": "Redo",
+    "clicktoDraw": "Click to draw"
   }
 }

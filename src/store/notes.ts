@@ -2,77 +2,52 @@ import {
   Directory,
   Filesystem,
   FilesystemEncoding,
-  FilesystemDirectory,
 } from "@capacitor/filesystem";
 import React from "react";
 import { Note } from "./types";
-import { Capacitor } from "@capacitor/core";
-import { setStoreRemotePath } from "./useDataPath";
+import { trackChange } from "../composable/sync";
 
 const STORAGE_PATH = "notes/data.json";
 
 // Create Directory
-
 async function createNotesDirectory() {
-  const notesPath = "notes";
-  const exportPath = "export";
-  const assetsPath = "note-assets";
-  const fileAssetsPath = "file-assets";
-
-  try {
-    await Filesystem.mkdir({
-      path: fileAssetsPath,
-      directory: Directory.Data,
-      recursive: true,
-    });
-    await Filesystem.mkdir({
-      path: assetsPath,
-      directory: Directory.Data,
-      recursive: true,
-    });
-    await Filesystem.mkdir({
-      path: exportPath,
-      directory: Directory.Data,
-      recursive: true,
-    });
-    await Filesystem.mkdir({
-      path: notesPath,
-      directory: Directory.Data,
-      recursive: true,
-    });
-  } catch (error: any) {
-    console.error("Error creating the directory:", error);
+  const paths = ["file-assets", "note-assets", "export", "notes"];
+  for (const path of paths) {
+    try {
+      await Filesystem.mkdir({
+        path,
+        directory: Directory.Data,
+        recursive: true,
+      });
+    } catch (error) {
+      console.error("Error creating directory:", path, error);
+    }
   }
 }
 
-// Load
-
-export const loadNotes = async (): Promise<Record<string, Note>> => {
+// Load all data (always return wrapped structure normalized to flat for internal use)
+export const loadNotes = async (): Promise<{
+  notes: Record<string, Note>;
+  labels: string[];
+  lockStatus: Record<string, any>;
+  isLocked: Record<string, any>;
+  deletedIds: Record<string, any>;
+}> => {
   try {
-    const { uri } = await Filesystem.getUri({
-      directory: FilesystemDirectory.Data,
-      path: "",
-    });
-    setStoreRemotePath(Capacitor.convertFileSrc(uri));
-
-    // Check if the file exists before creating the directory
-    let fileExists = true;
-
     try {
       await Filesystem.stat({
         path: STORAGE_PATH,
         directory: Directory.Data,
       });
     } catch {
-      console.log("The file doesn't exist. Marking as not found.");
-      fileExists = false;
-    }
-
-    if (!fileExists) {
-      // Create the notes directory only if the file is missing
       await createNotesDirectory();
-      console.log("Notes directory created because no file was found.");
-      return {};
+      return {
+        notes: {},
+        labels: [],
+        lockStatus: {},
+        isLocked: {},
+        deletedIds: {},
+      };
     }
 
     const data = await Filesystem.readFile({
@@ -81,98 +56,89 @@ export const loadNotes = async (): Promise<Record<string, Note>> => {
       encoding: FilesystemEncoding.UTF8,
     });
 
-    if (data.data) {
-      const parsedData = JSON.parse(data.data as string);
+    const parsed = JSON.parse(
+      typeof data.data === "string" ? data.data : await data.data.text()
+    );
 
-      if (parsedData?.data?.notes) {
-        const notes = parsedData.data.notes;
-        const collapsibleSetting = localStorage.getItem("collapsibleHeading");
+    const finalData = parsed?.data
+      ? parsed.data
+      : {
+          notes: {},
+          labels: [],
+          lockStatus: {},
+          isLocked: {},
+          deletedIds: {},
+        };
 
-        const filteredNotes = Object.keys(notes).reduce((acc, noteId) => {
-          const note = notes[noteId];
+    const collapsibleSetting = localStorage.getItem("collapsibleHeading");
+    const notes = finalData.notes ?? {};
 
-          // Ensure the title is not missing
-          note.title = note.title || "";
-
-          // If collapsible headings are disabled, uncollapse all headings
-          if (collapsibleSetting === "false" && note.content?.content) {
-            note.content.content = uncollapseHeading(note.content.content);
-          }
-
-          // Add the note to the accumulator
-          acc[noteId] = note;
-
-          return acc;
-        }, {} as Record<string, Note>);
-
-        return filteredNotes;
-      } else {
-        console.log(
-          "The file is missing the 'notes' data. Returning an empty object."
-        );
-        return {};
+    for (const noteId in notes) {
+      const note = notes[noteId];
+      note.title = note.title || "";
+      if (collapsibleSetting === "false" && note.content?.content) {
+        note.content.content = uncollapseHeading(note.content.content);
       }
-    } else {
-      console.log("The file is empty. Returning an empty object.");
-      return {};
     }
+
+    return {
+      notes,
+      labels: finalData.labels ?? [],
+      lockStatus: finalData.lockStatus ?? {},
+      isLocked: finalData.isLocked ?? {},
+      deletedIds: finalData.deletedIds ?? {},
+    };
   } catch (error) {
-    console.error("Error loading notes:", error);
-    return {};
+    console.error("Error loading data:", error);
+    return {
+      notes: {},
+      labels: [],
+      lockStatus: {},
+      isLocked: {},
+      deletedIds: {},
+    };
   }
 };
 
-// Save
-
+// Save Note - now saves wrapped in `data`
 export const useSaveNote = (
   setNotesState: (notes: Record<string, Note>) => void
 ) => {
   const saveNote = React.useCallback(
     async (note: unknown) => {
       try {
-        const notes = await loadNotes();
+        const { notes, labels, lockStatus, isLocked, deletedIds } =
+          await loadNotes();
 
         if (typeof note === "object" && note !== null) {
           const typedNote = note as Note;
-
-          // Ensure createdAt and updatedAt are timestamps
-          const createdAtTimestamp =
-            typeof typedNote.createdAt === "number"
-              ? typedNote.createdAt
-              : Date.now();
-
-          const updatedAtTimestamp =
-            typeof typedNote.updatedAt === "number"
-              ? typedNote.updatedAt
-              : Date.now();
-
           const updatedNote: Note = {
             ...typedNote,
-            createdAt: createdAtTimestamp,
-            updatedAt: updatedAtTimestamp,
+            createdAt:
+              typeof typedNote.createdAt === "number"
+                ? typedNote.createdAt
+                : Date.now(),
+            updatedAt: Date.now(),
           };
 
-          // Update the notes object with the new/updated note
-          const updatedNotes: Record<string, Note> = {
-            ...notes,
-            [typedNote.id]: updatedNote,
-          };
+          const updatedNotes = { ...notes, [typedNote.id]: updatedNote };
 
-          const data = {
-            data: {
-              notes: updatedNotes,
-            },
-          };
-
-          // Write updated notes to file
           await Filesystem.writeFile({
             path: STORAGE_PATH,
-            data: JSON.stringify(data),
+            data: JSON.stringify({
+              data: {
+                notes: updatedNotes,
+                labels,
+                lockStatus,
+                isLocked,
+                deletedIds,
+              },
+            }),
             directory: Directory.Data,
             encoding: FilesystemEncoding.UTF8,
           });
 
-          // Update the state directly
+          await trackChange("notes", updatedNotes);
           setNotesState(updatedNotes);
         } else {
           console.error("Invalid note object:", note);
@@ -187,8 +153,7 @@ export const useSaveNote = (
   return { saveNote };
 };
 
-// Delete
-
+// Delete Note - saves wrapped in `data`
 export const useDeleteNote = (
   setNotesState: (notes: Record<string, Note>) => void,
   notesState: Record<string, Note>
@@ -196,40 +161,45 @@ export const useDeleteNote = (
   const deleteNote = React.useCallback(
     async (noteId: string) => {
       try {
-        const notes = { ...notesState }; // Create a copy of notesState
-        delete notes[noteId]; // Delete the note with the given noteId
+        const { labels, lockStatus, isLocked, deletedIds } = await loadNotes();
+        const updatedNotes = { ...notesState };
+        delete updatedNotes[noteId];
 
-        // Define paths for the folders
-        const fileAssetsPath = `file-assets/${noteId}`;
-        const noteAssetsPath = `note-assets/${noteId}`;
+        if (!deletedIds[noteId]) {
+          deletedIds[noteId] = Date.now();
+        }
 
-        // Attempt to delete the folders if they exist
-        await Filesystem.rmdir({
-          path: fileAssetsPath,
-          directory: Directory.Data,
-          recursive: true, // This will ensure the directory is deleted even if it contains files
-        }).catch((error) => {
-          console.warn(`Error deleting file-assets for note ${noteId}:`, error);
-        });
+        const assetPaths = [`file-assets/${noteId}`, `note-assets/${noteId}`];
+        for (const path of assetPaths) {
+          try {
+            await Filesystem.rmdir({
+              path,
+              directory: Directory.Data,
+              recursive: true,
+            });
+          } catch {}
+        }
 
-        await Filesystem.rmdir({
-          path: noteAssetsPath,
-          directory: Directory.Data,
-          recursive: true,
-        }).catch((error) => {
-          console.warn(`Error deleting note-assets for note ${noteId}:`, error);
-        });
-
-        // Update the storage after deletion
         await Filesystem.writeFile({
           path: STORAGE_PATH,
-          data: JSON.stringify({ data: { notes } }),
+          data: JSON.stringify({
+            data: {
+              notes: updatedNotes,
+              labels,
+              lockStatus,
+              isLocked,
+              deletedIds,
+            },
+          }),
           directory: Directory.Data,
           encoding: FilesystemEncoding.UTF8,
         });
 
-        // Update the state with the new notes object
-        setNotesState(notes);
+        await trackChange("notes", updatedNotes);
+        await trackChange("deletedIds", deletedIds);
+
+        cleanupDeletedIds(30);
+        setNotesState(updatedNotes);
       } catch (error) {
         console.error("Error deleting note:", error);
         alert("Error deleting note: " + (error as any).message);
@@ -241,95 +211,128 @@ export const useDeleteNote = (
   return { deleteNote };
 };
 
-// Bookmark
+// Cleanup Deleted IDs - saves wrapped in `data`
+export const cleanupDeletedIds = async (days = 30) => {
+  try {
+    const { notes, labels, lockStatus, isLocked, deletedIds } =
+      await loadNotes();
+    const now = Date.now();
+    const cutoff = days * 24 * 60 * 60 * 1000;
 
+    const cleanedDeletedIds = Object.fromEntries(
+      Object.entries(deletedIds).filter(
+        ([_, timestamp]) => now - timestamp < cutoff
+      )
+    );
+
+    await Filesystem.writeFile({
+      path: STORAGE_PATH,
+      data: JSON.stringify({
+        data: {
+          notes,
+          labels,
+          lockStatus,
+          isLocked,
+          deletedIds: cleanedDeletedIds,
+        },
+      }),
+      directory: Directory.Data,
+      encoding: FilesystemEncoding.UTF8,
+    });
+
+    await trackChange("deletedIds", cleanedDeletedIds);
+  } catch (error) {
+    console.error("Error during cleanup of deletedIds:", error);
+  }
+};
+
+// Toggle Bookmark - saves wrapped in `data`
 export const useToggleBookmark = () => {
   const toggleBookmark = async (noteId: string) => {
     try {
-      const notes = await loadNotes();
-      const updatedNote = { ...notes[noteId] };
-
-      // Toggle the 'isBookmarked' property
-      updatedNote.isBookmarked = !updatedNote.isBookmarked;
-
-      // Update the note in the dictionary
-      notes[noteId] = updatedNote;
+      const { notes, labels, lockStatus, isLocked, deletedIds } =
+        await loadNotes();
+      notes[noteId].isBookmarked = !notes[noteId].isBookmarked;
 
       await Filesystem.writeFile({
         path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
+        data: JSON.stringify({
+          data: {
+            notes,
+            labels,
+            lockStatus,
+            isLocked,
+            deletedIds,
+          },
+        }),
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
-      return notes; // Return the updated notes
+      await trackChange("notes", notes);
+      return notes;
     } catch (error) {
       console.error("Error toggling bookmark:", error);
-      throw error; // Throw the error for the caller to handle
+      throw error;
     }
   };
 
   return { toggleBookmark };
 };
 
-// Archive
+// Toggle Archive - saves wrapped in `data`
 export const useToggleArchive = () => {
   const toggleArchive = async (noteId: string) => {
     try {
-      const notes = await loadNotes();
-      const updatedNote = { ...notes[noteId] };
-
-      // Toggle the 'isArchived' property
-      updatedNote.isArchived = !updatedNote.isArchived;
-
-      // Update the note in the dictionary
-      notes[noteId] = updatedNote;
+      const { notes, labels, lockStatus, isLocked, deletedIds } =
+        await loadNotes();
+      notes[noteId].isArchived = !notes[noteId].isArchived;
 
       await Filesystem.writeFile({
         path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
+        data: JSON.stringify({
+          data: {
+            notes,
+            labels,
+            lockStatus,
+            isLocked,
+            deletedIds,
+          },
+        }),
         directory: Directory.Data,
         encoding: FilesystemEncoding.UTF8,
       });
 
-      return notes; // Return the updated notes
+      await trackChange("notes", notes);
+      return notes;
     } catch (error) {
       console.error("Error toggling archive:", error);
-      throw error; // Throw the error for the caller to handle
+      throw error;
     }
   };
 
   return { toggleArchive };
 };
 
-// Function to uncollapse headings
+// Uncollapse headings (unchanged)
 function uncollapseHeading(contents: any[] = []): any[] {
-  if (contents.length === 0) {
-    return contents;
-  }
+  if (!Array.isArray(contents)) return contents;
 
-  let newContents = [];
-  for (let i = 0; i < contents.length; i++) {
-    const content = contents[i];
+  let newContents: any[] = [];
+  for (const content of contents) {
     newContents.push(content);
-
     if (content.type === "heading") {
-      let collapsedContent = content.attrs.collapsedContent ?? [];
-
-      if (typeof collapsedContent === "string") {
-        collapsedContent = collapsedContent ? JSON.parse(collapsedContent) : [];
+      let collapsed = content.attrs.collapsedContent ?? [];
+      if (typeof collapsed === "string") {
+        collapsed = collapsed ? JSON.parse(collapsed) : [];
       }
-
-      // Mark the heading as open and remove collapsed content
       content.attrs.open = true;
       content.attrs.collapsedContent = null;
 
-      // Recursively uncollapse any nested collapsed content
-      if (collapsedContent.length > 0) {
-        newContents = [...newContents, ...uncollapseHeading(collapsedContent)];
+      if (collapsed.length > 0) {
+        newContents = [...newContents, ...uncollapseHeading(collapsed)];
       }
     }
   }
-
   return newContents;
 }

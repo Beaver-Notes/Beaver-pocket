@@ -1,12 +1,13 @@
-// exportUtils.ts
-
-// Handles export and sharing notes and assets
-
-import { Directory, Filesystem, FilesystemEncoding } from "@capacitor/filesystem";
+import {
+  Directory,
+  Filesystem,
+  FilesystemEncoding,
+} from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import { useState, useEffect } from "react";
 import { Note } from "../store/types";
+import { Zip } from "capa-zip";
 
 export const useExportData = () => {
   const [translations, setTranslations] = useState({
@@ -40,16 +41,18 @@ export const useExportData = () => {
     try {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-
-      const parentExportFolderPath = `export`;
-      await Filesystem.mkdir({
-        path: parentExportFolderPath,
-        directory: Directory.Data,
-        recursive: true,
-      });
-
       const exportFolderName = `Beaver Notes ${formattedDate}`;
-      const exportFolderPath = `${parentExportFolderPath}/${exportFolderName}`;
+      const exportFolderPath = `export/${exportFolderName}`;
+
+      try {
+        await Filesystem.rmdir({
+          path: "export",
+          directory: Directory.Data,
+          recursive: true,
+        });
+      } catch (error) {
+        console.log("No existing export folder found, continuing...");
+      }
 
       await Filesystem.mkdir({
         path: exportFolderPath,
@@ -72,12 +75,11 @@ export const useExportData = () => {
       });
 
       const exportedData: any = {
-        data: {
-          notes: {},
-          lockStatus: {},
-          isLocked: {},
-        },
+        notes: {},
         labels: [],
+        lockStatus: {},
+        isLocked: {},
+        deletedIds: {},
       };
 
       Object.values(notesState).forEach((note) => {
@@ -116,13 +118,13 @@ export const useExportData = () => {
             note.content.content = updatedFileContent;
 
             // Add the modified note to exportedData
-            exportedData.data.notes[note.id] = note;
+            exportedData.notes[note.id] = note;
 
             exportedData.labels = exportedData.labels.concat(note.labels);
 
             if (note.isLocked) {
-              exportedData.data.lockStatus[note.id] = "locked";
-              exportedData.data.isLocked[note.id] = true;
+              exportedData.lockStatus[note.id] = "locked";
+              exportedData.isLocked[note.id] = true;
             }
           }
         }
@@ -140,30 +142,35 @@ export const useExportData = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      alert(translations.home.exportSuccess);
-
       await shareExportFolder(exportFolderPath);
     } catch (error) {
-      alert(translations.home.exportError + (error as any).message);
+      console.log((error as any).message);
     }
   };
 
   const shareExportFolder = async (folderPath: string) => {
     try {
+      const zipFilePath = `${folderPath}.zip`;
+      await Zip.zip({ sourcePath: folderPath, destinationPath: zipFilePath });
+      await Filesystem.rmdir({
+        path: folderPath,
+        directory: Directory.Data,
+        recursive: true,
+      });
       const result = await Filesystem.getUri({
         directory: Directory.Data,
-        path: folderPath,
+        path: zipFilePath,
       });
-
-      const resolvedFolderPath = result.uri;
-
       await Share.share({
-        title: `${translations.home.shareTitle}`,
-        url: resolvedFolderPath,
-        dialogTitle: `${translations.home.shareTitle}`,
+        title: translations.home.shareTitle,
+        url: result.uri,
+        dialogTitle: translations.home.shareTitle,
+      });
+      await Filesystem.deleteFile({
+        path: zipFilePath,
       });
     } catch (error) {
-      alert(translations.home.shareError + (error as any).message);
+      console.log(error);
     }
   };
 

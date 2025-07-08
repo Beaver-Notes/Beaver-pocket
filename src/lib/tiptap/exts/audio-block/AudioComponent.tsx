@@ -222,7 +222,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ node }) => {
           onEnded={audioEnded}
         />
         <button
-          className="bg-amber-400 text-white p-2 rounded-full mr-2"
+          className="bg-primary text-white p-2 rounded-full mr-2"
           onClick={togglePlay}
           aria-label={isPlaying ? translations.accessibility.pauseAudio : translations.accessibility.pauseAudio}
         >
@@ -245,11 +245,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ node }) => {
           onTouchStart={startDrag}
         >
           <div
-            className="flex flex-col justify-center rounded-full bg-amber-400 text-xs text-white text-center transition duration-500 dark:bg-amber-400"
+            className="flex flex-col justify-center rounded-full bg-primary text-xs text-white text-center transition duration-500 dark:bg-primary"
             style={{ width: progressBarWidth }}
           />
           <div
-            className="absolute top-0 left-0 h-full w-4 bg-amber-500 rounded-full transform -translate-x-1/2"
+            className="absolute top-0 left-0 h-full w-4 bg-secondary rounded-full transform -translate-x-1/2"
             style={{ left: progressBarWidth }}
             onMouseDown={startDrag}
             onTouchStart={startDrag}

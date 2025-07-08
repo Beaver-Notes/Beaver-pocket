@@ -1,8 +1,8 @@
 import { Note } from "../../store/types";
 import Icons from "../../lib/remixicon-react";
 import { useNotesState } from "../../store/Activenote";
-import ReactDOM from "react-dom";
-import ModularPrompt from "../ui/Dialog";
+import ReactDOM from "react-dom/client";
+import ModularPrompt from "../UI/Password";
 import * as CryptoJS from "crypto-js";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { NativeBiometric } from "capacitor-native-biometric";
@@ -16,7 +16,7 @@ import {
   Filesystem,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { JSONContent } from "@tiptap/react";
 import dayjs from "dayjs";
@@ -43,6 +43,88 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   const { toggleArchive } = useToggleArchive();
   const { toggleBookmark } = useToggleBookmark();
   const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
+
+  // Translations
+  const [translations, setTranslations] = useState({
+    card: {
+      unlocktoedit: "card.unlocktoedit",
+      noContent: "card.noContent",
+      confirmDelete: "card.confirmDelete",
+      bookmarkError: "card.bookmarkError",
+      archiveError: "card.archiveError",
+      wrongpasswd: "card.wrongpasswd",
+      lockerror: "card.lockerror",
+      enterpasswd: "card.enterpasswd",
+      biometricReason: "card.biometricReason",
+      biometricTitle: "card.biometricTitle",
+    },
+  });
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      try {
+        const translationModule = await import(
+          `../../assets/locales/${selectedLanguage}.json`
+        );
+
+        setTranslations({ ...translations, ...translationModule.default });
+        dayjs.locale(selectedLanguage);
+      } catch (error) {
+        console.error("Error loading translations:", error);
+      }
+    };
+
+    loadTranslations();
+  }, []);
+
+  const handleToggleBookmark = async (
+    noteId: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+
+    try {
+      const updatedNotes = await toggleBookmark(noteId);
+      setNotesState(updatedNotes);
+    } catch (error) {
+      console.error(translations.card.bookmarkError, error);
+      alert(translations.card.bookmarkError + (error as any).message);
+    }
+  };
+  const handleToggleArchive = async (
+    noteId: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+
+    try {
+      const updatedNotes = await toggleArchive(noteId);
+      setNotesState(updatedNotes);
+    } catch (error) {
+      console.error(translations.card.archiveError, error);
+      alert(translations.card.archiveError + (error as any).message);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    const isConfirmed = window.confirm(translations.card.confirmDelete);
+
+    if (isConfirmed) {
+      try {
+        await deleteNote(noteId);
+        // Remove the deleted note from filteredNotes state
+        setFilteredNotes((prevFilteredNotes) => {
+          const updatedFilteredNotes = { ...prevFilteredNotes };
+          delete updatedFilteredNotes[noteId];
+          return updatedFilteredNotes;
+        });
+      } catch (error) {
+        alert(error);
+      }
+    }
+  };
 
   const handleToggleLock = async (noteId: string, event: React.MouseEvent) => {
     event.stopPropagation();
@@ -164,114 +246,34 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 
   // Helper function to prompt the user for a password
   const promptForPassword = async (): Promise<string | null> => {
-    // Define a div where the prompt will be rendered
     const promptRoot = document.createElement("div");
     document.body.appendChild(promptRoot);
 
     return new Promise<string | null>((resolve) => {
       const handleConfirm = (value: string | null) => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
+        root.unmount(); // Unmount with new API
+        document.body.removeChild(promptRoot); // Clean up DOM
         resolve(value);
       };
       const handleCancel = () => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        resolve(null); // Resolving with null for cancel action
+        root.unmount(); // Unmount with new API
+        document.body.removeChild(promptRoot); // Clean up DOM
+        resolve(null);
       };
-      ReactDOM.render(
+
+      const root = ReactDOM.createRoot(promptRoot); // Create root
+      root.render(
         <ModularPrompt
           title={translations.card.enterpasswd}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
-        />,
-        promptRoot
+        />
       );
     });
   };
 
   const handleClickNote = async (note: Note) => {
     navigate(`/editor/${note.id}`);
-  };
-
-  // Translations
-  const [translations, setTranslations] = useState({
-    card: {
-      unlocktoedit: "card.unlocktoedit",
-      noContent: "card.noContent",
-      confirmDelete: "card.confirmDelete",
-      bookmarkError: "card.bookmarkError",
-      archiveError: "card.archiveError",
-      wrongpasswd: "card.wrongpasswd",
-      lockerror: "card.lockerror",
-      enterpasswd: "card.enterpasswd",
-      biometricReason: "card.biometricReason",
-      biometricTitle: "card.biometricTitle",
-    },
-  });
-
-  useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
-  }, []);
-
-  const handleToggleBookmark = async (
-    noteId: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation();
-
-    try {
-      const updatedNotes = await toggleBookmark(noteId);
-      setNotesState(updatedNotes);
-    } catch (error) {
-      console.error(translations.card.bookmarkError, error);
-      alert(translations.card.bookmarkError + (error as any).message);
-    }
-  };
-  const handleToggleArchive = async (
-    noteId: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation();
-
-    try {
-      const updatedNotes = await toggleArchive(noteId);
-      setNotesState(updatedNotes);
-    } catch (error) {
-      console.error(translations.card.archiveError, error);
-      alert(translations.card.archiveError + (error as any).message);
-    }
-  };
-
-  const handleDeleteNote = async (noteId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    const isConfirmed = window.confirm(translations.card.confirmDelete);
-
-    if (isConfirmed) {
-      try {
-        await deleteNote(noteId);
-        // Remove the deleted note from filteredNotes state
-        setFilteredNotes((prevFilteredNotes) => {
-          const updatedFilteredNotes = { ...prevFilteredNotes };
-          delete updatedFilteredNotes[noteId];
-          return updatedFilteredNotes;
-        });
-      } catch (error) {
-        alert(error);
-      }
-    }
   };
 
   const MAX_CONTENT_PREVIEW_LENGTH = 150;
@@ -360,13 +362,14 @@ const NoteCard: React.FC<BookmarkedProps> = ({
                 <div className="flex flex-col gap-1 overflow-hidden">
                   <div className="flex flex-wrap gap-1">
                     {note.labels.map((label) => (
-                      <span
+                      <Link
+                        to={`/?label=${label}`}
                         key={label}
-                        className="text-amber-400 text-opacity-100 px-1 py-0.5 rounded-md"
+                        className="text-primary text-opacity-100 px-1 py-0.5 rounded-md"
                         aria-label={`Label: ${label}`}
                       >
                         #{label}
-                      </span>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -415,7 +418,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
             }}
           >
             {note.isBookmarked ? (
-              <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2" />
+              <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2 text-primary" />
             ) : (
               <Icons.Bookmark3LineIcon className="w-8 h-8 mr-2" />
             )}

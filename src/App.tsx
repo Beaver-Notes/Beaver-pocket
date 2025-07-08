@@ -1,74 +1,141 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { CSSTransition, TransitionGroup } from "react-transition-group";
 import Home from "./Home";
 import Archive from "./Archive";
 import Settings from "./Settings";
-import About from "./settings/about";
+import About from "./components/Settings/about";
 import { App as CapacitorApp } from "@capacitor/app";
-import Shortcuts from "./settings/shortcuts";
+import Shortcuts from "./components/Settings/shortcuts";
 import Welcome from "./Welcome";
-import Dropbox from "./settings/screens/dropbox";
-import Onedrive from "./settings/screens/onedrive";
-import Gdrive from "./settings/screens/gdrive";
-import Webdav from "./settings/screens/webdav";
-import Icloud from "./settings/screens/icloud";
+import Dropbox from "./components/Sync/dropbox";
+import Onedrive from "./components/Sync/onedrive";
+import Drive from "./components/Sync/drive";
+import Dav from "./components/Sync/dav";
+import Icloud from "./components/Sync/icloud";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
-import Sync from "./settings/sync";
+import Sync from "./components/Settings/sync";
 import Editor from "./Editor";
-import { useImportDav } from "./utils/Webdav/webDavUtil";
 import "./assets/css/main.css";
 import "./assets/css/fonts.css";
 import BottomNavBar from "./components/App/BottomNavBar";
 import CommandPrompt from "./components/App/CommandPrompt";
+import { setStoreRemotePath } from "./store/useDataPath";
 import { loadNotes } from "./store/notes";
 import { useNotesState } from "./store/Activenote";
 import Mousetrap from "mousetrap";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { isPlatform } from "@ionic/react";
+import Icons from "./components/Settings/icons";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import useDropboxSync from "./utils/Dropbox/DropboxSync";
+import useiCloudSync from "./utils/iCloud/iCloudSync";
+import useOneDriveSync from "./utils/Onedrive/oneDriveSync";
+import useWebDAVSync from "./utils/Webdav/webDavSync";
+import useDriveSync from "./utils/Google Drive/GoogleDriveSync";
 
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { notesState, setNotesState } = useNotesState();
-  const [isSwipe, setIsSwipe] = useState(false);
-
-  const isIpad = isPlatform("ipad");
-
-  document.addEventListener("reload", () => {
-    const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
-      setNotesState(notes);
-    };
-
-    loadNotesFromStorage();
+  const { syncDropbox } = useDropboxSync(setNotesState);
+  const { synciCloud } = useiCloudSync(setNotesState);
+  const { syncOneDrive } = useOneDriveSync(setNotesState);
+  const { syncWebDAV } = useWebDAVSync(setNotesState);
+  const { syncDrive } = useDriveSync(setNotesState);
+  const [themeMode, setThemeMode] = useState<string>(
+    localStorage.getItem("themeMode") || "auto"
+  );
+  const colorScheme = localStorage.getItem("color-scheme") || "light";
+  document.documentElement.classList.add(colorScheme);
+  const [darkMode, setDarkMode] = useState(() => {
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
   });
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("themeMode", themeMode);
+  }, [darkMode, themeMode]);
 
-  document.addEventListener("notelink", (event: Event) => {
-    const customEvent = event as CustomEvent;
-    const noteId = customEvent.detail.noteId;
-    navigate(`/editor/${noteId}`);
-  });
+  // Function to toggle dark mode
+  const toggleTheme = (
+    newMode: boolean | ((prevState: boolean) => boolean)
+  ) => {
+    setDarkMode(newMode);
+    setThemeMode(newMode ? "dark" : "light");
+  };
+
+  const setAutoMode = () => {
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    setDarkMode(prefersDarkMode);
+    setThemeMode("auto");
+  };
 
   useEffect(() => {
     const loadNotesFromStorage = async () => {
-      const notes = await loadNotes();
+      const notes = await (await loadNotes()).notes;
+      console.log(notes);
       setNotesState(notes);
     };
 
-    loadNotesFromStorage();
+    document.addEventListener("reload", loadNotesFromStorage);
+
+    return () => {
+      document.removeEventListener("reload", loadNotesFromStorage);
+    };
   }, []);
 
-  // Add back button listener for Android
-  CapacitorApp.addListener("backButton", ({ canGoBack }) => {
-    if (!canGoBack) {
-      CapacitorApp.exitApp();
-    } else {
-      window.history.back();
-    }
-  });
+  useEffect(() => {
+    const handleSync = () => {
+      const syncValue = localStorage.getItem("sync");
+      if (syncValue === "dropbox") {
+        syncDropbox();
+      } else if (syncValue === "iCloud") {
+        synciCloud();
+      } else if (syncValue === "onedrive") {
+        syncOneDrive();
+      } else if (syncValue === "webdav") {
+        syncWebDAV();
+      } else if (syncValue === "googledrive") {
+        console.log("Syncing with Google Drive");
+        syncDrive();
+      }
+    };
+
+    document.addEventListener("sync", handleSync);
+
+    return () => {
+      document.removeEventListener("sync", handleSync);
+    };
+  }, []);
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        // Fetch the URI
+        const { uri } = await Filesystem.getUri({
+          directory: FilesystemDirectory.Data,
+          path: "",
+        });
+        setStoreRemotePath(Capacitor.convertFileSrc(uri));
+
+        // Load notes from storage
+        const notes = (await loadNotes()).notes;
+        setNotesState(notes);
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      }
+    };
+
+    initialize();
+  }, []);
 
   useEffect(() => {
     const selectedDarkText =
@@ -90,31 +157,17 @@ const App: React.FC = () => {
     }
   }, [checkedFirstTime, history]);
 
-  const { HandleImportData } = useImportDav(setNotesState);
+  async function styleStatusBar(darkMode: boolean) {
+    StatusBar.setStyle({ style: darkMode ? Style.Dark : Style.Light });
 
-  useEffect(() => {
-    const handleSync = () => {
-      const syncValue = localStorage.getItem("sync");
+    if (Capacitor.getPlatform() === "android") {
+      await StatusBar.setBackgroundColor({
+        color: darkMode ? "#232222" : "#FFFFFF",
+      });
+    }
+  }
 
-      if (syncValue === "dropbox") {
-        const dropboxImport = new CustomEvent("dropboxImport");
-        document.dispatchEvent(dropboxImport);
-      } else if (syncValue === "webdav") {
-        HandleImportData(); // now safely called
-      } else if (syncValue === "iCloud") {
-        const iCloudImport = new CustomEvent("iCloudImport");
-        document.dispatchEvent(iCloudImport);
-      } else if (syncValue === "googledrive") {
-        const driveImport = new CustomEvent("driveImport");
-        document.dispatchEvent(driveImport);
-      } else if (syncValue === "onedrive") {
-        const onedriveImport = new CustomEvent("onedriveImport");
-        document.dispatchEvent(onedriveImport);
-      }
-    };
-
-    handleSync();
-  }, [HandleImportData]);
+  styleStatusBar(darkMode).catch(console.error);
 
   const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
 
@@ -178,29 +231,12 @@ const App: React.FC = () => {
     location.pathname.startsWith(path)
   );
 
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
-  if (isIpad) {
+  if (isPlatform("ipad")) {
     Keyboard.setResizeMode({ mode: KeyboardResize.None });
-  } else {
+  } else if (!isPlatform("android")) {
     Keyboard.setResizeMode({ mode: KeyboardResize.Native });
   }
-  
+
   return (
     <div>
       <div className="safe-area"></div>
@@ -211,96 +247,76 @@ const App: React.FC = () => {
           redirect_uri: window.location.origin,
         }}
       >
-        <TransitionGroup>
-          <CSSTransition
-            key={location.pathname}
-            timeout={0}
-            classNames={isSwipe ? "fade" : ""}
-            onExited={() => setIsSwipe(false)}
-            unmountOnExit
-          >
-            <Routes location={location}>
-              <Route
-                path="/"
-                element={
-                  <Home notesState={notesState} setNotesState={setNotesState} />
-                }
+        <Routes location={location}>
+          <Route
+            path="/"
+            element={
+              <Home notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/archive"
+            element={
+              <Archive notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <Settings
+                themeMode={themeMode}
+                setThemeMode={setThemeMode}
+                toggleTheme={toggleTheme}
+                setAutoMode={setAutoMode}
+                darkMode={darkMode}
               />
-              <Route
-                path="/archive"
-                element={
-                  <Archive
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
+            }
+          />
+          <Route path="/about" element={<About />} />
+          <Route
+            path="/dropbox"
+            element={
+              <Dropbox
+                notesState={notesState}
+                setNotesState={setNotesState}
+                themeMode={themeMode}
+                darkMode={darkMode}
               />
-              <Route
-                path="/settings"
-                element={
-                  <Settings
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-              <Route path="/about" element={<About />} />
-              <Route
-                path="/dropbox"
-                element={
-                  <Dropbox
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-              <Route
-                path="/onedrive"
-                element={<Onedrive setNotesState={setNotesState} />}
-              />
-              <Route
-                path="/webdav"
-                element={
-                  <Webdav
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-              <Route
-                path="/icloud"
-                element={
-                  <Icloud
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-              <Route
-                path="/gdrive"
-                element={<Gdrive setNotesState={setNotesState} />}
-              />
-              <Route path="/onedrive" element={<Welcome />} />
-              <Route path="/shortcuts" element={<Shortcuts />} />
-              <Route path="/welcome" element={<Welcome />} />
-              <Route
-                path="/sync"
-                element={
-                  <Sync notesState={notesState} setNotesState={setNotesState} />
-                }
-              />
-              <Route
-                path="/editor/:note"
-                element={
-                  <Editor
-                    notesState={notesState}
-                    setNotesState={setNotesState}
-                  />
-                }
-              />
-            </Routes>
-          </CSSTransition>
-        </TransitionGroup>
+            }
+          />
+          <Route
+            path="/onedrive"
+            element={<Onedrive setNotesState={setNotesState} />}
+          />
+          <Route
+            path="/dav"
+            element={
+              <Dav notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/icloud"
+            element={
+              <Icloud notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route path="/drive" element={<Drive />} />
+          <Route path="/shortcuts" element={<Shortcuts />} />
+          <Route path="/icons" element={<Icons />} />
+          <Route path="/welcome" element={<Welcome />} />
+          <Route
+            path="/sync"
+            element={
+              <Sync notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+          <Route
+            path="/editor/:note"
+            element={
+              <Editor notesState={notesState} setNotesState={setNotesState} />
+            }
+          />
+        </Routes>
       </Auth0Provider>
       <CommandPrompt
         setIsCommandPromptOpen={setIsCommandPromptOpen}

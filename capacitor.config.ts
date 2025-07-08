@@ -6,9 +6,9 @@ const config: CapacitorConfig = {
   webDir: "dist",
   plugins: {
     SplashScreen: {
-      launchShowDuration: 3000,
-      launchAutoHide: true,
-      launchFadeOutDuration: 3000,
+      launchShowDuration: 300,
+      launchAutoHide: false,
+      launchFadeOutDuration: 300,
       backgroundColor: "#ffffffff",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
@@ -22,8 +22,15 @@ const config: CapacitorConfig = {
       useDialog: true,
     },
     GoogleAuth: {
-      scopes: ["profile", "email", "https://www.googleapis.com/auth/drive"],
-      serverClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID,
+      clientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID, // Web app client ID (browser use)
+      iosClientId: process.env.VITE_IOS_GOOGLE_CLIENT_ID, // iOS client ID
+      androidClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID, // Android client ID
+      servserverClientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID, // Android client ID
+      scopes: [
+        "profile",
+        "email",
+        "https://www.googleapis.com/auth/drive.file",
+      ],
       forceCodeForRefreshToken: true,
     },
     Keyboard: {

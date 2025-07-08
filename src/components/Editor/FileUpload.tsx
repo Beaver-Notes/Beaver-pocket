@@ -62,7 +62,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
           try {
             await Filesystem.writeFile({
               path: filePath,
-              data: fileDataUrl.split(',')[1], // Write only base64 data
+              data: fileDataUrl.split(",")[1], // Write only base64 data
               directory: FilesystemDirectory.Data,
               recursive: true,
             });
@@ -91,12 +91,12 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
       {menu ? (
         <div
           className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
-          aria-label={translations.menuItems?.fileLabel || "Upload File"} // Use fallback
+          aria-label={translations.menu.file || "Upload File"}
         >
           <label
             htmlFor="file-upload-input"
             className="flex items-center cursor-pointer"
-            aria-label={translations.menuItems?.fileDescription || "Upload a file"} // Use fallback
+            aria-label={translations.menu.file || "Upload a file"}
           >
             {/* Icon */}
             <icons.FileIcon
@@ -110,11 +110,8 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
                 className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]"
                 aria-hidden="true" // Hidden from screen readers
               >
-                {translations.menuItems?.fileLabel || "Upload File"} // Fallback
+                {translations.menu.file || "Upload File"}
               </h3>
-              <p className="text-sm text-neutral-500" aria-hidden="true"> {/* Hidden from screen readers */}
-                {translations.menuItems?.fileDescription || "Choose a file to upload"} // Fallback
-              </p>
             </div>
           </label>
 
@@ -124,20 +121,20 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             onChange={handleFileChange}
             id="file-upload-input"
             className="hidden"
-            aria-label={translations.accessibility?.fileUploadInput || "Upload a file"} // Use fallback
+            aria-label={translations.menu.file || "Upload a file"} // Use fallback
           />
         </div>
       ) : (
         <div
-          className="flex items-center justify-between sm:p-2 md:p-2 p-1 rounded-md sm:text-white bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
-          aria-label={translations.accessibility?.fileUpload || "Upload File"} // Use fallback
+          className="flex items-center justify-between p-1 rounded-md  bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+          aria-label={translations.menu.file || "Upload File"} // Use fallback
         >
           <label
             htmlFor="file-upload-input"
-            aria-label={translations.menuItems?.fileLabel || "Upload File"} // Use fallback
+            aria-label={translations.menu.file || "Upload File"} // Use fallback
           >
             <icons.FileIcon
-              className="sm:text-white text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 sm:w-7 md:w-7 sm:h-7 md:h-7 cursor-pointer"
+              className=" text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7 cursor-pointer"
               aria-hidden="true"
             />
           </label>
@@ -146,7 +143,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             onChange={handleFileChange}
             id="file-upload-input"
             className="hidden"
-            aria-label={translations.accessibility?.fileUploadInput || "Upload a file"} // Use fallback
+            aria-label={translations.menu.file || "Upload a file"} // Use fallback
           />
         </div>
       )}

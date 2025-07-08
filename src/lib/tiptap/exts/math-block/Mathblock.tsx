@@ -9,6 +9,7 @@ import {
   DialogTitle,
   Transition,
 } from "@headlessui/react";
+import Icons from "../../../remixicon-react";
 
 interface MathBlockProps extends NodeViewWrapperProps {
   updateAttributes: (attributes: Record<string, any>) => void;
@@ -134,7 +135,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
       disableKatex: "accessibility.disableKatex",
       enableKatex: "accessibility.enableKatex",
       close: "accessibility.close",
-    }
+    },
   });
 
   useEffect(() => {
@@ -166,7 +167,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
           ref={contentRef}
           contentEditable={useKatexMacros}
           suppressContentEditableWarning
-          className="break-words whitespace-pre-wrap"
+          className="overflow-x-auto whitespace-pre-wrap break-words text-wrap max-w-full katex-block"
         />
       </div>
       <Transition show={showModal} as={React.Fragment}>
@@ -190,7 +191,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
             >
               <DialogPanel
                 ref={dialogPanelRef}
-                className="relative w-full landscape:w-2/4 portrait:w-4/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
+                className="relative w-full landscape:w-2/4 portrait:w-5/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -219,22 +220,22 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                         useKatexMacros ? "text-primary" : ""
                       } ${
                         showSecondTextarea
-                          ? "text-amber-400"
+                          ? "text-primary"
                           : "text-neutral-800 dark:text-white"
                       }`}
                       onClick={toggleSecondTextarea}
                     >
                       <Settings4LineIcon
-                        className="active:text-amber-500"
+                        className="active:text-secondary"
                         aria-hidden="true"
                       />
                     </button>
                     <button
                       onClick={closeModal}
-                      className="text-amber-400 hover:text-gray-700 focus:outline-none"
+                      className="text-neutral-800 dark:text-[color:var(--selected-dark-text)]  bg-neutral-200 rounded-full hover:text-gray-700 focus:outline-none"
                       aria-label={translations.accessibility.close}
                     >
-                      {translations.editor.close || "-"}
+                      <Icons.CloseLineIcon />
                     </button>
                   </div>
                 </div>
