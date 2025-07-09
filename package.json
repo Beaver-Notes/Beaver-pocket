@@ -116,8 +116,8 @@
     "prosemirror-state": "^1.4.3",
     "prosemirror-utils": "^1.2.2",
     "puppeteer": "^21.6.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-portal-overlay": "^1.1.0",
     "react-router-dom": "^6.21.0",
     "react-swipeable": "^7.0.1",
@@ -149,5 +149,8 @@
     "typescript": "^5.3.3",
     "vite": "^5.2.11",
     "vite-plugin-mkcert": "^1.17.5"
+  },
+  "resolutions": {
+    "@types/react": "18.2.45"
   }
 }

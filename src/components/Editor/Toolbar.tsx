@@ -797,25 +797,26 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </>
         )}
       </div>
-      {showFind &&
-        createPortal(
-          <div
-            ref={FindRef}
-            className="absolute p-1"
-            style={{
-              top: FindPosition.top,
-              left: FindPosition.left,
-              zIndex: 1000,
-            }}
-          >
-            <div className="fixed inset-x-0 flex justify-center">
-              <div className="w-full px-4 sm:px-10 md:px-20 lg:px-60">
-                {showFind && <Find editor={editor} setShowFind={setShowFind} />}
+      {showFind
+        ? createPortal(
+            <div
+              ref={FindRef}
+              className="absolute p-1"
+              style={{
+                top: FindPosition.top,
+                left: FindPosition.left,
+                zIndex: 1000,
+              }}
+            >
+              <div className="fixed inset-x-0 flex justify-center">
+                <div className="w-full px-4 sm:px-10 md:px-20 lg:px-60">
+                  <Find editor={editor} setShowFind={setShowFind} />
+                </div>
               </div>
-            </div>
-          </div>,
-          document.body
-        )}
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 };
