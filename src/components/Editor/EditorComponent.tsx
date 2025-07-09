@@ -16,7 +16,7 @@ import { useNotesState } from "../../store/Activenote";
 import Icons from "../../lib/remixicon-react";
 import Mousetrap from "mousetrap";
 import { WebviewPrint } from "capacitor-webview-print";
-import { uselabelStore } from "../../store/label";
+import { useLabelStore } from "../../store/label";
 import { cleanEmptyParagraphs } from "../../utils/editor";
 
 type Props = {
@@ -48,7 +48,7 @@ function EditorComponent({
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
   const [sortingOption] = useState("updatedAt");
-  const labelStore = uselabelStore();
+  const labelStore = useLabelStore();
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {

@@ -1,6 +1,6 @@
 import icons from "../../lib/remixicon-react";
 import { useEffect, useState } from "react";
-import { uselabelStore } from "../../store/label";
+import { useLabelStore } from "../../store/label";
 import { useSearchParams } from "react-router-dom";
 
 interface SearchBarProps {
@@ -19,7 +19,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const urlLabel = searchParams.get("label");
   const [selectedLabel, setSelectedLabel] = useState(urlLabel || "");
-  const labelStore = uselabelStore();
+  const labelStore = useLabelStore();
   const labels = labelStore.labels;
   const [translations, setTranslations] = useState({
     filter: {
