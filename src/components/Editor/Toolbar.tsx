@@ -9,7 +9,7 @@ import { Keyboard } from "@capacitor/keyboard";
 import FileUploadComponent from "./FileUpload";
 import AudioUploadComponent from "./AudioUpload";
 import VideoUploadComponent from "./VideoUpload";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Popover from "../UI/Popover";
 import Mousetrap from "mousetrap";
 import Find from "./Find";
@@ -51,7 +51,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const searchRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const FindRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   const [translations, setTranslations] = useState<Record<string, any>>({
     editor: {},
@@ -240,24 +239,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
     };
   }, []);
 
-  const goBack = () => {
-    navigate("/");
-  };
-
   const draw = [
     {
       label: translations.menu.drawingBlock,
       active: "paper",
       icon: <icons.Brush2Fill className="border-none text-xl w-7 h-7" />,
       action: (editor: any) => editor?.chain().focus().insertPaper().run(),
-    },
-  ];
-
-  const back = [
-    {
-      label: translations.accessibility.back,
-      icon: <icons.ArrowLeftLineIcon className="border-none text-xl w-7 h-7" />,
-      action: goBack,
     },
   ];
 
@@ -346,7 +333,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   return (
     <div
-      className={`print:hidden fixed z-20 pointer-events-none bg-white dark:bg-[#232222] dark:text-[color:var(--selected-dark-text)] mx-2 transition overflow-auto no-scrollbar flex justify-center items-center
+      className={`print:hidden fixed z-20 bg-white dark:bg-[#232222] dark:text-[color:var(--selected-dark-text)] mx-2 transition overflow-auto no-scrollbar flex justify-center items-center
     ${focusMode ? "opacity-0 hover:opacity-100" : ""}
     ${isKeyboardVisible ? "pb-2 sm:pb-0" : "pb-5 sm:pb-0"}
     sm:pt-6 left-0 right-0 bottom-0 sm:bottom-auto`}
@@ -354,17 +341,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <div className="flex items-center justify-center sm:border-b sm:dark:border-b-neutral-600 whitespace-nowrap w-max">
         {/* Back button */}
         <div className="hidden sm:flex items-center">
-          {back.map((item) => (
-            <button
-              key={item.label}
-              className="p-1 dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
-              onMouseDown={handleMouseDown}
-              onClick={() => item.action()}
-              aria-label={item.label}
-            >
-              {item.icon}
-            </button>
-          ))}
+          <Link
+            to="/"
+            className="p-1 dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+            aria-label={translations.accessibility.back}
+          >
+            <icons.ArrowLeftLineIcon className="border-none text-xl w-7 h-7" />
+          </Link>
         </div>
         <div className="sm:hidden flex items-center">
           <button
