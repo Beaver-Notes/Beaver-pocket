@@ -36,7 +36,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install app dependencies
-        run: yarn install --frozen-lockfile --verbose
+        run: yarn install --frozen-lockfile
 
       - name: Build Svelte app
         run: yarn build
