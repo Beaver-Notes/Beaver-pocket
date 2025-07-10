@@ -22,7 +22,7 @@ jobs:
           java-version: "17"
 
       - name: Install unzip (required by setup-android when using act)
-        run: apt-get update && apt-get install -y unzip
+        run: sudo apt-get update && sudo apt-get install -y unzip
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
