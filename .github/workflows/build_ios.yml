@@ -10,6 +10,7 @@ jobs:
   build:
     runs-on: macos-latest
     name: Build iOS app
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -52,28 +53,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Cache yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/yarn
-            node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          cache: "yarn"
 
       - name: Install app dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build project app
+      - name: Install app dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build project
         run: yarn build
 
-      - name: Capacitor update
-        run: npx cap update
-
-      - name: Capacitor copy
-        run: npx cap copy
+      - name: Capacitor sync
+        run: npx cap sync
 
       - name: Build project
         run: xcodebuild -workspace './ios/App/App.xcworkspace' -scheme App -destination generic/platform=iOS -archivePath App.xcarchive archive

@@ -3,7 +3,7 @@ import enTranslations from "./assets/locales/en.json";
 import deTranslations from "./assets/locales/de.json";
 import { useNavigate } from "react-router-dom";
 import Icons from "./lib/remixicon-react";
-import { isPlatform } from "@ionic/react";
+import { Capacitor } from "@capacitor/core";
 import { useTranslation } from "./utils/translations";
 
 interface SettingsProps {
@@ -20,6 +20,7 @@ const Settings: React.FC<SettingsProps> = ({
   toggleTheme,
   setAutoMode,
 }) => {
+  const platform = Capacitor.getPlatform();
   const navigate = useNavigate();
   const [translations, setTranslations] = useState<Record<string, any>>({
     settings: {},
@@ -390,7 +391,7 @@ const Settings: React.FC<SettingsProps> = ({
                       onClick={() => navigate("/icons")}
                       aria-label={translations.settings.Shortcuts || "-"}
                       className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center ${
-                        isPlatform("android") ? "hidden" : ""
+                        platform === "android" ? "hidden" : ""
                       }`}
                     >
                       <Icons.Brush2Fill className="w-6 h-6 mr-2" />

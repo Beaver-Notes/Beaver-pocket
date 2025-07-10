@@ -10,53 +10,56 @@ jobs:
   build:
     name: Build APK
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: "zulu"
+          java-version: "17"
+
+      - name: Install unzip (required by setup-android when using act)
+        run: apt-get update && apt-get install -y unzip
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 11479570
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Cache yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/yarn
-            node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          cache: "yarn"
 
       - name: Install app dependencies
-        run: yarn install --frozen-lockfile --verbose
+        run: yarn install --frozen-lockfile
 
-      - name: Build Svelte app
+      - name: Build project
         run: yarn build
 
-      - name: Capacitor update
-        run: npx cap update
-
-      - name: Capacitor copy
-        run: npx cap copy
-
-      - name: Build app bundle
-        run: cd android && ./gradlew bundle
+      - name: Capacitor sync
+        run: npx cap sync
 
       - name: Extract Android signing key from env
+        env:
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
         run: |
-          echo "${{ secrets.RELEASE_KEYSTORE }}" > android/release.jks.base64
-          base64 -d android/release.jks.base64 > android/release.decrypted.jks
+          echo "${{ secrets.RELEASE_KEYSTORE }}" > android/app/release.jks.base64
+          base64 -d android/app/release.jks.base64 > android/app/release.jks
 
-      - name: Sign dev build
-        run: jarsigner -keystore android/release.decrypted.jks -storepass "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" -signedjar ./android/app/build/outputs/bundle/release/app-release-signed.aab ./android/app/build/outputs/bundle/release/app-release.aab release
+      - name: Build app bundle
+        env:
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          ONEDRIVE_SHA1: ${{ secrets.ONEDRIVE_SHA1 }}
+          ANDROID_HOME: ${{ env.ANDROID_HOME }} # Redundant but explicit
+        run: cd android && ./gradlew bundleRelease
 
       - name: Upload release bundle
         uses: actions/upload-artifact@v4

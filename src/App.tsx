@@ -25,7 +25,6 @@ import { loadNotes } from "./store/notes";
 import { useNotesState } from "./store/Activenote";
 import Mousetrap from "mousetrap";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
-import { isPlatform } from "@ionic/react";
 import Icons from "./components/Settings/icons";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
@@ -39,6 +38,14 @@ import useDriveSync from "./utils/Google Drive/GoogleDriveSync";
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const platform = Capacitor.getPlatform();
+  function isIPad(): boolean {
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const isModernIPad =
+      navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+
+    return /iPad/.test(ua) || isModernIPad;
+  }
   const [checkedFirstTime, setCheckedFirstTime] = useState(false);
   const { notesState, setNotesState } = useNotesState();
   const { syncDropbox } = useDropboxSync(setNotesState);
@@ -231,9 +238,9 @@ const App: React.FC = () => {
     location.pathname.startsWith(path)
   );
 
-  if (isPlatform("ipad")) {
+  if (isIPad()) {
     Keyboard.setResizeMode({ mode: KeyboardResize.None });
-  } else if (!isPlatform("android")) {
+  } else if (platform !== "android") {
     Keyboard.setResizeMode({ mode: KeyboardResize.Native });
   }
 
