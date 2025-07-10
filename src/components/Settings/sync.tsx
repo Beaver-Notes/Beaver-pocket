@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { isPlatform } from "@ionic/react";
+import { Capacitor } from "@capacitor/core";
 import { Note } from "../../store/types";
 import dayjs from "dayjs";
 import { useExportData } from "../../utils/exportUtils";
@@ -15,7 +15,7 @@ interface SyncProps {
 }
 
 const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
-  // Correctly destructuring props
+  const platform = Capacitor.getPlatform();
   const { exportUtils } = useExportData();
   const { importUtils } = useHandleImportData();
   const navigate = useNavigate();
@@ -164,7 +164,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
 
                   <button
                     className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center ${
-                      isPlatform("android") ? "hidden" : ""
+                      platform === "android" ? "hidden" : ""
                     }`}
                     onClick={() => navigate("/icloud")}
                     aria-label="iCloud"

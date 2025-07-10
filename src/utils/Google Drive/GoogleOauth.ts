@@ -1,6 +1,6 @@
+import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { isPlatform } from "@ionic/react";
 import { GoogleDriveAPI } from "./GoogleDriveAPI";
 
 const IOS_CLIENT_ID = import.meta.env.VITE_IOS_GOOGLE_CLIENT_ID;
@@ -13,9 +13,11 @@ class DriveService {
   async initialize(): Promise<void> {
     let clientId = "";
 
-    if (isPlatform("ios")) {
+    const platform = Capacitor.getPlatform();
+
+    if (platform === "ios") {
       clientId = IOS_CLIENT_ID;
-    } else if (isPlatform("android")) {
+    } else if (platform === "android") {
       clientId = ANDROID_CLIENT_ID;
     } else {
       throw new Error("Unsupported platform");
@@ -43,7 +45,7 @@ class DriveService {
   getAccessToken(): string | null {
     return this.accessToken;
   }
-  
+
   async signOut(): Promise<void> {
     await GoogleAuth.signOut();
     await SecureStoragePlugin.remove({ key: "access_token" });
