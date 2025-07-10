@@ -7,35 +7,35 @@ PODS:
   - AppAuth/Core (1.7.5)
   - AppAuth/ExternalUserAgent (1.7.5):
     - AppAuth/Core
-  - Capacitor (6.2.0):
+  - Capacitor (6.2.1):
     - CapacitorCordova
   - CapacitorApp (6.0.2):
     - Capacitor
-  - CapacitorBrowser (6.0.4):
+  - CapacitorBrowser (6.0.5):
     - Capacitor
   - CapacitorCommunityAppIcon (5.0.0):
     - Capacitor
-  - CapacitorCordova (6.2.0)
+  - CapacitorCordova (6.2.1)
   - CapacitorDevice (6.0.2):
     - Capacitor
   - CapacitorFilesystem (6.0.2):
     - Capacitor
-  - CapacitorHaptics (6.0.1):
+  - CapacitorHaptics (6.0.2):
     - Capacitor
-  - CapacitorKeyboard (6.0.2):
+  - CapacitorKeyboard (6.0.3):
     - Capacitor
   - CapacitorNativeBiometric (0.0.1):
     - Capacitor
-  - CapacitorPreferences (6.0.2):
+  - CapacitorPreferences (6.0.3):
     - Capacitor
   - CapacitorSecureStoragePlugin (0.10.0):
     - Capacitor
     - SwiftKeychainWrapper
-  - CapacitorShare (6.0.2):
+  - CapacitorShare (6.0.3):
     - Capacitor
-  - CapacitorSplashScreen (6.0.2):
+  - CapacitorSplashScreen (6.0.3):
     - Capacitor
-  - CapacitorStatusBar (6.0.1):
+  - CapacitorStatusBar (6.0.2):
     - Capacitor
   - CapacitorVoiceRecorder (5.0.0):
     - Capacitor
@@ -58,10 +58,10 @@ PODS:
   - MSAL (1.2.5):
     - MSAL/app-lib (= 1.2.5)
   - MSAL/app-lib (1.2.5)
-  - RecognizebvCapacitorPluginMsauth (3.6.0):
+  - RecognizebvCapacitorPluginMsauth (3.6.3):
     - Capacitor
     - MSAL (~> 1.1)
-  - SendIntent (6.0.2):
+  - SendIntent (6.0.3):
     - Capacitor
   - SSZipArchive (2.4.3)
   - SwiftKeychainWrapper (4.0.1)
@@ -149,21 +149,21 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AashuDubeyCapacitorStatusbarSafeArea: a33a5d9dd9f08c0aa68e7ee6c261767c67694a9a
   AppAuth: 501c04eda8a8d11f179dbe8637b7a91bb7e5d2fa
-  Capacitor: 05d35014f4425b0740fc8776481f6a369ad071bf
+  Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
   CapacitorApp: e1e6b7d05e444d593ca16fd6d76f2b7c48b5aea7
-  CapacitorBrowser: 3413e46a583b6edc3f20448732a531078d6924c6
+  CapacitorBrowser: b468ac2db928e594b4d319727f3874743f9bcf96
   CapacitorCommunityAppIcon: 8b88021902a5c3e9d836a69348e286104d61aaea
-  CapacitorCordova: b33e7f4aa4ed105dd43283acdd940964374a87d9
+  CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
   CapacitorDevice: 9efd479d71d1baad74b75df531184c3f730eaa48
   CapacitorFilesystem: a6b43788d8f9489fc95fb761f3d0d37d0bceaddf
-  CapacitorHaptics: 05d33e20e394b1977dfd2a00a2621e04098164c1
-  CapacitorKeyboard: 5bf4458dd989b56a60ea15c92cbca5fbfae6e9f9
+  CapacitorHaptics: 4fc15afe22b123d093e6ace24d95e8e3b1f261b9
+  CapacitorKeyboard: e89189ad398b815b6ff7e52271f0fb4f911a0a0a
   CapacitorNativeBiometric: 78cf21304251a512e4597437325b5e9b0cd9f7b3
-  CapacitorPreferences: 997d375b1962f98511e8b3d27a24d90cb8ca87fe
+  CapacitorPreferences: f3eadae2369ac3ab8e21743a2959145b0d1286a3
   CapacitorSecureStoragePlugin: 545b51d782d35e61a39231ecf99a966b060a2cbb
-  CapacitorShare: 5d49f1b220e991372b4d5d34be9a6080a042bae4
-  CapacitorSplashScreen: b46e61cc4345d73d510530b0c845a30e3602db40
-  CapacitorStatusBar: 9ed7f06318fd436917072a9bf60fda56d12c8bdb
+  CapacitorShare: d2a742baec21c8f3b92b361a2fbd2401cdd8288e
+  CapacitorSplashScreen: fd8bf1bf9081d9aa8817b7cd37d740d1bdaf2fb2
+  CapacitorStatusBar: b16799a26320ffa52f6c8b01737d5a95bbb8f3eb
   CapacitorVoiceRecorder: d07f0794998ff8c9a6ca3debd70070b286f70cb1
   CapacitorWebviewPrint: f17e654a2ff99367a429c9e01b62ddbdcf62c45d
   CapaZip: a379d937c2db9a882d0be29e63dcb0090e6cd6ae
@@ -172,8 +172,8 @@ SPEC CHECKSUMS:
   GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
   GTMSessionFetcher: 3a63d75eecd6aa32c2fc79f578064e1214dfdec2
   MSAL: 5149daaa19228c2c27d81987634da15b50981cef
-  RecognizebvCapacitorPluginMsauth: 2a861c981426c9354bb22cb987e4768153bb2b15
-  SendIntent: 79fd252e2477951566ac7f60c91195e686e4c9b4
+  RecognizebvCapacitorPluginMsauth: d49e9ada44f0423af62bec31a2a40dcc4e7c63f2
+  SendIntent: 20ca8a9cb829cfc599b1a01c4663bff2890ba452
   SSZipArchive: fe6a26b2a54d5a0890f2567b5cc6de5caa600aef
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
 
