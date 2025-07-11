@@ -8,7 +8,7 @@
         <key>provisioningProfiles</key>
         <dict>
             <key>beaver.notes.pocket</key>
-            <string>GitHub Actions</string>
+            <string>Github Actions</string>
             <key>beaver.notes.pocket.share</key>
             <string>Github CI Share</string>
         </dict>
