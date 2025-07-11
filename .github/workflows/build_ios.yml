@@ -59,7 +59,7 @@ jobs:
           security import certificate.p12 -k ios-build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" ios-build.keychain
 
-      - name: Install PODS
+      - name: Install Pods
         run: |
           cd ios/App
           pod install
