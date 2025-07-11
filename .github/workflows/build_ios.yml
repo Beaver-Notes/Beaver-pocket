@@ -60,7 +60,9 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" ios-build.keychain
 
       - name: Install PODS
-        run: pod install
+        run: |
+          cd ios/App
+          pod install
 
       - name: Build archive with xcodebuild
         run: |
