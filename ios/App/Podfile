@@ -31,13 +31,12 @@ def capacitor_pods
 end
 
 target 'App' do
-  use_frameworks! # ✅ Only inside the app target
+  use_frameworks!
   capacitor_pods
 
-  # Optional: If you have a Share Extension target defined
   target 'share' do
     inherit! :search_paths
-    # ❌ No use_frameworks! here!
+    use_frameworks! false
   end
 end
 
