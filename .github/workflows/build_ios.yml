@@ -10,10 +10,11 @@ jobs:
   build:
     runs-on: macos-latest
     env:
-      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-      APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
-      APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APPSTORE_API_KEY_CONTENT }}
-    name: Build iOS app
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+      BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+      BUILD_PROVISION_PROFILE_SHARE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_SHARE_BASE64 }}
+      BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
 
     steps:
       - name: Checkout source
@@ -28,36 +29,52 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "yarn"
+          cache: yarn
 
       - name: Install app dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Install app dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build project
+      - name: Build project (JS/TS)
         run: yarn build
 
       - name: Capacitor sync
         run: npx cap sync
 
-      - name: Build project
+      - name: Install main provisioning profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$BUILD_PROVISION_PROFILE_BASE64" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
+
+      - name: Install share extension provisioning profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$BUILD_PROVISION_PROFILE_SHARE_BASE64" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/build_share.mobileprovision
+
+      - name: Install signing certificate
+        run: |
+          echo "$BUILD_CERTIFICATE_BASE64" | base64 -d > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" ios-build.keychain
+          security default-keychain -s ios-build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" ios-build.keychain
+          security import certificate.p12 -k ios-build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" ios-build.keychain
+
+      - name: Build archive with xcodebuild
         run: |
           xcodebuild -workspace './ios/App/App.xcworkspace' \
-          -scheme App \
-          -destination generic/platform=iOS \
-          -archivePath App.xcarchive \
-          -allowProvisioningUpdates \
-          archive
+            -scheme App \
+            -destination 'generic/platform=iOS' \
+            -archivePath App.xcarchive \
+            -allowProvisioningUpdates \
+            archive
 
-      - name: 🍻 Assemble IPA
+      - name: Export IPA
         run: |
           xcodebuild -exportArchive \
-          -archivePath App.xcarchive \
-          -exportOptionsPlist ./archive.plist \
-          -exportPath output \
-          -allowProvisioningUpdates
+            -archivePath App.xcarchive \
+            -exportOptionsPlist ./archive.plist \
+            -exportPath output \
+            -allowProvisioningUpdates
 
       - name: Upload release bundle
         uses: actions/upload-artifact@v4
@@ -66,10 +83,10 @@ jobs:
           path: output/
           retention-days: 60
 
-      # For use on self-hosted runners, see
-      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      # Optional: Cleanup keychain after build (uncomment if needed)
       #- name: Clean up keychain and provisioning profile
       #  if: ${{ always() }}
       #  run: |
-      #    security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
+      #    security delete-keychain ios-build.keychain
       #    rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
+      #    rm ~/Library/MobileDevice/Provisioning\ Profiles/build_share.mobileprovision
