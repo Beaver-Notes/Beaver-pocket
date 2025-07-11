@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" 
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-<key>method</key>
-<string>app-store</string>
-<key>provisioningProfiles</key>
-<dict>
-    <key>beaver.notes.pocket</key>
-    <string>GitHub Actions</string>
-</dict>
-</dict>
+    <dict>
+        <key>method</key>
+        <string>app-store</string>
+        <key>provisioningProfiles</key>
+        <dict>
+            <key>beaver.notes.pocket</key>
+            <string>GitHub Actions</string>
+            <key>beaver.notes.pocket.share</key>
+            <string>Github CI Share</string>
+        </dict>
+        <key>signingStyle</key>
+        <string>manual</string>
+        <key>stripSwiftSymbols</key>
+        <true/>
+        <key>compileBitcode</key>
+        <true/>
+    </dict>
 </plist>
