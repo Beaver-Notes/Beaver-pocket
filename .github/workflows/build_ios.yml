@@ -73,8 +73,7 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath App.xcarchive \
             -exportOptionsPlist ./archive.plist \
-            -exportPath output \
-            -allowProvisioningUpdates
+            -exportPath output 
 
       - name: Upload release bundle
         uses: actions/upload-artifact@v4
