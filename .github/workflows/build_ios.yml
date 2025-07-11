@@ -59,6 +59,9 @@ jobs:
           security import certificate.p12 -k ios-build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" ios-build.keychain
 
+      - name: Install PODS
+        run: pod install
+
       - name: Build archive with xcodebuild
         run: |
           xcodebuild -workspace './ios/App/App.xcworkspace' \
@@ -73,7 +76,7 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath App.xcarchive \
             -exportOptionsPlist ./archive.plist \
-            -exportPath output 
+            -exportPath output
 
       - name: Upload release bundle
         uses: actions/upload-artifact@v4
