@@ -35,11 +35,20 @@ target 'App' do
   capacitor_pods
 
   target 'share' do
+    use_frameworks!
     inherit! :search_paths
-    use_frameworks! false
   end
 end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
+
+  installer.pods_project.targets.each do |target|
+    if target.name == 'share'
+      target.build_configurations.each do |config|
+        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
+        config.build_settings['LD_RUNPATH_SEARCH_PATHS'] = ['$(inherited)', '@executable_path/Frameworks']
+      end
+    end
+  end
 end
