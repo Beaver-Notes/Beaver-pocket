@@ -12,83 +12,47 @@
 	<dict>
 		<key>CFBundleAlternateIcons</key>
 		<dict>
-			<key>christmas</key>
+			<key>Dev</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
 				<array>
-					<string>christmas</string>
+					<string>Dev</string>
 				</array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
-			<key>deer</key>
+			<key>Matte</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
 				<array>
-					<string>deer</string>
+					<string>Matte</string>
 				</array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
-			<key>gift-green</key>
+			<key>Rainbow</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
 				<array>
-					<string>gift-green</string>
+					<string>Rainbow</string>
 				</array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
-			<key>gift-yellow</key>
+			<key>gFull</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
 				<array>
-					<string>gift-yellow</string>
+					<string>Full</string>
 				</array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
 			</dict>
-			<key>inspiration-dark</key>
+			<key>Computer</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
 				<array>
-					<string>inspiration-dark</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>inspiration-light</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>inspiration-light</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>inspiration-matte</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>inspiration-matte</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>inspiration-rainbow-dark</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>inspiration-rainbow-dark</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>inspiration-rainbow-light</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>inspiration-rainbow-light</string>
+					<string>Computer</string>
 				</array>
 				<key>UIPrerenderedIcon</key>
 				<false/>
