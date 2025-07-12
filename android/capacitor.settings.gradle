@@ -38,8 +38,8 @@ project(':capacitor-splash-screen').projectDir = new File('../node_modules/@capa
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacitor/status-bar/android')
 
-include ':codetrix-studio-capacitor-google-auth'
-project(':codetrix-studio-capacitor-google-auth').projectDir = new File('../node_modules/@codetrix-studio/capacitor-google-auth/android')
+include ':daniele-rolli-capacitor-google-auth'
+project(':daniele-rolli-capacitor-google-auth').projectDir = new File('../node_modules/@daniele-rolli/capacitor-google-auth/android')
 
 include ':recognizebv-capacitor-plugin-msauth'
 project(':recognizebv-capacitor-plugin-msauth').projectDir = new File('../node_modules/@recognizebv/capacitor-plugin-msauth/android')

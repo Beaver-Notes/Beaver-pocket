@@ -30,7 +30,7 @@
     "@capacitor/share": "^6.0.0",
     "@capacitor/splash-screen": "^6.0.0",
     "@capacitor/status-bar": "^6.0.0",
-    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
+    "@daniele-rolli/capacitor-google-auth": "^3.4.0-rc.5",
     "@headlessui/react": "^2.1.1",
     "@recognizebv/capacitor-plugin-msauth": "^3.6.0",
     "@sereneinserenade/tiptap-search-and-replace": "^0.1.1",

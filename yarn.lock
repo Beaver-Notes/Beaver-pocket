@@ -1176,11 +1176,6 @@
   resolved "https://registry.yarnpkg.com/@capacitor/status-bar/-/status-bar-6.0.2.tgz#a28a46630af1677f3e9c73f0e6921431d5340152"
   integrity sha512-AmRIX6QvFemItlY7/69ARkIAqitRQqJ2qwgZmD1KqgFb78pH+XFXm1guvS/a8CuOOm/IqZ4ddDbl20yxtBqzGA==
 
-"@codetrix-studio/capacitor-google-auth@^3.4.0-rc.4":
-  version "3.4.0-rc.4"
-  resolved "https://registry.yarnpkg.com/@codetrix-studio/capacitor-google-auth/-/capacitor-google-auth-3.4.0-rc.4.tgz#bcc4471f7f4fdfc3d2bd5000600cd5ed4979872b"
-  integrity sha512-d548/xKrbMHHbzMYSWnlgZCLZYo2zzY7Onrh3x8ujojrb7atkNK68I6su5WgmaBt4E+R4gxBsWams4554aOFjA==
-
 "@csstools/selector-resolve-nested@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@csstools/selector-resolve-nested/-/selector-resolve-nested-1.1.0.tgz#d872f2da402d3ce8bd0cf16ea5f9fba76b18e430"
@@ -1190,6 +1185,11 @@
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@csstools/selector-specificity/-/selector-specificity-3.1.1.tgz#63085d2995ca0f0e55aa8b8a07d69bfd48b844fe"
   integrity sha512-a7cxGcJ2wIlMFLlh8z2ONm+715QkPHiyJcxwQlKOz/03GPw1COpfhcmC9wm4xlZfp//jWHNNMwzjtqHXVWU9KA==
+
+"@daniele-rolli/capacitor-google-auth@^3.4.0-rc.5":
+  version "3.4.0-rc.5"
+  resolved "https://registry.yarnpkg.com/@daniele-rolli/capacitor-google-auth/-/capacitor-google-auth-3.4.0-rc.5.tgz#a74eac93d0741e3fa36f1940e511e393717c0d60"
+  integrity sha512-hurqUCqh/k/o3fNXZXzKiEXWzTz/0+G3bk/o9ZYQg4sed2WIH82AoxEZr21MNlyheP2/2311AZW134LU36R67Q==
 
 "@esbuild/aix-ppc64@0.21.5":
   version "0.21.5"

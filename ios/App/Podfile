@@ -22,7 +22,7 @@ def capacitor_pods
   pod 'CapacitorShare', :path => '../../node_modules/@capacitor/share'
   pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
-  pod 'CodetrixStudioCapacitorGoogleAuth', :path => '../../node_modules/@codetrix-studio/capacitor-google-auth'
+  pod 'DanieleRolliCapacitorGoogleAuth', :path => '../../node_modules/@daniele-rolli/capacitor-google-auth'
   pod 'RecognizebvCapacitorPluginMsauth', :path => '../../node_modules/@recognizebv/capacitor-plugin-msauth'
   pod 'CapaZip', :path => '../../node_modules/capa-zip'
   pod 'CapacitorNativeBiometric', :path => '../../node_modules/capacitor-native-biometric'
