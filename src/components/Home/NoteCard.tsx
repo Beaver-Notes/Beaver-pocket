@@ -5,7 +5,7 @@ import ReactDOM from "react-dom/client";
 import ModularPrompt from "../UI/Password";
 import * as CryptoJS from "crypto-js";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { NativeBiometric } from "capacitor-native-biometric";
+import { NativeBiometric } from "@capgo/capacitor-native-biometric";
 import {
   useDeleteNote,
   useToggleBookmark,

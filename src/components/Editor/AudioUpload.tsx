@@ -1,10 +1,7 @@
 import React, { useState } from "react";
-import { Plugins } from "@capacitor/core";
-import { FilesystemDirectory } from "@capacitor/filesystem";
+import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { VoiceRecorder } from "capacitor-voice-recorder";
 import icons from "../../lib/remixicon-react";
-
-const { Filesystem } = Plugins;
 
 interface FileUploadProps {
   onAudioUpload: (fileUrl: string, fileName: string) => void;

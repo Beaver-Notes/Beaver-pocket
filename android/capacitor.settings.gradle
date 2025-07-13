@@ -38,17 +38,17 @@ project(':capacitor-splash-screen').projectDir = new File('../node_modules/@capa
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacitor/status-bar/android')
 
+include ':capgo-capacitor-native-biometric'
+project(':capgo-capacitor-native-biometric').projectDir = new File('../node_modules/@capgo/capacitor-native-biometric/android')
+
 include ':daniele-rolli-capacitor-google-auth'
-project(':daniele-rolli-capacitor-google-auth').projectDir = new File('../node_modules/@daniele-rolli/capacitor-google-auth/android')
+project(':daniele-rolli-capacitor-google-auth').projectDir = new File('../../CapacitorGoogleAuth/android')
 
 include ':recognizebv-capacitor-plugin-msauth'
 project(':recognizebv-capacitor-plugin-msauth').projectDir = new File('../node_modules/@recognizebv/capacitor-plugin-msauth/android')
 
 include ':capa-zip'
 project(':capa-zip').projectDir = new File('../node_modules/capa-zip/android')
-
-include ':capacitor-native-biometric'
-project(':capacitor-native-biometric').projectDir = new File('../node_modules/capacitor-native-biometric/android')
 
 include ':capacitor-secure-storage-plugin'
 project(':capacitor-secure-storage-plugin').projectDir = new File('../node_modules/capacitor-secure-storage-plugin/android')

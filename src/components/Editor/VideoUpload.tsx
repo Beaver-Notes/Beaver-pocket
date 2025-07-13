@@ -1,9 +1,6 @@
 import React from "react";
-import { Plugins } from "@capacitor/core";
-import { Directory, FilesystemDirectory } from "@capacitor/filesystem";
+import { Directory, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import icons from "../../lib/remixicon-react";
-
-const { Filesystem } = Plugins;
 
 interface FileUploadProps {
   onVideoUpload: (fileUrl: string) => void;
