@@ -6,9 +6,9 @@ const config: CapacitorConfig = {
   webDir: "dist",
   plugins: {
     SplashScreen: {
-      launchShowDuration: 300,
+      launchShowDuration: 0,
       launchAutoHide: false,
-      launchFadeOutDuration: 300,
+      launchFadeOutDuration: 200,
       backgroundColor: "#ffffffff",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
@@ -19,7 +19,7 @@ const config: CapacitorConfig = {
       splashFullScreen: true,
       splashImmersive: true,
       layoutName: "launch_screen",
-      useDialog: true,
+      useDialog: false,
     },
     GoogleAuth: {
       clientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID, // Web app client ID (browser use)
