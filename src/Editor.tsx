@@ -12,7 +12,7 @@ import {
   Filesystem,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { NativeBiometric } from "capacitor-native-biometric";
+import { NativeBiometric } from "@capgo/capacitor-native-biometric";
 import { Note } from "./store/types";
 
 const STORAGE_PATH = "notes/data.json";

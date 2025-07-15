@@ -1,6 +1,6 @@
 import icons from "../../lib/remixicon-react";
 import { useEffect, useState } from "react";
-import { useLabelStore } from "../../store/label";
+import { labelStore } from "../../store/label";
 import { useSearchParams } from "react-router-dom";
 
 interface SearchBarProps {
@@ -19,7 +19,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const urlLabel = searchParams.get("label");
   const [selectedLabel, setSelectedLabel] = useState(urlLabel || "");
-  const labelStore = useLabelStore();
   const labels = labelStore.labels;
   const [translations, setTranslations] = useState({
     filter: {
@@ -71,7 +70,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleLabelChange = (value: string) => {
     setSelectedLabel(value);
     handleLabelFilterChange(value);
-    
+
     // Update URL params
     if (value) {
       searchParams.set("label", value);
@@ -130,8 +129,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
             className="rounded-full ml-2 pl-4 pr-10 p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
           >
             <option value="updatedAt">{translations.filter.lastUpdated}</option>
-            <option value="createdAt">{translations.filter.creationDate}</option>
-            <option value="alphabetical">{translations.filter.alphabetical}</option>
+            <option value="createdAt">
+              {translations.filter.creationDate}
+            </option>
+            <option value="alphabetical">
+              {translations.filter.alphabetical}
+            </option>
           </select>
           <div className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none">
             <icons.ArrowDownSLineIcon className="h-6 w-6" />
@@ -146,9 +149,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
               onChange={(e) => setSortingOption(e.target.value)}
               className="bg-transparent dark:text-[color:var(--selected-dark-text)] outline-none appearance-none pl-8 w-full"
             >
-              <option value="updatedAt">{translations.filter.lastUpdated}</option>
-              <option value="createdAt">{translations.filter.creationDate}</option>
-              <option value="alphabetical">{translations.filter.alphabetical}</option>
+              <option value="updatedAt">
+                {translations.filter.lastUpdated}
+              </option>
+              <option value="createdAt">
+                {translations.filter.creationDate}
+              </option>
+              <option value="alphabetical">
+                {translations.filter.alphabetical}
+              </option>
             </select>
           </div>
         </div>
@@ -164,7 +173,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               <option key={label} value={label}>
                 {label}
               </option>
-              ))}
+            ))}
           </select>
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
             <icons.ArrowDownSLineIcon className="h-6 w-6" />

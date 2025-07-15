@@ -15,7 +15,16 @@ const App: React.FC = () => {
 
   const changeIcon = async (iconName: string) => {
     try {
-      await AppIcon.change({ name: iconName, suppressNotification: true });
+      // Get all icon names except the one we're switching to
+      const iconsToDisable = iconNames
+        .filter((icon) => icon.name !== iconName)
+        .map((icon) => icon.name);
+
+      await AppIcon.change({ 
+        name: iconName, 
+        suppressNotification: true,
+        disable: iconsToDisable
+      });
       setCurrentIcon(iconName);
     } catch (error) {
       console.error("Error changing icon:", error);
@@ -41,7 +50,7 @@ const App: React.FC = () => {
         {/* Default Icon Button */}
         <button
           className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center ${
-            currentIcon === "AppIcon" ? "ring-2 ring-primary" : ""
+            currentIcon === null ? "ring-2 ring-primary" : ""
           }`}
           aria-label="Default App Icon"
           onClick={() => resetIcon()}
@@ -54,7 +63,7 @@ const App: React.FC = () => {
           <p className="text-2xl pl-2 py-1 font-bold">Default</p>
         </button>
 
-        {/* App Icon 1 to 11 Buttons */}
+        {/* App Icon 1 to 5 Buttons */}
         {iconNames.map(({ name, cuteName }) => (
           <button
             key={name}

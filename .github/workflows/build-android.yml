@@ -19,15 +19,13 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: "zulu"
-          java-version: "17"
+          java-version: "21"
 
       - name: Install unzip (required by setup-android when using act)
         run: sudo apt-get update && sudo apt-get install -y unzip
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: 11479570
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

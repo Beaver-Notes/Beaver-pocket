@@ -1,6 +1,6 @@
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { useState } from "react";
-import { Plugins } from "@capacitor/core";
+import { MsAuthPlugin } from "@recognizebv/capacitor-plugin-msauth";
 import {
   Filesystem,
   FilesystemDirectory,
@@ -10,8 +10,6 @@ import { OneDriveAPI } from "./oneDriveApi";
 import { base64ToBlob } from "../../utils/base64";
 import mime from "mime";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
-
-const { MsAuthPlugin } = Plugins;
 
 const decodeJwt = (token: string) => {
   try {
