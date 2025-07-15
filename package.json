@@ -12,10 +12,10 @@
     "ionic:serve": "vite"
   },
   "dependencies": {
-    "@aashu-dubey/capacitor-statusbar-safe-area": "^3.0.0",
     "@auth0/auth0-react": "^2.2.4",
     "@benrbray/prosemirror-math": "0.2.2",
     "@capacitor-community/app-icon": "^5.0.0",
+    "@capacitor-community/safe-area": "^7.0.0-alpha.1",
     "@capacitor/android": "^7.0.0",
     "@capacitor/app": "^7.0.0",
     "@capacitor/browser": "^7.0.0",
@@ -29,7 +29,6 @@
     "@capacitor/preferences": "^7.0.0",
     "@capacitor/share": "^7.0.0",
     "@capacitor/splash-screen": "^7.0.0",
-    "@capacitor/status-bar": "^7.0.0",
     "@capgo/capacitor-native-biometric": "^7.1.7",
     "@daniele-rolli/capacitor-google-auth": "^3.4.0-rc.6",
     "@headlessui/react": "^2.1.1",

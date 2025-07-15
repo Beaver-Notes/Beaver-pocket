@@ -2,21 +2,21 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
 import SDialog from "../UI/SDialog";
-import { EditorContent, useEditor, JSONContent } from "@tiptap/react";
+import { EditorContent, useEditor } from "@tiptap/react";
 import Toolbar from "./Toolbar";
 import Find from "./Find";
 import "../../assets/css/editor.css";
 import { extensions } from "../../lib/tiptap/index";
 import Commands from "../../lib/tiptap/exts/commands";
-import NoteLinkExtension from "../../lib/tiptap/exts/suggestions/NoteLinkSuggestion";
-import NoteLabelSuggestion from "../../lib/tiptap/exts/suggestions/NoteLabelSuggestion";
+import LabelSuggestion from "../../lib/tiptap/exts/label-suggestion";
+import LinkNote from "../../lib/tiptap/exts/link-note";
 import DOMPurify from "dompurify";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
 import Icons from "../../lib/remixicon-react";
 import Mousetrap from "mousetrap";
+import { labelStore } from "../../store/label";
 import { WebviewPrint } from "capacitor-webview-print";
-import { useLabelStore } from "../../store/label";
 import { cleanEmptyParagraphs } from "../../utils/editor";
 
 type Props = {
@@ -41,14 +41,10 @@ function EditorComponent({
     notesState,
     setNotesState
   );
-  const [previousContent, setPreviousContent] = useState<JSONContent | null>(
-    null
-  );
   const [searchQuery] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
     useState<Record<string, Note>>(notesState);
   const [sortingOption] = useState("updatedAt");
-  const labelStore = useLabelStore();
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
@@ -62,13 +58,6 @@ function EditorComponent({
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
   }, [searchQuery, notesState]);
-
-  useEffect(() => {
-    const load = async () => {
-      await labelStore.retrieve();
-    };
-    load();
-  }, []);
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     switch (sortingOption) {
@@ -108,34 +97,10 @@ function EditorComponent({
     setActiveNoteId(note.id);
   }, [note.id, setActiveNoteId]);
 
-  document.addEventListener("updateLabel", (event: Event) => {
-    const customEvent = event as CustomEvent;
-    const labelToAdd = customEvent.detail.props;
-    console.log(labelToAdd);
-
-    const existingLabels = note.labels || [];
-
-    const labelExists = existingLabels.includes(labelToAdd);
-
-    const updatedLabels = labelExists
-      ? existingLabels
-      : [...existingLabels, labelToAdd];
-
-    labelStore.add(labelToAdd);
-
-    const jsonContent = editor?.getJSON() || {};
-
-    handleChangeNoteContent(jsonContent, note.title, updatedLabels);
-  });
-
   const exts = [
     ...extensions,
-    NoteLinkExtension.configure({
-      notes: notesList,
-    }),
-    NoteLabelSuggestion.configure({
-      uniqueLabels: labelStore.labels,
-    }),
+    LinkNote(notesList, activeNoteId ?? ""),
+    LabelSuggestion,
     Commands.configure({
       noteId: note.id,
     }),
@@ -147,37 +112,42 @@ function EditorComponent({
       content: note.content,
       onUpdate: ({ editor }) => {
         let editorContent = editor.getJSON();
+        editorContent = cleanEmptyParagraphs(editorContent);
 
-        editorContent = cleanEmptyParagraphs(editorContent); // 🧹 clean here
+        const labelEls = editor.view.dom.querySelectorAll("[data-mention]");
+        const labelsSet = new Set<string>();
+        labelEls.forEach((el) => {
+          const labelId = el.getAttribute("data-id");
+          if (labelId && labelStore.labels.includes(labelId)) {
+            labelsSet.add(labelId);
+          }
+        });
+        const extractedLabels = Array.from(labelsSet);
 
-        handleChangeNoteContent(editorContent || {}, title);
-
-        if (previousContent) {
-          const previousLabels = findNoteLabels(previousContent);
-          const currentLabels = findNoteLabels(editorContent);
-
-          previousLabels.forEach((label) => {
-            if (
-              !currentLabels.some(
-                (currentLabel) => currentLabel.attrs.id === label.attrs.id
-              )
-            ) {
-              console.log(`Label deleted: ${label.attrs.label}`);
-
-              const updatedLabels = note.labels.filter(
-                (noteLabel) => noteLabel !== label.attrs.label
-              );
-
-              handleChangeNoteContent(editorContent, note.title, updatedLabels);
-            }
-          });
-        }
-
-        setPreviousContent(editorContent);
+        handleChangeNoteContent(editorContent || {}, title, extractedLabels);
       },
     },
-    [note.id, labelStore.labels]
+    [note.id]
   );
+
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) {
+      const editorContent = editor.getJSON();
+      const labelEls = editor.view.dom.querySelectorAll("[data-mention]");
+      const labelsSet = new Set<string>();
+      labelEls.forEach((el) => {
+        const labelId = el.getAttribute("data-id");
+        if (labelId && labelStore.labels.includes(labelId)) {
+          labelsSet.add(labelId);
+        }
+      });
+      const extractedLabels = Array.from(labelsSet);
+
+      if (JSON.stringify(extractedLabels) !== JSON.stringify(note.labels)) {
+        handleChangeNoteContent(editorContent, title, extractedLabels);
+      }
+    }
+  }, [labelStore.labels, editor, note.labels, title]);
 
   useEffect(() => {
     function handleClick(event: MouseEvent | TouchEvent) {
@@ -240,20 +210,6 @@ function EditorComponent({
     event.preventDefault();
     const text = event.clipboardData.getData("text/plain");
     document.execCommand("insertText", false, text);
-  };
-
-  const findNoteLabels = (content: JSONContent) => {
-    const labels: any[] = [];
-    const traverse = (node: any) => {
-      if (node.type === "noteLabel") {
-        labels.push(node);
-      }
-      if (node.content) {
-        node.content.forEach(traverse);
-      }
-    };
-    traverse(content);
-    return labels;
   };
 
   const handleKeyDownTitle = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -536,7 +492,6 @@ function EditorComponent({
           contentEditable
           onPaste={handleTitlePaste}
           suppressContentEditableWarning
-          onTouchStart={event?.preventDefault}
           className={`text-3xl font-bold overflow-y-scroll outline-none`}
           onBlur={handleTitleChange}
           onKeyDown={handleKeyDownTitle}

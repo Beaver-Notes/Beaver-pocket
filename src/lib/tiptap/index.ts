@@ -21,8 +21,6 @@ import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import BulletList from "@tiptap/extension-bullet-list";
 import MathInline from "./exts/math-inline";
-import { NoteLabel } from "./exts/NoteLabel";
-import { linkNote } from "./exts/note-link";
 import FileEmbed from "./exts/file-block";
 import SearchAndReplace from "@sereneinserenade/tiptap-search-and-replace";
 import Mathblock from "./exts/math-block/Index";
@@ -30,7 +28,6 @@ import CodeBlock from "./exts/code-block";
 import Paper from "./exts/paper-block";
 import iframe from "./exts/embed-block/iframe";
 import MermaidDiagram from "./exts/mermaid-block";
-import labels from "./exts/labels";
 import markdownEngine from "./exts/markdown-engine";
 import { Paste } from "./exts/markdown-engine/paste";
 import TextStyle from "@tiptap/extension-text-style";
@@ -98,8 +95,6 @@ const extensions = [
   MermaidDiagram,
   BulletList,
   MathInline,
-  NoteLabel,
-  linkNote,
   FileEmbed,
   SearchAndReplace,
   Mathblock,
@@ -107,7 +102,6 @@ const extensions = [
   Typography,
   blackCallout,
   blueCallout,
-  labels,
   greenCallout,
   purpleCallout,
   redCallout,

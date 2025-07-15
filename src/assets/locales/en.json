@@ -278,6 +278,8 @@
     "legal": "Legal"
   },
   "menu": {
+    "noData": "No data",
+    "Add": "Add",
     "file": "File",
     "image": "Image",
     "video": "Video",

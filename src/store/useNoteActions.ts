@@ -1,34 +1,42 @@
-import { useState } from 'react';
-import { Note } from './types';
-import { JSONContent } from '@tiptap/react';
-import { useSaveNote } from './notes';
+import { useState } from "react";
+import { Note } from "./types";
+import { JSONContent } from "@tiptap/react";
+import { useSaveNote } from "./notes";
 
 const useNoteEditor = (
-  activeNoteId: string | number | null, 
+  activeNoteId: string | number | null,
   notesState: Record<string, Note>,
-  setNotesState: (notes: Record<string, Note>) => void,
+  setNotesState: (notes: Record<string, Note>) => void
 ) => {
   // Initialize title state based on the active note
-  const [title, setTitle] = useState<string>(activeNoteId ? notesState[activeNoteId]?.title || "" : "");
+  const [title, setTitle] = useState<string>(
+    activeNoteId ? notesState[activeNoteId]?.title || "" : ""
+  );
   const { saveNote } = useSaveNote(setNotesState);
 
   const handleChangeNoteContent = async (
     content: JSONContent, // Update type here if JSONContent is expected
-    newTitle?: string, 
+    newTitle?: string,
     newLabels?: string[]
   ) => {
     try {
       if (activeNoteId) {
         const existingNote = notesState[activeNoteId];
         if (!existingNote) {
-          throw new Error(`Note with id ${activeNoteId} not found in notesState.`);
+          throw new Error(
+            `Note with id ${activeNoteId} not found in notesState.`
+          );
         }
 
         // Update title if provided
-        const updatedTitle = newTitle !== undefined && newTitle.trim() !== "" ? newTitle : existingNote.title;
+        const updatedTitle =
+          newTitle !== undefined && newTitle.trim() !== ""
+            ? newTitle
+            : existingNote.title;
 
         // Update labels if provided
-        const updatedLabels = newLabels !== undefined ? newLabels : existingNote.labels;
+        const updatedLabels =
+          newLabels !== undefined ? newLabels : existingNote.labels;
 
         const updatedNote: Note = {
           ...existingNote,

@@ -2,11 +2,6 @@
 # yarn lockfile v1
 
 
-"@aashu-dubey/capacitor-statusbar-safe-area@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@aashu-dubey/capacitor-statusbar-safe-area/-/capacitor-statusbar-safe-area-3.0.0.tgz#c0fddd8f3e5df3370c8c0bf8d76e67b9e951518b"
-  integrity sha512-/az4LZo1YDdV8lZjNecKp7ghBLgGX5MXYeHxtUDqxJbNC0OMoBHYkub70Ps1R417xhMZlC/FiEs7aPFskZ35Vg==
-
 "@alloc/quick-lru@^5.2.0":
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/@alloc/quick-lru/-/quick-lru-5.2.0.tgz#7bf68b20c0a350f936915fcae06f58e32007ce30"
@@ -1079,6 +1074,11 @@
   resolved "https://registry.yarnpkg.com/@capacitor-community/app-icon/-/app-icon-5.0.0.tgz#9a70cace5560c239b1befd01ee1f7e9c7ee2aaea"
   integrity sha512-DH1NcFGQnulkeAXALqg1gfc9Vga2og1i0tcByT1yc/q9woF0wfSpwv9n6eapqxWpQMQYI9FmqLle++likphjaA==
 
+"@capacitor-community/safe-area@^7.0.0-alpha.1":
+  version "7.0.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@capacitor-community/safe-area/-/safe-area-7.0.0-alpha.1.tgz#9749cd59ca6a21942da006a3b8c7f0da5cd902e3"
+  integrity sha512-N6ktkRiofqrt+N/vQzh4jcWY8IzJ4TVw1tKAPssvbddWFTyZzXzSdBeX/l/nracJF0PZqmLdA7JYTBfnOxXQYw==
+
 "@capacitor/android@^7.0.0":
   version "7.4.2"
   resolved "https://registry.yarnpkg.com/@capacitor/android/-/android-7.4.2.tgz#8fa1b6fbedfbb8506df3444dddaea75cc09ee8a9"
@@ -1165,11 +1165,6 @@
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/@capacitor/splash-screen/-/splash-screen-7.0.1.tgz#ea70d39c4346db4558f749eeb2d3ac2f5c34c550"
   integrity sha512-Nbqw9bEIe7uHj/HOT81mf4jT6uK1YykozpQw/uIKQDueMg6RJYaJK2/TMajIOohLk8fJF4TYIc1i9nGjNLnfGg==
-
-"@capacitor/status-bar@^7.0.0":
-  version "7.0.1"
-  resolved "https://registry.yarnpkg.com/@capacitor/status-bar/-/status-bar-7.0.1.tgz#6bd3769ef35158c961ff2a6b571c03e9bce55809"
-  integrity sha512-iDv3mXYo9CdxYRVwt3/pRyuk25p7Sn4GfaS/zMZyVIqTzsvKLCIIH3GdKK+ta+nsNcAVpCw/t5jFEBt1D18ctA==
 
 "@capacitor/synapse@^1.0.3":
   version "1.0.4"

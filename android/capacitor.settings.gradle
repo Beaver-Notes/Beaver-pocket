@@ -2,11 +2,11 @@
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
 
-include ':aashu-dubey-capacitor-statusbar-safe-area'
-project(':aashu-dubey-capacitor-statusbar-safe-area').projectDir = new File('../node_modules/@aashu-dubey/capacitor-statusbar-safe-area/android')
-
 include ':capacitor-community-app-icon'
 project(':capacitor-community-app-icon').projectDir = new File('../node_modules/@capacitor-community/app-icon/android')
+
+include ':capacitor-community-safe-area'
+project(':capacitor-community-safe-area').projectDir = new File('../node_modules/@capacitor-community/safe-area/android')
 
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('../node_modules/@capacitor/app/android')
@@ -35,14 +35,11 @@ project(':capacitor-share').projectDir = new File('../node_modules/@capacitor/sh
 include ':capacitor-splash-screen'
 project(':capacitor-splash-screen').projectDir = new File('../node_modules/@capacitor/splash-screen/android')
 
-include ':capacitor-status-bar'
-project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacitor/status-bar/android')
-
 include ':capgo-capacitor-native-biometric'
 project(':capgo-capacitor-native-biometric').projectDir = new File('../node_modules/@capgo/capacitor-native-biometric/android')
 
 include ':daniele-rolli-capacitor-google-auth'
-project(':daniele-rolli-capacitor-google-auth').projectDir = new File('../../CapacitorGoogleAuth/android')
+project(':daniele-rolli-capacitor-google-auth').projectDir = new File('../node_modules/@daniele-rolli/capacitor-google-auth/android')
 
 include ':recognizebv-capacitor-plugin-msauth'
 project(':recognizebv-capacitor-plugin-msauth').projectDir = new File('../node_modules/@recognizebv/capacitor-plugin-msauth/android')

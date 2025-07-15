@@ -335,7 +335,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     <div
       className={`print:hidden fixed z-20 bg-white dark:bg-[#232222] dark:text-[color:var(--selected-dark-text)] mx-2 transition overflow-auto no-scrollbar flex justify-center items-center
     ${focusMode ? "opacity-0 hover:opacity-100" : ""}
-    ${isKeyboardVisible ? "pb-2 sm:pb-0" : "pb-5 sm:pb-0"}
+    ${isKeyboardVisible ? "pb-4 sm:pb-0" : "pb-6 sm:pb-0"}
     sm:pt-6 left-0 right-0 bottom-0 sm:bottom-auto`}
     >
       <div className="flex items-center justify-center sm:border-b sm:dark:border-b-neutral-600 whitespace-nowrap w-max">
@@ -366,7 +366,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <icons.ArrowGoForwardLineIcon className="border-none text-xl w-7 h-7" />
           </button>
-          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+          <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
         </div>
         <button
           className={
@@ -427,7 +427,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             ))}
           </>
         </Popover>
-        <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+        <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
         <button
           className={
             editor?.isActive("bold")
@@ -658,7 +658,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
           </>
         )}
-        <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+        <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
         <ImageUploadComponent
           onImageUpload={handleImageUpload}
           noteId={noteId}
@@ -754,7 +754,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </div>
         </Popover>
         <div className="sm:flex items-center hidden">
-          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+          <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
           <button
             className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
@@ -763,7 +763,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <icons.ShareLineIcon className="border-none text-xl w-7 h-7" />
           </button>
-          <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+          <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
           <button
             className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
             onMouseDown={handleMouseDown}
@@ -785,7 +785,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         </div>
         {isTableActive && !isTextSelected && (
           <>
-            <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
+            <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
             <button
               className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
               onMouseDown={handleMouseDown}

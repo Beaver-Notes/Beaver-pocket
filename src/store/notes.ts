@@ -56,19 +56,23 @@ export const loadNotes = async (): Promise<{
       encoding: FilesystemEncoding.UTF8,
     });
 
-    const parsed = JSON.parse(
-      typeof data.data === "string" ? data.data : await data.data.text()
-    );
+    const raw =
+      typeof data.data === "string" ? data.data : await data.data.text();
+    const parsed = JSON.parse(raw);
 
-    const finalData = parsed?.data
-      ? parsed.data
-      : {
-          notes: {},
-          labels: [],
-          lockStatus: {},
-          isLocked: {},
-          deletedIds: {},
-        };
+    // Handle both old and new formats
+    const finalData =
+      parsed?.data && parsed.data.notes !== undefined
+        ? parsed.data // New format
+        : parsed?.notes !== undefined
+        ? parsed // Old format
+        : {
+            notes: {},
+            labels: [],
+            lockStatus: {},
+            isLocked: {},
+            deletedIds: {},
+          };
 
     const collapsibleSetting = localStorage.getItem("collapsibleHeading");
     const notes = finalData.notes ?? {};

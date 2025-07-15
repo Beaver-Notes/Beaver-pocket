@@ -34,13 +34,11 @@ kbd {
   -webkit-tap-highlight-color: transparent;
   --selected-dark-text: white;
   @apply dark:text-[color:var(--selected-dark-text)];
-  padding-top: constant(safe-area-inset-top) !important;
-  padding-top: env(safe-area-inset-top) !important;
+  padding-top: var(--safe-area-inset-top);
 }
 
 .safe-area {
-  padding-top: constant(safe-area-inset-top) !important;
-  padding-top: env(safe-area-inset-top) !important;
+  padding-top: var(--safe-area-inset-top);
   @apply bg-white bg-opacity-95 dark:bg-opacity-95 dark:bg-[#232222] z-40;
   position: fixed;
   top: 0;
@@ -85,4 +83,8 @@ input[type="checkbox"]:checked::before {
 
 .view {
   height: 80vh;
+}
+
+.dark * {
+  border-color: rgba(255, 255, 255, 0.1);
 }
