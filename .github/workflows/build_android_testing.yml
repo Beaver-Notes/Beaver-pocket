@@ -1,0 +1,67 @@
+name: Build Android
+
+on:
+  push:
+    branches:
+      - testing
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "21"
+
+      - name: Install unzip (required by setup-android when using act)
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "yarn"
+
+      - name: Install app dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build project
+        run: yarn build
+
+      - name: Capacitor sync
+        run: npx cap sync
+
+      - name: Extract Android signing key from env
+        env:
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE }}" > android/app/release.jks.base64
+          base64 -d android/app/release.jks.base64 > android/app/release.jks
+
+      - name: Build app bundle
+        env:
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          ONEDRIVE_SHA1: ${{ secrets.ONEDRIVE_SHA1 }}
+          ANDROID_HOME: ${{ env.ANDROID_HOME }} # Redundant but explicit
+        run: cd android && ./gradlew bundleRelease
+
+      - name: Upload release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 60
