@@ -13,20 +13,19 @@ interface NavbarProps {
 }
 
 const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const { saveNote } = useSaveNote(setNotesState);
   const navigate = useNavigate();
+
   useEffect(() => {
-    const handleKeyboardShow = () => {
-      document.body.classList.add("keyboard-visible");
-    };
+    Keyboard.addListener("keyboardWillShow", () => {
+      setKeyboardVisible(true);
+    });
 
-    const handleKeyboardHide = () => {
-      document.body.classList.remove("keyboard-visible");
-    };
+    Keyboard.addListener("keyboardWillHide", () => {
+      setKeyboardVisible(false);
+    });
 
-    Keyboard.addListener("keyboardWillShow", handleKeyboardShow);
-    Keyboard.addListener("keyboardWillHide", handleKeyboardHide);
-    // Cleanup listeners on component unmount
     return () => {
       Keyboard.removeAllListeners();
     };
@@ -122,39 +121,44 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     };
   }, []);
 
+  if (keyboardVisible) return null;
+
   return (
-    <div className={`element-to-hide spacingdiv`}>
-      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto">
-        <div className="flex justify-between">
+    <div className="element-to-hide spacingdiv">
+      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto z-50">
+        <div className="flex justify-between items-center">
           <Link to="/">
             <button
-              className="flex items-center justify-center w-12 h-12"
               aria-label={translations.accessibility.home}
+              className="w-12 h-12 flex items-center justify-center"
             >
               <icons.HomeLineIcon className="text-white hover:text-primary h-10 w-10" />
             </button>
           </Link>
 
           <button
-            onClick={handleEditNote}
-            className="flex items-center justify-center w-12 h-12"
+            onClick={() => {
+              const last = localStorage.getItem("lastNoteEdit");
+              if (last) navigate(`/editor/${last}`);
+            }}
             aria-label={translations.accessibility.editNote}
+            className="w-12 h-12 flex items-center justify-center"
           >
             <icons.Edit2LineIcon className="text-white hover:text-primary h-10 w-10" />
           </button>
 
           <button
-            className="flex items-center justify-center w-12 h-12"
             onClick={handleCreateNewNote}
             aria-label={translations.accessibility.createNew}
+            className="w-12 h-12 flex items-center justify-center"
           >
             <icons.AddFillIcon className="text-white hover:text-primary h-10 w-10" />
           </button>
 
           <Link to="/archive">
             <button
-              className="flex items-center justify-center w-12 h-12"
               aria-label={translations.accessibility.archive}
+              className="w-12 h-12 flex items-center justify-center"
             >
               <icons.ArchiveDrawerLineIcon className="text-white hover:text-primary h-10 w-10" />
             </button>
@@ -162,8 +166,8 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
 
           <Link to="/settings">
             <button
-              className="flex items-center justify-center w-12 h-12"
               aria-label={translations.accessibility.settings}
+              className="w-12 h-12 flex items-center justify-center"
             >
               <icons.Settings4LineIcon className="text-white hover:text-primary h-10 w-10" />
             </button>
