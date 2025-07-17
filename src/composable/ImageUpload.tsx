@@ -1,6 +1,6 @@
 import React from "react";
 import { Directory, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
-import icons from "../../lib/remixicon-react";
+import icons from "../lib/remixicon-react";
 
 interface ImageUploadProps {
   onImageUpload: (imageUrl: string, fileUri: string) => void;

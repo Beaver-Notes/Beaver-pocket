@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import icons from "../../lib/remixicon-react";
-import { driveService } from "../../utils/Google Drive/GoogleOauth";
+import icons from "@/lib/remixicon-react";
+import { driveService } from "@/utils/Google Drive/GoogleOauth";
 
 const GoogleDrive: React.FC = () => {
   const [user, setUser] = useState<any | null>(null);

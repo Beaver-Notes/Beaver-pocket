@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { MsAuthPlugin } from "@recognizebv/capacitor-plugin-msauth";
-import icons from "../../lib/remixicon-react";
+import icons from "@/lib/remixicon-react";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { Note } from "../../store/types";
+import { Note } from "@/store/types";
 
 interface OneDriveProps {
   setNotesState: (notes: Record<string, Note>) => void;

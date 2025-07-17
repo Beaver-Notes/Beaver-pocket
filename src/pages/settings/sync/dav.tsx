@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { WebDavService } from "../../utils/Webdav/webDavApi";
-import icons from "../../lib/remixicon-react";
-import { Note } from "../../store/types";
-import WebDAV from "../../utils/Webdav/WebDAVPlugin";
+import { WebDavService } from "@/utils/Webdav/webDavApi";
+import icons from "@/lib/remixicon-react";
+import { Note } from "@/store/types";
+import WebDAV from "@/utils/Webdav/WebDAVPlugin";
 
 interface WebdavProps {
   notesState: Record<string, Note>;

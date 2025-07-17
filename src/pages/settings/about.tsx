@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { version } from "../../../package.json";
-import icons from "../../lib/remixicon-react";
+import icons from "@/lib/remixicon-react";
 import dayjs from "dayjs";
 
 const Shortcuts: React.FC = () => {

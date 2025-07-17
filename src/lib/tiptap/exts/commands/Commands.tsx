@@ -1,8 +1,8 @@
 // SlashMenu.tsx
 import React, { useEffect, useState } from "react";
-import ImageUploadComponent from "../../../../components/Editor/ImageUpload"; // Adjust the path
-import FileUploadComponent from "../../../../components/Editor/FileUpload"; // Adjust the path
-import VideoUploadComponent from "../../../../components/Editor/VideoUpload"; // Adjust the path
+import ImageUploadComponent from "../../../../composable/ImageUpload"; // Adjust the path
+import FileUploadComponent from "../../../../composable/FileUpload"; // Adjust the path
+import VideoUploadComponent from "../../../../composable/VideoUpload"; // Adjust the path
 import icons from "../../../remixicon-react";
 import Mousetrap from "mousetrap";
 

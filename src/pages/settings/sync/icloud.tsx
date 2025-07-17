@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Note } from "../../store/types";
-import icons from "../../lib/remixicon-react";
+import { Note } from "@/store/types";
+import icons from "@/lib/remixicon-react";
 interface iCloudProps {
   notesState: Record<string, Note>;
   setNotesState: (notes: Record<string, Note>) => void;

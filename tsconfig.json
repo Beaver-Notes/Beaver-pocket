@@ -1,6 +1,10 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "forceConsistentCasingInFileNames": true,
     "target": "ES6",
     "useDefineForClassFields": true,
