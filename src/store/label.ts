@@ -72,7 +72,6 @@ export class LabelStore {
   async retrieve(): Promise<string[]> {
     const fullData = await this.readData();
     this._labels = fullData.data.labels || [];
-    console.log(this._labels);
     return [...this._labels];
   }
 
