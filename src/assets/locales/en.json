@@ -322,5 +322,10 @@
     "undo": "Undo",
     "redo": "Redo",
     "clicktoDraw": "Click to draw"
+  },
+  "link": {
+    "placeholder": "URL or type @ to link a note",
+    "shortcut": "Press Alt + Click to open the link",
+    "untitlednote": "Untitled note"
   }
 }
