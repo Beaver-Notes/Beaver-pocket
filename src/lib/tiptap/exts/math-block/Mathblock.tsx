@@ -9,7 +9,8 @@ import {
   DialogTitle,
   Transition,
 } from "@headlessui/react";
-import Icons from "../../../remixicon-react";
+import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
 
 interface MathBlockProps extends NodeViewWrapperProps {
   updateAttributes: (attributes: Record<string, any>) => void;
@@ -122,38 +123,19 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
     [startY, dragging, closeModal]
   );
 
-  const [translations, setTranslations] = useState({
-    editor: {
-      mermaidContent: "editor.mermaidContent",
-      editContent: "editor.editContent",
-      close: "editor.console",
-      mathContent: "editor.mathContent",
-      katexMacros: "editor.katexMacros",
-    },
-    accessibility: {
-      editMath: "accessibility.editMath",
-      disableKatex: "accessibility.disableKatex",
-      enableKatex: "accessibility.enableKatex",
-      close: "accessibility.close",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    editor: {},
+    accessibility: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   return (
@@ -235,7 +217,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                       className="text-neutral-800 dark:text-[color:var(--selected-dark-text)]  bg-neutral-200 rounded-full hover:text-gray-700 focus:outline-none"
                       aria-label={translations.accessibility.close}
                     >
-                      <Icons.CloseLineIcon />
+                      <Icon name="CloseLine" />
                     </button>
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import {
   DialogTitle,
   Transition,
 } from "@headlessui/react";
-import Icons from "../../lib/remixicon-react";
+import Icon from "./Icon";
 
 type DialogProps = {
   isOpen: boolean;
@@ -83,7 +83,7 @@ const UIDialog: React.FC<DialogProps> = ({ isOpen, closeDialog, title, children 
               <div className="flex justify-between items-center">
                 {title && <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>}
                 <button onClick={closeDialog} className="text-gray-600 hover:text-black">
-                  <Icons.CloseLineIcon />
+                  <Icon name="CloseLine" />
                 </button>
               </div>
               <div className="my-2 border-b dark:border-gray-600"></div>

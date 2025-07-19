@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import icons from "@/lib/remixicon-react";
 import { driveService } from "@/utils/Google Drive/GoogleOauth";
+import Icon from "@/components/UI/Icon";
 
 const GoogleDrive: React.FC = () => {
   const [user, setUser] = useState<any | null>(null);
@@ -95,7 +95,7 @@ const GoogleDrive: React.FC = () => {
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">
             <p className="text-4xl font-bold p-4">Drive</p>
-            <icons.GDrive className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
+            <Icon name="GDrive" className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
           </div>
         </div>
 

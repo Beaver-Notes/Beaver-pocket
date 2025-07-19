@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import icons from "../../lib/remixicon-react";
 import { Link, useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
 import { useSaveNote } from "../../store/notes";
 import { Note } from "../../store/types";
 import Mousetrap from "../../utils/mousetrap";
+import Icon from "../UI/Icon";
+import { Capacitor } from "@capacitor/core";
 
 interface NavbarProps {
   notesState: Record<string, Note>;
@@ -18,6 +19,8 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (Capacitor.getPlatform() === "web") return;
+
     Keyboard.addListener("keyboardWillShow", () => {
       setKeyboardVisible(true);
     });
@@ -132,7 +135,10 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
               aria-label={translations.accessibility.home}
               className="w-12 h-12 flex items-center justify-center"
             >
-              <icons.HomeLineIcon className="text-white hover:text-primary h-10 w-10" />
+              <Icon
+                name="HomeLine"
+                className="text-white hover:text-primary h-10 w-10"
+              />
             </button>
           </Link>
 
@@ -144,7 +150,10 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
             aria-label={translations.accessibility.editNote}
             className="w-12 h-12 flex items-center justify-center"
           >
-            <icons.Edit2LineIcon className="text-white hover:text-primary h-10 w-10" />
+            <Icon
+              name="Edit2Line"
+              className="text-white hover:text-primary h-10 w-10"
+            />
           </button>
 
           <button
@@ -152,7 +161,10 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
             aria-label={translations.accessibility.createNew}
             className="w-12 h-12 flex items-center justify-center"
           >
-            <icons.AddFillIcon className="text-white hover:text-primary h-10 w-10" />
+            <Icon
+              name="AddFill"
+              className="text-white hover:text-primary h-10 w-10"
+            />
           </button>
 
           <Link to="/archive">
@@ -160,7 +172,10 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
               aria-label={translations.accessibility.archive}
               className="w-12 h-12 flex items-center justify-center"
             >
-              <icons.ArchiveDrawerLineIcon className="text-white hover:text-primary h-10 w-10" />
+              <Icon
+                name="ArchiveDrawerLine"
+                className="text-white hover:text-primary h-10 w-10"
+              />
             </button>
           </Link>
 
@@ -169,7 +184,10 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
               aria-label={translations.accessibility.settings}
               className="w-12 h-12 flex items-center justify-center"
             >
-              <icons.Settings4LineIcon className="text-white hover:text-primary h-10 w-10" />
+              <Icon
+                name="Settings4Line"
+                className="text-white hover:text-primary h-10 w-10"
+              />
             </button>
           </Link>
         </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "../../utils/translations";
-import icons from "../../lib/remixicon-react";
+import Icon from "../UI/Icon";
 
 interface SearchReplaceBarProps {
   editor: any;
@@ -97,7 +97,10 @@ const Find: React.FC<SearchReplaceBarProps> = ({ editor, setShowFind }) => {
     <div className="fixed sm:top-8 top-12 bg-white dark:bg-[#232222] flex items-center left-0 w-full z-30 px-4">
       <div className="flex items-center w-full space-x-2 justify-center">
         <div className="relative flex items-center flex-grow bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-lg p-2 outline-none outline-primary text-neutral-800 overflow-hidden mr-2">
-          <icons.Search2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] mr-2 w-8" />
+          <Icon
+            name="Search2Line"
+            className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] mr-2 w-8"
+          />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -127,7 +130,7 @@ const Find: React.FC<SearchReplaceBarProps> = ({ editor, setShowFind }) => {
       }`}
             onClick={toggleCaseSensitive}
           >
-            <icons.FontSizeIcon />
+            <Icon name="FontSize" />
           </button>
         </div>
         <div className="hidden lg:flex items-center space-x-2">
@@ -156,7 +159,10 @@ const Find: React.FC<SearchReplaceBarProps> = ({ editor, setShowFind }) => {
           onClick={findPreviousResult}
           className="p-3  hover:bg-opacity-25 rounded-lg text-lg bg-neutral-200 bg-opacity-20 dark:bg-[#353333]"
         >
-          <icons.ArrowUpIcon className="dark:text-neutral-200 text-neutral-600" />
+          <Icon
+            name="ArrowUp"
+            className="dark:text-neutral-200 text-neutral-600"
+          />
         </button>
         {/* Find Next Button */}
         <button
@@ -165,7 +171,10 @@ const Find: React.FC<SearchReplaceBarProps> = ({ editor, setShowFind }) => {
           className="p-3  hover:bg-opacity-25 rounded-lg text-lg bg-neutral-200 bg-opacity-20 dark:bg-[#353333]
  bg-[#F8F8F7] dark:bg-[#353333]"
         >
-          <icons.ArrowDownIcon className="dark:text-neutral-200 text-neutral-600" />
+          <Icon
+            name="ArrowDown"
+            className="dark:text-neutral-200 text-neutral-600"
+          />
         </button>
         {/* Close Button */}
         <button
@@ -173,7 +182,7 @@ const Find: React.FC<SearchReplaceBarProps> = ({ editor, setShowFind }) => {
           className="p-3  hover:bg-opacity-25 rounded-lg text-lg bg-neutral-200 bg-opacity-20 dark:bg-[#353333]
  bg-[#F8F8F7] dark:bg-[#353333]"
         >
-          <icons.CloseLineIcon />
+          <Icon name="CloseLine" />
         </button>
       </div>
     </div>

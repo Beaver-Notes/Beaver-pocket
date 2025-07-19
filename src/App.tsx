@@ -119,7 +119,7 @@ const App: React.FC = () => {
         setIsInitialized(true);
       } catch (error) {
         console.error("Error during critical initialization:", error);
-        setIsInitialized(true); // Still allow app to continue
+        setIsInitialized(true);
       }
     };
 
@@ -136,7 +136,7 @@ const App: React.FC = () => {
         setNotesLoaded(true);
       } catch (error) {
         console.error("Error loading notes:", error);
-        setNotesLoaded(true); // Still mark as loaded to prevent retry
+        setNotesLoaded(true);
       }
     };
 

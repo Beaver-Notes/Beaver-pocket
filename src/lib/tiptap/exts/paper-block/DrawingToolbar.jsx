@@ -1,5 +1,5 @@
-import Icons from "../../../remixicon-react";
 import React, { useState } from "react";
+import Icon from "@/components/UI/Icon";
 
 const DrawingToolBar = ({
   setState,
@@ -68,7 +68,7 @@ const DrawingToolBar = ({
           onClick={() => setShowStyleOpt((prev) => !prev)}
           className={`relative flex items-center justify-center p-2 text-[color:var(--selected-dark-text)] rounded focus:outline-none focus:ring-2 focus:ring-primary bg-neutral-800`}
         >
-          <Icons.Brush3FillIcon className="w-6 h-6" />
+          <Icon name="Brush3Fill" />
           {showStyleOpt && (
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-auto bg-neutral-800 border border-neutral-600 shadow-md rounded-lg p-2 z-20">
               <div className="drawing-container flex flex-col-2 flex-wrap gap-2">
@@ -93,7 +93,7 @@ const DrawingToolBar = ({
           onClick={onClose}
           className="p-1 rounded-full text-[color:var(--selected-dark-text)] transition-colors"
         >
-          <Icons.CloseLineIcon className="w-8 h-8" />
+          <Icon name="CloseLine" />
         </button>
       </div>
       <div className="fixed top-12 sm:top-6 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-2">
@@ -106,7 +106,7 @@ const DrawingToolBar = ({
                 : "text-[color:var(--selected-dark-text)]"
             }`}
           >
-            <Icons.Focus3LineIcon className="w-8 h-8" />
+            <Icon name="Focus3Line" />
           </button>
           <button
             onClick={() => setState((prev) => ({ ...prev, tool: "pen" }))}
@@ -128,7 +128,7 @@ const DrawingToolBar = ({
                 : "text-[color:var(--selected-dark-text)]"
             }`}
           >
-            <Icons.MarkPenLineIcon className="w-8 h-8" />
+            <Icon name="MarkPenLine" />
           </button>
           <button
             onClick={() => setState((prev) => ({ ...prev, tool: "eraser" }))}
@@ -138,27 +138,27 @@ const DrawingToolBar = ({
                 : "text-[color:var(--selected-dark-text)]"
             }`}
           >
-            <Icons.EraserLineIcon className="w-8 h-8" />
+            <Icon name="EraserLine" />
           </button>
           <button
             onClick={undo}
             disabled={undoStack.length === 0}
             className="p-2 text-[color:var(--selected-dark-text)]"
           >
-            <Icons.ArrowGoBackLineIcon className="w-8 h-8" />
+            <Icon name="ArrowGoBackLine" />
           </button>
           <button
             onClick={redo}
             disabled={redoStack.length === 0}
             className="p-2 text-[color:var(--selected-dark-text)]"
           >
-            <Icons.ArrowGoForwardLineIcon className="w-8 h-8" />
+            <Icon name="ArrowGoForwardLine" />
           </button>
           <button
             onClick={onClose}
             className="sm:hidden p-2 rounded-full text-[color:var(--selected-dark-text)] transition-colors"
           >
-            <Icons.CloseLineIcon className="w-8 h-8" />
+            <Icon name="CloseLine" />
           </button>
         </div>
         <div className="p-1 flex justify-between items-center bg-neutral-800 rounded-xl shadow-md gap-2">

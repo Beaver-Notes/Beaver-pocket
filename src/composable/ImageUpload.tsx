@@ -1,6 +1,6 @@
 import React from "react";
 import { Directory, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
-import icons from "../lib/remixicon-react";
+import Icon from "@/components/UI/Icon";
 
 interface ImageUploadProps {
   onImageUpload: (imageUrl: string, fileUri: string) => void;
@@ -107,10 +107,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
             aria-label={translations.menu.image}
           >
             {/* Icon */}
-            <icons.ImageLineIcon
-              className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3"
-              aria-hidden="true"
-            />
+            <Icon name="ImageLine" />
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
@@ -136,10 +133,7 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
             onClick={triggerFileInput}
             aria-label={translations.menu.image}
           >
-            <icons.ImageLineIcon
-              className="text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7 cursor-pointer"
-              aria-hidden="true"
-            />
+            <Icon name="ImageLine" />
           </button>
           <input
             type="file"

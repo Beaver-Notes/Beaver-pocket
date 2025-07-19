@@ -39,7 +39,7 @@ export function usePointerHelper({
 
   const handlePointerDown = useCallback(
     (e) => {
-      if (isPalmTouch(e) || !isPenInput(e)) return;
+      if (isPalmTouch(e, svgRef?.current) || !isPenInput(e)) return;
 
       e.preventDefault();
       const svgElem = e.currentTarget;
@@ -100,7 +100,7 @@ export function usePointerHelper({
 
   const handlePointerMove = useCallback(
     (e) => {
-      if (isPalmTouch(e) || !isPenInput(e)) return;
+      if (isPalmTouch(e, svgRef?.current) || !isPenInput(e)) return;
 
       if (tool === "select") {
         if (transformState) {
@@ -180,7 +180,7 @@ export function usePointerHelper({
 
   const handlePointerUp = useCallback(
     (e) => {
-      if (isPalmTouch(e)) return;
+      if (isPalmTouch(e, svgRef?.current)) return;
 
       e.preventDefault();
 
@@ -326,7 +326,7 @@ export function usePointerHelper({
 
   const handlePointerLeave = useCallback(
     (e) => {
-      if (isPalmTouch(e)) return;
+      if (isPalmTouch(e, svgRef?.current)) return;
       e.preventDefault();
       handlePointerUp(e);
     },
@@ -335,7 +335,7 @@ export function usePointerHelper({
 
   const handlePointerCancel = useCallback(
     (e) => {
-      if (isPalmTouch(e)) return;
+      if (isPalmTouch(e, svgRef?.current)) return;
       e.preventDefault();
       if (longPressTimeout.current) {
         clearTimeout(longPressTimeout.current);

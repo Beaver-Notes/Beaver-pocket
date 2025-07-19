@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "../../utils/translations";
 import { createPortal } from "react-dom";
-import icons from "../../lib/remixicon-react";
 import ImageUploadComponent from "../../composable/ImageUpload";
 import { Editor } from "@tiptap/react";
 import { Note } from "../../store/types";
@@ -13,6 +12,8 @@ import { Link } from "react-router-dom";
 import Popover from "../UI/Popover";
 import Mousetrap from "mousetrap";
 import Find from "./Find";
+import Icon from "../UI/Icon";
+import { Capacitor } from "@capacitor/core";
 
 interface ToolbarProps {
   note: Note;
@@ -36,10 +37,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
     number,
     React.ComponentType<{ className?: string }>
   > = {
-    1: icons.Heading1Icon,
-    2: icons.Heading2Icon,
-    3: icons.Heading3Icon,
-    4: icons.Heading4Icon,
+    1: (props) => <Icon {...props} name="Heading1" />,
+    2: (props) => <Icon {...props} name="Heading2" />,
+    3: (props) => <Icon {...props} name="Heading3" />,
+    4: (props) => <Icon {...props} name="Heading4" />,
   };
   const [isDropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [showFind, setShowFind] = useState(false);
@@ -141,31 +142,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     };
   }, [editor]);
 
-  const setLink = useCallback(() => {
-    const previousUrl = editor?.getAttributes("link").href;
-    const url = window.prompt("URL", previousUrl);
-
-    // cancelled
-    if (url === null) {
-      return;
-    }
-
-    // empty
-    if (url === "") {
-      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
-
-      return;
-    }
-
-    // update link
-    editor
-      ?.chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: url })
-      .run();
-  }, [editor]);
-
   const handleMouseDown = (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
@@ -221,7 +197,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     translations.accessibility.red,
   ];
 
-  // Close the dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -243,7 +218,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     {
       label: translations.menu.drawingBlock,
       active: "paper",
-      icon: <icons.Brush2Fill className="border-none text-xl w-7 h-7" />,
+      icon: <Icon name="Brush2Fill" />,
       action: (editor: any) => editor?.chain().focus().insertPaper().run(),
     },
   ];
@@ -289,6 +264,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   useEffect(() => {
+    if (Capacitor.getPlatform() === "web") return;
+
     const keyboardShowListener = Keyboard.addListener("keyboardDidShow", () => {
       setIsKeyboardVisible(true);
     }) as any;
@@ -307,26 +284,20 @@ const Toolbar: React.FC<ToolbarProps> = ({
     {
       active: "bulletList",
       label: translations.menu.bulletList,
-      icon: (
-        <icons.ListUnorderedIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
-      ),
+      icon: <Icon name="ListUnordered" />,
       action: (editor: any) => editor?.chain().focus().toggleBulletList().run(),
     },
     {
       active: "orderedList",
-      label: translations.menu.bulletList,
-      icon: (
-        <icons.ListOrderedIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
-      ),
+      label: translations.menu.orderedList,
+      icon: <Icon name="ListOrdered" />,
       action: (editor: any) =>
         editor?.chain().focus().toggleOrderedList().run(),
     },
     {
       active: "tasklist",
-      label: translations.menu.bulletList,
-      icon: (
-        <icons.ListCheck2Icon className="border-none text-xl w-7 h-7 cursor-pointer" />
-      ),
+      label: translations.menu.tasklist,
+      icon: <Icon name="ListCheck2" />,
       action: (editor: any) => editor?.chain().focus().toggleTaskList().run(),
     },
   ];
@@ -346,7 +317,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             className="p-1 dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
             aria-label={translations.accessibility.back}
           >
-            <icons.ArrowLeftLineIcon className="border-none text-xl w-7 h-7" />
+            <Icon name="ArrowLeftLine" />
           </Link>
         </div>
         <div className="sm:hidden flex items-center">
@@ -356,7 +327,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onClick={() => editor?.chain().focus().undo().run()}
             aria-label={translations.editor.undo}
           >
-            <icons.ArrowGoBackLineIcon className="border-none text-xl w-7 h-7" />
+            <Icon name="ArrowGoBackLine" />
           </button>
           <button
             className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
@@ -364,7 +335,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             onClick={() => editor?.chain().focus().redo().run()}
             aria-label={translations.editor.redo}
           >
-            <icons.ArrowGoForwardLineIcon className="border-none text-xl w-7 h-7" />
+            <Icon name="ArrowGoForwardLine" />
           </button>
           <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
         </div>
@@ -378,7 +349,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onClick={() => editor?.chain().focus().setParagraph().run()}
           aria-label={translations.menu.paragraph}
         >
-          <icons.ParagraphIcon className="border-none text-xl w-7 h-7" />
+          <Icon name="Paragraph" />
         </button>
         <Popover
           placement="top"
@@ -389,11 +360,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
               className={`p-1 ${
                 editor?.isActive("highlight")
                   ? "text-primary"
-                  : "flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
+                  : "flex items-center rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
               } cursor-pointer flex`}
             >
-              <icons.HeadingIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
-              <icons.ArrowDownS className="border-none w-4 h-4 cursor-pointer" />
+              <Icon name="Heading" />
+              <Icon name="ArrowDownS" className="w-4 h-4" />
             </button>
           }
           aria-label={translations.accessibility.highlight}
@@ -401,6 +372,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <>
             {headings.map((heading) => (
               <button
+                key={heading}
                 aria-label={`${translations.menu.heading} ${heading}`} // v-tooltip replacement
                 className={`flex items-center p-1 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200 ${
                   editor?.isActive("heading", { level: heading })
@@ -438,7 +410,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onClick={() => editor?.chain().focus().toggleBold().run()}
           aria-label={translations.accessibility.bold}
         >
-          <icons.BoldIcon className="border-none text-xl w-7 h-7" />
+          <Icon name="Bold" />
         </button>
         <button
           className={
@@ -450,7 +422,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onClick={() => editor?.chain().focus().toggleItalic().run()}
           aria-label={translations.accessibility.italic}
         >
-          <icons.ItalicIcon className="border-none text-xl w-7 h-7" />
+          <Icon name="Italic" />
         </button>
         <button
           className={
@@ -462,7 +434,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onClick={() => editor?.chain().focus().toggleUnderline().run()}
           aria-label={translations.accessibility.underline}
         >
-          <icons.UnderlineIcon className="border-none text-xl w-7 h-7" />
+          <Icon name="Underline" />
         </button>
         <button
           className={
@@ -474,7 +446,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           onClick={() => editor?.chain().focus().toggleStrike().run()}
           aria-label={translations.accessibility.strikethrough}
         >
-          <icons.StrikethroughIcon className="border-none text-xl w-7 h-7" />
+          <Icon name="Strikethrough" />
         </button>
         <Popover
           placement="top"
@@ -488,7 +460,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               } cursor-pointer flex-1`}
             >
-              <icons.MarkPenLineIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
+              <Icon name="MarkPenLine" />
             </button>
           }
           aria-label={translations.accessibility.highlight}
@@ -511,10 +483,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                     setTextColor(color);
                   }}
                 >
-                  <icons.fontColor
-                    className="border-none text-xl w-7 h-7 cursor-pointer"
-                    style={{ color: color }}
-                  />
+                  <Icon name="fontColor" />
                 </button>
               ))}
             </div>
@@ -545,7 +514,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               onClick={() => editor?.chain().focus().addRowAfter().run()}
               aria-label={translations.accessibility.insertRowAfter}
             >
-              <icons.InsertRowBottomIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="InsertRowBottom" />
             </button>
             <button
               className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
@@ -553,7 +522,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               onClick={() => editor?.chain().focus().addRowBefore().run()}
               aria-label={translations.accessibility.insertRowBefore}
             >
-              <icons.InsertRowTopIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="InsertRowTop" />
             </button>
             <button
               className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
@@ -561,7 +530,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               onClick={() => editor?.chain().focus().deleteRow().run()}
               aria-label={translations.accessibility.deleteRow}
             >
-              <icons.DeleteRow className="border-none text-xl w-7 h-7" />
+              <Icon name="DeleteRow" />
             </button>
             <button
               className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
@@ -569,7 +538,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               onClick={() => editor?.chain().focus().addColumnBefore().run()}
               aria-label={translations.accessibility.insertColumnLeft}
             >
-              <icons.InsertColumnLeftIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="InsertColumnLeft" />
             </button>
             <button
               className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
@@ -577,7 +546,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               onClick={() => editor?.chain().focus().addColumnAfter().run()}
               aria-label={translations.accessibility.insertColumnRight}
             >
-              <icons.InsertColumnRightIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="InsertColumnRight" />
             </button>
             <button
               className="p-1 block align-end rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
@@ -585,7 +554,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               onClick={() => editor?.chain().focus().deleteColumn().run()}
               aria-label={translations.accessibility.deleteColumn}
             >
-              <icons.DeleteColumn className="border-none text-xl w-7 h-7" />
+              <Icon name="DeleteColumn" />
             </button>
           </>
         )}
@@ -601,11 +570,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   className={`p-1 ${
                     editor?.isActive("highlight")
                       ? "text-primary"
-                      : "flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
+                      : "flex items-center rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
                   } cursor-pointer flex`}
                 >
-                  <icons.ListUnorderedIcon className="border-none text-xl w-7 h-7 cursor-pointer" />
-                  <icons.ArrowDownS className="border-none w-4 h-4 cursor-pointer" />
+                  <Icon name="ListUnordered" />
+                  <Icon name="ArrowDownS" className="w-4 h-4" />
                 </button>
               }
               aria-label={translations.accessibility.highlight}
@@ -613,6 +582,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <>
                 {lists.map((item) => (
                   <button
+                    key={item.active}
                     className={`flex items-center p-1 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200 ${
                       editor?.isActive(item.active.toLowerCase())
                         ? "text-primary"
@@ -642,7 +612,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               onClick={() => editor?.chain().focus().toggleBlockquote().run()}
               aria-label={translations.menu.quote}
             >
-              <icons.DoubleQuotesLIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="DoubleQuotesL" />
             </button>
             <button
               className={
@@ -654,7 +624,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
               aria-label={translations.menu.code}
             >
-              <icons.CodeBoxLineIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="CodeBoxLine" />
             </button>
           </>
         )}
@@ -676,10 +646,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
               : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
           }`}
           onMouseDown={handleMouseDown}
-          onClick={setLink}
+          onClick={() => editor?.chain().focus().toggleLink({ href: "" }).run()}
           aria-label={translations.accessibility.link}
         >
-          <icons.LinkIcon className="border-none text-xl w-7 h-7" />
+          <Icon name="Link" />
         </button>
         <FileUploadComponent
           onFileUpload={handlefileUpload}
@@ -702,7 +672,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           }
           aria-label={translations.menu.table}
         >
-          <icons.Table2Icon className="border-none text-xl w-7 h-7" />
+          <Icon name="Table2" />
         </button>
         <Popover
           placement="top"
@@ -715,7 +685,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               }
               aria-label={translations.accessibility.highlight}
             >
-              <icons.MoreLineIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="MoreLine" />
             </button>
           }
         >
@@ -735,7 +705,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               onClick={handleAddIframe}
               aria-label={translations.menu.embed}
             >
-              <icons.PagesLineIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="PagesLine" />
             </button>
             {draw.map((item) => (
               <button
@@ -756,30 +726,30 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <div className="sm:flex items-center hidden">
           <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
           <button
-            className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+            className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333]"
             onMouseDown={handleMouseDown}
             onClick={() => openDialog()}
             aria-label={translations.editor.share}
           >
-            <icons.ShareLineIcon className="border-none text-xl w-7 h-7" />
+            <Icon name="ShareLine" />
           </button>
           <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
           <button
-            className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+            className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333]"
             onMouseDown={handleMouseDown}
             onClick={() => toggleFocusMode()}
             aria-label={translations.editor.ReadingMode}
           >
-            <icons.FileArticleLine className="border-none text-xl w-7 h-7" />
+            <Icon name="FileArticleLine" />
           </button>
           {!isTableActive && !isTextSelected && (
             <button
-              className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+              className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333]"
               onMouseDown={handleMouseDown}
               onClick={() => handleshowFind()}
               aria-label={translations.editor.searchPage}
             >
-              <icons.Search2LineIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="Search2Line" />
             </button>
           )}
         </div>
@@ -787,12 +757,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <>
             <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
             <button
-              className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer"
+              className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333]"
               onMouseDown={handleMouseDown}
               onClick={() => editor?.chain().focus().deleteTable().run()}
               aria-label={translations.editor.deleteTable}
             >
-              <icons.DeleteBinLineIcon className="border-none text-xl w-7 h-7" />
+              <Icon name="DeleteBinLine" />
             </button>
           </>
         )}

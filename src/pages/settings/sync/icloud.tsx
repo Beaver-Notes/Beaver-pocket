@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "@/store/types";
-import icons from "@/lib/remixicon-react";
+import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
 interface iCloudProps {
   notesState: Record<string, Note>;
   setNotesState: (notes: Record<string, Note>) => void;
@@ -8,38 +9,19 @@ interface iCloudProps {
 
 const iCloudSync: React.FC<iCloudProps> = () => {
   // Translations
-  const [translations, setTranslations] = useState({
-    icloud: {
-      title: "icloud.title",
-      import: "icloud.import",
-      export: "icloud.export",
-      submit: "icloud.submit",
-      getToken: "icloud.getToken",
-      autoSync: "icloud.Autosync",
-      logout: "icloud.logout",
-      refreshingToken: "icloud.refreshingToken",
-    },
-    sync: {
-      existingFolder: "sync.existingFolder",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    icloud: {},
+    sync: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   const [autoSync, setAutoSync] = useState<boolean>(() => {
@@ -95,7 +77,10 @@ const iCloudSync: React.FC<iCloudProps> = () => {
         </p>
         <div className="flex justify-center items-center">
           <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
-            <icons.iCloud className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
+            <Icon
+              name="iCloud"
+              className="w-32 h-32 text-neutral-800 dark:text-neutral-200"
+            />
           </div>
         </div>
         <section>

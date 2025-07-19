@@ -4,9 +4,10 @@ import SearchBar from "./components/Home/Search";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/it";
 import { useNotesState } from "./store/Activenote";
-import Icons from "./lib/remixicon-react";
 import dayjs from "dayjs";
 import NoteCard from "./components/Home/NoteCard";
+import Icon from "./components/UI/Icon";
+import { useTranslation } from "./utils/translations";
 
 interface ArchiveProps {
   notesState: Record<string, Note>;
@@ -75,33 +76,18 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
 
   dayjs.extend(relativeTime);
 
-  const [translations, setTranslations] = useState({
-    archive: {
-      archived: "archive.archived",
-      messagePt1: "archive.messagePt1",
-      messagePt2: "archive.messagePt2",
-      unlocktoeditor: "archive.unlocktoeditor",
-      noContent: "archive.noContent",
-      title: "archive.title",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    archive: {},
   });
 
   useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `./assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   return (
@@ -129,7 +115,10 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
                     />
                     <p className="py-2 text-lg text-center">
                       {translations.archive.messagePt1 || "-"}
-                      <Icons.ArchiveDrawerLineIcon className="inline-block w-5 h-5" />{" "}
+                      <Icon
+                        name="ArchiveDrawerLine"
+                        className="inline-block w-5 h-5"
+                      />
                       {translations.archive.messagePt2 || "-"}
                     </p>
                   </div>

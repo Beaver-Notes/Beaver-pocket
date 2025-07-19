@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Note } from "@/store/types";
 import { Browser } from "@capacitor/browser";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import icons from "@/lib/remixicon-react";
+import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 
@@ -18,42 +19,21 @@ const DropboxSync: React.FC<DropboxProps> = () => {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [authorizationCode, setAuthorizationCode] = useState<string>("");
 
-  // Translations
-  const [translations, setTranslations] = useState({
-    dropbox: {
-      title: "dropbox.title",
-      import: "dropbox.import",
-      export: "dropbox.export",
-      submit: "dropbox.submit",
-      getToken: "dropbox.getToken",
-      autoSync: "dropbox.Autosync",
-      logout: "dropbox.logout",
-      refreshingToken: "dropbox.refreshingToken",
-      placeholder: "dropbox.placeholder",
-    },
-    sync: {
-      existingFolder: "sync.existingFolder",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    dropbox: {},
+    sync: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
-
+  
   const handleLogin = async () => {
     await Browser.open({
       url: `https://www.dropbox.com/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&token_access_type=offline`,
@@ -279,7 +259,7 @@ const DropboxSync: React.FC<DropboxProps> = () => {
         </p>
         <div className="flex justify-center items-center">
           <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
-            <icons.DropboxFillIcon className="w-32 h-32 text-blue-700 z-0" />
+            <Icon name="DropboxFill" className="w-32 h-32 text-blue-700 z-0" />
           </div>
         </div>
         {accessToken ? (

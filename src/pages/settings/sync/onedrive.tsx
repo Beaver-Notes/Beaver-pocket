@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { MsAuthPlugin } from "@recognizebv/capacitor-plugin-msauth";
-import icons from "@/lib/remixicon-react";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { Note } from "@/store/types";
+import Icon from "@/components/UI/Icon";
 
 interface OneDriveProps {
   setNotesState: (notes: Record<string, Note>) => void;
@@ -175,7 +175,10 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
         </p>
         <div className="flex justify-center items-center">
           <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
-            <icons.OneDrive className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
+            <Icon
+              name="OneDrive"
+              className="w-32 h-32 text-neutral-800 dark:text-neutral-200"
+            />
           </div>
         </div>
         {accessToken ? (

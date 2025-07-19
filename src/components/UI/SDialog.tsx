@@ -6,9 +6,9 @@ import {
   DialogTitle,
   Transition,
 } from "@headlessui/react";
-import Icons from "../../lib/remixicon-react";
 import { shareNote } from "../../utils/share";
 import { Note } from "../../store/types";
+import Icon from "./Icon";
 
 type SDialogProps = {
   isOpen: boolean;
@@ -112,7 +112,7 @@ const SDialog: React.FC<SDialogProps> = ({
                   onClick={closeDialog}
                   className="text-white dark:text-[color:var(--selected-dark-text)] bg-neutral-300 dark:bg-neutral-700 rounded-full hover:text-neutral-100 focus:outline-none"
                 >
-                  <Icons.CloseLineIcon />
+                  <Icon name="CloseLine" />
                 </button>
               </div>
               <div className="my-2 border-b dark:border-neutral-500"></div>
@@ -125,7 +125,8 @@ const SDialog: React.FC<SDialogProps> = ({
                     onClick={() => shareNote(note.id, notesState)}
                   >
                     <p className="text-base pl-2 font-bold">BEA</p>
-                    <Icons.FileTextLineIcon
+                    <Icon
+                      name="FileTextLine"
                       className="w-6 h-6"
                       aria-hidden="true"
                     />
@@ -139,7 +140,8 @@ const SDialog: React.FC<SDialogProps> = ({
                     aria-label="PDF"
                   >
                     <p className="text-base pl-2 font-bold">PDF</p>
-                    <Icons.FileArticleLine
+                    <Icon
+                      name="FileArticleLine"
                       className="w-6 h-6"
                       aria-hidden="true"
                     />

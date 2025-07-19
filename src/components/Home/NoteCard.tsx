@@ -1,5 +1,4 @@
 import { Note } from "../../store/types";
-import Icons from "../../lib/remixicon-react";
 import { useNotesState } from "../../store/Activenote";
 import ReactDOM from "react-dom/client";
 import ModularPrompt from "../UI/Password";
@@ -23,6 +22,8 @@ import dayjs from "dayjs";
 import "dayjs/locale/en";
 import "dayjs/locale/de";
 import "dayjs/locale/zh-cn";
+import Icon from "../UI/Icon";
+import { useTranslation } from "@/utils/translations";
 
 interface BookmarkedProps {
   note: Note;
@@ -45,20 +46,19 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   const [, setFilteredNotes] = useState<Record<string, Note>>(notesState);
 
   // Translations
-  const [translations, setTranslations] = useState({
-    card: {
-      unlocktoedit: "card.unlocktoedit",
-      noContent: "card.noContent",
-      confirmDelete: "card.confirmDelete",
-      bookmarkError: "card.bookmarkError",
-      archiveError: "card.archiveError",
-      wrongpasswd: "card.wrongpasswd",
-      lockerror: "card.lockerror",
-      enterpasswd: "card.enterpasswd",
-      biometricReason: "card.biometricReason",
-      biometricTitle: "card.biometricTitle",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    card: {},
   });
+
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
+      }
+    };
+    fetchTranslations();
+  }, []);
 
   useEffect(() => {
     const loadTranslations = async () => {
@@ -308,22 +308,21 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   }
 
   function truncateContentPreview(
-    content: JSONContent | string | JSONContent[]
-  ) {
+    content: JSONContent | string | JSONContent[] | undefined | null
+  ): string {
     let text = "";
 
     if (typeof content === "string") {
       text = content;
     } else if (Array.isArray(content)) {
       const jsonContent: JSONContent = { type: "doc", content };
-      text = extractParagraphTextFromContent(jsonContent);
-    } else if (content && content.content) {
+      text = extractParagraphTextFromContent(jsonContent) || "";
+    } else if (content && typeof content === "object" && "content" in content) {
       const { title, ...contentWithoutTitle } = content;
-      text = extractParagraphTextFromContent(contentWithoutTitle);
+      text = extractParagraphTextFromContent(contentWithoutTitle) || "";
     }
 
-    // Handle long URLs or continuous text
-    text = text.replace(/(\S{30,})/g, "$1 "); // Add space after long continuous strings
+    text = text.replace(/(\S{30,})/g, "$1 ");
 
     if (text.length <= MAX_CONTENT_PREVIEW_LENGTH) {
       return text;
@@ -387,7 +386,10 @@ const NoteCard: React.FC<BookmarkedProps> = ({
                   handleToggleLock(note.id, e);
                 }}
               >
-                <Icons.LockClosedIcon className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]" />
+                <Icon
+                  name="LockClosed"
+                  className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]"
+                />
               </button>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 {translations.card.unlocktoedit || "-"}
@@ -418,9 +420,12 @@ const NoteCard: React.FC<BookmarkedProps> = ({
             }}
           >
             {note.isBookmarked ? (
-              <Icons.Bookmark3FillIcon className="w-8 h-8 mr-2 text-primary" />
+              <Icon
+                name="Bookmark3Fill"
+                className="w-8 h-8 mr-2 text-primary"
+              />
             ) : (
-              <Icons.Bookmark3LineIcon className="w-8 h-8 mr-2" />
+              <Icon name="Bookmark3Line" className="w-8 h-8 mr-2" />
             )}
           </button>
 
@@ -436,9 +441,9 @@ const NoteCard: React.FC<BookmarkedProps> = ({
             }}
           >
             {note.isArchived ? (
-              <Icons.ArchiveDrawerFillIcon className="w-8 h-8 mr-2" />
+              <Icon name="ArchiveDrawerFill" className="w-8 h-8 mr-2" />
             ) : (
-              <Icons.ArchiveDrawerLineIcon className="w-8 h-8 mr-2" />
+              <Icon name="ArchiveDrawerLine" className="w-8 h-8 mr-2" />
             )}
           </button>
 
@@ -452,9 +457,9 @@ const NoteCard: React.FC<BookmarkedProps> = ({
             }}
           >
             {note.isLocked ? (
-              <Icons.LockClosedIcon className="w-8 h-8 mr-2" />
+              <Icon name="LockClosed" className="w-8 h-8 mr-2" />
             ) : (
-              <Icons.LockOpenIcon className="w-8 h-8 mr-2" />
+              <Icon name="LockOpen" className="w-8 h-8 mr-2" />
             )}
           </button>
 
@@ -466,7 +471,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               handleDeleteNote(note.id, e);
             }}
           >
-            <Icons.DeleteBinLineIcon className="w-8 h-8 mr-2" />
+            <Icon name="DeleteBinLine" className="w-8 h-8 mr-2" />
           </button>
         </div>
         <div

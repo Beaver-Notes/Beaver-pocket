@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Note } from "../../store/types";
-import dayjs from "dayjs";
 import { useExportData } from "../../utils/exportUtils";
 import { useHandleImportData } from "../../utils/importUtils";
 import { useNavigate } from "react-router-dom";
-import icons from "../../lib/remixicon-react";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { Zip } from "capa-zip";
+import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
 
 interface SyncProps {
   notesState: Record<string, Note>;
@@ -95,39 +95,18 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
   const [sortingOption, setSortingOption] = useState("updatedAt");
 
   // Translations
-  const [translations, setTranslations] = useState({
-    sync: {
-      Dropbox: "sync.Dropbox",
-      Webdav: "sync.Webdav",
-      importData: "sync.importData",
-      exportData: "sync.exportData",
-      exportError: "sync.exportError",
-      shareError: "sync.shareError",
-      encryptwPasswd: "sync.encryptwPasswd",
-      importSuccess: "sync.importSuccess",
-      importInvalid: "sync.importInvalid",
-      Sync: "sync.Sync",
-      iCloud: "sync.iCloud",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    sync: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   return (
@@ -146,7 +125,8 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     onClick={() => navigate("/dropbox")}
                     aria-label="Dropbox"
                   >
-                    <icons.DropboxFillIcon
+                    <Icon
+                      name="DropboxFill"
                       className="w-10 h-10"
                       aria-hidden="true"
                     />
@@ -158,7 +138,11 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     onClick={() => navigate("/dav")}
                     aria-label="Webdav"
                   >
-                    <icons.CloudLine className="w-10 h-10" aria-hidden="true" />
+                    <Icon
+                      name="CloudLine"
+                      className="w-10 h-10"
+                      aria-hidden="true"
+                    />
                     <p className="text-2xl pl-2 py-1 font-bold">Webdav</p>
                   </button>
 
@@ -169,7 +153,11 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     onClick={() => navigate("/icloud")}
                     aria-label="iCloud"
                   >
-                    <icons.iCloud className="w-10 h-10" aria-hidden="true" />
+                    <Icon
+                      name="iCloud"
+                      className="w-10 h-10"
+                      aria-hidden="true"
+                    />
                     <p className="text-2xl pl-2 py-1 font-bold">iCloud</p>
                   </button>
 
@@ -178,7 +166,11 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     onClick={() => navigate("/onedrive")}
                     aria-label="OneDrive"
                   >
-                    <icons.OneDrive className="w-10 h-10" aria-hidden="true" />
+                    <Icon
+                      name="OneDrive"
+                      className="w-10 h-10"
+                      aria-hidden="true"
+                    />
                     <p className="text-2xl pl-2 py-1 font-bold">OneDrive</p>
                   </button>
 
@@ -187,7 +179,11 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                     onClick={() => navigate("/drive")}
                     aria-label="Google Drive"
                   >
-                    <icons.GDrive className="w-10 h-10" aria-hidden="true" />
+                    <Icon
+                      name="GDrive"
+                      className="w-10 h-10"
+                      aria-hidden="true"
+                    />
                     <p className="text-2xl pl-2 py-1 font-bold">GDrive</p>
                   </button>
                 </div>
@@ -199,7 +195,10 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                       className="w-full flex items-center justify-center h-20  bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl"
                       aria-label={translations.sync.importData || "-"}
                     >
-                      <icons.Download2LineIcon className="w-12 h-12 text-neutral-800 dark:text-neutral-300" />
+                      <Icon
+                        name="Download2Line"
+                        className="w-12 h-12 text-neutral-800 dark:text-neutral-300"
+                      />
                     </label>
                     <input
                       type="file"
@@ -214,7 +213,10 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
                       onClick={exportData}
                       aria-label={translations.sync.exportData || "-"}
                     >
-                      <icons.Upload2LineIcon className="w-12 h-12 text-neutral-800 dark:text-neutral-300" />
+                      <Icon
+                        name="Upload2Line"
+                        className="w-12 h-12 text-neutral-800 dark:text-neutral-300"
+                      />
                     </button>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { VoiceRecorder } from "capacitor-voice-recorder";
-import icons from "../lib/remixicon-react";
+import Icon from "@/components/UI/Icon";
 
 interface FileUploadProps {
   onAudioUpload: (fileUrl: string, fileName: string) => void;
@@ -81,9 +81,12 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
             aria-disabled={isProcessing}
           >
             {isProcessing ? (
-              <icons.Spinner className="text-xl w-7 h-7 cursor-pointer animate-spin" />
+              <Icon
+                name="Spinner"
+                className="text-xl w-7 h-7 cursor-pointer animate-spin"
+              />
             ) : (
-              <icons.MicLineIcon className="text-xl w-7 h-7 cursor-pointer" />
+              <Icon name="MicLine" />
             )}
           </button>
         ) : (
@@ -98,9 +101,12 @@ const AudioUploadComponent: React.FC<FileUploadProps> = ({
             aria-disabled={isProcessing}
           >
             {isProcessing ? (
-              <icons.Spinner className="text-xl w-7 h-7 cursor-pointer animate-spin" />
+              <Icon
+                name="Spinner"
+                className="text-xl w-7 h-7 cursor-pointer animate-spin"
+              />
             ) : (
-              <icons.StopCircleLineIcon className="text-xl w-7 h-7 cursor-pointer" />
+              <Icon name="StopCircleLine" />
             )}
           </button>
         )}

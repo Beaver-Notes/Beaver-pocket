@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import icons from "../../lib/remixicon-react";
 import "../../assets/css/Modal.css"; // Import your CSS file for modal styles
 import dayjs from "dayjs";
+import Icon from "./Icon";
+import { useTranslation } from "@/utils/translations";
 
 interface ModularPromptProps {
   title: string;
@@ -38,33 +39,18 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
   };
 
   // Translations
-  const [translations, setTranslations] = useState({
-    home: {
-      enterpasswd: "home.enterpasswd",
-      confirm: "home.confirm",
-      cancel: "home.cancel",
-      showPassword: "home.showPassword",
-      hidePassword: "home.hidePassword",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    home: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   return (
@@ -103,12 +89,16 @@ const ModularPrompt: React.FC<ModularPromptProps> = ({
             <button
               onClick={toggleInputContentVisibility}
               className="absolute right-0 py-1.5 text-sm dark:text-[color:var(--selected-dark-text)] text-neutral-500 focus:outline-none"
-              aria-label={showInputContent ? translations.home.hidePassword : translations.home.showPassword}
+              aria-label={
+                showInputContent
+                  ? translations.home.hidePassword
+                  : translations.home.showPassword
+              }
             >
               {showInputContent ? (
-                <icons.EyeLineIcon className="w-8 h-8 mr-2" />
+                <Icon name="EyeLine" className="mr-2" />
               ) : (
-                <icons.EyeCloseLineIcon className="w-8 h-8 mr-2" />
+                <Icon name="EyeCloseLine" className="mr-2" />
               )}
             </button>
           </div>

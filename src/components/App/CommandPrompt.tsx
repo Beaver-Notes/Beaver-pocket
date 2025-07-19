@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "../../store/types";
-import icons from "../../lib/remixicon-react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useSaveNote } from "../../store/notes";
 import Mousetrap from "mousetrap";
 import { formatTime } from "../../utils/time-format";
 import { JSONContent } from "@tiptap/react";
+import Icon from "../UI/Icon";
 
 interface CommandPromptProps {
   isOpen: boolean;
@@ -278,7 +278,8 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
               role="search"
             >
               <div>
-                <icons.Search2LineIcon
+                <Icon
+                  name="Search2Line"
                   className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6"
                   aria-hidden="true"
                 />
@@ -359,7 +360,8 @@ const CommandPrompt: React.FC<CommandPromptProps> = ({
                         <span>
                           {note.title || "Untitled Note"}
                           {note.isLocked && (
-                            <icons.LockClosedIcon
+                            <Icon
+                              name="LockClosed"
                               className="text-neutral-600 ml-2 w-4 translate-y-[-1.5px]"
                               aria-label={translations.accessibility.lockedNote}
                             />

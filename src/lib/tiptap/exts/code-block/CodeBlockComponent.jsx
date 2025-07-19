@@ -18,12 +18,20 @@ const CodeBlockComponent = ({ node, updateAttributes, extension }) => {
     setSelectedLanguage(node.attrs.language || "");
   }, [node.attrs.language]);
 
-  const [translations, setTranslations] = useState({
-    accessibility: {
-      selectcodeLanguage: "accessibility.selectcodeLanguage"
-    },
+  const [translations, setTranslations] = ({
+    accessibility: {},
   });
 
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
+      }
+    };
+    fetchTranslations();
+  }, []);
+  
 
   return (
     <NodeViewWrapper className="relative">
