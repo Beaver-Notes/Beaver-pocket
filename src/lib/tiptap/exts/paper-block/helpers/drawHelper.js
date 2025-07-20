@@ -318,14 +318,87 @@ export const transformPoints = (
  * Check if pointer input is valid for drawing
  */
 export const isPenInput = (e) => {
-  return e.pointerType === "pen" || e.pointerType === "mouse";
+  return (
+    e.pointerType === "pen" ||
+    e.pointerType === "mouse" ||
+    e.pointerType === "touch"
+  );
 };
 
+const MOVEMENT_THRESHOLD = 2;
+let lastTouch = { x: null, y: null };
+
 /**
- * Check if input is palm touch (should be ignored)
+ * Determines if a touch input is likely from a palm and should be ignored.
  */
-export const isPalmTouch = (e) => {
-  return e.pointerType === "touch";
+export const isPalmTouch = (e, svg, hasStarted) => {
+  const PALM_MIN_SIZE = 50;
+  const PALM_MAX_PRESSURE = 0.1;
+
+  if (e.pointerType !== "touch") return false;
+
+  if (hasStarted) return false;
+
+  const width = e.width ?? 0;
+  const height = e.height ?? 0;
+  const pressure = typeof e.pressure === "number" ? e.pressure : null;
+  const isLargeTouch = width >= PALM_MIN_SIZE || height >= PALM_MIN_SIZE;
+  const isLowPressure =
+    pressure !== null ? pressure <= PALM_MAX_PRESSURE : true;
+
+  const moved = hasMoved(e);
+
+  const shouldIgnore =
+    isLargeTouch && isLowPressure && !moved && isInsideSVG(e, svg);
+
+  console.debug("isPalmTouch:", {
+    width,
+    height,
+    pressure,
+    isLargeTouch,
+    isLowPressure,
+    moved,
+    shouldIgnore,
+  });
+
+  return shouldIgnore;
+};
+
+function hasMoved(e) {
+  const dx = Math.abs((e.clientX ?? 0) - (lastTouch.x ?? 0));
+  const dy = Math.abs((e.clientY ?? 0) - (lastTouch.y ?? 0));
+  const moved = dx > MOVEMENT_THRESHOLD || dy > MOVEMENT_THRESHOLD;
+  lastTouch = { x: e.clientX, y: e.clientY };
+  return moved;
+}
+
+/**
+ * Checks if the touch point is inside or near the SVG canvas.
+ * Adds a buffer around the SVG to account for edge cases.
+ *
+ * @param {PointerEvent} e
+ * @param {SVGSVGElement} svg
+ * @returns {boolean}
+ */
+const isInsideSVG = (e, svg) => {
+  const buffer = 20; // px tolerance to account for near-edge touches
+  const rect = svg.getBoundingClientRect();
+
+  const inside =
+    e.clientX >= rect.left - buffer &&
+    e.clientX <= rect.right + buffer &&
+    e.clientY >= rect.top - buffer &&
+    e.clientY <= rect.bottom + buffer;
+
+  console.debug("isInsideSVG: bounds check", {
+    clientX: e.clientX,
+    clientY: e.clientY,
+    rect,
+    buffer,
+    inside,
+  });
+
+  return inside;
 };
 
 /**
@@ -352,12 +425,11 @@ export const getToolSettings = (
 /**
  * Prevent touch scrolling on drawing canvas
  */
-export const preventTouchScroll = (event, svgRef) => {
+export const preventTouchScroll = (event, svgElement) => {
   if (event.touches && event.touches.length > 1) {
     return true;
   }
 
-  const svgElement = svgRef.current;
   if (
     svgElement &&
     (event.target === svgElement || svgElement.contains(event.target))
