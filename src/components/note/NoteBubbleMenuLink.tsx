@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
 import { useTranslation } from "@/utils/translations";
 import Icon from "../UI/Icon";
+import UiList from "../UI/List";
+import UiListItem from "../UI/ListItem";
 
 interface Props {
   editor: any;
@@ -117,24 +119,20 @@ const NoteBubbleMenuLink: React.FC<Props> = ({ editor, notes }) => {
   return (
     <div>
       {currentLinkVal.startsWith("@") && notes.length > 0 && (
-        <div className="transition-all p-2 space-y-1 border-b max-h-48 overflow-auto">
-          {notes.map((note, index) => (
-            <div
+        <UiList className="transition-all p-2 space-y-1 border-b max-h-48 overflow-auto">
+          {notes.map((note) => (
+            <UiListItem
               key={note.id}
               onClick={() => updateCurrentLink(note.id)}
-              className={`cursor-pointer line-clamp leading-tight p-2 rounded ${
-                index === selectedNoteIndex
-                  ? "bg-blue-100 dark:bg-blue-800 text-blue-900 dark:text-white font-semibold"
-                  : ""
-              }`}
+              className="cursor-pointer line-clamp leading-tight"
               style={{ userSelect: "none" }}
             >
               <p className="text-overflow w-full text-sm">
                 {note.title || translations.link?.untitlednote || "Untitled"}
               </p>
-            </div>
+            </UiListItem>
           ))}
-        </div>
+        </UiList>
       )}
 
       <div className="p-2">
@@ -143,8 +141,8 @@ const NoteBubbleMenuLink: React.FC<Props> = ({ editor, notes }) => {
             id="bubble-input"
             type="url"
             placeholder={translations.link?.placeholder || "Enter link"}
-            className="flex-1 bg-transparent border border-gray-300 rounded px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:text-white dark:focus:ring-blue-400"
             value={currentLinkVal}
+            className="flex-1 bg-transparent"
             onChange={(e) => setCurrentLinkVal(e.target.value)}
             onKeyDown={(e) => {
               keydownHandler(e);
@@ -158,7 +156,7 @@ const NoteBubbleMenuLink: React.FC<Props> = ({ editor, notes }) => {
           />
           <button
             title="Remove link"
-            className="text-neutral-600 dark:text-neutral-200 p-2 rounded hover:bg-gray-200 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-neutral-600 -mr-1 p-2 dark:text-neutral-200"
             onClick={() => editor?.chain().focus().unsetLink().run()}
             aria-label="Remove link"
           >
@@ -166,7 +164,7 @@ const NoteBubbleMenuLink: React.FC<Props> = ({ editor, notes }) => {
           </button>
           <button
             title="Open link"
-            className="text-neutral-600 dark:text-neutral-200 p-2 rounded hover:bg-gray-200 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-neutral-600 -mr-1 p-2 dark:text-neutral-200"
             onClick={openLink}
             aria-label="Open link"
             disabled={!currentLinkVal}

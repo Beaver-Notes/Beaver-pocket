@@ -1,7 +1,5 @@
 import { Note } from "../../store/types";
 import { useNotesState } from "../../store/Activenote";
-import ReactDOM from "react-dom/client";
-import ModularPrompt from "../UI/Password";
 import * as CryptoJS from "crypto-js";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { NativeBiometric } from "@capgo/capacitor-native-biometric";
@@ -24,6 +22,7 @@ import "dayjs/locale/de";
 import "dayjs/locale/zh-cn";
 import Icon from "../UI/Icon";
 import { useTranslation } from "@/utils/translations";
+import emitter from "tiny-emitter/instance";
 
 interface BookmarkedProps {
   note: Note;
@@ -244,31 +243,23 @@ const NoteCard: React.FC<BookmarkedProps> = ({
     }
   };
 
-  // Helper function to prompt the user for a password
   const promptForPassword = async (): Promise<string | null> => {
-    const promptRoot = document.createElement("div");
-    document.body.appendChild(promptRoot);
-
-    return new Promise<string | null>((resolve) => {
-      const handleConfirm = (value: string | null) => {
-        root.unmount(); // Unmount with new API
-        document.body.removeChild(promptRoot); // Clean up DOM
-        resolve(value);
-      };
-      const handleCancel = () => {
-        root.unmount(); // Unmount with new API
-        document.body.removeChild(promptRoot); // Clean up DOM
-        resolve(null);
-      };
-
-      const root = ReactDOM.createRoot(promptRoot); // Create root
-      root.render(
-        <ModularPrompt
-          title={translations.card.enterpasswd}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
-      );
+    return new Promise((resolve) => {
+      emitter.emit("show-dialog", "prompt", {
+        title: translations.card.enterpasswd,
+        okText: translations.card.setkey,
+        body: translations.settings.warning,
+        cancelText: translations.card.cancel,
+        placeholder: translations.card.Password,
+        allowedEmpty: false,
+        onConfirm: (value: string) => {
+          resolve(value); // Resolve with password
+          return true; // Close modal
+        },
+        onCancel: () => {
+          resolve(null); // Resolve as cancelled
+        },
+      });
     });
   };
 

@@ -1,0 +1,10 @@
+.expand-enter-active,
+.expand-exit-active {
+  transition: height 0.2s ease-in-out;
+  overflow: hidden;
+}
+
+.expand-enter,
+.expand-exit-done {
+  height: 0;
+}

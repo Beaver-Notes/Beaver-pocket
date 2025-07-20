@@ -1,8 +1,6 @@
 import EditorComponent from "../../components/note/NoteEditor";
 import { useNavigate, useParams } from "react-router-dom";
-import ReactDOM from "react-dom";
 import * as CryptoJS from "crypto-js";
-import ModularPrompt from "../../components/UI/Password";
 import { useEffect, useState } from "react";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import {
@@ -14,6 +12,7 @@ import { NativeBiometric } from "@capgo/capacitor-native-biometric";
 import { Note } from "../../store/types";
 import Icon from "@/components/UI/Icon";
 import { useTranslation } from "@/utils/translations";
+import emitter from "tiny-emitter/instance";
 
 const STORAGE_PATH = "notes/data.json";
 
@@ -161,28 +160,22 @@ function Editor({ notesState, setNotesState }: Props) {
   };
 
   const promptForPassword = async (): Promise<string | null> => {
-    const promptRoot = document.createElement("div");
-    document.body.appendChild(promptRoot);
-
-    return new Promise<string | null>((resolve) => {
-      const handleConfirm = (value: string | null) => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        document.body.removeChild(promptRoot);
-        resolve(value);
-      };
-      const handleCancel = () => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        document.body.removeChild(promptRoot);
-        resolve(null);
-      };
-      ReactDOM.render(
-        <ModularPrompt
-          title={translations.editor.enterpasswd || "-"}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />,
-        promptRoot
-      );
+    return new Promise((resolve) => {
+      emitter.emit("show-dialog", "prompt", {
+        title: translations.card.enterpasswd,
+        okText: translations.card.setkey,
+        body: translations.settings.warning,
+        cancelText: translations.card.cancel,
+        placeholder: translations.card.Password,
+        allowedEmpty: false,
+        onConfirm: (value: string) => {
+          resolve(value); // Resolve with password
+          return true; // Close modal
+        },
+        onCancel: () => {
+          resolve(null); // Resolve as cancelled
+        },
+      });
     });
   };
 

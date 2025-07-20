@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
-import SDialog from "../UI/SDialog";
 import { EditorContent, useEditor } from "@tiptap/react";
 import Toolbar from "./Toolbar";
 import Find from "./Find";
@@ -19,6 +18,8 @@ import { WebviewPrint } from "capacitor-webview-print";
 import { cleanEmptyParagraphs } from "../../utils/editor";
 import NoteBubbleMenu from "./NoteBubbleMenu";
 import Icon from "../UI/Icon";
+import { UiModal } from "../UI/Modal";
+import { shareNote } from "../../utils/share";
 
 type Props = {
   note: Note;
@@ -360,14 +361,44 @@ function EditorComponent({
               <Icon name="ShareLine" />
             </button>
 
-            <SDialog
-              translations={translations}
-              isOpen={isOpen}
-              closeDialog={closeDialog}
-              notesState={notesState}
-              handlePrint={handlePrint}
-              note={note}
-            />
+            <UiModal
+              modelValue={isOpen}
+              onClose={closeDialog}
+              header={translations.editor.exportas}
+              allowSwipeToDismiss={true}
+              className="fixed inset-0 flex items-end sm:items-center pb-6 justify-center bg-black bg-opacity-20 p-5 overflow-y-auto z-50"
+            >
+              <div className="my-2 border-b dark:border-neutral-500"></div>
+              <div className="mt-4 space-y-4 p-2 bg-[#F8F8F7] dark:bg-neutral-800 rounded-xl">
+                <div className="flex items-center w-full">
+                  <p className="text-base pl-2 font-bold">BEA</p>
+
+                  <button
+                    onClick={() => shareNote(note.id, notesState)}
+                    className="w-full bg-[#F8F8F7] dark:bg-neutral-800 p-4 text-lg rounded-xl inline-flex justify-between items-center"
+                  >
+                    <Icon
+                      name="FileTextLine"
+                      className="w-6 h-6"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+                <div className="flex items-center w-full">
+                  <p className="text-base pl-2 font-bold">PDF</p>
+                  <button
+                    onClick={() => handlePrint(`${note.title}.pdf`)}
+                    className="w-full bg-[#F8F8F7] dark:bg-neutral-800 p-4 text-lg rounded-xl inline-flex justify-between items-center"
+                  >
+                    <Icon
+                      name="FileArticleLine"
+                      className="w-6 h-6"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              </div>
+            </UiModal>
 
             <button
               className="p-2 rounded-md text-white bg-transparent cursor-pointer"

@@ -202,16 +202,28 @@
     "noContent": "No content..."
   },
   "card": {
-    "unlocktoedit": "Unlock to edit",
     "noContent": "No content...",
     "confirmDelete": "Are you sure you want to delete this note?",
     "bookmarkError": "The following error accured while bookmarking a note:",
     "archiveError": "The following error accured while archiving a note:",
-    "wrongpasswd": "Incorrect password. Note cannot be unlocked.",
     "lockerror": "Note cannot be unlocked.",
-    "enterpasswd": "Enter the Password",
     "biometricReason": "Lock/Unlock notes",
-    "biometricTitle": "Lock/Unlock with Biometrics"
+    "biometricTitle": "Lock/Unlock with Biometrics",
+    "enterpasswd": "Enter the Password",
+    "islocked": "This note is locked",
+    "cancel": "Cancel",
+    "keyfail": "Password setup cancelled. Note cannot be locked.",
+    "lock": "Lock",
+    "nokey": "No shared key set up for this note",
+    "removebookmark": "Remove bookmark",
+    "setkey": "Set Key",
+    "setupkey": "Set Up a New Shared Key",
+    "unarchive": "Unarchive",
+    "unarchived": "Unarchived",
+    "unlock": "Unlock",
+    "unlocktoedit": "Unlock to edit",
+    "warning": "Warning, if you forget your password, you'll lose access to your locked notes, and setting a new password will require knowing the old one.",
+    "wrongpasswd": "Incorrect password. Note cannot be unlocked."
   },
   "filter": {
     "searchNotes": "Search Notes",
