@@ -38,7 +38,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
   const login = async () => {
     try {
       const result = await MsAuthPlugin.login({
-        clientId: import.meta.env.VITE_ONEDRIDE_CLIENT_ID,
+        clientId: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
         tenant: "common",
         keyHash: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
         scopes: ["Files.ReadWrite", "User.Read"],
@@ -77,9 +77,9 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
     try {
       setAccessToken(null);
       await MsAuthPlugin.logout({
-        clientId: import.meta.env.VITE_ONEDRIDE_CLIENT_ID,
+        clientId: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
         tenant: "common",
-        keyHash: import.meta.env.VITE_ONEDRIDE_ANDROID_HASH,
+        keyHash: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
       });
       await SecureStoragePlugin.remove({ key: "onedrive_access_token" });
       console.log("Logged out successfully");
