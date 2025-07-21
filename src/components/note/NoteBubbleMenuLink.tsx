@@ -120,9 +120,10 @@ const NoteBubbleMenuLink: React.FC<Props> = ({ editor, notes }) => {
     <div>
       {currentLinkVal.startsWith("@") && notes.length > 0 && (
         <UiList className="transition-all p-2 space-y-1 border-b max-h-48 overflow-auto">
-          {notes.map((note) => (
+          {notes.map((note, index) => (
             <UiListItem
               key={note.id}
+              active={index === selectedNoteIndex}
               onClick={() => updateCurrentLink(note.id)}
               className="cursor-pointer line-clamp leading-tight"
               style={{ userSelect: "none" }}

@@ -5,6 +5,8 @@ import FileUploadComponent from "@/composable/FileUpload";
 import VideoUploadComponent from "@/composable/VideoUpload";
 import Icon from "@/components/UI/Icon";
 import { useTranslation } from "@/utils/translations";
+import UiList from "@/components/UI/List";
+import UiListItem from "@/components/UI/ListItem";
 
 type IconName = React.ComponentProps<typeof Icon>["name"];
 
@@ -412,27 +414,22 @@ const Commands: React.FC<SlashMenuProps> = ({
   }, [filteredItems.length]);
 
   return (
-    <div className="z-50 fixed bg-white dark:bg-neutral-800 rounded-lg shadow-lg border shadow-xl dark:border-neutral-600 p-2">
+    <UiList className="z-50 fixed bg-white dark:bg-neutral-800 rounded-lg shadow-lg border shadow-xl dark:border-neutral-600 p-2">
       {filteredItems.map((item, index) => (
-        <div
+        <UiListItem
           key={item.id}
           onClick={() => handleSelect({ item })}
-          className={`cursor-pointer ${
-            index === selectedIndex
-              ? "bg-neutral-200 dark:bg-neutral-600 rounded-lg"
-              : ""
-          }`}
+          active={index === selectedIndex}
+          className="cursor-pointer"
         >
           {item.type === "upload" && item.component ? (
             item.component
           ) : (
-            <div className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700 transition duration-200">
+            <div className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] hover:bg-neutral-100 dark:hover:bg-neutral-700 transition duration-200">
               <div className="text-left flex overflow-hidden text-ellipsis whitespace-nowrap">
                 <Icon
                   name={item.icon as IconName}
-                  className={`text-left overflow-hidden text-ellipsis whitespace-nowrap mr-2 ltr:ml-2 text-lg ${
-                    item.className || ""
-                  }`}
+                  className={`mr-2 ltr:ml-2 text-lg ${item.className || ""}`}
                 />
                 <h3 className="text-lg font-medium text-neutral-800 dark:text-[color:var(--selected-dark-text)]">
                   {item.label}
@@ -440,9 +437,9 @@ const Commands: React.FC<SlashMenuProps> = ({
               </div>
             </div>
           )}
-        </div>
+        </UiListItem>
       ))}
-    </div>
+    </UiList>
   );
 };
 

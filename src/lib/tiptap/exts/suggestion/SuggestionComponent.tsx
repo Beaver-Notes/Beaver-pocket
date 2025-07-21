@@ -139,6 +139,7 @@ const SuggestionComponent = forwardRef<
               {items.map((item, index) => (
                 <UiListItem
                   key={index}
+                  active={index === selectedIndex}
                   className="label-item w-full text-overflow"
                   onClick={() => selectItem(index)}
                 >
