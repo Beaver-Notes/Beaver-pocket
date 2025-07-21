@@ -1,6 +1,5 @@
-// transformHelper.js
 import { useCallback } from "react";
-import { getPointerCoordinates, transformPoints } from "./drawHelper"
+import { getPointerCoordinates, transformPoints } from "./drawHelper";
 
 const TRANSFORM_MOVE_THRESHOLD = 2;
 
@@ -14,7 +13,23 @@ export function useTransformHelpers({
 }) {
   const handleTransformStart = useCallback(
     (e, corner) => {
-      if (!selectedElement || isPalmTouch(e)) return;
+      if (!selectedElement) return;
+
+      // Reject palm touches or gestures
+      if (isPalmTouch(e, svgRef?.current, true)) {
+        console.log("Palm touch detected, ignoring transform start");
+        return;
+      }
+
+      if (
+        e.pointerType === "touch" &&
+        e.pointerId &&
+        svgRef?.current?.contains(e.target)
+      ) {
+        e.preventDefault();
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+      }
+
       const svg = svgRef.current;
       const [x, y] = getPointerCoordinates(e, svg);
 
@@ -36,7 +51,17 @@ export function useTransformHelpers({
 
   const handleTransformMove = useCallback(
     (e) => {
-      if (!transformState || !selectedElement || isPalmTouch(e)) return;
+      if (
+        !transformState ||
+        !selectedElement ||
+        isPalmTouch(e, svgRef?.current, false)
+      )
+        return;
+
+      if (e.pointerType === "touch" && e.pointerId) {
+        e.preventDefault();
+      }
+
       const svg = svgRef.current;
       const [currentX, currentY] = getPointerCoordinates(e, svg);
       const dx = currentX - transformState.startX;
@@ -100,43 +125,52 @@ export function useTransformHelpers({
     [transformState, selectedElement, isPalmTouch, svgRef, setState]
   );
 
-  const handleTransformEnd = useCallback(() => {
-    if (!transformState || !selectedElement) return;
+  const handleTransformEnd = useCallback(
+    (e) => {
+      if (!transformState || !selectedElement) return;
 
-    const transformType = transformState.corner === "move" ? "move" : "resize";
-
-    const transformedLines = lines.map((line) => {
-      if (transformState.lineIds.includes(line.id)) {
-        const transformedPoints = transformPoints(
-          line.points,
-          transformState.originalBounds,
-          selectedElement.bounds,
-          transformType
-        );
-
-        return { ...line, points: transformedPoints };
+      if (e?.pointerType === "touch" && e.pointerId) {
+        e.preventDefault();
+        e.currentTarget?.releasePointerCapture?.(e.pointerId);
       }
-      return line;
-    });
 
-    const transformedSelectedLines = transformedLines.filter((line) =>
-      transformState.lineIds.includes(line.id)
-    );
+      const transformType =
+        transformState.corner === "move" ? "move" : "resize";
 
-    setState((prev) => ({
-      ...prev,
-      lines: transformedLines,
-      undoStack: [...prev.undoStack, prev.lines],
-      isDrawing: false,
-      selectedElement: {
-        type: "group",
-        lines: transformedSelectedLines,
-        bounds: selectedElement.bounds,
-        lineIds: transformState.lineIds,
-      },
-      transformState: null,
-    }));
-  }, [transformState, selectedElement, lines, setState]);
+      const transformedLines = lines.map((line) => {
+        if (transformState.lineIds.includes(line.id)) {
+          const transformedPoints = transformPoints(
+            line.points,
+            transformState.originalBounds,
+            selectedElement.bounds,
+            transformType
+          );
+
+          return { ...line, points: transformedPoints };
+        }
+        return line;
+      });
+
+      const transformedSelectedLines = transformedLines.filter((line) =>
+        transformState.lineIds.includes(line.id)
+      );
+
+      setState((prev) => ({
+        ...prev,
+        lines: transformedLines,
+        undoStack: [...prev.undoStack, prev.lines],
+        isDrawing: false,
+        selectedElement: {
+          type: "group",
+          lines: transformedSelectedLines,
+          bounds: selectedElement.bounds,
+          lineIds: transformState.lineIds,
+        },
+        transformState: null,
+      }));
+    },
+    [transformState, selectedElement, lines, setState]
+  );
 
   return {
     handleTransformStart,

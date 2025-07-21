@@ -1,4 +1,4 @@
-// usePointerHelper.js - Enhanced version with proper multi-touch support
+// usePointerHelper.js
 import { useRef, useCallback, useEffect } from "react";
 import { getStroke } from "perfect-freehand";
 import {
@@ -42,9 +42,8 @@ export function usePointerHelper({
 
   const LONG_PRESS_DURATION = 500;
   const MOVE_CANCEL_THRESHOLD = 5;
-  const MULTI_TOUCH_CANCEL_DELAY = 100; // ms to cancel drawing when second finger detected
+  const MULTI_TOUCH_CANCEL_DELAY = 100;
 
-  // Enhanced touch event handlers for scroll detection
   const handleTouchStart = useCallback(
     (e) => {
       const touchCount = e.touches.length;

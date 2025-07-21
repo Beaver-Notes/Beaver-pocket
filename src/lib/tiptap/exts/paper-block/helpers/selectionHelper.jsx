@@ -15,7 +15,7 @@ export function useSelectionHelper({
 }) {
   const handleSelectionStart = useCallback(
     (e) => {
-      if (tool !== "select" || isPalmTouch(e)) return;
+      if (tool !== "select" || isPalmTouch(e, svgRef?.current, true)) return;
       const svg = svgRef.current;
       const [x, y] = getPointerCoordinates(e, svg);
       if (selectedElement && isPointInsideSelection(x, y)) {
@@ -42,7 +42,8 @@ export function useSelectionHelper({
 
   const handleSelectionMove = useCallback(
     (e) => {
-      if (!selectionBox || tool !== "select" || isPalmTouch(e)) return;
+      if (!selectionBox || tool !== "select" || isPalmTouch(e, svgRef?.current, false))
+        return;
       const svg = svgRef.current;
       const [x, y] = getPointerCoordinates(e, svg);
       setState((prev) => ({
