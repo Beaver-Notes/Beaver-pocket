@@ -152,7 +152,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <Icon name="ArrowUpDownLine" />
             <select
               onChange={(e) => setSortingOption(e.target.value)}
-              className="bg-transparent dark:text-[color:var(--selected-dark-text)] outline-none appearance-none pl-8 w-full"
+              className="bg-transparent dark:text-[color:var(--selected-dark-text)] outline-none appearance-none pl-3 w-full"
             >
               <option value="updatedAt">
                 {translations.filter.lastUpdated}

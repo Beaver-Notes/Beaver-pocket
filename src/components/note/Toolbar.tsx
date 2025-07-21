@@ -296,7 +296,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     },
     {
       active: "tasklist",
-      label: translations.menu.tasklist,
+      label: translations.menu.checklist,
       icon: <Icon name="ListCheck2" />,
       action: (editor: any) => editor?.chain().focus().toggleTaskList().run(),
     },
