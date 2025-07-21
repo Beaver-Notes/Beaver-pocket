@@ -14,10 +14,12 @@ android {
         def googleClientId = project.hasProperty("GOOGLE_CLIENT_ID") ? project.GOOGLE_CLIENT_ID : System.getenv("GOOGLE_CLIENT_ID") ?: ""
         buildConfigField "String", "SERVER_CLIENT_ID", "\"${googleClientId}\""
         def onedriveSha1 = project.hasProperty("ONEDRIVE_SHA1") ? project.ONEDRIVE_SHA1 : System.getenv("ONEDRIVE_SHA1") ?: ""
+        buildConfigField "String", "ONEDRIVE_SHA1", "\"${onedriveSha1}\""
 
-        manifestPlaceholders = [
-            ONEDRIVE_SHA1: onedriveSha1        
-        ]
+        println "Using OneDrive SHA1: ${onedriveSha1}"
+        println "Using Google: ${googleClientId}"
+
+        manifestPlaceholders = [ONEDRIVE_SHA1: onedriveSha1]
 
         signingConfigs {
             debug {
