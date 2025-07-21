@@ -3,6 +3,8 @@ import { MsAuthPlugin } from "@recognizebv/capacitor-plugin-msauth";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { Note } from "@/store/types";
 import Icon from "@/components/UI/Icon";
+import { OneDriveAPI } from "@/utils/Onedrive/oneDriveApi";
+import { useTranslation } from "@/utils/translations";
 
 interface OneDriveProps {
   setNotesState: (notes: Record<string, Note>) => void;
@@ -10,6 +12,7 @@ interface OneDriveProps {
 
 const OneDriveAuth: React.FC<OneDriveProps> = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
   useEffect(() => {
     const loadToken = async () => {
@@ -68,6 +71,20 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
         key: "onedrive_expiration_time",
         value: expirationTime.toString(),
       });
+
+      const onedrive = new OneDriveAPI(result.accessToken);
+
+      // Check if folder exists, otherwise create it
+      try {
+        await onedrive.filesGetMetadata(`/${SYNC_FOLDER_NAME}`);
+      } catch (error: any) {
+        if (error.status === 409) {
+          // Folder doesn't exist, create it
+          await onedrive.createFolder(`/${SYNC_FOLDER_NAME}`);
+        } else {
+          throw error;
+        }
+      }
     } catch (error) {
       console.error("Login failed:", error);
     }
@@ -106,37 +123,19 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
   }, [darkMode, themeMode]);
 
   // Translations
-  const [translations, setTranslations] = useState({
-    onedrive: {
-      title: "onedrive.title",
-      import: "onedrive.import",
-      export: "onedrive.export",
-      autoSync: "onedrive.Autosync",
-      logout: "onedrive.logout",
-      login: "onedrive.login",
-      refreshingToken: "onedrive.refreshingToken",
-    },
-    sync: {
-      existingFolder: "sync.existingFolder",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    onedrive: {},
+    sync: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   const [autoSync, setAutoSync] = useState<boolean>(() => {

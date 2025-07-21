@@ -4,6 +4,7 @@ import { Browser } from "@capacitor/browser";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import Icon from "@/components/UI/Icon";
 import { useTranslation } from "@/utils/translations";
+import { Dropbox } from "dropbox";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 
@@ -18,6 +19,7 @@ const DropboxSync: React.FC<DropboxProps> = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [authorizationCode, setAuthorizationCode] = useState<string>("");
+  const SYNC_FOLDER_NAME = "BeaverNotesSync"; // Fixed folder name instead of date-based
 
   const [translations, setTranslations] = useState<Record<string, any>>({
     dropbox: {},
@@ -33,7 +35,7 @@ const DropboxSync: React.FC<DropboxProps> = () => {
     };
     fetchTranslations();
   }, []);
-  
+
   const handleLogin = async () => {
     await Browser.open({
       url: `https://www.dropbox.com/oauth2/authorize?response_type=code&client_id=${CLIENT_ID}&token_access_type=offline`,
@@ -75,6 +77,25 @@ const DropboxSync: React.FC<DropboxProps> = () => {
 
           setAccessToken(accessToken);
           setRefreshToken(refreshToken);
+
+          if (!accessToken) {
+            throw new Error("No access token available");
+          }
+
+          const dbx = new Dropbox({ accessToken });
+
+          try {
+            await dbx.filesGetMetadata({ path: `/${SYNC_FOLDER_NAME}` });
+          } catch (error: any) {
+            if (error.status === 409) {
+              await dbx.filesCreateFolderV2({
+                path: `/${SYNC_FOLDER_NAME}`,
+                autorename: false,
+              });
+            } else {
+              throw error;
+            }
+          }
         } else {
           const errorData = await response.json();
           console.error(

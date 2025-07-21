@@ -11,6 +11,8 @@ interface WebdavProps {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
+const SYNC_FOLDER_NAME = "BeaverNotesSync";
+
 const Webdav: React.FC<WebdavProps> = () => {
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
@@ -79,7 +81,7 @@ const Webdav: React.FC<WebdavProps> = () => {
     };
     fetchTranslations();
   }, []);
-  
+
   const [showInputContent, setShowInputContent] = useState(false);
 
   useEffect(() => {
@@ -101,22 +103,29 @@ const Webdav: React.FC<WebdavProps> = () => {
   }, [baseUrl, username, password]);
 
   const login = async () => {
+    if (!baseUrl || !username || !password) {
+      throw new Error("Missing login credentials");
+    }
+
     try {
-      await SecureStoragePlugin.set({
-        key: "baseUrl",
-        value: baseUrl,
-      });
-      await SecureStoragePlugin.set({
-        key: "username",
-        value: username,
-      });
-      await SecureStoragePlugin.set({
-        key: "password",
-        value: password,
-      });
+      await SecureStoragePlugin.set({ key: "baseUrl", value: baseUrl });
+      await SecureStoragePlugin.set({ key: "username", value: username });
+      await SecureStoragePlugin.set({ key: "password", value: password });
+
       initialize();
+
+      const webDavService = new WebDavService({
+        baseUrl,
+        username,
+        password,
+      });
+
+      const exists = await webDavService.folderExists(`${SYNC_FOLDER_NAME}`);
+      if (!exists) {
+        await webDavService.createFolder(`${SYNC_FOLDER_NAME}`);
+      }
     } catch (error) {
-      console.log("Error logging in");
+      console.log("Error logging in", error);
     }
   };
 

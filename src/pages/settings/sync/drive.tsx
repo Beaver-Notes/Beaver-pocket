@@ -1,39 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { driveService } from "@/utils/Google Drive/GoogleOauth";
 import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
 
 const GoogleDrive: React.FC = () => {
+  const SYNC_FOLDER_NAME = "BeaverNotesSync";
   const [user, setUser] = useState<any | null>(null);
   const [autoSync, setAutoSync] = useState(
     () => localStorage.getItem("sync") === "googledrive"
   );
-  const [translations, setTranslations] = useState({
-    gdrive: {
-      title: "gdrive.title",
-      import: "gdrive.import",
-      export: "gdrive.export",
-      autoSync: "gdrive.Autosync",
-      logout: "gdrive.logout",
-      login: "gdrive.login",
-      refreshingToken: "gdrive.refreshingToken",
-    },
-    sync: {
-      existingFolder: "sync.existingFolder",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    gdrive: {},
+    sync: {},
   });
 
-  // Load translations
   useEffect(() => {
-    const loadTranslations = async () => {
-      const lang = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const module = await import(`../../assets/locales/${lang}.json`);
-        setTranslations((prev) => ({ ...prev, ...module.default }));
-      } catch (error) {
-        console.error("Failed to load translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   // Initialize driveService on mount and sync user state
@@ -64,7 +52,11 @@ const GoogleDrive: React.FC = () => {
         setUser({
           authentication: { accessToken: driveService.getAccessToken() },
         });
-        console.log("Signed in with access token.");
+        let folderId = await driveAPI.checkFolderExists(SYNC_FOLDER_NAME);
+        if (!folderId) {
+          folderId = await driveAPI.createFolder(SYNC_FOLDER_NAME);
+          if (!folderId) throw new Error("Failed to create sync folder");
+        }
       }
     } catch (err) {
       console.error("Google Sign-In Error:", err);
@@ -95,7 +87,10 @@ const GoogleDrive: React.FC = () => {
         <div className="flex justify-center items-center">
           <div className="flex flex-col items-center">
             <p className="text-4xl font-bold p-4">Drive</p>
-            <Icon name="GDrive" className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
+            <Icon
+              name="GDrive"
+              className="w-32 h-32 text-neutral-800 dark:text-neutral-200"
+            />
           </div>
         </div>
 

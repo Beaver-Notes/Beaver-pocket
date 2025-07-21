@@ -64,7 +64,12 @@ const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
     setProgress(0);
 
     try {
-      await webDavService.createFolder(`${SYNC_FOLDER_NAME}`);
+      const folderPath = `${SYNC_FOLDER_NAME}`;
+
+      const exists = await webDavService.folderExists(folderPath);
+      if (!exists) {
+        await webDavService.createFolder(folderPath);
+      }
 
       let localData: SyncData = { data: { notes: {} } };
       try {
@@ -80,9 +85,7 @@ const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
 
       let remoteData: SyncData = { data: { notes: {} } };
       try {
-        const fileData = await webDavService.get(
-          `${SYNC_FOLDER_NAME}/data.json`
-        );
+        const fileData = await webDavService.get(`${folderPath}/data.json`);
         const fileString = await blobToString(fileData);
         remoteData = JSON.parse(fileString);
       } catch {
@@ -93,7 +96,7 @@ const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
 
       const mergedData = await mergeData(localData, remoteData);
 
-      await syncWebDAVAssets(SYNC_FOLDER_NAME, webDavService);
+      await syncWebDAVAssets(folderPath, webDavService);
 
       setProgress(80);
 
@@ -111,7 +114,7 @@ const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
 
       const base64Data = base64Encode(JSON.stringify(cleanedData));
 
-      await webDavService.upload(`${SYNC_FOLDER_NAME}/data.json`, base64Data);
+      await webDavService.upload(`${folderPath}/data.json`, base64Data);
 
       setSyncState((prev) => ({
         ...prev,

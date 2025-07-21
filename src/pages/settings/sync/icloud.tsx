@@ -2,10 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Note } from "@/store/types";
 import Icon from "@/components/UI/Icon";
 import { useTranslation } from "@/utils/translations";
+import iCloud from "@/utils/iCloud/iCloud";
+
 interface iCloudProps {
   notesState: Record<string, Note>;
   setNotesState: (notes: Record<string, Note>) => void;
 }
+
+const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
 const iCloudSync: React.FC<iCloudProps> = () => {
   // Translations
@@ -46,10 +50,16 @@ const iCloudSync: React.FC<iCloudProps> = () => {
     };
   }, [autoSync]);
 
-  const handleSyncToggle = () => {
+  const handleSyncToggle = async () => {
     const syncValue = autoSync ? "none" : "iCloud";
     localStorage.setItem("sync", syncValue);
     setAutoSync(!autoSync);
+    const { exists } = await iCloud.checkFolderExists({
+      folderName: `${SYNC_FOLDER_NAME}`,
+    });
+    if (!exists) {
+      await iCloud.createFolder({ folderName: `${SYNC_FOLDER_NAME}` });
+    }
   };
 
   const [themeMode] = useState(() => {
