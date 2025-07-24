@@ -7,6 +7,7 @@ import { Note } from "../../store/types";
 import Mousetrap from "../../utils/mousetrap";
 import Icon from "../UI/Icon";
 import { Capacitor } from "@capacitor/core";
+import { useTranslation } from "@/utils/translations";
 
 interface NavbarProps {
   notesState: Record<string, Note>;
@@ -41,34 +42,19 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     }
   };
 
-  const [translations, setTranslations] = useState({
-    accessibility: {
-      home: "accessibility.home",
-      editNote: "accessibility.home",
-      createNew: "accessibility.createNew",
-      archive: "accessibility.archive",
-      settings: "accessibility.archive",
-    },
-    home: {
-      title: "home.title",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    accessibility: {},
+    home: {},
   });
 
   useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   const handleCreateNewNote = async () => {
