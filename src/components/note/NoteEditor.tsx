@@ -366,7 +366,7 @@ function EditorComponent({
               onClose={closeDialog}
               header={translations.editor.exportas}
               allowSwipeToDismiss={true}
-              className="fixed inset-0 flex items-end sm:items-center pb-6 justify-center bg-black bg-opacity-20 p-5 overflow-y-auto z-50"
+              className="fixed inset-0 flex items-end sm:items-center pb-6 justify-center bg-black bg-opacity-20 p-5 overflow-y-auto z-50 print:hidden"
             >
               <div className="my-2 border-b dark:border-neutral-500"></div>
               <div className="mt-4 space-y-4 p-2 bg-[#F8F8F7] dark:bg-neutral-800 rounded-xl">

@@ -15,7 +15,7 @@ const NoteBubbleMenu: React.FC<Props> = ({ editor, notes }) => {
       shouldShow={({ editor }) =>
         editor.isActive("image") || editor.isActive("link")
       }
-      className="bg-white dark:bg-neutral-800 rounded-lg max-w-xs border shadow-xl"
+      className="bg-white dark:bg-neutral-800 rounded-lg max-w-xs border shadow-xl print:hidden"
     >
       <NoteBubbleMenuLink editor={editor} notes={notes} />
     </BubbleMenu>
