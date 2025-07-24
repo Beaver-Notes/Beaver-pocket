@@ -74,6 +74,14 @@ const CustomNodeView = ({ node, updateAttributes }) => {
     });
   }, [lines, tool]);
 
+  useEffect(() => {
+    setLines(convertLegacyLines(node.attrs.lines || []));
+  }, [node.attrs.lines]);
+
+  useEffect(() => {
+    setBackground(node.attrs.paperType || "plain");
+  }, [node.attrs.paperType]);
+
   const PreviewMode = () => (
     <div
       className="cursor-pointer hover:opacity-80 transition-opacity"

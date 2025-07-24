@@ -25,13 +25,32 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
   const currentPointsRef = useRef([]);
   const animationFrameRef = useRef(null);
 
+  useEffect(() => {
+    const hideKeyboardOnShow = async () => {
+      const showListener = await Keyboard.addListener(
+        "keyboardWillShow",
+        async () => {
+          await Keyboard.hide();
+        }
+      );
+
+      return () => {
+        showListener.remove();
+      };
+    };
+
+    hideKeyboardOnShow();
+  }, []);
+
   const [state, setState] = useState(() => {
-    const initialLines = convertLegacyLines(node.attrs.lines || []).map(
-      (line, index) => ({
-        ...line,
-        id: `line_${index}`,
-      })
-    );
+    const initialLines = (
+      node.attrs.linesV2?.length
+        ? node.attrs.linesV2
+        : convertLegacyLines(node.attrs.lines || [])
+    ).map((line, index) => ({
+      ...line,
+      id: `line_${index}`,
+    }));
 
     return {
       lines: initialLines,

@@ -44,6 +44,26 @@ export function usePointerHelper({
   const MOVE_CANCEL_THRESHOLD = 5;
   const MULTI_TOUCH_CANCEL_DELAY = 100;
 
+  // Reset all pointer states
+  const resetPointerStates = useCallback(() => {
+    activePointers.current.clear();
+    primaryPointerId.current = null;
+    isMultiTouch.current = false;
+    drawingCancelled.current = false;
+    isLongPress.current = false;
+    touchStartTime.current = null;
+
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+    }
+
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+  }, []);
+
   const handleTouchStart = useCallback(
     (e) => {
       const touchCount = e.touches.length;
@@ -69,15 +89,7 @@ export function usePointerHelper({
           }));
           currentPointsRef.current = [];
 
-          if (longPressTimeout.current) {
-            clearTimeout(longPressTimeout.current);
-            longPressTimeout.current = null;
-          }
-
-          if (animationFrameRef.current) {
-            cancelAnimationFrame(animationFrameRef.current);
-            animationFrameRef.current = null;
-          }
+          resetPointerStates();
         }
 
         // Don't prevent default for two-finger gestures - allow native scrolling
@@ -89,7 +101,7 @@ export function usePointerHelper({
         e.preventDefault();
       }
     },
-    [isDrawing, setState, svgRef]
+    [isDrawing, setState, svgRef, resetPointerStates]
   );
 
   const handleTouchMove = useCallback(
@@ -98,11 +110,9 @@ export function usePointerHelper({
 
       if (touchCount >= 2) {
         isMultiTouch.current = true;
-        // Don't prevent default for multi-touch - allow native scroll behavior
         return;
       }
 
-      // Only prevent single-touch moves on the drawing area
       if (
         touchCount === 1 &&
         svgRef?.current?.contains(e.target) &&
@@ -117,17 +127,25 @@ export function usePointerHelper({
   const handleTouchEnd = useCallback((e) => {
     const touchCount = e.touches.length;
 
-    // Reset multi-touch state when all fingers are lifted
     if (touchCount === 0) {
       setTimeout(() => {
         isMultiTouch.current = false;
         drawingCancelled.current = false;
-      }, 50); // Small delay to prevent immediate re-triggering
+      }, 50);
     }
   }, []);
 
   const handlePointerDown = useCallback(
     (e) => {
+      console.log(
+        "Pointer down - tool:",
+        tool,
+        "pointerId:",
+        e.pointerId,
+        "pointerType:",
+        e.pointerType
+      );
+
       // Track all pointers
       activePointers.current.add(e.pointerId);
 
@@ -140,10 +158,8 @@ export function usePointerHelper({
       // If we already have multiple pointers, ignore additional ones
       if (activePointers.current.size > 1) {
         console.log("Multiple pointers detected, ignoring additional pointer");
-        // For touch events, check if this might be the start of a scroll gesture
         if (e.pointerType === "touch") {
           isMultiTouch.current = true;
-          // Cancel any ongoing drawing
           if (isDrawing) {
             drawingCancelled.current = true;
             setState((prev) => ({
@@ -157,8 +173,11 @@ export function usePointerHelper({
         return;
       }
 
-      // Check if this is a palm touch or invalid input
-      if (isPalmTouch(e, svgRef?.current, false) || !isPenInput(e)) {
+      // Check if this is a palm touch or invalid input (but not for select tool)
+      if (
+        tool !== "select" &&
+        (isPalmTouch(e, svgRef?.current, false) || !isPenInput(e))
+      ) {
         console.log("Palm touch or invalid input detected, ignoring");
         activePointers.current.delete(e.pointerId);
         return;
@@ -172,6 +191,7 @@ export function usePointerHelper({
       svgElem.setPointerCapture(e.pointerId);
 
       if (tool === "select") {
+        console.log("Handling selection start");
         handleSelectionStart(e);
         return;
       }
@@ -208,7 +228,6 @@ export function usePointerHelper({
         currentStrokePoints: [[x, y]],
       }));
 
-      // Initialize currentPointsRef
       currentPointsRef.current = [[x, y]];
 
       if (y > height - 50) {
@@ -229,11 +248,21 @@ export function usePointerHelper({
       isPenInput,
       svgRef,
       isDrawing,
+      setState,
     ]
   );
 
   const handlePointerMove = useCallback(
     (e) => {
+      if (tool === "select") {
+        if (transformState) {
+          handleTransformMove(e);
+        } else if (selectionBox) {
+          handleSelectionMove(e);
+        }
+        return;
+      }
+
       // Only process events from the primary pointer
       if (e.pointerId !== primaryPointerId.current) return;
 
@@ -242,7 +271,6 @@ export function usePointerHelper({
 
       // If multiple pointers active, ignore moves
       if (activePointers.current.size > 1) {
-        // Mark as multi-touch for touch events
         if (e.pointerType === "touch") {
           isMultiTouch.current = true;
           if (isDrawing && !drawingCancelled.current) {
@@ -258,23 +286,14 @@ export function usePointerHelper({
         return;
       }
 
-      // Check for palm touch
-      if (isPalmTouch(e, svgRef?.current, true)) {
+      // Check for palm touch (but not for select tool)
+      if (tool !== "select" && isPalmTouch(e, svgRef?.current, true)) {
         console.log("Palm touch detected during move, canceling");
         handlePointerCancel(e);
         return;
       }
 
-      if (!isPenInput(e)) return;
-
-      if (tool === "select") {
-        if (transformState) {
-          handleTransformMove(e);
-        } else if (selectionBox) {
-          handleSelectionMove(e);
-        }
-        return;
-      }
+      if (tool !== "select" && !isPenInput(e)) return;
 
       if (!isDrawing || drawingCancelled.current) return;
 
@@ -286,7 +305,6 @@ export function usePointerHelper({
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist > MOVE_CANCEL_THRESHOLD) {
-        // User moved — cancel long press timer (only if not eraser)
         if (tool !== "eraser" && longPressTimeout.current) {
           clearTimeout(longPressTimeout.current);
           longPressTimeout.current = null;
@@ -350,11 +368,14 @@ export function usePointerHelper({
       handleTransformMove,
       handleSelectionMove,
       svgRef,
+      setState,
     ]
   );
 
   const handlePointerUp = useCallback(
     (e) => {
+      console.log("Pointer up - tool:", tool, "pointerId:", e.pointerId);
+
       // Remove pointer from active set
       activePointers.current.delete(e.pointerId);
 
@@ -366,8 +387,8 @@ export function usePointerHelper({
         primaryPointerId.current = null;
       }
 
-      // Don't process palm touches
-      if (isPalmTouch(e, svgRef?.current, true)) return;
+      // Don't process palm touches (but allow for select tool)
+      if (tool !== "select" && isPalmTouch(e, svgRef?.current, true)) return;
 
       e.preventDefault();
 
@@ -382,6 +403,7 @@ export function usePointerHelper({
       }
 
       if (tool === "select") {
+        console.log("Handling selection end or transform end");
         if (transformState) {
           handleTransformEnd();
         } else {
@@ -520,6 +542,7 @@ export function usePointerHelper({
       eraserSettings.size,
       isPalmTouch,
       svgRef,
+      setState,
     ]
   );
 
@@ -528,17 +551,19 @@ export function usePointerHelper({
       // Remove from active pointers
       activePointers.current.delete(e.pointerId);
 
-      if (isPalmTouch(e, svgRef?.current)) return;
+      if (tool !== "select" && isPalmTouch(e, svgRef?.current)) return;
       if (e.pointerId !== primaryPointerId.current) return;
 
       e.preventDefault();
       handlePointerUp(e);
     },
-    [handlePointerUp, isPalmTouch, svgRef]
+    [handlePointerUp, isPalmTouch, svgRef, tool]
   );
 
   const handlePointerCancel = useCallback(
     (e) => {
+      console.log("Pointer cancel - tool:", tool, "pointerId:", e.pointerId);
+
       // Remove from active pointers
       activePointers.current.delete(e.pointerId);
 
@@ -547,13 +572,12 @@ export function usePointerHelper({
         primaryPointerId.current = null;
       }
 
-      if (isPalmTouch(e, svgRef?.current)) return;
+      if (tool !== "select" && isPalmTouch(e, svgRef?.current)) return;
 
       e.preventDefault();
-      if (longPressTimeout.current) {
-        clearTimeout(longPressTimeout.current);
-        longPressTimeout.current = null;
-      }
+
+      resetPointerStates();
+
       setState((prev) => ({
         ...prev,
         isDrawing: false,
@@ -562,7 +586,7 @@ export function usePointerHelper({
       currentPointsRef.current = [];
       drawingCancelled.current = true;
     },
-    [isPalmTouch, svgRef]
+    [isPalmTouch, svgRef, tool, resetPointerStates, setState]
   );
 
   // Set up touch event listeners for the SVG element
@@ -570,7 +594,6 @@ export function usePointerHelper({
     const svgElement = svgRef.current;
     if (!svgElement) return;
 
-    // Add passive touch listeners to detect multi-touch gestures
     svgElement.addEventListener("touchstart", handleTouchStart, {
       passive: false,
     });
@@ -588,21 +611,17 @@ export function usePointerHelper({
     };
   }, [handleTouchStart, handleTouchMove, handleTouchEnd, svgRef]);
 
-  // Clean up on unmount
+  // Clean up on unmount or tool change
   useEffect(() => {
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (longPressTimeout.current) {
-        clearTimeout(longPressTimeout.current);
-      }
-      activePointers.current.clear();
-      primaryPointerId.current = null;
-      isMultiTouch.current = false;
-      drawingCancelled.current = false;
+      resetPointerStates();
     };
-  }, []);
+  }, [resetPointerStates]);
+
+  // Reset states when tool changes
+  useEffect(() => {
+    resetPointerStates();
+  }, [tool, resetPointerStates]);
 
   return {
     handlePointerDown,
