@@ -15,7 +15,6 @@ export function useSelectionHelper({
 }) {
   const handleSelectionStart = useCallback(
     (e) => {
-      // Remove palm touch check for select tool - selection should work with any input
       if (tool !== "select") return;
 
       const svg = svgRef.current;
@@ -26,14 +25,12 @@ export function useSelectionHelper({
         return;
       }
 
-      // FIXED: Always clear the current selection when starting a new selection
-      // This ensures the selection state is properly reset
       setState((prev) => ({
         ...prev,
         isDrawing: true,
         selectionBox: { startX: x, startY: y, currentX: x, currentY: y },
         selectedElement: null,
-        transformState: null, // Also clear any lingering transform state
+        transformState: null,
       }));
     },
     [
@@ -72,9 +69,7 @@ export function useSelectionHelper({
       height: Math.abs(selectionBox.currentY - selectionBox.startY),
     };
 
-    // FIXED: Ensure we're working with the most current lines state
     setState((prev) => {
-      // Use the current lines from state to ensure we have the latest data
       const currentLines = prev.lines;
 
       if (bounds.width > 5 && bounds.height > 5) {
@@ -119,12 +114,11 @@ export function useSelectionHelper({
             },
             selectionBox: null,
             isDrawing: false,
-            transformState: null, // Ensure transform state is cleared
+            transformState: null,
           };
         }
       }
 
-      // If no valid selection, just clear the selection box
       return {
         ...prev,
         selectionBox: null,

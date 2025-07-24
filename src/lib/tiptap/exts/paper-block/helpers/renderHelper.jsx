@@ -1,5 +1,6 @@
+// renderHelper.jsx
 import { useMemo } from "react";
-import { interpolatePoints } from "./drawHelper"; // Make sure the path is correct
+import { interpolatePoints } from "./drawHelper";
 
 export const renderHelper = (
   lines,
@@ -38,7 +39,6 @@ export const renderHelper = (
         );
       }
 
-      // Interpolate points before computing stroke
       const interpolatedPoints = interpolatePoints(line.points, {
         smoothness: 0.7,
       });
@@ -116,7 +116,6 @@ export const renderCurrentStroke = ({
     );
   }
 
-  // Interpolate current stroke before rendering
   const interpolatedPoints = interpolatePoints(currentPoints, {
     smoothness: 0.7,
   });

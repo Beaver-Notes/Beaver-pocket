@@ -1,3 +1,4 @@
+// transformHelper.js
 import { useCallback } from "react";
 import { getPointerCoordinates, transformPoints } from "./drawHelper";
 
@@ -145,14 +146,11 @@ export function useTransformHelpers({
   const handleTransformEnd = useCallback(() => {
     if (!transformState || !selectedElement) return;
 
-    // FIXED: Keep the selectedElement active after both resize AND move operations
-    // This allows for continuous selection interactions without losing the selection
     setState((prev) => ({
       ...prev,
       undoStack: [...prev.undoStack, transformState.originalLines],
       redoStack: [],
       transformState: null,
-      // Keep selection active after all transform operations
       isDrawing: false,
     }));
   }, [transformState, selectedElement, setState]);
