@@ -78,13 +78,20 @@ const extensions = [
   TaskItem.configure({
     nested: true,
   }),
-  Link.configure({
+  Link.extend({
+    addKeyboardShortcuts() {
+      return {
+        "Mod-k": () => this.editor.chain().focus().toggleLink({ href: '' }).run(),
+      };
+    },
+  }).configure({
     openOnClick: false,
-    protocols: ['http', 'https', 'mailto', 'note'],
+    protocols: ["http", "https", "mailto", "note"],
     HTMLAttributes: {
       target: "_blank",
       rel: "noopener noreferrer nofollow",
       "tiptap-url": "true",
+      title: "Ctrl+Click to open URL",
     },
   }),
   Text,

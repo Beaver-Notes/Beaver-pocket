@@ -7,13 +7,13 @@ import "dayjs/locale/it";
 import relativeTime from "dayjs/plugin/relativeTime";
 import SearchBar from "./components/Home/Search";
 import { useNotesState } from "./store/Activenote";
-import Icons from "./lib/remixicon-react";
 import { SendIntent } from "send-intent";
 import { useImportBea } from "./utils/share";
 import { loadNotes } from "./store/notes";
 
 // Import Remix icons
 import NoteCard from "./components/Home/NoteCard";
+import Icon from "./components/UI/Icon";
 
 interface HomeProps {
   notesState: Record<string, Note>;
@@ -200,7 +200,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
                   // Safe to use as a string
                   importUtils(
                     setNotesState,
-                    async () => (await loadNotes()),
+                    async () => await loadNotes(),
                     content.data
                   );
                 } else if (content.data instanceof Blob) {
@@ -210,7 +210,7 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
                     const textContent = event.target?.result as string;
                     importUtils(
                       setNotesState,
-                      async () => (await loadNotes()),
+                      async () => await loadNotes(),
                       textContent
                     );
                   };
@@ -297,7 +297,10 @@ const Home: React.FC<HomeProps> = ({ notesState, setNotesState }) => {
                   />
                   <p className="py-2 text-lg text-center">
                     {translations.home.messagePt1 || "-"}
-                    <Icons.AddFillIcon className="inline-block w-5 h-5" />{" "}
+                    <Icon
+                      name="AddFill"
+                      className="inline-block w-5 h-5"
+                    />{" "}
                     {translations.home.messagePt2 || "-"}
                   </p>
                 </div>

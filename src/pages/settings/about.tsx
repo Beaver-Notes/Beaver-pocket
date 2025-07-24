@@ -1,47 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { version } from "../../../package.json";
-import icons from "../../lib/remixicon-react";
-import dayjs from "dayjs";
+import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
 
 const Shortcuts: React.FC = () => {
-  // @ts-ignore
-  const [sortingOption, setSortingOption] = useState("updatedAt");
-
-  // Translations
-  const [translations, setTranslations] = useState({
-    about: {
-      title: "about.title",
-      app: "about.app",
-      description: "about.description",
-      version: "about.version",
-      website: "about.website",
-      github: "about.github",
-      donate: "about.donate",
-      copyright: "about.Copyright",
-      termsConditions: "about.termsConditions",
-      privacyPolicy: "about.privacyPolicy",
-      license: "about.license",
-      legal: "about.legal",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    about: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   const [themeMode] = useState(() => {
@@ -96,7 +70,7 @@ const Shortcuts: React.FC = () => {
                 className="w-full p-3 text-lg bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                 aria-label={`${translations.about.website}`}
               >
-                <icons.GlobalLineIcon className="w-8 h-8" aria-hidden="true" />
+                <Icon name="GlobalLine" className="w-8 h-8" aria-hidden="true" />
                 <p className="text-lg pl-2 py-1 font-bold">
                   {translations.about.website}
                 </p>
@@ -111,7 +85,7 @@ const Shortcuts: React.FC = () => {
                 className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                 aria-label={`${translations.about.github}`}
               >
-                <icons.GithubFillIcon className="w-8 h-8" aria-hidden="true" />
+                <Icon name="GithubFill" className="w-8 h-8" aria-hidden="true" />
                 <p className="text-lg pl-2 py-1 font-bold">
                   {translations.about.github}
                 </p>
@@ -126,7 +100,7 @@ const Shortcuts: React.FC = () => {
                 className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                 aria-label={`${translations.about.donate}`}
               >
-                <icons.CupLineIcon className="w-8 h-8" aria-hidden="true" />
+                <Icon name="CupLine" className="w-8 h-8" aria-hidden="true" />
                 <p className="text-lg pl-2 py-1 font-bold">
                   {translations.about.donate}
                 </p>

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import icons from "../../lib/remixicon-react";
 import { Link, useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
 import { useSaveNote } from "../../store/notes";
 import { Note } from "../../store/types";
 import Mousetrap from "../../utils/mousetrap";
+import Icon from "../UI/Icon";
+import { Capacitor } from "@capacitor/core";
+import { useTranslation } from "@/utils/translations";
 
 interface NavbarProps {
   notesState: Record<string, Note>;
@@ -13,20 +15,21 @@ interface NavbarProps {
 }
 
 const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const { saveNote } = useSaveNote(setNotesState);
   const navigate = useNavigate();
+
   useEffect(() => {
-    const handleKeyboardShow = () => {
-      document.body.classList.add("keyboard-visible");
-    };
+    if (Capacitor.getPlatform() === "web") return;
 
-    const handleKeyboardHide = () => {
-      document.body.classList.remove("keyboard-visible");
-    };
+    Keyboard.addListener("keyboardWillShow", () => {
+      setKeyboardVisible(true);
+    });
 
-    Keyboard.addListener("keyboardWillShow", handleKeyboardShow);
-    Keyboard.addListener("keyboardWillHide", handleKeyboardHide);
-    // Cleanup listeners on component unmount
+    Keyboard.addListener("keyboardWillHide", () => {
+      setKeyboardVisible(false);
+    });
+
     return () => {
       Keyboard.removeAllListeners();
     };
@@ -39,34 +42,19 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     }
   };
 
-  const [translations, setTranslations] = useState({
-    accessibility: {
-      home: "accessibility.home",
-      editNote: "accessibility.home",
-      createNew: "accessibility.createNew",
-      archive: "accessibility.archive",
-      settings: "accessibility.archive",
-    },
-    home: {
-      title: "home.title",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    accessibility: {},
+    home: {},
   });
 
   useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   const handleCreateNewNote = async () => {
@@ -122,50 +110,70 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     };
   }, []);
 
+  if (keyboardVisible) return null;
+
   return (
-    <div className={`element-to-hide spacingdiv`}>
-      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto">
-        <div className="flex justify-between">
+    <div className="element-to-hide spacingdiv">
+      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto z-50">
+        <div className="flex justify-between items-center">
           <Link to="/">
             <button
-              className="flex items-center justify-center w-12 h-12"
               aria-label={translations.accessibility.home}
+              className="w-12 h-12 flex items-center justify-center"
             >
-              <icons.HomeLineIcon className="text-white hover:text-primary h-10 w-10" />
+              <Icon
+                name="HomeLine"
+                className="text-white hover:text-primary h-10 w-10"
+              />
             </button>
           </Link>
 
           <button
-            onClick={handleEditNote}
-            className="flex items-center justify-center w-12 h-12"
+            onClick={() => {
+              const last = localStorage.getItem("lastNoteEdit");
+              if (last) navigate(`/editor/${last}`);
+            }}
             aria-label={translations.accessibility.editNote}
+            className="w-12 h-12 flex items-center justify-center"
           >
-            <icons.Edit2LineIcon className="text-white hover:text-primary h-10 w-10" />
+            <Icon
+              name="Edit2Line"
+              className="text-white hover:text-primary h-10 w-10"
+            />
           </button>
 
           <button
-            className="flex items-center justify-center w-12 h-12"
             onClick={handleCreateNewNote}
             aria-label={translations.accessibility.createNew}
+            className="w-12 h-12 flex items-center justify-center"
           >
-            <icons.AddFillIcon className="text-white hover:text-primary h-10 w-10" />
+            <Icon
+              name="AddFill"
+              className="text-white hover:text-primary h-10 w-10"
+            />
           </button>
 
           <Link to="/archive">
             <button
-              className="flex items-center justify-center w-12 h-12"
               aria-label={translations.accessibility.archive}
+              className="w-12 h-12 flex items-center justify-center"
             >
-              <icons.ArchiveDrawerLineIcon className="text-white hover:text-primary h-10 w-10" />
+              <Icon
+                name="ArchiveDrawerLine"
+                className="text-white hover:text-primary h-10 w-10"
+              />
             </button>
           </Link>
 
           <Link to="/settings">
             <button
-              className="flex items-center justify-center w-12 h-12"
               aria-label={translations.accessibility.settings}
+              className="w-12 h-12 flex items-center justify-center"
             >
-              <icons.Settings4LineIcon className="text-white hover:text-primary h-10 w-10" />
+              <Icon
+                name="Settings4Line"
+                className="text-white hover:text-primary h-10 w-10"
+              />
             </button>
           </Link>
         </div>

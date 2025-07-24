@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Icons from "./lib/remixicon-react";
 import enTranslations from "./assets/locales/en.json";
 import deTranslations from "./assets/locales/de.json";
+import Icon from "./components/UI/Icon";
+import { useTranslation } from "./utils/translations";
 
 const Welcome: React.FC = () => {
   const [currentView, setCurrentView] = useState<"view1" | "view2" | "view3">(
@@ -58,51 +59,26 @@ const Welcome: React.FC = () => {
   const updatCodeFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCodeFont(e.target.value);
   };
-
-  useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `./assets/locales/${selectedLanguage}.json`
-        );
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
-  }, []); // Empty dependency array means this effect runs once on mount
-
   const [selectedLanguage, setSelectedLanguage] = useState(
     localStorage.getItem("selectedLanguage") || "en"
   );
 
   // Translations
-  const [translations, setTranslations] = useState({
-    welcome: {
-      welcomeMessage: "welcome.welcomeMessage",
-      themeTitle: "welcome.themeTitle",
-      next: "welcome.next",
-      back: "welcome.back",
-      welcomeTitle: "welcome.welcomeTitle",
-      welcomeParagraph: "welcome.welcomeParagraph",
-      getStarted: "welcome.getStarted",
-      startTitle: "welcome.startTitle",
-    },
-    settings: {
-      apptheme: "settings.appTheme",
-      selectfont: "settings.selectfont",
-      codeFont: "settings.codeFont",
-      light: "settings.light",
-      dark: "settings.dark",
-      system: "settings.system",
-      colorScheme: "settings.colorScheme"
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    welcome: {},
+    settings: {},
   });
 
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
+      }
+    };
+    fetchTranslations();
+  }, []);
+  
   const languages = [
     { code: "en", name: "English", translations: enTranslations },
     { code: "de", name: "Deutsch", translations: deTranslations },
@@ -252,7 +228,8 @@ const Welcome: React.FC = () => {
                     </option>
                   ))}
                 </select>
-                <Icons.ArrowDownSLineIcon
+                <Icon
+                  name="ArrowDownSLine"
                   className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
                   aria-hidden="true"
                 />
@@ -273,7 +250,8 @@ const Welcome: React.FC = () => {
         <div className="flex view items-center justify-center">
           <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between h-full">
             <div className="mt-5 flex justify-center">
-              <Icons.FontSizeIcon
+              <Icon
+                name="FontSize"
                 className="w-12 h-12 mx-auto rounded-xl"
                 aria-hidden="true"
               />
@@ -304,7 +282,8 @@ const Welcome: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon
+                  <Icon
+                    name="ArrowDownSLine"
                     className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
                     aria-hidden="true"
                   />
@@ -349,7 +328,8 @@ const Welcome: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon
+                  <Icon
+                    name="ArrowDownSLine"
                     className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
                     aria-hidden="true"
                   />
@@ -374,7 +354,8 @@ const Welcome: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon
+                  <Icon
+                    name="ArrowDownSLine"
                     className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
                     aria-hidden="true"
                   />

@@ -8,7 +8,8 @@ import {
   DialogTitle,
   Transition,
 } from "@headlessui/react";
-import Icons from "../../../remixicon-react";
+import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
 
 const MermaidNodeView: React.FC<NodeViewProps> = ({
   node,
@@ -22,6 +23,20 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
   const [dragging, setDragging] = useState(false);
   const dialogPanelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    accessibility: {},
+    editor: {},
+  });
+
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
+      }
+    };
+    fetchTranslations();
+  }, []);
 
   const updateContent = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -88,36 +103,6 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
     setMermaidContent(node.attrs.content || "");
   }, [node.attrs.content]);
 
-  const [translations, setTranslations] = useState({
-    editor: {
-      mermaidContent: "editor.mermaidContent",
-      editContent: "editor.editContent",
-      close: "editor.console",
-    },
-    accessibility: {
-      editMermaid: "accessibility.editMermaid",
-      close: "accessibility.close"
-    },
-  });
-
-  useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
-  }, []);
-
   return (
     <NodeViewWrapper>
       <div>
@@ -171,8 +156,8 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
                       onClick={closeModal}
                       className="text-neutral-800 dark:text-[color:var(--selected-dark-text)]  bg-neutral-200 rounded-full hover:text-gray-700 focus:outline-none"
                       aria-label={translations.accessibility.close}
-                      >
-                      <Icons.CloseLineIcon />
+                    >
+                      <Icon name="CloseLine" />
                     </button>
                   </div>
                   <div className="p-4 h-full flex flex-col">

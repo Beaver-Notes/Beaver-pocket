@@ -4,8 +4,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Router from "./router";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
-import "./assets/css/main.css";
-import "./assets/css/fonts.css";
 import BottomNavBar from "./components/App/BottomNavBar";
 import CommandPrompt from "./components/App/CommandPrompt";
 import { setStoreRemotePath } from "./store/useDataPath";
@@ -16,6 +14,11 @@ import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { SplashScreen } from "@capacitor/splash-screen";
+import Dialog from "./components/UI/Dialog";
+
+// Import styles
+import "./assets/css/main.css";
+import "./assets/css/fonts.css";
 
 // Types for sync services
 type SyncService = "dropbox" | "iCloud" | "onedrive" | "webdav" | "googledrive";
@@ -119,7 +122,7 @@ const App: React.FC = () => {
         setIsInitialized(true);
       } catch (error) {
         console.error("Error during critical initialization:", error);
-        setIsInitialized(true); // Still allow app to continue
+        setIsInitialized(true);
       }
     };
 
@@ -136,7 +139,7 @@ const App: React.FC = () => {
         setNotesLoaded(true);
       } catch (error) {
         console.error("Error loading notes:", error);
-        setNotesLoaded(true); // Still mark as loaded to prevent retry
+        setNotesLoaded(true);
       }
     };
 
@@ -336,6 +339,7 @@ const App: React.FC = () => {
       {shouldShowNavBar && (
         <BottomNavBar notesState={notesState} setNotesState={setNotesState} />
       )}
+      <Dialog />
     </div>
   );
 };

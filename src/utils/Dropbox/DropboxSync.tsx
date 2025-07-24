@@ -36,7 +36,7 @@ interface AssetSyncLog {
 }
 
 const STORAGE_PATH = "notes/data.json";
-const SYNC_FOLDER_NAME = "BeaverNotesSync"; // Fixed folder name instead of date-based
+const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
 const useDropboxSync = (setNotesState: any): DropboxSyncHookReturn => {
   const [syncState, setSyncState] = useState<SyncState>({

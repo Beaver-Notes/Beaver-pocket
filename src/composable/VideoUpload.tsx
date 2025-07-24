@@ -1,6 +1,6 @@
 import React from "react";
 import { Directory, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
-import icons from "../../lib/remixicon-react";
+import Icon from "@/components/UI/Icon";
 
 interface FileUploadProps {
   onVideoUpload: (fileUrl: string) => void;
@@ -92,10 +92,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
             aria-label={translations.menu.video}
           >
             {/* Icon */}
-            <icons.VideoIcon
-              className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3"
-              aria-hidden="true"
-            />
+            <Icon name="Video" />
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
@@ -127,10 +124,7 @@ const VideoUploadComponent: React.FC<FileUploadProps> = ({
             }}
             aria-label={translations.menu.video}
           >
-            <icons.VideoIcon
-              className=" text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7"
-              aria-hidden="true"
-            />
+            <Icon name="Video" />
           </button>
           <input
             type="file"

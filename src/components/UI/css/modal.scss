@@ -1,0 +1,30 @@
+.modal-enter {
+  opacity: 0;
+}
+.modal-enter-active {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+.modal-exit {
+  opacity: 1;
+}
+.modal-exit-active {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal-ui__content {
+  transition: transform 0.3s ease;
+}
+.modal-enter .modal-ui__content {
+  transform: translateY(30px);
+}
+.modal-enter-active .modal-ui__content {
+  transform: translateY(0);
+}
+.modal-exit .modal-ui__content {
+  transform: translateY(0);
+}
+.modal-exit-active .modal-ui__content {
+  transform: translateY(30px);
+}

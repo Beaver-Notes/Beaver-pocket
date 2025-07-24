@@ -1,99 +1,176 @@
-import React, { useCallback, useRef, useState, ReactNode } from "react";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle,
-  Transition,
-} from "@headlessui/react";
-import Icons from "../../lib/remixicon-react";
+import React, { useEffect, useState, useCallback } from "react";
+import { UiModal } from "@/components/UI/Modal";
+import UiInput from "@/components/UI/Input";
+import UiButton from "@/components/UI/Button";
+import { useTranslation } from "@/utils/translations";
+import emitter from "tiny-emitter/instance";
 
-type DialogProps = {
-  isOpen: boolean;
-  closeDialog: () => void;
+type DialogType = "" | "prompt" | "auth";
+type ButtonVariant = "default" | "primary" | "danger";
+
+export interface DialogOptions {
+  html?: boolean;
+  body?: string;
   title?: string;
-  children: ReactNode;
+  placeholder?: string;
+  label?: string;
+  auth?: string[];
+  allowedEmpty?: boolean;
+  okText?: string;
+  okVariant?: ButtonVariant;
+  cancelText?: string;
+  onConfirm?: (param: any) => boolean | void;
+  onCancel?: () => void;
+}
+
+const defaultOptions: DialogOptions = {
+  html: false,
+  body: "",
+  title: "",
+  placeholder: "",
+  label: "",
+  auth: [],
+  allowedEmpty: true,
+  okText: "Confirm",
+  okVariant: "primary",
+  cancelText: "Cancel",
 };
 
-const UIDialog: React.FC<DialogProps> = ({ isOpen, closeDialog, title, children }) => {
-  const dialogPanelRef = useRef<HTMLDivElement>(null);
-  const [startY, setStartY] = useState(0);
-  const [dragging, setDragging] = useState(false);
+const Dialog: React.FC = () => {
+  const [show, setShow] = useState(false);
+  const [type, setType] = useState<DialogType>("");
+  const [input, setInput] = useState("");
+  const [options, setOptions] = useState<DialogOptions>(defaultOptions);
+  const [isEmpty, setIsEmpty] = useState(false);
+  const [translations, setTranslations] = useState<Record<string, any>>({});
 
-  const handleTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
-    setStartY(event.touches[0].clientY);
-    setDragging(true);
+  const loadTranslations = async () => {
+    const trans = await useTranslation();
+    if (trans) setTranslations(trans);
+  };
+
+  useEffect(() => {
+    loadTranslations();
   }, []);
 
-  const handleTouchMove = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>) => {
-      if (!dragging) return;
-      const currentY = event.touches[0].clientY;
-      const delta = currentY - startY;
+  const fireCallback = useCallback(
+    (callbackType: "onCancel" | "onConfirm") => {
+      const callback = options[callbackType];
+      let param: any = true;
 
-      if (delta > 0) {
-        dialogPanelRef.current!.style.transform = `translateY(${delta}px)`;
-      }
-    },
-    [startY, dragging]
-  );
-
-  const handleTouchEnd = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>) => {
-      if (!dragging) return;
-      const currentY = event.changedTouches[0].clientY;
-      const delta = currentY - startY;
-
-      if (delta > 100) {
-        closeDialog();
-      } else {
-        dialogPanelRef.current!.style.transition = "transform 0.3s ease";
-        dialogPanelRef.current!.style.transform = "translateY(0)";
+      if (type === "prompt") {
+        param = input;
+      } else if (type === "auth") {
+        param = {
+          name: input,
+        };
       }
 
-      setDragging(false);
-      setStartY(0);
+      let hide = true;
+
+      if (callbackType !== "onCancel" && !options.allowedEmpty && !input) {
+        setIsEmpty(true);
+        return;
+      }
+
+      if (callback) {
+        const cbReturn = callback(param);
+        if (typeof cbReturn === "boolean") {
+          hide = cbReturn;
+        }
+      }
+
+      if (hide) {
+        setOptions(defaultOptions);
+        setShow(false);
+        setInput("");
+      }
+      setIsEmpty(false);
     },
-    [startY, dragging, closeDialog]
+    [input, options, type]
   );
+
+  useEffect(() => {
+    const handleDialog = (type: DialogType, opts: DialogOptions) => {
+      setType(type);
+      const newOptions = { ...defaultOptions, ...opts };
+      setOptions(newOptions);
+      setShow(true);
+      setIsEmpty(false);
+    };
+
+    emitter.on("show-dialog", handleDialog);
+    return () => {
+      emitter.off("show-dialog", handleDialog);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.code === "Enter") {
+        fireCallback("onConfirm");
+      } else if (e.code === "Escape") {
+        fireCallback("onCancel");
+      }
+    };
+
+    if (show) {
+      window.addEventListener("keyup", handler);
+    } else {
+      window.removeEventListener("keyup", handler);
+    }
+
+    return () => window.removeEventListener("keyup", handler);
+  }, [show, fireCallback]);
 
   return (
-    <Transition show={isOpen} as={React.Fragment}>
-      <Dialog as="div" className="fixed inset-0 z-[1000] flex justify-center items-center" onClose={closeDialog}>
-        <DialogBackdrop className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
-        <div className="fixed inset-0 flex items-end sm:items-center pb-6 justify-center">
-          <Transition.Child
-            as={React.Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <DialogPanel
-              ref={dialogPanelRef}
-              className="bg-white dark:bg-gray-900 p-6 rounded-2xl w-full max-w-lg mx-4"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              style={{ transition: dragging ? "none" : "transform 0.3s ease" }}
-              aria-labelledby="dialog-title"
-            >
-              <div className="flex justify-between items-center">
-                {title && <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>}
-                <button onClick={closeDialog} className="text-gray-600 hover:text-black">
-                  <Icons.CloseLineIcon />
-                </button>
-              </div>
-              <div className="my-2 border-b dark:border-gray-600"></div>
-              <div className="mt-4">{children}</div>
-            </DialogPanel>
-          </Transition.Child>
+    <UiModal
+      modelValue={show}
+      onClose={() => fireCallback("onCancel")}
+      contentClass="max-w-sm"
+      persist
+    >
+      <div className="font-semibold text-lg">{options.title}</div>
+      <p className="text-neutral-600 dark:text-neutral-200 leading-tight break-words overflow-hidden">
+        {options.body}
+      </p>
+
+      {type === "prompt" && (
+        <div className="w-full mt-4 relative">
+          <UiInput
+            autofocus
+            value={input}
+            onChange={(val: string) => setInput(val)}
+            placeholder={options.placeholder}
+            label={options.label}
+            password
+          />
         </div>
-      </Dialog>
-    </Transition>
+      )}
+
+      {isEmpty && (
+        <div className="text-sm text-red-500 mt-2">
+          {translations?.dialog?.inputEmpty}
+        </div>
+      )}
+
+      <div className="mt-8 flex space-x-2 rtl:space-x-0">
+        <UiButton
+          className="w-6/12 rtl:ml-2"
+          onClick={() => fireCallback("onCancel")}
+        >
+          {options.cancelText}
+        </UiButton>
+        <UiButton
+          className="w-6/12"
+          variant={options.okVariant}
+          onClick={() => fireCallback("onConfirm")}
+        >
+          {options.okText}
+        </UiButton>
+      </div>
+    </UiModal>
   );
 };
 
-export default UIDialog;
+export default Dialog;

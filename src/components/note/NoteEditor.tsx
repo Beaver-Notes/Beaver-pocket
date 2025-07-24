@@ -1,7 +1,6 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
-import SDialog from "../UI/SDialog";
 import { EditorContent, useEditor } from "@tiptap/react";
 import Toolbar from "./Toolbar";
 import Find from "./Find";
@@ -13,11 +12,14 @@ import LinkNote from "../../lib/tiptap/exts/link-note";
 import DOMPurify from "dompurify";
 import useNoteEditor from "../../store/useNoteActions";
 import { useNotesState } from "../../store/Activenote";
-import Icons from "../../lib/remixicon-react";
 import Mousetrap from "mousetrap";
 import { labelStore } from "../../store/label";
 import { WebviewPrint } from "capacitor-webview-print";
 import { cleanEmptyParagraphs } from "../../utils/editor";
+import NoteBubbleMenu from "./NoteBubbleMenu";
+import Icon from "../UI/Icon";
+import { UiModal } from "../UI/Modal";
+import { shareNote } from "../../utils/share";
 
 type Props = {
   note: Note;
@@ -149,50 +151,6 @@ function EditorComponent({
     }
   }, [labelStore.labels, editor, note.labels, title]);
 
-  useEffect(() => {
-    function handleClick(event: MouseEvent | TouchEvent) {
-      const target = event.target as HTMLElement | null;
-      const closestAnchor = target?.closest("a");
-
-      const isTiptapURL = closestAnchor?.hasAttribute("tiptap-url");
-      const isMentionURL = target?.hasAttribute("data-mention");
-
-      if (isTiptapURL) {
-        if (closestAnchor && closestAnchor.href.startsWith("note://")) {
-          const noteId = closestAnchor.href.split("note://")[1];
-          navigate(`/editor/${noteId}`);
-          return;
-        } else if (closestAnchor) {
-          window.open(closestAnchor.href, "_blank", "noopener");
-          event.preventDefault();
-        }
-      } else if (isMentionURL) {
-        event.preventDefault();
-        navigate(`/?label=${encodeURIComponent(target?.dataset.id || "")}`);
-      }
-    }
-
-    const editorElement = document.querySelector(".ProseMirror");
-
-    if (editorElement) {
-      editorElement.addEventListener("click", handleClick as EventListener);
-      editorElement.addEventListener("touchend", handleClick as EventListener);
-    }
-
-    return () => {
-      if (editorElement) {
-        editorElement.removeEventListener(
-          "click",
-          handleClick as EventListener
-        );
-        editorElement.removeEventListener(
-          "touchend",
-          handleClick as EventListener
-        );
-      }
-    };
-  }, [editor]);
-
   document.addEventListener("showFind", () => {
     setShowFind((prevShowFind) => !prevShowFind);
   });
@@ -219,38 +177,12 @@ function EditorComponent({
     }
   };
 
-  const setLink = useCallback(() => {
-    const previousUrl = editor?.getAttributes("link").href;
-    const url = window.prompt("URL", previousUrl);
-
-    if (url === null) {
-      return;
-    }
-
-    if (url === "") {
-      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
-
-      return;
-    }
-
-    editor
-      ?.chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: url })
-      .run();
-  }, [editor]);
-
   useEffect(() => {
     Mousetrap.bind("mod+f", (e) => {
       e.preventDefault();
       setShowFind(true);
     });
 
-    Mousetrap.bind("mod+k", (e) => {
-      e.preventDefault();
-      setLink();
-    });
     Mousetrap.bind("mod+shift+x", (e) => {
       e.preventDefault();
       editor?.chain().focus().toggleStrike().run();
@@ -334,7 +266,7 @@ function EditorComponent({
       Mousetrap.unbind("mod+shift+b");
       Mousetrap.unbind("mod+alt+c");
     };
-  }, [editor, setLink]);
+  }, [editor]);
 
   const handlePrint = async (fileName: string) => {
     const html = document.documentElement;
@@ -400,11 +332,7 @@ function EditorComponent({
 
   return (
     <div className="relative h-auto" onDragOver={(e) => e.preventDefault()}>
-      <div
-        className={`fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] sm:top-0 sm:bottom-auto print:hidden bg-white dark:bg-[#232222] z-50 ${
-          focusMode ? "hidden" : "block"
-        }`}
-      >
+      <div className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] sm:top-0 sm:bottom-auto print:hidden bg-white dark:bg-[#232222] z-20">
         <Toolbar
           note={note}
           noteId={note.id}
@@ -421,7 +349,7 @@ function EditorComponent({
             className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
             onClick={goBack}
           >
-            <Icons.ArrowLeftLineIcon className="border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7" />
+            <Icon name="ArrowLeftLine" />
           </button>
 
           <div className="flex">
@@ -430,24 +358,55 @@ function EditorComponent({
               onClick={openDialog}
               aria-label={translations.editor.share}
             >
-              <Icons.ShareLineIcon className="border-none text-neutral-800 dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7" />
+              <Icon name="ShareLine" />
             </button>
 
-            <SDialog
-              translations={translations}
-              isOpen={isOpen}
-              closeDialog={closeDialog}
-              notesState={notesState}
-              handlePrint={handlePrint}
-              note={note}
-            />
+            <UiModal
+              modelValue={isOpen}
+              onClose={closeDialog}
+              header={translations.editor.exportas}
+              allowSwipeToDismiss={true}
+              className="fixed inset-0 flex items-end sm:items-center pb-6 justify-center bg-black bg-opacity-20 p-5 overflow-y-auto z-50 print:hidden"
+            >
+              <div className="my-2 border-b dark:border-neutral-500"></div>
+              <div className="mt-4 space-y-4 p-2 bg-[#F8F8F7] dark:bg-neutral-800 rounded-xl">
+                <div className="flex items-center w-full">
+                  <p className="text-base pl-2 font-bold">BEA</p>
+
+                  <button
+                    onClick={() => shareNote(note.id, notesState)}
+                    className="w-full bg-[#F8F8F7] dark:bg-neutral-800 p-4 text-lg rounded-xl inline-flex justify-between items-center"
+                  >
+                    <Icon
+                      name="FileTextLine"
+                      className="w-6 h-6"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+                <div className="flex items-center w-full">
+                  <p className="text-base pl-2 font-bold">PDF</p>
+                  <button
+                    onClick={() => handlePrint(`${note.title}.pdf`)}
+                    className="w-full bg-[#F8F8F7] dark:bg-neutral-800 p-4 text-lg rounded-xl inline-flex justify-between items-center"
+                  >
+                    <Icon
+                      name="FileArticleLine"
+                      className="w-6 h-6"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              </div>
+            </UiModal>
 
             <button
               className="p-2 rounded-md text-white bg-transparent cursor-pointer"
               onClick={toggleFocusMode}
               aria-label={translations.editor.ReadingMode}
             >
-              <Icons.FileArticleLine
+              <Icon
+                name="FileArticleLine"
                 className={`border-none ${
                   focusMode
                     ? "text-primary"
@@ -467,9 +426,7 @@ function EditorComponent({
               ref={buttonRef}
               aria-label={translations.editor.searchPage}
             >
-              <Icons.Search2LineIcon
-                className={`border-none dark:text-[color:var(--selected-dark-text)] text-neutral-800 text-xl w-7 h-7`}
-              />
+              <Icon name="Search2Line" />
             </button>
           </div>
 
@@ -505,6 +462,7 @@ function EditorComponent({
               className="prose dark:text-neutral-100 max-w-none prose-indigo mb-[5em]"
             />
           </div>
+          <NoteBubbleMenu editor={editor} notes={notesList} />
         </div>
       </div>
     </div>

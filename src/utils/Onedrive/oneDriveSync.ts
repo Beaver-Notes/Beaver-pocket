@@ -25,7 +25,7 @@ const decodeJwt = (token: string) => {
 const refreshAccessToken = async (): Promise<string | null> => {
   try {
     const result = await MsAuthPlugin.login({
-      clientId: import.meta.env.VITE_ONEDRIDE_CLIENT_ID,
+      clientId: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
       tenant: "common",
       keyHash: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
       scopes: ["Files.ReadWrite", "User.Read"],

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
-import icons from "../../../remixicon-react";
+import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
 
 interface FileEmbedComponentProps extends NodeViewProps {}
 
@@ -11,28 +12,18 @@ const FileEmbedComponent: React.FC<FileEmbedComponentProps> = ({ node }) => {
     setFileName(node.attrs.fileName);
   }, [node.attrs.fileName]);
 
-  const [translations, setTranslations] = useState({
-    accessibility: {
-      open: "accessibility.open",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    accessibility: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   const openDocument = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -59,7 +50,7 @@ const FileEmbedComponent: React.FC<FileEmbedComponentProps> = ({ node }) => {
         aria-label={`${fileName}`}
       >
         <div className="flex items-center cursor-pointer" role="presentation">
-          <icons.FileIcon className="w-6 h-6 mr-2" aria-hidden="true" />
+          <Icon name="File" className="w-6 h-6 mr-2" aria-hidden="true" />
           <span>{truncatedFileName}</span>
         </div>
         <button
@@ -67,7 +58,7 @@ const FileEmbedComponent: React.FC<FileEmbedComponentProps> = ({ node }) => {
           onClick={openDocument}
           aria-label={`${translations.accessibility.open} ${fileName}`}
         >
-          <icons.EyeLineIcon className="w-6 h-6" aria-hidden="true" />
+          <Icon name="EyeLine" className="w-6 h-6" aria-hidden="true" />
         </button>
       </div>
     </NodeViewWrapper>

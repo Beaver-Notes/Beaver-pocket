@@ -15,25 +15,28 @@ export function useSelectionHelper({
 }) {
   const handleSelectionStart = useCallback(
     (e) => {
-      if (tool !== "select" || isPalmTouch(e)) return;
+      if (tool !== "select") return;
+
       const svg = svgRef.current;
       const [x, y] = getPointerCoordinates(e, svg);
+
       if (selectedElement && isPointInsideSelection(x, y)) {
         handleTransformStart(e, "move");
         return;
       }
+
       setState((prev) => ({
         ...prev,
         isDrawing: true,
         selectionBox: { startX: x, startY: y, currentX: x, currentY: y },
         selectedElement: null,
+        transformState: null,
       }));
     },
     [
       tool,
       selectedElement,
       isPointInsideSelection,
-      isPalmTouch,
       svgRef,
       handleTransformStart,
       setState,
@@ -42,15 +45,18 @@ export function useSelectionHelper({
 
   const handleSelectionMove = useCallback(
     (e) => {
-      if (!selectionBox || tool !== "select" || isPalmTouch(e)) return;
+      // Remove palm touch check for select tool
+      if (!selectionBox || tool !== "select") return;
+
       const svg = svgRef.current;
       const [x, y] = getPointerCoordinates(e, svg);
+
       setState((prev) => ({
         ...prev,
         selectionBox: { ...prev.selectionBox, currentX: x, currentY: y },
       }));
     },
-    [selectionBox, tool, isPalmTouch, svgRef, setState]
+    [selectionBox, tool, svgRef, setState]
   );
 
   const handleSelectionEnd = useCallback(() => {
@@ -63,54 +69,65 @@ export function useSelectionHelper({
       height: Math.abs(selectionBox.currentY - selectionBox.startY),
     };
 
-    if (bounds.width > 5 && bounds.height > 5) {
-      const selectedLines = lines.filter((line) => {
-        const lineBounds = getLineBounds(line);
-        return (
-          lineBounds.x < bounds.x + bounds.width &&
-          lineBounds.x + lineBounds.width > bounds.x &&
-          lineBounds.y < bounds.y + bounds.height &&
-          lineBounds.y + lineBounds.height > bounds.y
-        );
-      });
+    setState((prev) => {
+      const currentLines = prev.lines;
 
-      if (selectedLines.length > 0) {
-        const actualBounds = selectedLines.reduce(
-          (acc, line) => {
-            const lineBounds = getLineBounds(line);
-            return {
-              x: Math.min(acc.x, lineBounds.x),
-              y: Math.min(acc.y, lineBounds.y),
-              maxX: Math.max(acc.maxX, lineBounds.x + lineBounds.width),
-              maxY: Math.max(acc.maxY, lineBounds.y + lineBounds.height),
-            };
-          },
-          { x: Infinity, y: Infinity, maxX: -Infinity, maxY: -Infinity }
-        );
+      if (bounds.width > 5 && bounds.height > 5) {
+        const selectedLines = currentLines.filter((line) => {
+          const lineBounds = getLineBounds(line);
+          return (
+            lineBounds.x < bounds.x + bounds.width &&
+            lineBounds.x + lineBounds.width > bounds.x &&
+            lineBounds.y < bounds.y + bounds.height &&
+            lineBounds.y + lineBounds.height > bounds.y
+          );
+        });
 
-        const finalBounds = {
-          x: actualBounds.x,
-          y: actualBounds.y,
-          width: actualBounds.maxX - actualBounds.x,
-          height: actualBounds.maxY - actualBounds.y,
-        };
+        if (selectedLines.length > 0) {
+          const actualBounds = selectedLines.reduce(
+            (acc, line) => {
+              const lineBounds = getLineBounds(line);
+              return {
+                x: Math.min(acc.x, lineBounds.x),
+                y: Math.min(acc.y, lineBounds.y),
+                maxX: Math.max(acc.maxX, lineBounds.x + lineBounds.width),
+                maxY: Math.max(acc.maxY, lineBounds.y + lineBounds.height),
+              };
+            },
+            { x: Infinity, y: Infinity, maxX: -Infinity, maxY: -Infinity }
+          );
 
-        setState((prev) => ({
-          ...prev,
-          selectedElement: {
-            type: "group",
-            lines: selectedLines,
-            bounds: finalBounds,
-            lineIds: selectedLines.map((line) => line.id),
-          },
-          selectionBox: null,
-          isDrawing: false,
-        }));
+          const finalBounds = {
+            x: actualBounds.x,
+            y: actualBounds.y,
+            width: actualBounds.maxX - actualBounds.x,
+            height: actualBounds.maxY - actualBounds.y,
+          };
+
+          return {
+            ...prev,
+            selectedElement: {
+              type: "group",
+              lines: selectedLines,
+              bounds: finalBounds,
+              lineIds: selectedLines.map((line) => line.id),
+            },
+            selectionBox: null,
+            isDrawing: false,
+            transformState: null,
+          };
+        }
       }
-    } else {
-      setState((prev) => ({ ...prev, selectionBox: null, isDrawing: false }));
-    }
-  }, [selectionBox, tool, lines, setState]);
+
+      return {
+        ...prev,
+        selectionBox: null,
+        isDrawing: false,
+        selectedElement: null,
+        transformState: null,
+      };
+    });
+  }, [selectionBox, tool, setState]);
 
   const renderSelectionOverlay = useCallback(
     (selectedElement, handleTransformStart) => {

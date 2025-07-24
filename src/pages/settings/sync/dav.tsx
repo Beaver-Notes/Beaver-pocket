@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { WebDavService } from "../../utils/Webdav/webDavApi";
-import icons from "../../lib/remixicon-react";
-import { Note } from "../../store/types";
-import WebDAV from "../../utils/Webdav/WebDAVPlugin";
+import { WebDavService } from "@/utils/Webdav/webDavApi";
+import { Note } from "@/store/types";
+import WebDAV from "@/utils/Webdav/WebDAVPlugin";
+import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
 
 interface WebdavProps {
   notesState: Record<string, Note>;
   setNotesState: (notes: Record<string, Note>) => void;
 }
+
+const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
 const Webdav: React.FC<WebdavProps> = () => {
   const [autoSync, setAutoSync] = useState<boolean>(() => {
@@ -64,40 +67,19 @@ const Webdav: React.FC<WebdavProps> = () => {
   );
   // Translations
   //@ts-ignore
-  const [translations, setTranslations] = useState({
-    webdav: {
-      title: "webdav.title",
-      login: "webdav.login",
-      username: "webdav.username",
-      password: "webdav.password",
-      export: "webdav.export",
-      import: "webdav.import",
-      autoSync: "wevdav.autoSync",
-      insecureMode: "webdav.insecureMode",
-    },
-    accessibility: {
-      webdavUrl: "accessibility.webdavUrl",
-      hidePasswd: "accessibility.hidePasswd",
-      showPasswd: "accessibility.showPasswd",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    accessibility: {},
+    webdav: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   const [showInputContent, setShowInputContent] = useState(false);
@@ -121,22 +103,29 @@ const Webdav: React.FC<WebdavProps> = () => {
   }, [baseUrl, username, password]);
 
   const login = async () => {
+    if (!baseUrl || !username || !password) {
+      throw new Error("Missing login credentials");
+    }
+
     try {
-      await SecureStoragePlugin.set({
-        key: "baseUrl",
-        value: baseUrl,
-      });
-      await SecureStoragePlugin.set({
-        key: "username",
-        value: username,
-      });
-      await SecureStoragePlugin.set({
-        key: "password",
-        value: password,
-      });
+      await SecureStoragePlugin.set({ key: "baseUrl", value: baseUrl });
+      await SecureStoragePlugin.set({ key: "username", value: username });
+      await SecureStoragePlugin.set({ key: "password", value: password });
+
       initialize();
+
+      const webDavService = new WebDavService({
+        baseUrl,
+        username,
+        password,
+      });
+
+      const exists = await webDavService.folderExists(`${SYNC_FOLDER_NAME}`);
+      if (!exists) {
+        await webDavService.createFolder(`${SYNC_FOLDER_NAME}`);
+      }
     } catch (error) {
-      console.log("Error logging in");
+      console.log("Error logging in", error);
     }
   };
 
@@ -226,7 +215,10 @@ const Webdav: React.FC<WebdavProps> = () => {
               </p>
               <div className="flex justify-center items-center">
                 <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
-                  <icons.CloudLine className="w-32 h-32 text-neutral-800 dark:text-neutral-200" />
+                  <Icon
+                    name="CloudLine"
+                    className="w-32 h-32 text-neutral-800 dark:text-neutral-200"
+                  />
                 </div>
               </div>
               {securityWarning && (
@@ -269,9 +261,9 @@ const Webdav: React.FC<WebdavProps> = () => {
                   }
                 >
                   {showInputContent ? (
-                    <icons.EyeLineIcon className="w-8 h-8 mr-2" />
+                    <Icon name="EyeLine" className="w-8 h-8 mr-2" />
                   ) : (
-                    <icons.EyeCloseLineIcon className="w-8 h-8 mr-2" />
+                    <Icon name="EyeCloseLine" className="w-8 h-8 mr-2" />
                   )}
                 </button>
               </div>
@@ -325,9 +317,9 @@ const Webdav: React.FC<WebdavProps> = () => {
                   >
                     <span>Advanced Settings</span>
                     {showAdvanced ? (
-                      <icons.ArrowUpSLineIcon className="w-6 h-6 ml-2" />
+                      <Icon name="ArrowUpSLine" className="w-6 h-6 ml-2" />
                     ) : (
-                      <icons.ArrowDownSLineIcon className="w-6 h-6 ml-2" />
+                      <Icon name="ArrowDownSLine" className="w-6 h-6 ml-2" />
                     )}
                   </button>
                 </div>

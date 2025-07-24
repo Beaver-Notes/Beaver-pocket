@@ -1,7 +1,8 @@
-import icons from "../../lib/remixicon-react";
 import { useEffect, useState } from "react";
 import { labelStore } from "../../store/label";
 import { useSearchParams } from "react-router-dom";
+import Icon from "../UI/Icon";
+import { useTranslation } from "@/utils/translations";
 
 interface SearchBarProps {
   searchQuery: string;
@@ -20,15 +21,19 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const urlLabel = searchParams.get("label");
   const [selectedLabel, setSelectedLabel] = useState(urlLabel || "");
   const labels = labelStore.labels;
-  const [translations, setTranslations] = useState({
-    filter: {
-      searchNotes: "filter.searchNotes",
-      selectlabel: "filter.selectlabel",
-      lastUpdated: "filter.lastUpdated",
-      creationDate: "filter.creationDate",
-      alphabetical: "filter.alphabetical",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    filter: {},
   });
+
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
+      }
+    };
+    fetchTranslations();
+  }, []);
 
   // Load labels when component mounts
   useEffect(() => {
@@ -85,7 +90,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       <div className="flex justify-center">
         <div className="relative w-full ring-2 ring-primary sm:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-full text-neutral-800 flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2">
           <div>
-            <icons.Search2LineIcon className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] h-6 w-6" />
+            <Icon name="Search2Line" />
           </div>
           <input
             className="text-xl text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
@@ -99,7 +104,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               onClick={handleClearInput}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-800 dark:text-[color:var(--selected-dark-text)]"
             >
-              <icons.DeleteBackLineIcon className="h-6 w-6" />
+              <Icon name="DeleteBackLine" />
             </button>
           )}
         </div>
@@ -119,7 +124,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               ))}
             </select>
             <div className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none">
-              <icons.ArrowDownSLineIcon className="h-6 w-6" />
+              <Icon name="ArrowDownSLine" />
             </div>
           </div>
         </div>
@@ -137,17 +142,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
             </option>
           </select>
           <div className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none">
-            <icons.ArrowDownSLineIcon className="h-6 w-6" />
+            <Icon name="ArrowDownSLine" />
           </div>
         </div>
       </div>
       <div className="items-center flex gap-2 justify-between w-full">
         <div className="sm:w-[22em] h-12 flex items-center justify-start sm:hidden overflow-hidden w-full">
           <div className="block bg-[#F8F8F7] p-3 w-full dark:bg-[#2D2C2C] rounded-full sm:hidden relative inline-flex items-center">
-            <icons.ArrowUpDownLineIcon className="absolute top-1/2 transform -translate-y-1/2 pointer-events-none h-6 w-6" />
+            <Icon name="ArrowUpDownLine" />
             <select
               onChange={(e) => setSortingOption(e.target.value)}
-              className="bg-transparent dark:text-[color:var(--selected-dark-text)] outline-none appearance-none pl-8 w-full"
+              className="bg-transparent dark:text-[color:var(--selected-dark-text)] outline-none appearance-none pl-3 w-full"
             >
               <option value="updatedAt">
                 {translations.filter.lastUpdated}
@@ -176,7 +181,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             ))}
           </select>
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-            <icons.ArrowDownSLineIcon className="h-6 w-6" />
+            <Icon name="ArrowDownSLine" />
           </div>
         </div>
       </div>

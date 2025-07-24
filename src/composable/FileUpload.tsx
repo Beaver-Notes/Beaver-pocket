@@ -1,6 +1,6 @@
 import React from "react";
 import { Directory, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
-import icons from "../../lib/remixicon-react";
+import Icon from "@/components/UI/Icon";
 
 
 interface FileUploadProps {
@@ -97,10 +97,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             aria-label={translations.menu.file || "Upload a file"}
           >
             {/* Icon */}
-            <icons.FileIcon
-              className="text-black dark:text-[color:var(--selected-dark-text)] text-xl w-8 h-8 mr-3"
-              aria-hidden="true"
-            />
+            <Icon name="File" />
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
@@ -131,10 +128,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
             htmlFor="file-upload-input"
             aria-label={translations.menu.file || "Upload File"} // Use fallback
           >
-            <icons.FileIcon
-              className=" text-xl border-none dark:text-[color:var(--selected-dark-text)] text-xl w-7 h-7 cursor-pointer"
-              aria-hidden="true"
-            />
+            <Icon name="File" />
           </label>
           <input
             type="file"

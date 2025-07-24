@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import enTranslations from "./assets/locales/en.json";
 import deTranslations from "./assets/locales/de.json";
 import { useNavigate } from "react-router-dom";
-import Icons from "./lib/remixicon-react";
 import { Capacitor } from "@capacitor/core";
 import { useTranslation } from "./utils/translations";
+import Icon from "./components/UI/Icon";
 
 interface SettingsProps {
   themeMode: string;
@@ -214,9 +214,9 @@ const Settings: React.FC<SettingsProps> = ({
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon
-                    aria-hidden="true"
-                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  <Icon
+                    name="ArrowDownSLine"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
                   />
                 </div>
               </section>
@@ -260,9 +260,9 @@ const Settings: React.FC<SettingsProps> = ({
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon
-                    aria-hidden="true"
-                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  <Icon
+                    name="ArrowDownSLine"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
                   />
                 </div>
               </section>
@@ -288,10 +288,10 @@ const Settings: React.FC<SettingsProps> = ({
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon
-                    aria-hidden="true"
-                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
-                  />
+                  <Icon
+                    name="ArrowDownSLine"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
+                  />{" "}
                 </div>
               </section>
 
@@ -316,9 +316,9 @@ const Settings: React.FC<SettingsProps> = ({
                       </option>
                     ))}
                   </select>
-                  <Icons.ArrowDownSLineIcon
-                    aria-hidden="true"
-                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
+                  <Icon
+                    name="ArrowDownSLine"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
                   />
                 </div>
               </section>
@@ -383,7 +383,7 @@ const Settings: React.FC<SettingsProps> = ({
                       aria-label={translations.settings.Sync || "-"}
                       className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <Icons.SyncLineIcon className="w-6 h-6 mr-2" />
+                      <Icon name="SyncLine" className="w-6 h-6 mr-2" />
                       {translations.settings.Sync || "-"}
                     </button>
 
@@ -394,7 +394,7 @@ const Settings: React.FC<SettingsProps> = ({
                         platform === "android" ? "hidden" : ""
                       }`}
                     >
-                      <Icons.Brush2Fill className="w-6 h-6 mr-2" />
+                      <Icon name="Brush2Fill" className="w-6 h-6 mr-2" />
                       {translations.settings.appIcon || "-"}
                     </button>
 
@@ -403,7 +403,7 @@ const Settings: React.FC<SettingsProps> = ({
                       aria-label={translations.settings.Shortcuts || "-"}
                       className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <Icons.KeyboardLineIcon className="w-6 h-6 mr-2" />
+                      <Icon name="KeyboardLine" className="w-6 h-6 mr-2" />
                       {translations.settings.Shortcuts || "-"}
                     </button>
 
@@ -412,7 +412,7 @@ const Settings: React.FC<SettingsProps> = ({
                       aria-label={translations.settings.About || "-"}
                       className="w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center"
                     >
-                      <Icons.InformationLineIcon className="w-6 h-6 mr-2" />
+                      <Icon name="InformationLine" className="w-6 h-6 mr-2" />
                       {translations.settings.About || "-"}
                     </button>
                   </div>

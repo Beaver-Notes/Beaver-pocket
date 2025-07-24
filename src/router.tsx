@@ -4,17 +4,17 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./Home";
 import Archive from "./Archive";
 import Settings from "./Settings";
-import About from "./components/Settings/about";
-import Dropbox from "./components/Sync/dropbox";
-import Onedrive from "./components/Sync/onedrive";
-import Drive from "./components/Sync/drive";
-import Dav from "./components/Sync/dav";
-import Icloud from "./components/Sync/icloud";
-import Shortcuts from "./components/Settings/shortcuts";
+import About from "./pages/settings/about";
+import Dropbox from "./pages/settings/sync/dropbox";
+import Onedrive from "./pages/settings/sync/onedrive";
+import Drive from "./pages/settings/sync/drive";
+import Dav from "./pages/settings/sync/dav";
+import Icloud from "./pages/settings/sync/icloud";
+import Shortcuts from "./pages/settings/shortcuts";
 import Welcome from "./Welcome";
-import Sync from "./components/Settings/sync";
-import Editor from "./Editor";
-import Icons from "./components/Settings/icons";
+import Sync from "./pages/settings/sync";
+import Editor from "./pages/notes/_id";
+import Icons from "./pages/settings/icons";
 import { Note } from "./store/types";
 
 interface routerProps {

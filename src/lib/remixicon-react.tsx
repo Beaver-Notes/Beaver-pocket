@@ -1,102 +1,104 @@
 // icons.ts
-import HeadingIcon from "remixicon-react/HeadingIcon";
-import ArrowUpSLineIcon from "remixicon-react/ArrowUpSLineIcon";
+import Heading from "remixicon-react/HeadingIcon";
+import ArrowUpSLine from "remixicon-react/ArrowUpSLineIcon";
 import BallPenLine from "remixicon-react/BallPenLineIcon";
-import SingleQuotesLIcon from "remixicon-react/SingleQuotesLIcon";
-import BrushLineIcon from "remixicon-react/BrushLineIcon";
-import CalculatorLineIcon from "remixicon-react/CalculatorLineIcon";
-import PieChart2LineIcon from "remixicon-react/PieChart2LineIcon";
+import SingleQuotesL from "remixicon-react/SingleQuotesLIcon";
+import BrushLine from "remixicon-react/BrushLineIcon";
+import CalculatorLine from "remixicon-react/CalculatorLineIcon";
+import PieChart2Line from "remixicon-react/PieChart2LineIcon";
 import HardDriveLine from "remixicon-react/HardDrive2LineIcon";
-import EraserLineIcon from "remixicon-react/EraserLineIcon";
-import PlayLineIcon from "remixicon-react/PlayLineIcon";
-import PauseLineIcon from "remixicon-react/PauseLineIcon";
-import VolumeUpLineIcon from "remixicon-react/VolumeUpLineIcon";
-import VolumeMuteLineIcon from "remixicon-react/VolumeMuteLineIcon";
-import PagesLineIcon from "remixicon-react/PagesLineIcon";
-import MicLineIcon from "remixicon-react/MicLineIcon";
-import StopCircleLineIcon from "remixicon-react/StopCircleLineIcon";
-import AddFillIcon from "remixicon-react/AddFillIcon";
-import CodeBoxLineIcon from "remixicon-react/CodeBoxLineIcon";
-import DeleteBinLineIcon from "remixicon-react/DeleteBinLineIcon";
-import ImageLineIcon from "remixicon-react/ImageLineIcon";
-import ArchiveDrawerLineIcon from "remixicon-react/ArchiveLineIcon";
-import ArchiveDrawerFillIcon from "remixicon-react/InboxUnarchiveLineIcon";
-import Download2LineIcon from "remixicon-react/Download2LineIcon";
-import LockClosedIcon from "remixicon-react/LockLineIcon";
-import LockOpenIcon from "remixicon-react/LockUnlockLineIcon";
-import KeyboardLineIcon from "remixicon-react/KeyboardLineIcon";
-import ParagraphIcon from "remixicon-react/ParagraphIcon";
-import InformationLineIcon from "remixicon-react/InformationLineIcon";
-import SyncLineIcon from "remixicon-react/RefreshLineIcon";
-import LockLineIcon from "remixicon-react/LockLineIcon";
-import Focus3LineIcon from "remixicon-react/Focus3LineIcon";
-import Focus3FillIcon from "remixicon-react/Focus3FillIcon";
-import Search2LineIcon from "remixicon-react/Search2LineIcon";
-import FileIcon from "remixicon-react/FileLineIcon";
-import ArrowLeftLineIcon from "remixicon-react/ArrowLeftLineIcon";
-import CloseLineIcon from "remixicon-react/CloseLineIcon";
-import BoldIcon from "remixicon-react/BoldIcon";
+import EraserLine from "remixicon-react/EraserLineIcon";
+import PlayLine from "remixicon-react/PlayLineIcon";
+import PauseLine from "remixicon-react/PauseLineIcon";
+import VolumeUpLine from "remixicon-react/VolumeUpLineIcon";
+import VolumeMuteLine from "remixicon-react/VolumeMuteLineIcon";
+import PagesLine from "remixicon-react/PagesLineIcon";
+import MicLine from "remixicon-react/MicLineIcon";
+import StopCircleLine from "remixicon-react/StopCircleLineIcon";
+import AddFill from "remixicon-react/AddFillIcon";
+import CodeBoxLine from "remixicon-react/CodeBoxLineIcon";
+import DeleteBinLine from "remixicon-react/DeleteBinLineIcon";
+import ImageLine from "remixicon-react/ImageLineIcon";
+import ArchiveDrawerLine from "remixicon-react/ArchiveLineIcon";
+import ArchiveDrawerFill from "remixicon-react/InboxUnarchiveLineIcon";
+import Download2Line from "remixicon-react/Download2LineIcon";
+import LockClosed from "remixicon-react/LockLineIcon";
+import LockOpen from "remixicon-react/LockUnlockLineIcon";
+import KeyboardLine from "remixicon-react/KeyboardLineIcon";
+import Paragraph from "remixicon-react/ParagraphIcon";
+import InformationLine from "remixicon-react/InformationLineIcon";
+import SyncLine from "remixicon-react/RefreshLineIcon";
+import LockLine from "remixicon-react/LockLineIcon";
+import Focus3Line from "remixicon-react/Focus3LineIcon";
+import Focus3Fill from "remixicon-react/Focus3FillIcon";
+import Search2Line from "remixicon-react/Search2LineIcon";
+import File from "remixicon-react/FileLineIcon";
+import ArrowLeftLine from "remixicon-react/ArrowLeftLineIcon";
+import CloseLine from "remixicon-react/CloseLineIcon";
+import Bold from "remixicon-react/BoldIcon";
 import CloudLine from "remixicon-react/CloudyLineIcon";
-import MarkPenLineIcon from "remixicon-react/MarkPenLineIcon";
-import ItalicIcon from "remixicon-react/ItalicIcon";
-import UnderlineIcon from "remixicon-react/UnderlineIcon";
-import StrikethroughIcon from "remixicon-react/StrikethroughIcon";
-import Heading1Icon from "remixicon-react/H1Icon";
-import Heading2Icon from "remixicon-react/H2Icon";
-import Heading3Icon from "remixicon-react/H3Icon";
-import Heading4Icon from "remixicon-react/H4Icon";
-import Heading5Icon from "remixicon-react/H5Icon";
-import Heading6Icon from "remixicon-react/H6Icon";
-import InsertRowTopIcon from "remixicon-react/InsertRowTopIcon";
+import MarkPenLine from "remixicon-react/MarkPenLineIcon";
+import Italic from "remixicon-react/ItalicIcon";
+import Underline from "remixicon-react/UnderlineIcon";
+import Strikethrough from "remixicon-react/StrikethroughIcon";
+import Heading1 from "remixicon-react/H1Icon";
+import Heading2 from "remixicon-react/H2Icon";
+import Heading3 from "remixicon-react/H3Icon";
+import Heading4 from "remixicon-react/H4Icon";
+import Heading5 from "remixicon-react/H5Icon";
+import Heading6 from "remixicon-react/H6Icon";
+import InsertRowTop from "remixicon-react/InsertRowTopIcon";
 import DeleteRow from "remixicon-react/DeleteRowIcon";
 import DeleteColumn from "remixicon-react/DeleteColumnIcon";
-import InsertRowBottomIcon from "remixicon-react/InsertRowBottomIcon";
-import InsertColumnLeftIcon from "remixicon-react/InsertColumnLeftIcon";
-import InsertColumnRightIcon from "remixicon-react/InsertColumnRightIcon";
+import InsertRowBottom from "remixicon-react/InsertRowBottomIcon";
+import InsertColumnLeft from "remixicon-react/InsertColumnLeftIcon";
+import InsertColumnRight from "remixicon-react/InsertColumnRightIcon";
 import Brush2Fill from "remixicon-react/Brush2FillIcon";
-import ListCheck2Icon from "remixicon-react/ListCheck2Icon";
-import Table2Icon from "remixicon-react/TableLineIcon";
-import VideoIcon from "remixicon-react/MovieLineIcon";
-import ListUnorderedIcon from "remixicon-react/ListUnorderedIcon";
-import ListOrderedIcon from "remixicon-react/ListOrderedIcon";
-import DoubleQuotesLIcon from "remixicon-react/DoubleQuotesRIcon";
-import LinkIcon from "remixicon-react/LinkMIcon";
-import Settings4LineIcon from "remixicon-react/SettingsLineIcon";
-import HomeLineIcon from "remixicon-react/HomeLineIcon";
-import ArrowUpIcon from "remixicon-react/ArrowUpLineIcon";
-import ArrowDownIcon from "remixicon-react/ArrowDownLineIcon";
+import ListCheck2 from "remixicon-react/ListCheck2Icon";
+import Table2 from "remixicon-react/TableLineIcon";
+import Video from "remixicon-react/MovieLineIcon";
+import ListUnordered from "remixicon-react/ListUnorderedIcon";
+import ListOrdered from "remixicon-react/ListOrderedIcon";
+import DoubleQuotesL from "remixicon-react/DoubleQuotesRIcon";
+import Link from "remixicon-react/LinkMIcon";
+import LinkUnlink from "remixicon-react/LinkUnlinkIcon";
+import Settings4Line from "remixicon-react/SettingsLineIcon";
+import HomeLine from "remixicon-react/HomeLineIcon";
+import ArrowUp from "remixicon-react/ArrowUpLineIcon";
+import ArrowDown from "remixicon-react/ArrowDownLineIcon";
 import ArrowDownS from "remixicon-react/ArrowDownSLineIcon";
-import ArrowUpDownLineIcon from "remixicon-react/ArrowUpDownLineIcon";
-import ArchiveLineIcon from "remixicon-react/ArchiveLineIcon";
-import BookletLineIcon from "remixicon-react/BookletLineIcon";
-import SunLineIcon from "remixicon-react/SunLineIcon";
-import MoonLineIcon from "remixicon-react/MoonClearLineIcon";
-import SettingsLineIcon from "remixicon-react/SettingsLineIcon";
-import Upload2LineIcon from "remixicon-react/Upload2LineIcon";
-import EyeLineIcon from "remixicon-react/EyeLineIcon";
-import EyeCloseLineIcon from "remixicon-react/EyeCloseLineIcon";
-import DropboxFillIcon from "remixicon-react/DropboxFillIcon";
-import GlobalLineIcon from "remixicon-react/GlobalLineIcon";
-import GithubFillIcon from "remixicon-react/GithubFillIcon";
-import CupLineIcon from "remixicon-react/CupLineIcon";
-import FileUploadLineIcon from "remixicon-react/FileUploadLineIcon";
-import FileDownloadLineIcon from "remixicon-react/FileDownloadLineIcon";
-import ArrowRightLineIcon from "remixicon-react/ArrowRightLineIcon";
-import Edit2LineIcon from "remixicon-react/Edit2LineIcon";
-import CodeLineIcon from "remixicon-react/CodeLineIcon";
-import ArrowDownSLineIcon from "remixicon-react/ArrowDownSLineIcon";
-import FontSizeIcon from "remixicon-react/FontSizeIcon";
-import SubscriptIcon from "remixicon-react/SubscriptIcon";
-import SuperscriptIcon from "remixicon-react/SuperscriptIcon";
-import ArrowGoForwardLineIcon from "remixicon-react/ArrowGoForwardLineIcon";
-import ArrowGoBackLineIcon from "remixicon-react/ArrowGoBackLineIcon";
-import FileTextLineIcon from "remixicon-react/FileTextLineIcon";
+import ArrowUpDownLine from "remixicon-react/ArrowUpDownLineIcon";
+import ArchiveLine from "remixicon-react/ArchiveLineIcon";
+import BookletLine from "remixicon-react/BookletLineIcon";
+import SunLine from "remixicon-react/SunLineIcon";
+import MoonLine from "remixicon-react/MoonClearLineIcon";
+import SettingsLine from "remixicon-react/SettingsLineIcon";
+import Upload2Line from "remixicon-react/Upload2LineIcon";
+import EyeLine from "remixicon-react/EyeLineIcon";
+import EyeCloseLine from "remixicon-react/EyeCloseLineIcon";
+import DropboxFill from "remixicon-react/DropboxFillIcon";
+import GlobalLine from "remixicon-react/GlobalLineIcon";
+import GithubFill from "remixicon-react/GithubFillIcon";
+import CupLine from "remixicon-react/CupLineIcon";
+import FileUploadLine from "remixicon-react/FileUploadLineIcon";
+import FileDownloadLine from "remixicon-react/FileDownloadLineIcon";
+import ArrowRightLine from "remixicon-react/ArrowRightLineIcon";
+import Edit2Line from "remixicon-react/Edit2LineIcon";
+import CodeLine from "remixicon-react/CodeLineIcon";
+import ArrowDownSLine from "remixicon-react/ArrowDownSLineIcon";
+import FontSize from "remixicon-react/FontSizeIcon";
+import Subscript from "remixicon-react/SubscriptIcon";
+import Superscript from "remixicon-react/SuperscriptIcon";
+import ArrowGoForwardLine from "remixicon-react/ArrowGoForwardLineIcon";
+import ArrowGoBackLine from "remixicon-react/ArrowGoBackLineIcon";
+import FileTextLine from "remixicon-react/FileTextLineIcon";
 import FileArticleLine from "remixicon-react/ArticleLineIcon";
-import SplitCellsHorizontalIcon from "remixicon-react/SplitCellsHorizontalIcon";
-import DeleteBackLineIcon from "remixicon-react/DeleteBackLineIcon";
-import MoreLineIcon from "remixicon-react/MoreLineIcon";
-import Brush3FillIcon from "remixicon-react/Brush3FillIcon";
+import SplitCellsHorizontal from "remixicon-react/SplitCellsHorizontalIcon";
+import DeleteBackLine from "remixicon-react/DeleteBackLineIcon";
+import MoreLine from "remixicon-react/MoreLineIcon";
+import Brush3Fill from "remixicon-react/Brush3FillIcon";
 import fontColor from "remixicon-react/FontColorIcon";
+import ExternalLink from "remixicon-react/ExternalLinkLineIcon";
 
 const Forward5Line: React.FC<{ className?: string }> = ({ className }) => (
   <svg
@@ -120,7 +122,7 @@ const Backward5Line: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Bookmark3LineIcon: React.FC<{ className?: string }> = ({ className }) => (
+const Bookmark3Line: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -131,7 +133,7 @@ const Bookmark3LineIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Bookmark3FillIcon: React.FC<{ className?: string }> = ({ className }) => (
+const Bookmark3Fill: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -142,7 +144,7 @@ const Bookmark3FillIcon: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const SpeedLineIcon: React.FC<{ className?: string }> = ({ className }) => (
+const SpeedLine: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -239,7 +241,7 @@ const OneDrive: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const ShareLineIcon: React.FC<{ className?: string }> = ({ className }) => (
+const ShareLine: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -261,116 +263,118 @@ const mdiRegex: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
-const Icons = {
-  AddFillIcon,
-  FontSizeIcon,
-  ArrowRightLineIcon,
-  FileUploadLineIcon,
-  ArrowDownSLineIcon,
-  FileDownloadLineIcon,
-  CupLineIcon,
-  CodeLineIcon,
-  GlobalLineIcon,
-  GithubFillIcon,
-  EyeLineIcon,
-  EyeCloseLineIcon,
-  ArrowUpDownLineIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
+export const icons = {
+  AddFill,
+  FontSize,
+  ArrowRightLine,
+  FileUploadLine,
+  ArrowDownSLine,
+  FileDownloadLine,
+  CupLine,
+  CodeLine,
+  GlobalLine,
+  GithubFill,
+  EyeLine,
+  EyeCloseLine,
+  ArrowUpDownLine,
+  ArrowUp,
+  ArrowDown,
   ArrowDownS,
-  ArchiveLineIcon,
-  BookletLineIcon,
-  SunLineIcon,
-  MoonLineIcon,
-  SettingsLineIcon,
-  Upload2LineIcon,
-  HomeLineIcon,
-  Settings4LineIcon,
-  DeleteBinLineIcon,
-  Bookmark3LineIcon,
-  Bookmark3FillIcon,
-  ArchiveDrawerLineIcon,
-  ArchiveDrawerFillIcon,
-  Download2LineIcon,
-  LockClosedIcon,
-  LockOpenIcon,
-  KeyboardLineIcon,
-  InformationLineIcon,
-  SyncLineIcon,
-  LockLineIcon,
-  Focus3LineIcon,
-  Focus3FillIcon,
-  Search2LineIcon,
-  ListUnorderedIcon,
-  ArrowLeftLineIcon,
-  CloseLineIcon,
-  BoldIcon,
-  MarkPenLineIcon,
-  ItalicIcon,
-  UnderlineIcon,
-  StrikethroughIcon,
-  Heading1Icon,
-  Heading2Icon,
-  Heading3Icon,
-  Heading4Icon,
-  Heading5Icon,
-  Heading6Icon,
-  InsertRowTopIcon,
+  ArchiveLine,
+  BookletLine,
+  SunLine,
+  MoonLine,
+  SettingsLine,
+  ExternalLink,
+  Upload2Line,
+  HomeLine,
+  Settings4Line,
+  DeleteBinLine,
+  Bookmark3Line,
+  Bookmark3Fill,
+  ArchiveDrawerLine,
+  ArchiveDrawerFill,
+  Download2Line,
+  LockClosed,
+  LockOpen,
+  KeyboardLine,
+  InformationLine,
+  SyncLine,
+  LockLine,
+  Focus3Line,
+  Focus3Fill,
+  Search2Line,
+  ListUnordered,
+  ArrowLeftLine,
+  CloseLine,
+  Bold,
+  MarkPenLine,
+  Italic,
+  Underline,
+  Strikethrough,
+  Heading1,
+  Heading2,
+  Heading3,
+  Heading4,
+  Heading5,
+  Heading6,
+  InsertRowTop,
   DeleteRow,
   DeleteColumn,
-  ParagraphIcon,
-  InsertRowBottomIcon,
-  InsertColumnLeftIcon,
-  InsertColumnRightIcon,
-  CodeBoxLineIcon,
-  ListOrderedIcon,
+  Paragraph,
+  InsertRowBottom,
+  InsertColumnLeft,
+  InsertColumnRight,
+  CodeBoxLine,
+  ListOrdered,
   Brush2Fill,
-  ListCheck2Icon,
-  Table2Icon,
-  VideoIcon,
-  FileIcon,
-  ImageLineIcon,
-  LinkIcon,
-  DoubleQuotesLIcon,
-  DropboxFillIcon,
+  ListCheck2,
+  Table2,
+  Video,
+  File,
+  ImageLine,
+  Link,
+  LinkUnlink,
+  DoubleQuotesL,
+  DropboxFill,
   CloudLine,
-  Edit2LineIcon,
-  SubscriptIcon,
-  SuperscriptIcon,
-  PagesLineIcon,
-  MicLineIcon,
-  StopCircleLineIcon,
-  PlayLineIcon,
-  PauseLineIcon,
-  VolumeUpLineIcon,
-  VolumeMuteLineIcon,
-  SpeedLineIcon,
+  Edit2Line,
+  Subscript,
+  Superscript,
+  PagesLine,
+  MicLine,
+  StopCircleLine,
+  PlayLine,
+  PauseLine,
+  VolumeUpLine,
+  VolumeMuteLine,
+  SpeedLine,
   Forward5Line,
   Backward5Line,
   Spinner,
   iCloud,
   BallPenLine,
-  ArrowGoForwardLineIcon,
-  ArrowGoBackLineIcon,
-  EraserLineIcon,
+  ArrowGoForwardLine,
+  ArrowGoBackLine,
+  EraserLine,
   HardDriveLine,
   GDrive,
   OneDrive,
-  SingleQuotesLIcon,
-  CalculatorLineIcon,
-  PieChart2LineIcon,
-  BrushLineIcon,
-  ShareLineIcon,
-  ArrowUpSLineIcon,
-  FileTextLineIcon,
+  SingleQuotesL,
+  CalculatorLine,
+  PieChart2Line,
+  BrushLine,
+  ShareLine,
+  ArrowUpSLine,
+  FileTextLine,
   FileArticleLine,
-  SplitCellsHorizontalIcon,
-  DeleteBackLineIcon,
-  MoreLineIcon,
-  Brush3FillIcon,
+  SplitCellsHorizontal,
+  DeleteBackLine,
+  MoreLine,
+  Brush3Fill,
   mdiRegex,
   fontColor,
-  HeadingIcon,
+  Heading,
 };
 
-export default Icons;
+export type IconName = keyof typeof icons;

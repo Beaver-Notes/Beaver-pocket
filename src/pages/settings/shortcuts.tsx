@@ -1,51 +1,20 @@
+import { useTranslation } from "@/utils/translations";
 import React, { useState, useEffect } from "react";
 
 const Shortcuts: React.FC = () => {
-  // Translations
-  const [translations, setTranslations] = useState({
-    settings: {
-      title: "settings.title",
-    },
-    shortcuts: {
-      Createnewnote: "shortcuts.Createnewnote",
-      Toggledarktheme: "shortcuts.Toggledarktheme",
-      Tonotes: "shortcuts.Tonotes",
-      Toarchivednotes: "shortcuts.ToarchivedNotes",
-      Tosettings: "shortcuts.Tosettings",
-      Bold: "shortcuts.Bold",
-      Italic: "shortcuts.Italic",
-      Underline: "shortcuts.Underline",
-      Link: "shortcuts.Link",
-      Strikethrough: "shortcuts.Strikethrough",
-      Highlight: "shortcuts.Highlight",
-      Inlinecode: "shortcuts.InlineCode",
-      Headings: "shortcuts.Headings",
-      Orderedlist: "shortcuts.OrderedList",
-      Bulletlist: "shortcuts.Bulletlist",
-      Blockquote: "shortcuts.Blockquote",
-      Blockcode: "shortcuts.BlockCode",
-      General: "shortcuts.General",
-      Navigates: "shortcuts.Navigates",
-      Editor: "shortcuts.Editor",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    shortcuts: {},
+    settings: {},
   });
 
   useEffect(() => {
-    // Load translations
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   const shortcuts = [

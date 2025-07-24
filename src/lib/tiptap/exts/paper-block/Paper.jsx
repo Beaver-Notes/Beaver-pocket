@@ -9,10 +9,10 @@ import {
   getStrokeOptions,
 } from "./helpers/drawHelper";
 import { NodeViewWrapper } from "@tiptap/react";
-import Icons from "../../../remixicon-react";
 import { v4 as uuid } from "uuid";
 import DrawMode from "./DrawMode";
 import * as d3 from "d3";
+import paperBlock from ".";
 
 const OverlayPortal = ({ children, onClose }) => {
   return createPortal(
@@ -33,24 +33,17 @@ const CustomNodeView = ({ node, updateAttributes }) => {
   const [isDrawMode, setIsDrawMode] = useState(false);
 
   const [translations, setTranslations] = useState({
-    paperBlock: {
-      clicktoDraw: "paperBlock.clicktoDraw",
-    },
+    paperBlock: {},
   });
 
   useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../../../assets/locales/${selectedLanguage}.json`
-        );
-        setTranslations({ ...translations, ...translationModule.default });
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-    loadTranslations();
+    fetchTranslations();
   }, []);
 
   const toggleDrawMode = () => {
@@ -80,6 +73,14 @@ const CustomNodeView = ({ node, updateAttributes }) => {
       );
     });
   }, [lines, tool]);
+
+  useEffect(() => {
+    setLines(convertLegacyLines(node.attrs.lines || []));
+  }, [node.attrs.lines]);
+
+  useEffect(() => {
+    setBackground(node.attrs.paperType || "plain");
+  }, [node.attrs.paperType]);
 
   const PreviewMode = () => (
     <div

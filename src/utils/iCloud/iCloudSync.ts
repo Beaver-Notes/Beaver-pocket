@@ -60,7 +60,12 @@ const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
     }));
     setProgress(0);
     try {
-      await iCloud.createFolder({ folderName: `${SYNC_FOLDER_NAME}` });
+      const { exists } = await iCloud.checkFolderExists({
+        folderName: `${SYNC_FOLDER_NAME}`,
+      });
+      if (!exists) {
+        await iCloud.createFolder({ folderName: `${SYNC_FOLDER_NAME}` });
+      }
 
       let localData: SyncData = { data: { notes: {} } };
       try {

@@ -1,11 +1,7 @@
-import EditorComponent from "./components/Editor/EditorComponent";
+import EditorComponent from "../../components/note/NoteEditor";
 import { useNavigate, useParams } from "react-router-dom";
-import icons from "./lib/remixicon-react";
-import ReactDOM from "react-dom";
 import * as CryptoJS from "crypto-js";
-import ModularPrompt from "./components/UI/Password";
 import { useEffect, useState } from "react";
-import dayjs from "dayjs";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import {
   Directory,
@@ -13,7 +9,10 @@ import {
   FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { NativeBiometric } from "@capgo/capacitor-native-biometric";
-import { Note } from "./store/types";
+import { Note } from "../../store/types";
+import Icon from "@/components/UI/Icon";
+import { useTranslation } from "@/utils/translations";
+import emitter from "tiny-emitter/instance";
 
 const STORAGE_PATH = "notes/data.json";
 
@@ -22,43 +21,21 @@ interface Props {
   setNotesState: (notes: Record<string, Note>) => void;
 }
 
-function Editor({notesState, setNotesState}: Props) {
+function Editor({ notesState, setNotesState }: Props) {
   const navigate = useNavigate();
   const { note } = useParams<{ note: string }>();
-  const [translations, setTranslations] = useState({
-    editor: {
-      unlocktoedit: "editor.unlocktoedit",
-      wrongpasswd: "editor.wrongpasswd",
-      lockerror: "editor.lockerror",
-      unlock: "editor.unlock",
-      cancel: "editor.cancel",
-      enterpasswd: "enter.enterpasswd",
-      biometricReason: "enter.biometricReason",
-      biometricTitle: "enter.biometricTitle",
-      noteNotFound: "enter.noteNotFound",
-      noNoteId: "enter.noNoteId",
-      exportas: "editor.exportas",
-    },
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    editor: {},
   });
 
   useEffect(() => {
-    console.time("loadTranslations");
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `./assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
       }
     };
-
-    loadTranslations();
-    console.timeEnd("loadTranslations");
+    fetchTranslations();
   }, []);
 
   const unlockNote = async (noteId: string): Promise<void> => {
@@ -66,7 +43,9 @@ function Editor({notesState, setNotesState}: Props) {
     try {
       let password: string | null = null;
       console.time("SecureStoragePlugin.get");
-      const globalPasswordResult = await SecureStoragePlugin.get({ key: "globalPassword" }).catch(() => null);
+      const globalPasswordResult = await SecureStoragePlugin.get({
+        key: "globalPassword",
+      }).catch(() => null);
       console.timeEnd("SecureStoragePlugin.get");
       const storedGlobalPassword = globalPasswordResult?.value;
 
@@ -181,28 +160,22 @@ function Editor({notesState, setNotesState}: Props) {
   };
 
   const promptForPassword = async (): Promise<string | null> => {
-    const promptRoot = document.createElement("div");
-    document.body.appendChild(promptRoot);
-
-    return new Promise<string | null>((resolve) => {
-      const handleConfirm = (value: string | null) => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        document.body.removeChild(promptRoot);
-        resolve(value);
-      };
-      const handleCancel = () => {
-        ReactDOM.unmountComponentAtNode(promptRoot);
-        document.body.removeChild(promptRoot);
-        resolve(null);
-      };
-      ReactDOM.render(
-        <ModularPrompt
-          title={translations.editor.enterpasswd || "-"}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />,
-        promptRoot
-      );
+    return new Promise((resolve) => {
+      emitter.emit("show-dialog", "prompt", {
+        title: translations.card.enterpasswd,
+        okText: translations.card.setkey,
+        body: translations.settings.warning,
+        cancelText: translations.card.cancel,
+        placeholder: translations.card.Password,
+        allowedEmpty: false,
+        onConfirm: (value: string) => {
+          resolve(value); // Resolve with password
+          return true; // Close modal
+        },
+        onCancel: () => {
+          resolve(null); // Resolve as cancelled
+        },
+      });
     });
   };
 
@@ -219,7 +192,9 @@ function Editor({notesState, setNotesState}: Props) {
   if (!noteData) {
     return (
       <div className="h-screen w-screen flex justify-center items-center">
-        <div className="text-xl font-bold text-center">{translations.editor.noteNotFound || "-"}</div>
+        <div className="text-xl font-bold text-center">
+          {translations.editor.noteNotFound || "-"}
+        </div>
       </div>
     );
   }
@@ -227,7 +202,7 @@ function Editor({notesState, setNotesState}: Props) {
   if (noteData.isLocked) {
     return (
       <div className="h-[80vh] w-screen flex flex-col justify-center items-center">
-        <icons.LockLineIcon className="w-32 h-32" />
+        <Icon name="LockLine" className="w-32 h-32" />
         <p>{translations.editor.unlocktoedit || "-"}</p>
         <div className="flex flex-col gap-2 pt-2 w-2/4">
           <button
@@ -249,7 +224,14 @@ function Editor({notesState, setNotesState}: Props) {
 
   localStorage.setItem("lastNoteEdit", note);
 
-  return <EditorComponent note={noteData} notesState={notesState} setNotesState={setNotesState} translations={translations}/>;
+  return (
+    <EditorComponent
+      note={noteData}
+      notesState={notesState}
+      setNotesState={setNotesState}
+      translations={translations}
+    />
+  );
 }
 
 export default Editor;
