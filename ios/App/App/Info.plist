@@ -1,64 +1,72 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<?xml version='1.0' encoding='utf-8'?>
 <plist version="1.0">
-<dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
-	<key>CFBundleDisplayName</key>
-	<string>Beaver Pocket</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIcons</key>
 	<dict>
-		<key>CFBundleAlternateIcons</key>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>en</string>
+		<key>CFBundleDisplayName</key>
+		<string>Beaver Pocket</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIcons</key>
 		<dict>
-			<key>Computer</key>
+			<key>CFBundleAlternateIcons</key>
 			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon 5</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
+				<key>Computer</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIcon 5</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false/>
+				</dict>
+				<key>Dev</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIcon 1</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false/>
+				</dict>
+				<key>Full</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIcon 4</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false/>
+				</dict>
+				<key>Matte</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIcon 2</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false/>
+				</dict>
+				<key>Rainbow</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIcon 3</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false/>
+				</dict>
 			</dict>
-			<key>Dev</key>
+			<key>CFBundlePrimaryIcon</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
 				<array>
-					<string>AppIcon 1</string>
+					<string>AppIcon</string>
 				</array>
 				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>Full</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon 4</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>Matte</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon 2</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
-			</dict>
-			<key>Rainbow</key>
-			<dict>
-				<key>CFBundleIconFiles</key>
-				<array>
-					<string>AppIcon 3</string>
-				</array>
-				<key>UIPrerenderedIcon</key>
-				<false/>
+				<false />
 			</dict>
 		</dict>
-<<<<<<< Updated upstream
 		<key>CFBundleIdentifier</key>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 		<key>CFBundleInfoDictionaryVersion</key>
@@ -100,21 +108,19 @@
 		</array>
 		<key>CFBundleVersion</key>
 		<string>$(CURRENT_PROJECT_VERSION)</string>
-		<key>GIDClientID</key>
-		<string>462278481265-kugstu9sglncb5ms2vfi9glrkfqn531v.apps.googleusercontent.com</string>
 		<key>LSApplicationQueriesSchemes</key>
 		<array>
 			<string>msauthv2</string>
 			<string>msauthv3</string>
 		</array>
 		<key>LSRequiresIPhoneOS</key>
-		<true/>
+		<true />
 		<key>LSSupportsOpeningDocumentsInPlace</key>
-		<true/>
+		<true />
 		<key>NSAppTransportSecurity</key>
 		<dict>
 			<key>NSAllowsArbitraryLoads</key>
-			<true/>
+			<true />
 		</dict>
 		<key>NSFaceIDUsageDescription</key>
 		<string>To secure notes</string>
@@ -125,7 +131,7 @@
 			<key>iCloud.beaver.notes.pocket</key>
 			<dict>
 				<key>NSUbiquitousContainerIsDocumentScopePublic</key>
-				<true/>
+				<true />
 				<key>NSUbiquitousContainerName</key>
 				<string>Beaver Pocket</string>
 				<key>NSUbiquitousContainerSupportedFolderLevels</key>
@@ -133,7 +139,7 @@
 			</dict>
 		</dict>
 		<key>UIFileSharingEnabled</key>
-		<true/>
+		<true />
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
@@ -143,9 +149,9 @@
 			<string>armv7</string>
 		</array>
 		<key>UIRequiresFullScreen</key>
-		<false/>
+		<false />
 		<key>UIStatusBarHidden</key>
-		<false/>
+		<false />
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
@@ -159,7 +165,7 @@
 			<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		</array>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
-		<true/>
+		<true />
 		<key>UTExportedTypeDeclarations</key>
 		<array>
 			<dict>
@@ -170,7 +176,7 @@
 				<key>UTTypeDescription</key>
 				<string>BEA Custom File</string>
 				<key>UTTypeIconFiles</key>
-				<array/>
+				<array />
 				<key>UTTypeIdentifier</key>
 				<string>beaver.notes.pocket.bea</string>
 				<key>UTTypeTagSpecification</key>
@@ -184,143 +190,7 @@
 				</dict>
 			</dict>
 		</array>
+		<key>GIDClientID</key>
+		<string>462278481265-kugstu9sglncb5ms2vfi9glrkfqn531v.apps.googleusercontent.com</string>
 	</dict>
-=======
-		<key>CFBundlePrimaryIcon</key>
-		<dict>
-			<key>CFBundleIconFiles</key>
-			<array>
-				<string>AppIcon</string>
-			</array>
-			<key>UIPrerenderedIcon</key>
-			<false/>
-		</dict>
-	</dict>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.462278481265-kugstu9sglncb5ms2vfi9glrkfqn531v</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>msauth.$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>beaver.notes.pocket</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>beaver-pocket</string>
-			</array>
-		</dict>
-	</array>
-	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>GIDClientID</key>
-	<string>462278481265-kugstu9sglncb5ms2vfi9glrkfqn531v.apps.googleusercontent.com</string>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>msauthv2</string>
-		<string>msauthv3</string>
-	</array>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
-	<key>NSFaceIDUsageDescription</key>
-	<string>To secure notes</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>To record audio notes</string>
-	<key>NSUbiquitousContainers</key>
-	<dict>
-		<key>iCloud.beaver.notes.pocket</key>
-		<dict>
-			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
-			<true/>
-			<key>NSUbiquitousContainerName</key>
-			<string>Beaver Pocket</string>
-			<key>NSUbiquitousContainerSupportedFolderLevels</key>
-			<string>ANY</string>
-		</dict>
-	</dict>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>armv7</string>
-	</array>
-	<key>UIRequiresFullScreen</key>
-	<false/>
-	<key>UIStatusBarHidden</key>
-	<false/>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-	</array>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
-	<key>UTExportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.json</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>BEA Custom File</string>
-			<key>UTTypeIconFiles</key>
-			<array/>
-			<key>UTTypeIdentifier</key>
-			<string>beaver.notes.pocket.bea</string>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>bea</string>
-				</array>
-				<key>public.mime-type</key>
-				<string>application/json</string>
-			</dict>
-		</dict>
-	</array>
-</dict>
->>>>>>> Stashed changes
 </plist>
