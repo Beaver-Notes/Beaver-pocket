@@ -16,6 +16,7 @@ interface ArchiveProps {
 
 const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
   const { activeNoteId } = useNotesState();
+  const [sortingOption, setSortingOption] = useState("updatedAt");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedLabel, setSelectedLabel] = useState<string>("");
   const [filteredNotes, setFilteredNotes] =
@@ -51,8 +52,6 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
       Object.fromEntries(filtered.map((note) => [note.id, note]))
     );
   }, [searchQuery, selectedLabel, notesState]);
-
-  const [sortingOption] = useState("updatedAt");
 
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     switch (sortingOption) {
@@ -100,7 +99,7 @@ const Archive: React.FC<ArchiveProps> = ({ notesState, setNotesState }) => {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 handleLabelFilterChange={handleLabelFilterChange}
-                setSortingOption={handleLabelFilterChange}
+                setSortingOption={setSortingOption}
               />
               <div className="py-2 p-2 mx-4 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
                 <h2 className="text-3xl font-bold">

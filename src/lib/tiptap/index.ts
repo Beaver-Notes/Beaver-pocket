@@ -35,6 +35,7 @@ import { Color } from "@tiptap/extension-color";
 import Footnote from "./exts/footnote-block/footnote";
 import Footnotes from "./exts/footnote-block/footnotes";
 import FootnoteReference from "./exts/footnote-block/reference";
+import { TrailingNode } from "@tiptap/extensions";
 import {
   blackCallout,
   blueCallout,
@@ -81,7 +82,8 @@ const extensions = [
   Link.extend({
     addKeyboardShortcuts() {
       return {
-        "Mod-k": () => this.editor.chain().focus().toggleLink({ href: '' }).run(),
+        "Mod-k": () =>
+          this.editor.chain().focus().toggleLink({ href: "" }).run(),
       };
     },
   }).configure({
@@ -104,6 +106,7 @@ const extensions = [
   MathInline,
   FileEmbed,
   SearchAndReplace,
+  TrailingNode,
   Mathblock,
   iframe,
   Typography,
