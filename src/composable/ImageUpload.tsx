@@ -1,5 +1,9 @@
 import React from "react";
-import { Directory, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import {
+  Directory,
+  Filesystem,
+  FilesystemDirectory,
+} from "@capacitor/filesystem";
 import Icon from "@/components/UI/Icon";
 
 interface ImageUploadProps {
@@ -100,20 +104,18 @@ const ImageUploadComponent: React.FC<ImageUploadProps> = ({
     <div>
       {/* Conditionally render content based on `menu` value */}
       {menu ? (
-        <div className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200">
+        <div className="flex items-center rounded-lg transition">
           <button
             onClick={triggerFileInput}
             className="flex items-center cursor-pointer"
             aria-label={translations.menu.image}
           >
             {/* Icon */}
-            <Icon name="ImageLine" />
+            <Icon name="ImageLine" className={`mr-2 ltr:ml-2 text-lg`} />
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
-              <h3 className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]">
-                {translations.menu.image}
-              </h3>
+              <h3 className="text-lg font-medium">{translations.menu.image}</h3>
             </div>
           </button>
 

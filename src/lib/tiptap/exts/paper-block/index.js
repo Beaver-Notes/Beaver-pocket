@@ -1,27 +1,25 @@
-import { Node, mergeAttributes, ReactNodeViewRenderer } from '@tiptap/react';
-import Component from './Paper.jsx';
+import { Node, mergeAttributes, ReactNodeViewRenderer } from "@tiptap/react";
+import Component from "./Paper.jsx";
 
 export default Node.create({
-  name: 'paper',
-
-  group: 'block',
-
+  name: "paper",
+  group: "block",
   atom: true,
-
+  selectable: true,
+  draggable: true,
   addAttributes() {
     return {
       lines: {
         default: [],
       },
       height: {
-        default: 400, // Default height
+        default: 800,
       },
       paperType: {
-        default: 'plain',
+        default: "plain",
       },
     };
   },
-
   parseHTML() {
     return [
       {
@@ -29,29 +27,26 @@ export default Node.create({
       },
     ];
   },
-
   renderHTML({ HTMLAttributes }) {
     return [
-      'div',
+      "div",
       mergeAttributes(HTMLAttributes, {
-        'data-type': 'paper',
-        style: `height: ${HTMLAttributes.height}px;`, // Set initial height via style
+        "data-type": "paper",
+        style: `height: ${HTMLAttributes.height}px;`,
       }),
     ];
   },
-
   addNodeView() {
     return ReactNodeViewRenderer(Component);
   },
-
   addCommands() {
     return {
       insertPaper:
         () =>
         ({ commands }) => {
           return commands.insertContent({
-            type: 'paper',
-            attrs: { lines: [], height: 800 }, // Ensure default height is set
+            type: "paper",
+            attrs: { lines: [], height: 800 },
           });
         },
     };

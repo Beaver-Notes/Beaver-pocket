@@ -1,7 +1,10 @@
 import React from "react";
-import { Directory, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import {
+  Directory,
+  Filesystem,
+  FilesystemDirectory,
+} from "@capacitor/filesystem";
 import Icon from "@/components/UI/Icon";
-
 
 interface FileUploadProps {
   onFileUpload: (fileUrl: string, fileName: string) => void;
@@ -88,22 +91,22 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
       {/* Conditionally render content based on `menu` value */}
       {menu ? (
         <div
-          className="flex items-center p-2 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
+          className="flex items-center rounded-lg transition"
           aria-label={translations.menu.file || "Upload File"}
         >
           <label
             htmlFor="file-upload-input"
-            className="flex items-center cursor-pointer"
+            className="text-left flex overflow-hidden text-ellipsis whitespace-nowrap"
             aria-label={translations.menu.file || "Upload a file"}
           >
             {/* Icon */}
-            <Icon name="File" />
+            <Icon name="File" className={`mr-2 ltr:ml-2 text-lg`} />
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
               <h3
-                className="font-medium text-neutral-900 dark:text-[color:var(--selected-dark-text)]"
-                aria-hidden="true" // Hidden from screen readers
+                className="text-lg font-medium"
+                aria-hidden="true"
               >
                 {translations.menu.file || "Upload File"}
               </h3>

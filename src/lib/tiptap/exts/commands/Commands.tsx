@@ -1,5 +1,5 @@
 // SlashMenu.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ImageUploadComponent from "@/composable/ImageUpload";
 import FileUploadComponent from "@/composable/FileUpload";
 import VideoUploadComponent from "@/composable/VideoUpload";
@@ -38,6 +38,7 @@ const Commands: React.FC<SlashMenuProps> = ({
     menu: {},
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchTranslations = async () => {
@@ -48,6 +49,28 @@ const Commands: React.FC<SlashMenuProps> = ({
     };
     fetchTranslations();
   }, []);
+
+  // Position adjustment effect
+  useEffect(() => {
+    if (menuRef.current) {
+      const menu = menuRef.current;
+      const rect = menu.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const windowWidth = window.innerWidth;
+
+      // Adjust vertical position if menu goes below viewport
+      if (rect.bottom > windowHeight) {
+        menu.style.transform = `translateY(-${rect.height + 10}px)`;
+      }
+
+      // Adjust horizontal position if menu goes beyond viewport
+      if (rect.right > windowWidth) {
+        menu.style.transform = `${menu.style.transform || ""} translateX(-${
+          rect.right - windowWidth + 20
+        }px)`;
+      }
+    }
+  }, [query]); // Re-run when query changes as menu size might change
 
   const handlefileUpload = (fileUrl: string, fileName: string) => {
     editor.commands.deleteRange(range).run();
@@ -414,32 +437,39 @@ const Commands: React.FC<SlashMenuProps> = ({
   }, [filteredItems.length]);
 
   return (
-    <UiList className="z-50 fixed rounded-lg shadow-lg border shadow-xl dark:border-neutral-600 p-2">
-      {filteredItems.map((item, index) => (
-        <UiListItem
-          key={item.id}
-          onClick={() => handleSelect({ item })}
-          active={index === selectedIndex}
-          className="cursor-pointer"
-        >
-          {item.type === "upload" && item.component ? (
-            item.component
-          ) : (
-            <div className="flex items-center rounded-lg transition">
-              <div className="text-left flex overflow-hidden text-ellipsis whitespace-nowrap">
-                <Icon
-                  name={item.icon as IconName}
-                  className={`mr-2 ltr:ml-2 text-lg ${item.className || ""}`}
-                />
-                <h3 className="text-lg font-medium">
-                  {item.label}
-                </h3>
+    <div
+      ref={menuRef}
+      style={{
+        maxWidth: "300px", // Prevent excessive width
+        maxHeight: "400px", // Prevent excessive height
+        overflow: "auto", // Allow scrolling if needed
+      }}
+    >
+      <UiList className="z-50 rounded-lg shadow-lg border shadow-xl dark:border-neutral-600 p-2 bg-white dark:bg-neutral-800">
+        {filteredItems.map((item, index) => (
+          <UiListItem
+            key={item.id}
+            onClick={() => handleSelect({ item })}
+            active={index === selectedIndex}
+            className="cursor-pointer"
+          >
+            {item.type === "upload" && item.component ? (
+              item.component
+            ) : (
+              <div className="flex items-center rounded-lg transition">
+                <div className="text-left flex overflow-hidden text-ellipsis whitespace-nowrap">
+                  <Icon
+                    name={item.icon as IconName}
+                    className={`mr-2 ltr:ml-2 text-lg ${item.className || ""}`}
+                  />
+                  <h3 className="text-lg font-medium">{item.label}</h3>
+                </div>
               </div>
-            </div>
-          )}
-        </UiListItem>
-      ))}
-    </UiList>
+            )}
+          </UiListItem>
+        ))}
+      </UiList>
+    </div>
   );
 };
 
