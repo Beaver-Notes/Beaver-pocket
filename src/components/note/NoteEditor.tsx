@@ -50,10 +50,8 @@ function EditorComponent({
 
   useEffect(() => {
     const filtered = Object.values(notesState).filter((note) => {
-      const titleMatch = note.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      return titleMatch;
+      const noteTitle = note.title ?? ""; // fallback to empty string
+      return noteTitle.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
     setFilteredNotes(
@@ -64,7 +62,7 @@ function EditorComponent({
   const notesList = Object.values(filteredNotes).sort((a, b) => {
     switch (sortingOption) {
       case "alphabetical":
-        return a.title.localeCompare(b.title);
+        return (a.title ?? "").localeCompare(b.title ?? "");
       case "createdAt":
         const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
         const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
@@ -151,9 +149,16 @@ function EditorComponent({
     }
   }, [labelStore.labels, editor, note.labels, title]);
 
-  document.addEventListener("showFind", () => {
-    setShowFind((prevShowFind) => !prevShowFind);
-  });
+  useEffect(() => {
+    function toggleFindListener() {
+      setShowFind((prevShowFind) => !prevShowFind);
+    }
+
+    document.addEventListener("showFind", toggleFindListener);
+    return () => {
+      document.removeEventListener("showFind", toggleFindListener);
+    };
+  }, []);
 
   useEffect(() => {
     setWd(localStorage.getItem("expand-editor") === "true");

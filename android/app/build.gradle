@@ -16,10 +16,11 @@ android {
         def onedriveSha1 = project.hasProperty("ONEDRIVE_SHA1") ? project.ONEDRIVE_SHA1 : System.getenv("ONEDRIVE_SHA1") ?: ""
         buildConfigField "String", "ONEDRIVE_SHA1", "\"${onedriveSha1}\""
 
-        println "Using OneDrive SHA1: ${onedriveSha1}"
-        println "Using Google: ${googleClientId}"
-
         manifestPlaceholders = [ONEDRIVE_SHA1: onedriveSha1]
+        
+        ext {
+            recognizebvMSALVersion = '5.3.0'
+        }
 
         signingConfigs {
             debug {

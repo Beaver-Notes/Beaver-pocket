@@ -454,11 +454,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
           modelValue={false}
           triggerContent={
             <button
-              className={`p-1 ${
+              className={`${
                 editor?.isActive("highlight")
-                  ? "text-primary"
-                  : "text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
-              } cursor-pointer flex-1`}
+                  ? "p-1 rounded-md text-primary hoverable cursor-pointer text-primary"
+                  : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
+              }`}
             >
               <Icon name="MarkPenLine" />
             </button>

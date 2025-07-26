@@ -263,7 +263,7 @@
     "Highlight": "Highlight",
     "Inlinecode": "Inline code",
     "Headings": "Headings (1-6)",
-    "Orderedlist": "Ordered list",
+    "orderedList": "Ordered list",
     "Bulletlist": "Bullet list",
     "Blockquote": "Blockquote",
     "Blockcode": "Block code",

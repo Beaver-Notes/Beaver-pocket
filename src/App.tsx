@@ -19,18 +19,11 @@ import Dialog from "./components/UI/Dialog";
 // Import styles
 import "./assets/css/main.css";
 import "./assets/css/fonts.css";
-
-// Types for sync services
-type SyncService = "dropbox" | "iCloud" | "onedrive" | "webdav" | "googledrive";
-
-// Lazy load sync services
-const syncServices = {
-  dropbox: () => import("./utils/Dropbox/DropboxSync"),
-  iCloud: () => import("./utils/iCloud/iCloudSync"),
-  onedrive: () => import("./utils/Onedrive/oneDriveSync"),
-  webdav: () => import("./utils/Webdav/webDavSync"),
-  googledrive: () => import("./utils/Google Drive/GoogleDriveSync"),
-};
+import useDropboxSync from "./utils/Dropbox/DropboxSync";
+import useiCloudSync from "./utils/iCloud/iCloudSync";
+import useOneDriveSync from "./utils/Onedrive/oneDriveSync";
+import useWebDAVSync from "./utils/Webdav/webDavSync";
+import useDriveSync from "./utils/Google Drive/GoogleDriveSync";
 
 // Memoized theme detection
 const getInitialTheme = () => {
@@ -54,15 +47,18 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const platform = Capacitor.getPlatform();
-
   const initialTheme = useMemo(() => getInitialTheme(), []);
   const [themeMode, setThemeMode] = useState<string>(initialTheme.mode);
   const [darkMode, setDarkMode] = useState<boolean>(initialTheme.isDark);
   const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [notesLoaded, setNotesLoaded] = useState(false);
-
   const { notesState, setNotesState } = useNotesState();
+  const { syncDropbox } = useDropboxSync(setNotesState);
+  const { synciCloud } = useiCloudSync(setNotesState);
+  const { syncOneDrive } = useOneDriveSync(setNotesState);
+  const { syncWebDAV } = useWebDAVSync(setNotesState);
+  const { syncDrive } = useDriveSync(setNotesState);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
@@ -175,44 +171,21 @@ const App: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [navigate]);
 
-  const handleSync = useCallback(async () => {
-    const syncValue = localStorage.getItem("sync") as SyncService;
-    if (!syncValue || !syncServices[syncValue]) return;
-
-    try {
-      const syncModule = await syncServices[syncValue]();
-
-      switch (syncValue) {
-        case "dropbox":
-          const { useDropboxSync } = syncModule as any;
-          const { syncDropbox } = useDropboxSync(setNotesState);
-          syncDropbox();
-          break;
-        case "iCloud":
-          const { useiCloudSync } = syncModule as any;
-          const { synciCloud } = useiCloudSync(setNotesState);
-          synciCloud();
-          break;
-        case "onedrive":
-          const { useOneDriveSync } = syncModule as any;
-          const { syncOneDrive } = useOneDriveSync(setNotesState);
-          syncOneDrive();
-          break;
-        case "webdav":
-          const { useWebDAVSync } = syncModule as any;
-          const { syncWebDAV } = useWebDAVSync(setNotesState);
-          syncWebDAV();
-          break;
-        case "googledrive":
-          const { useDriveSync } = syncModule as any;
-          const { syncDrive } = useDriveSync(setNotesState);
-          syncDrive();
-          break;
-      }
-    } catch (error) {
-      console.error(`Error syncing with ${syncValue}:`, error);
+  const handleSync = () => {
+    const syncValue = localStorage.getItem("sync");
+    if (syncValue === "dropbox") {
+      syncDropbox();
+    } else if (syncValue === "iCloud") {
+      synciCloud();
+    } else if (syncValue === "onedrive") {
+      syncOneDrive();
+    } else if (syncValue === "webdav") {
+      syncWebDAV();
+    } else if (syncValue === "googledrive") {
+      console.log("Syncing with Google Drive");
+      syncDrive();
     }
-  }, [setNotesState]);
+  };
 
   useEffect(() => {
     if (!isInitialized) return;
