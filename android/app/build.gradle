@@ -1,7 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "beaver.notes.pocket"
+    namespace
+		dirs '../../node_modules/@capacitor/background-runner/android/src/main/libs', 'libs' "beaver.notes.pocket"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "beaver.notes.pocket"
@@ -54,6 +55,8 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.18.0")
+    implementation("io.opentelemetry:opentelemetry-context:1.18.0")
 }
 
 apply from: 'capacitor.build.gradle'
