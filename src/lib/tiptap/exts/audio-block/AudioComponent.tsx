@@ -8,7 +8,7 @@ import React, {
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import VolumeUpLineIcon from "remixicon-react/VolumeUpLineIcon";
 import { Filesystem, Directory } from "@capacitor/filesystem";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 
 interface AudioPlayerProps extends NodeViewProps {}

@@ -17,7 +17,7 @@ import { labelStore } from "../../store/label";
 import { WebviewPrint } from "capacitor-webview-print";
 import { cleanEmptyParagraphs } from "../../utils/editor";
 import NoteBubbleMenu from "./NoteBubbleMenu";
-import Icon from "../UI/Icon";
+import Icon from "../ui/Icon";
 import { UiModal } from "../ui/Modal";
 import { shareNote } from "../../utils/share";
 

@@ -1,5 +1,5 @@
 import emitter from "tiny-emitter/instance";
-import type { DialogOptions } from "@/components/UI/Dialog";
+import type { DialogOptions } from "@/components/ui/Dialog";
 
 type DialogType = "confirm" | "prompt" | "auth";
 

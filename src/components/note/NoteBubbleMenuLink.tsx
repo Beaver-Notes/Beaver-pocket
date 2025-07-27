@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Note } from "../../store/types";
 import { useTranslation } from "@/utils/translations";
-import Icon from "../UI/Icon";
-import UiList from "../UI/List";
-import UiListItem from "../UI/ListItem";
+import Icon from "../ui/Icon";
+import UiList from "../ui/List";
+import UiListItem from "../ui/ListItem";
 
 interface Props {
   editor: any;

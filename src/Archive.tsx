@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "./store/types";
-import SearchBar from "./components/Home/Search";
+import SearchBar from "./components/home/Search";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/it";
 import { useNotesState } from "./store/Activenote";
 import dayjs from "dayjs";
-import NoteCard from "./components/Home/NoteCard";
-import Icon from "./components/UI/Icon";
+import NoteCard from "./components/home/NoteCard";
+import Icon from "./components/ui/Icon";
 import { useTranslation } from "./utils/translations";
 
 interface ArchiveProps {

@@ -3,7 +3,7 @@ import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { WebDavService } from "@/utils/Webdav/webDavApi";
 import { Note } from "@/store/types";
 import WebDAV from "@/utils/Webdav/WebDAVPlugin";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 
 interface WebdavProps {

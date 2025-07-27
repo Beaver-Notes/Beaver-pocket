@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MsAuthPlugin } from "@recognizebv/capacitor-plugin-msauth";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { Note } from "@/store/types";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { OneDriveAPI } from "@/utils/Onedrive/oneDriveApi";
 import { useTranslation } from "@/utils/translations";
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import enTranslations from "./assets/locales/en.json";
 import deTranslations from "./assets/locales/de.json";
-import Icon from "./components/UI/Icon";
+import Icon from "./components/ui/Icon";
 import { useTranslation } from "./utils/translations";
 
 const Welcome: React.FC = () => {

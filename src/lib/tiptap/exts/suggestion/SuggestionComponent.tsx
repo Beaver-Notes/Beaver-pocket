@@ -1,7 +1,7 @@
 import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
-import UiCard from "../../../../components/UI/Card";
-import UiList from "../../../../components/UI/List";
-import UiListItem from "../../../../components/UI/ListItem";
+import UiCard from "../../../../components/ui/Card";
+import UiList from "../../../../components/ui/List";
+import UiListItem from "../../../../components/ui/ListItem";
 import { useTranslation } from "../../../../utils/translations";
 
 interface SuggestionItem {

@@ -5,13 +5,13 @@ import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import "dayjs/locale/it";
 import relativeTime from "dayjs/plugin/relativeTime";
-import SearchBar from "./components/Home/Search";
+import SearchBar from "./components/home/Search";
 import { useNotesState } from "./store/Activenote";
 import { SendIntent } from "send-intent";
 import { useImportBea } from "./utils/share";
 import { loadNotes } from "./store/notes";
-import NoteCard from "./components/Home/NoteCard";
-import Icon from "./components/UI/Icon";
+import NoteCard from "./components/home/NoteCard";
+import Icon from "./components/ui/Icon";
 
 interface HomeProps {
   notesState: Record<string, Note>;

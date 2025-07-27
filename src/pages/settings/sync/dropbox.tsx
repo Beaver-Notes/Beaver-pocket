@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Note } from "@/store/types";
 import { Browser } from "@capacitor/browser";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import { Dropbox } from "dropbox";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;

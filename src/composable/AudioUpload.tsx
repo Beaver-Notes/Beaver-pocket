@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { VoiceRecorder } from "capacitor-voice-recorder";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 
 interface FileUploadProps {
   onAudioUpload: (fileUrl: string, fileName: string) => void;

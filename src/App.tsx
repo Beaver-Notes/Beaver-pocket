@@ -4,8 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Router from "./router";
 import { Auth0Provider } from "@auth0/auth0-react";
 import Auth0Config from "./utils/auth0-config";
-import BottomNavBar from "./components/App/BottomNavBar";
-import CommandPrompt from "./components/App/CommandPrompt";
+import BottomNavBar from "./components/app/BottomNavBar";
+import CommandPrompt from "./components/app/CommandPrompt";
 import { setStoreRemotePath } from "./store/useDataPath";
 import { loadNotes } from "./store/notes";
 import { useNotesState } from "./store/Activenote";
@@ -14,7 +14,7 @@ import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { SplashScreen } from "@capacitor/splash-screen";
-import Dialog from "./components/UI/Dialog";
+import Dialog from "./components/ui/Dialog";
 
 // Import styles
 import "./assets/css/main.css";

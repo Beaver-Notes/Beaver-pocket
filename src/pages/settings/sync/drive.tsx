@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { driveService } from "@/utils/Google Drive/GoogleOauth";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 
 const GoogleDrive: React.FC = () => {

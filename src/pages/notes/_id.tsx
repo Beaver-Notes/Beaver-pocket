@@ -10,7 +10,7 @@ import {
 } from "@capacitor/filesystem";
 import { NativeBiometric } from "@capgo/capacitor-native-biometric";
 import { Note } from "../../store/types";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import emitter from "tiny-emitter/instance";
 

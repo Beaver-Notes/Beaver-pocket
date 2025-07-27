@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Note } from "@/store/types";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import iCloud from "@/utils/iCloud/iCloud";
 

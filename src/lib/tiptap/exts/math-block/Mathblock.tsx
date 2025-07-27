@@ -9,7 +9,7 @@ import {
   DialogTitle,
   Transition,
 } from "@headlessui/react";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 
 interface MathBlockProps extends NodeViewWrapperProps {
