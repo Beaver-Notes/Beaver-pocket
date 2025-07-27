@@ -18,7 +18,7 @@ import { WebviewPrint } from "capacitor-webview-print";
 import { cleanEmptyParagraphs } from "../../utils/editor";
 import NoteBubbleMenu from "./NoteBubbleMenu";
 import Icon from "../UI/Icon";
-import { UiModal } from "../UI/Modal";
+import { UiModal } from "../ui/Modal";
 import { shareNote } from "../../utils/share";
 
 type Props = {
@@ -164,9 +164,17 @@ function EditorComponent({
     setWd(localStorage.getItem("expand-editor") === "true");
   }, []);
 
+  function decodeHtml(html: string) {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+  }
+
   const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
-    const newTitle = DOMPurify.sanitize(event.currentTarget.innerHTML);
-    handleChangeNoteContent(editor?.getJSON() || {}, newTitle);
+    let rawHtml = event.currentTarget.innerHTML;
+    const decoded = decodeHtml(rawHtml);
+    const sanitized = DOMPurify.sanitize(decoded, { ALLOWED_TAGS: [] }); // allow no tags - plain text
+    handleChangeNoteContent(editor?.getJSON() || {}, sanitized.trim());
   };
 
   const handleTitlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {

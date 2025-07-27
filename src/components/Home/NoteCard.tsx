@@ -1,5 +1,4 @@
 import { Note } from "../../store/types";
-import { useNotesState } from "../../store/Activenote";
 import * as CryptoJS from "crypto-js";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { NativeBiometric } from "@capgo/capacitor-native-biometric";
@@ -23,6 +22,7 @@ import "dayjs/locale/zh-cn";
 import Icon from "../UI/Icon";
 import { useTranslation } from "@/utils/translations";
 import emitter from "tiny-emitter/instance";
+import UiCard from "../ui/Card";
 
 interface BookmarkedProps {
   note: Note;
@@ -35,8 +35,6 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   setNotesState,
   notesState,
 }) => {
-  const { activeNoteId } = useNotesState();
-
   const STORAGE_PATH = "notes/data.json";
   const navigate = useNavigate();
   const { deleteNote } = useDeleteNote(setNotesState, notesState);
@@ -47,6 +45,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   // Translations
   const [translations, setTranslations] = useState<Record<string, any>>({
     card: {},
+    accessibility: {},
   });
 
   useEffect(() => {
@@ -57,24 +56,6 @@ const NoteCard: React.FC<BookmarkedProps> = ({
       }
     };
     fetchTranslations();
-  }, []);
-
-  useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-
-        setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
-      } catch (error) {
-        console.error("Error loading translations:", error);
-      }
-    };
-
-    loadTranslations();
   }, []);
 
   const handleToggleBookmark = async (
@@ -323,57 +304,52 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   }
 
   return (
-    <div
+    <UiCard
       key={note.id}
-      className={`p-3 rounded-xl ${
-        note.id === activeNoteId
-          ? "bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] cursor-pointer"
-          : "bg-[#F8F8F7] text-black dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C]"
-      }`}
-      onClick={() => handleClickNote(note)}
-      aria-label={`Open note ${note.title}`}
+      className="hover:ring-2 ring-secondary group note-card transition flex flex-col"
+      padding="p-5"
     >
-      <div className="h-40 overflow-hidden">
-        <div className="flex flex-col h-full overflow-hidden">
-          <div
-            className="text-xl font-bold"
-            aria-label={`Title: ${note.title}`}
-          >
-            {note.title}
+      <div>
+        <div className="font-semibold text-lg block line-clamp leading-tight">
+          {note.title}
+        </div>
+
+        {note.isLocked ? (
+          <div>
+            <p></p>
           </div>
+        ) : (
+          <div>
+            {note.labels?.length > 0 && (
+              <div className="text-primary dark:text-primary mt-2 mb-1 line-clamp w-full space-x-1">
+                {note.labels.map((label) => (
+                  <Link
+                    to={`/?label=${label}`}
+                    key={label}
+                    className="inline-block hover:underline cursor-pointer"
+                    aria-label={`${translations.accessibility.label} ${label}`}
+                  >
+                    #{label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-          {note.isLocked ? (
-            <div>
-              <p></p>
-            </div>
-          ) : (
-            <div>
-              {note.labels?.length > 0 && (
-                <div className="flex flex-col gap-1 overflow-hidden">
-                  <div className="flex flex-wrap gap-1">
-                    {note.labels.map((label) => (
-                      <Link
-                        to={`/?label=${label}`}
-                        key={label}
-                        className="text-primary text-opacity-100 px-1 py-0.5 rounded-md"
-                        aria-label={`Label: ${label}`}
-                      >
-                        #{label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
+        <div
+          className="text-neutral-600 block dark:text-[color:var(--selected-dark-text)] flex-1 overflow-hidden overflow-ellipsis"
+          style={{ minHeight: "64px" }}
+          onClick={() => handleClickNote(note)}
+          aria-label={`${translations.accessibility.openNote} ${note.title}`}
+        >
+          {" "}
           {note.isLocked ? (
             <div className="flex flex-col items-center">
               <button
                 className="flex items-center justify-center"
                 aria-label="Unlock note"
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering parent click event
                   handleToggleLock(note.id, e);
                 }}
               >
@@ -382,13 +358,10 @@ const NoteCard: React.FC<BookmarkedProps> = ({
                   className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]"
                 />
               </button>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                {translations.card.unlocktoedit || "-"}
-              </p>
+              <p>{translations.card.unlocktoedit || "-"}</p>
             </div>
           ) : (
             <div
-              className="text-lg"
               aria-label={`Content: ${
                 note.content && truncateContentPreview(note.content)
               }`}
@@ -396,13 +369,13 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               {note.content && truncateContentPreview(note.content)}
             </div>
           )}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center">
+          <div className="flex z-10 items-center mt-4 text-neutral-600 dark:text-neutral-200 gap-2"></div>
           <button
-            className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
+            className={
+              note.isBookmarked
+                ? "text-primary opacity-90 hover:opacity-100"
+                : "hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)] transition"
+            }
             aria-pressed={note.isBookmarked}
             aria-label={`Bookmark note ${note.isBookmarked ? "Remove" : "Add"}`}
             onClick={(e) => {
@@ -419,15 +392,14 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               <Icon name="Bookmark3Line" className="w-8 h-8 mr-2" />
             )}
           </button>
-
           <button
-            className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
+            className="hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)]"
             aria-pressed={note.isArchived}
             aria-label={`Archive note ${
               note.isArchived ? "Unarchive" : "Archive"
             }`}
             onClick={(e) => {
-              e.stopPropagation(); // Prevent triggering parent click event
+              e.stopPropagation();
               handleToggleArchive(note.id, e);
             }}
           >
@@ -437,9 +409,8 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               <Icon name="ArchiveDrawerLine" className="w-8 h-8 mr-2" />
             )}
           </button>
-
           <button
-            className="text-[#52525C] py-2 dark:text-[color:var(--selected-dark-text)] w-auto"
+            className="hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)]"
             aria-pressed={note.isLocked}
             aria-label={`Lock note ${note.isLocked ? "Unlock" : "Lock"}`}
             onClick={(e) => {
@@ -453,7 +424,6 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               <Icon name="LockOpen" className="w-8 h-8 mr-2" />
             )}
           </button>
-
           <button
             className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
             aria-label="Delete note"
@@ -472,7 +442,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
           {dayjs(note.createdAt).fromNow()}
         </div>
       </div>
-    </div>
+    </UiCard>
   );
 };
 
