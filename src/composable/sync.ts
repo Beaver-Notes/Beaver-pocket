@@ -2,7 +2,6 @@ import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 
 const METADATA_FILE = "metadata.json";
 const pendingChanges = new Map<string, any>();
-let debounceTimeout: number | undefined;
 
 interface Metadata {
   version: number;
@@ -73,16 +72,32 @@ export async function trackChange(key: string, data: any): Promise<string> {
   await writeMetadata(metadata);
   state.localVersion = metadata.version;
 
-  if (!state.syncInProgress) scheduleSyncWithDebounce();
+  if (!state.syncInProgress) scheduleSync();
 
   return changeId;
 }
 
-function scheduleSyncWithDebounce(): void {
-  if (debounceTimeout) clearTimeout(debounceTimeout);
-  debounceTimeout = window.setTimeout(() => {
+// Debounce
+let syncTimeout: number | undefined = undefined;
+let lastScheduled = 0;
+const SYNC_DEBOUNCE_MS = 60000;
+
+function scheduleSync(immediate = false): void {
+  const now = Date.now();
+
+  if (immediate || now - lastScheduled > SYNC_DEBOUNCE_MS) {
+    clearTimeout(syncTimeout);
     document.dispatchEvent(new Event("sync"));
-  }, 500);
+  }
+  clearTimeout(syncTimeout)
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = window.setTimeout(() => {
+    document.dispatchEvent(new Event("sync"));
+  }, SYNC_DEBOUNCE_MS);
+}
+
+export function forceSyncNow() {
+  return scheduleSync(true);
 }
 
 export function getPendingChanges() {

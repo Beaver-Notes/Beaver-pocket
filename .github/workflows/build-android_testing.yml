@@ -35,6 +35,7 @@ jobs:
 
       - name: Create .env file
         env:
+          VITE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
           VITE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
           VITE_IOS_GOOGLE_CLIENT_ID: ${{ secrets.IOS_GOOGLE_CLIENT_ID }}
           VITE_ANDROID_GOOGLE_CLIENT_ID: ${{ secrets.ANDROID_GOOGLE_CLIENT_ID }}

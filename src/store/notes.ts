@@ -75,14 +75,20 @@ export const loadNotes = async (): Promise<{
           };
 
     const collapsibleSetting = localStorage.getItem("collapsibleHeading");
-    const notes = finalData.notes ?? {};
+    const rawNotes = finalData.notes ?? {};
+    const notes: Record<string, Note> = {};
 
-    for (const noteId in notes) {
-      const note = notes[noteId];
+    for (const noteId in rawNotes) {
+      const note = rawNotes[noteId];
+
+      if (!note?.id) continue;
+
       note.title = note.title || "";
       if (collapsibleSetting === "false" && note.content?.content) {
         note.content.content = uncollapseHeading(note.content.content);
       }
+
+      notes[noteId] = note;
     }
 
     return {

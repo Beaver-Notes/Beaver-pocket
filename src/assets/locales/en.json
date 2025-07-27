@@ -133,7 +133,13 @@
     "export": "Export",
     "import": "Import",
     "autoSync": "Auto Sync",
-    "insecureMode": "Insecure mode"
+    "insecureMode": "Insecure mode",
+    "toggleSync": "Sync Now",
+    "advancedSettings": "Advanced Settings",
+    "insicureMode": "Insecure mode",
+    "uploadCertificate": "Upload Certificate",
+    "insicureModeInfo": "Enable 'Insecure Mode' to allow HTTP connections.",
+    "insecureModeWaring": "Insecure mode is enabled. This allows HTTP connections, which might expose your data. Proceed with caution."
   },
   "onedrive": {
     "import": "Import",
