@@ -62,6 +62,7 @@ export default Extension.create<CommandsProps>({
         render: () => {
           let popup: any;
           let root: any;
+          let commandsRef: any = null; // Store reference to Commands component
 
           return {
             onStart: (props: any) => {
@@ -116,6 +117,9 @@ export default Extension.create<CommandsProps>({
               root = createRoot(wrapper);
               root.render(
                 <Commands
+                  ref={(ref: any) => {
+                    commandsRef = ref;
+                  }}
                   noteId={this.options.noteId}
                   editor={this.editor}
                   query={props.query}
@@ -128,6 +132,9 @@ export default Extension.create<CommandsProps>({
               if (root) {
                 root.render(
                   <Commands
+                    ref={(ref: any) => {
+                      commandsRef = ref;
+                    }}
                     noteId={this.options.noteId}
                     editor={this.editor}
                     query={props.query}
@@ -143,6 +150,18 @@ export default Extension.create<CommandsProps>({
               }
             },
 
+            onKeyDown: (props: any) => {
+              if (props.event.key === "Escape") {
+                if (popup && popup[0]) {
+                  popup[0].hide();
+                }
+                return true;
+              }
+
+              // Delegate to Commands component's onKeyDown method
+              return commandsRef?.onKeyDown?.(props) || false;
+            },
+
             onExit: () => {
               if (root) {
                 root.unmount();
@@ -150,6 +169,7 @@ export default Extension.create<CommandsProps>({
               if (popup && popup[0]) {
                 popup[0].destroy();
               }
+              commandsRef = null;
             },
           };
         },
