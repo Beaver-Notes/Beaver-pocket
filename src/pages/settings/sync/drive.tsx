@@ -6,9 +6,10 @@ import { forceSyncNow } from "@/composable/sync";
 
 interface DriveProps {
   syncStatus: string;
+  disableClass?: boolean;
 }
 
-const GoogleDrive: React.FC<DriveProps> = ({ syncStatus }) => {
+const GoogleDrive: React.FC<DriveProps> = ({ syncStatus, disableClass }) => {
   const SYNC_FOLDER_NAME = "BeaverNotesSync";
   const [user, setUser] = useState<any | null>(null);
   const [autoSync, setAutoSync] = useState(
@@ -100,11 +101,19 @@ const GoogleDrive: React.FC<DriveProps> = ({ syncStatus }) => {
   };
 
   return (
-    <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
-      <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
-        <div className="flex justify-center items-center">
-          <div className="flex flex-col items-center">
-            <p className="text-4xl font-bold p-4">Drive</p>
+    <div
+      className={`sm:flex sm:justify-center sm:items-center ${
+        !disableClass ? "sm:h-[80vh]" : ""
+      }`}
+    >
+      <div
+        className={`mx-4 ${
+          !disableClass ? "sm:px-20" : ""
+        } mb-2 items-center align-center text-center space-y-4`}
+      >
+        <p className="text-4xl font-bold p-4">Drive</p>
+        <div className="flex flex-col items-center">
+          <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
             <Icon
               name="GDrive"
               className={`w-32 h-32 ${getIconClass(
@@ -115,7 +124,6 @@ const GoogleDrive: React.FC<DriveProps> = ({ syncStatus }) => {
             />
           </div>
         </div>
-
         {user ? (
           <section>
             <button

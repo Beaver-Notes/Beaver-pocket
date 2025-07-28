@@ -10,9 +10,10 @@ const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 
 interface DropboxProps {
   syncStatus: string;
+  disableClass?: boolean;
 }
 
-const DropboxSync: React.FC<DropboxProps> = ({ syncStatus }) => {
+const DropboxSync: React.FC<DropboxProps> = ({ syncStatus, disableClass }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [authorizationCode, setAuthorizationCode] = useState<string>("");
@@ -283,8 +284,16 @@ const DropboxSync: React.FC<DropboxProps> = ({ syncStatus }) => {
   };
 
   return (
-    <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
-      <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+    <div
+      className={`sm:flex sm:justify-center sm:items-center ${
+        !disableClass ? "sm:h-[80vh]" : ""
+      }`}
+    >
+      <div
+        className={`mx-4 ${
+          !disableClass ? "sm:px-20" : ""
+        } mb-2 items-center align-center text-center space-y-4`}
+      >
         <p className="text-4xl text-left font-bold p-4" aria-label="dropbox">
           Dropbox
         </p>

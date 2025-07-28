@@ -436,17 +436,21 @@ const Welcome: React.FC = () => {
                   </div>
                 ) : (
                   <div className="p-4 w-full">
-                    {selectedCloud === "iCloud" && <Icloud syncStatus="idle" />}
+                    {selectedCloud === "iCloud" && (
+                      <Icloud syncStatus="idle" disableClass={true} />
+                    )}
                     {selectedCloud === "Dropbox" && (
-                      <Dropbox syncStatus="idle" />
+                      <Dropbox syncStatus="idle" disableClass={true} />
                     )}
                     {selectedCloud === "OneDrive" && (
-                      <Onedrive syncStatus="idle" />
+                      <Onedrive syncStatus="idle" disableClass={true} />
                     )}
                     {selectedCloud === "Google Drive" && (
-                      <Drive syncStatus="idle" />
+                      <Drive syncStatus="idle" disableClass={true} />
                     )}
-                    {selectedCloud === "WebDAV" && <Dav syncStatus="idle" />}
+                    {selectedCloud === "WebDAV" && (
+                      <Dav syncStatus="idle" disableClass={true} />
+                    )}
                   </div>
                 )}
               </div>

@@ -8,11 +8,12 @@ import { forceSyncNow } from "@/composable/sync";
 
 interface WebdavProps {
   syncStatus: string;
+  disableClass?: boolean;
 }
 
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const Webdav: React.FC<WebdavProps> = ({ syncStatus }) => {
+const Webdav: React.FC<WebdavProps> = ({ syncStatus, disableClass }) => {
   const [logged, setLogin] = useState<boolean>(false);
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
@@ -217,8 +218,16 @@ const Webdav: React.FC<WebdavProps> = ({ syncStatus }) => {
   };
 
   return (
-    <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
-      <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+    <div
+      className={`w-full sm:flex sm:justify-center sm:items-center ${
+        !disableClass ? "sm:h-[80vh]" : ""
+      } space-y-4`}
+    >
+      <div
+        className={`w-full max-w-xl ${
+          !disableClass ? "sm:px-20" : ""
+        } px-4 sm:px-20 mb-2 text-center`}
+      >
         <section>
           <div className="flex flex-col">
             <div className="space-y-2">

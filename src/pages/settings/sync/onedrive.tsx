@@ -8,9 +8,10 @@ import { forceSyncNow } from "@/composable/sync";
 
 interface OneDriveProps {
   syncStatus: string;
+  disableClass?: boolean,
 }
 
-const OneDriveAuth: React.FC<OneDriveProps> = ({ syncStatus }) => {
+const OneDriveAuth: React.FC<OneDriveProps> = ({ syncStatus, disableClass }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
@@ -180,8 +181,16 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ syncStatus }) => {
   };
 
   return (
-    <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
-      <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+    <div
+      className={`w-full sm:flex sm:justify-center sm:items-center ${
+        !disableClass ? "sm:h-[80vh]" : ""
+      } space-y-4`}
+    >
+      <div
+        className={`w-full max-w-xl ${
+          !disableClass ? "sm:px-20" : ""
+        } px-4 sm:px-20 mb-2 text-center`}
+      >
         <p className="text-4xl text-left font-bold p-4" aria-label="onedrive">
           Onedrive
         </p>
