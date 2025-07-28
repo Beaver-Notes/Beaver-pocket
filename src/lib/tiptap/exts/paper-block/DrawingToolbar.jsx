@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 
 const DrawingToolBar = ({
   setState,

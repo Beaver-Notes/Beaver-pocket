@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { UiModal } from "@/components/UI/Modal";
-import UiInput from "@/components/UI/Input";
-import UiButton from "@/components/UI/Button";
+import { UiModal } from "@/components/ui/Modal";
+import UiInput from "@/components/ui/Input";
+import UiButton from "@/components/ui/Button";
 import { useTranslation } from "@/utils/translations";
 import emitter from "tiny-emitter/instance";
 

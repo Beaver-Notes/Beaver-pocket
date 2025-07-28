@@ -1,5 +1,5 @@
 import React, { ReactNode, ComponentType, HTMLAttributes } from "react";
-import Spinner from "@/components/UI/Spinner";
+import Spinner from "@/components/ui/Spinner";
 
 type ButtonVariant = "default" | "primary" | "danger";
 

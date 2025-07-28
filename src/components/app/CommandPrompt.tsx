@@ -6,9 +6,9 @@ import { useSaveNote } from "../../store/notes";
 import Mousetrap from "mousetrap";
 import { formatTime } from "../../utils/time-format";
 import { JSONContent } from "@tiptap/react";
-import Icon from "../UI/Icon";
-import UiCard from "../UI/Card";
-import UiListItem from "../UI/ListItem";
+import Icon from "../ui/Icon";
+import UiCard from "../ui/Card";
+import UiListItem from "../ui/ListItem";
 import { useTranslation } from "@/utils/translations";
 import "./css/commandprompt.css";
 

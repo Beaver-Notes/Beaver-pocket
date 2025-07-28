@@ -25,6 +25,7 @@ interface routerProps {
   toggleTheme: (val: boolean | ((prev: boolean) => boolean)) => void;
   setAutoMode: () => void;
   darkMode: boolean;
+  syncStatus: string;
 }
 
 const router: React.FC<routerProps> = ({
@@ -35,6 +36,7 @@ const router: React.FC<routerProps> = ({
   toggleTheme,
   setAutoMode,
   darkMode,
+  syncStatus,
 }) => {
   const location = useLocation();
 
@@ -67,28 +69,42 @@ const router: React.FC<routerProps> = ({
         path="/dropbox"
         element={
           <Dropbox
-            notesState={notesState}
-            setNotesState={setNotesState}
-            themeMode={themeMode}
-            darkMode={darkMode}
+            syncStatus={syncStatus}
           />
         }
       />
       <Route
         path="/onedrive"
-        element={<Onedrive setNotesState={setNotesState} />}
+        element={
+          <Onedrive
+            syncStatus={syncStatus}
+          />
+        }
       />
       <Route
         path="/dav"
-        element={<Dav notesState={notesState} setNotesState={setNotesState} />}
+        element={
+          <Dav
+            syncStatus={syncStatus}
+          />
+        }
       />
       <Route
         path="/icloud"
         element={
-          <Icloud notesState={notesState} setNotesState={setNotesState} />
+          <Icloud
+            syncStatus={syncStatus}
+          />
         }
       />
-      <Route path="/drive" element={<Drive />} />
+      <Route
+        path="/drive"
+        element={
+          <Drive
+            syncStatus={syncStatus}
+          />
+        }
+      />
       <Route path="/shortcuts" element={<Shortcuts />} />
       <Route path="/icons" element={<Icons />} />
       <Route path="/welcome" element={<Welcome />} />

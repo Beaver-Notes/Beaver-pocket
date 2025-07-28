@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { driveService } from "@/utils/Google Drive/GoogleOauth";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
+import { forceSyncNow } from "@/composable/sync";
 
-const GoogleDrive: React.FC = () => {
+interface DriveProps {
+  syncStatus: string;
+  disableClass?: boolean;
+}
+
+const GoogleDrive: React.FC<DriveProps> = ({ syncStatus, disableClass }) => {
   const SYNC_FOLDER_NAME = "BeaverNotesSync";
   const [user, setUser] = useState<any | null>(null);
   const [autoSync, setAutoSync] = useState(
@@ -81,19 +87,43 @@ const GoogleDrive: React.FC = () => {
     setAutoSync(!autoSync);
   };
 
+  const getIconClass = (status: "syncing" | "idle" | "error") => {
+    switch (status) {
+      case "syncing":
+        return "text-neutral-800 dark:text-neutral-200 animate-pulse";
+      case "idle":
+        return "text-neutral-800 dark:text-neutral-200";
+      case "error":
+        return "text-red-500";
+      default:
+        return "text-neutral-800 dark:text-neutral-200";
+    }
+  };
+
   return (
-    <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
-      <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
-        <div className="flex justify-center items-center">
-          <div className="flex flex-col items-center">
-            <p className="text-4xl font-bold p-4">Drive</p>
+    <div
+      className={`sm:flex sm:justify-center sm:items-center ${
+        !disableClass ? "sm:h-[80vh]" : ""
+      }`}
+    >
+      <div
+        className={`mx-4 ${
+          !disableClass ? "sm:px-20" : ""
+        } mb-2 items-center align-center text-center space-y-4`}
+      >
+        <p className="text-4xl font-bold p-4">Drive</p>
+        <div className="flex flex-col items-center">
+          <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
             <Icon
               name="GDrive"
-              className="w-32 h-32 text-neutral-800 dark:text-neutral-200"
+              className={`w-32 h-32 ${getIconClass(
+                ["syncing", "idle", "error"].includes(syncStatus)
+                  ? (syncStatus as "syncing" | "idle" | "error")
+                  : "idle"
+              )}`}
             />
           </div>
         </div>
-
         {user ? (
           <section>
             <button
@@ -101,8 +131,14 @@ const GoogleDrive: React.FC = () => {
               onClick={Logout}
             >
               {translations.gdrive.logout || "Logout"}
+            </button>{" "}
+            <button
+              className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+              onClick={forceSyncNow}
+              aria-label={translations.drive.sync}
+            >
+              {translations.drive.sync || "-"}
             </button>
-
             <div className="flex items-center py-2 justify-between">
               <p className="text-lg">{translations.gdrive.autoSync || "-"}</p>
               <label className="relative inline-flex cursor-pointer items-center">

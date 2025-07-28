@@ -16,6 +16,7 @@
     "lockedNote": "Locked note",
     "Suggestion": "Filtered  suggestions",
     "select": "Select ",
+    "label": "Label",
     "filterednotes": "Filtered notes",
     "insertRowAfter": "Insert row after",
     "insertRowBefore": "Insert row before",
@@ -111,7 +112,8 @@
     "autoSync": "Auto Sync",
     "logout": "Logout",
     "placeholder": "Paste authorization code here",
-    "icon": "Dropbox icon"
+    "icon": "Dropbox icon",
+    "sync": "Sync Now"
   },
   "gdrive": {
     "import": "Import",
@@ -119,12 +121,14 @@
     "autoSync": "Auto Sync",
     "logout": "Logout",
     "login": "Login",
-    "refreshingToken": "Access token expired, refreshing..."
+    "refreshingToken": "Access token expired, refreshing...",
+    "sync": "Sync Now"
   },
   "icloud": {
     "import": "Import",
     "export": "Export",
-    "autoSync": "Auto Sync"
+    "autoSync": "Auto Sync",
+    "sync": "Sync Now"
   },
   "webdav": {
     "login": "Login",
@@ -133,7 +137,13 @@
     "export": "Export",
     "import": "Import",
     "autoSync": "Auto Sync",
-    "insecureMode": "Insecure mode"
+    "insecureMode": "Insecure mode",
+    "sync": "Sync Now",
+    "advancedSettings": "Advanced Settings",
+    "insicureMode": "Insecure mode",
+    "uploadCertificate": "Upload Certificate",
+    "insicureModeInfo": "Enable 'Insecure Mode' to allow HTTP connections.",
+    "insecureModeWaring": "Insecure mode is enabled. This allows HTTP connections, which might expose your data. Proceed with caution."
   },
   "onedrive": {
     "import": "Import",
@@ -141,7 +151,8 @@
     "login": "Login",
     "logout": "Logout",
     "autoSync": "Auto Sync",
-    "refreshingToken": "Access token expired, refreshing..."
+    "refreshingToken": "Access token expired, refreshing...",
+    "sync": "Sync Now"
   },
   "welcome": {
     "welcomeTitle": "🎉 Welcome to Beaver Pocket",

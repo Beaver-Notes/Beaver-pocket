@@ -10,13 +10,6 @@ jobs:
   build:
     name: Build Android Testing
     runs-on: ubuntu-latest
-    env:
-      VITE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
-      VITE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
-      VITE_IOS_GOOGLE_CLIENT_ID: ${{ secrets.IOS_GOOGLE_CLIENT_ID }}
-      VITE_ANDROID_GOOGLE_CLIENT_ID: ${{ secrets.ANDROID_GOOGLE_CLIENT_ID }}
-      VITE_ONEDRIVE_CLIENT_ID: ${{ secrets.ONEDRIVE_CLIENT_ID }}
-      VITE_ONEDRIVE_ANDROID_HASH: ${{ secrets.ONEDRIVE_ANDROID_HASH }}
 
     steps:
       - name: Checkout source
@@ -41,6 +34,13 @@ jobs:
           cache: "yarn"
 
       - name: Create .env file
+        env:
+          VITE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
+          VITE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
+          VITE_IOS_GOOGLE_CLIENT_ID: ${{ secrets.IOS_GOOGLE_CLIENT_ID }}
+          VITE_ANDROID_GOOGLE_CLIENT_ID: ${{ secrets.ANDROID_GOOGLE_CLIENT_ID }}
+          VITE_ONEDRIVE_CLIENT_ID: ${{ secrets.ONEDRIVE_CLIENT_ID }}
+          VITE_ONEDRIVE_ANDROID_HASH: ${{ secrets.ONEDRIVE_ANDROID_HASH }}
         run: |
           cat <<EOF > .env
           VITE_DROPBOX_CLIENT_ID=${VITE_DROPBOX_CLIENT_ID}
@@ -64,6 +64,8 @@ jobs:
         env:
           RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          ONEDRIVE_SHA1: ${{ secrets.ONEDRIVE_ANDROID_HASH }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
         run: |
           echo "${{ secrets.RELEASE_KEYSTORE }}" > android/app/release.jks.base64
           base64 -d android/app/release.jks.base64 > android/app/release.jks

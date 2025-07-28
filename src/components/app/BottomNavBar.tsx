@@ -5,7 +5,7 @@ import { Keyboard } from "@capacitor/keyboard";
 import { useSaveNote } from "../../store/notes";
 import { Note } from "../../store/types";
 import Mousetrap from "../../utils/mousetrap";
-import Icon from "../UI/Icon";
+import Icon from "../ui/Icon";
 import { Capacitor } from "@capacitor/core";
 import { useTranslation } from "@/utils/translations";
 

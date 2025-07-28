@@ -4,7 +4,7 @@ import deTranslations from "./assets/locales/de.json";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { useTranslation } from "./utils/translations";
-import Icon from "./components/UI/Icon";
+import Icon from "./components/ui/Icon";
 
 interface SettingsProps {
   themeMode: string;

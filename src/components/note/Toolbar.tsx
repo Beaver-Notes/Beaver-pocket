@@ -9,10 +9,10 @@ import FileUploadComponent from "../../composable/FileUpload";
 import AudioUploadComponent from "../../composable/AudioUpload";
 import VideoUploadComponent from "../../composable/VideoUpload";
 import { Link } from "react-router-dom";
-import Popover from "../UI/Popover";
+import Popover from "../ui/Popover";
 import Mousetrap from "mousetrap";
 import Find from "./Find";
-import Icon from "../UI/Icon";
+import Icon from "../ui/Icon";
 import { Capacitor } from "@capacitor/core";
 
 interface ToolbarProps {

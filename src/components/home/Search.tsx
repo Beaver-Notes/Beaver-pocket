@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { labelStore } from "../../store/label";
 import { useSearchParams } from "react-router-dom";
-import Icon from "../UI/Icon";
+import Icon from "../ui/Icon";
 import { useTranslation } from "@/utils/translations";
 
 interface SearchBarProps {

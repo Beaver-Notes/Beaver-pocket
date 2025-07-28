@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { WebDavService } from "@/utils/Webdav/webDavApi";
-import { Note } from "@/store/types";
 import WebDAV from "@/utils/Webdav/WebDAVPlugin";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
+import { forceSyncNow } from "@/composable/sync";
 
 interface WebdavProps {
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
+  syncStatus: string;
+  disableClass?: boolean;
 }
 
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const Webdav: React.FC<WebdavProps> = () => {
+const Webdav: React.FC<WebdavProps> = ({ syncStatus, disableClass }) => {
+  const [logged, setLogin] = useState<boolean>(false);
   const [autoSync, setAutoSync] = useState<boolean>(() => {
     const storedSync = localStorage.getItem("sync");
     return storedSync === "webdav";
@@ -112,6 +113,8 @@ const Webdav: React.FC<WebdavProps> = () => {
       await SecureStoragePlugin.set({ key: "username", value: username });
       await SecureStoragePlugin.set({ key: "password", value: password });
 
+      setLogin(true);
+
       initialize();
 
       const webDavService = new WebDavService({
@@ -201,9 +204,30 @@ const Webdav: React.FC<WebdavProps> = () => {
     reader.readAsDataURL(file);
   };
 
+  const getIconClass = (status: "syncing" | "idle" | "error") => {
+    switch (status) {
+      case "syncing":
+        return "text-neutral-800 dark:text-neutral-200 animate-pulse";
+      case "idle":
+        return "text-neutral-800 dark:text-neutral-200";
+      case "error":
+        return "text-red-500";
+      default:
+        return "text-neutral-800 dark:text-neutral-200";
+    }
+  };
+
   return (
-    <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
-      <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
+    <div
+      className={`w-full sm:flex sm:justify-center sm:items-center ${
+        !disableClass ? "sm:h-[80vh]" : ""
+      } space-y-4`}
+    >
+      <div
+        className={`w-full max-w-xl ${
+          !disableClass ? "sm:px-20" : ""
+        } px-4 sm:px-20 mb-2 text-center`}
+      >
         <section>
           <div className="flex flex-col">
             <div className="space-y-2">
@@ -217,7 +241,11 @@ const Webdav: React.FC<WebdavProps> = () => {
                 <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
                   <Icon
                     name="CloudLine"
-                    className="w-32 h-32 text-neutral-800 dark:text-neutral-200"
+                    className={`w-32 h-32 ${getIconClass(
+                      ["syncing", "idle", "error"].includes(syncStatus)
+                        ? (syncStatus as "syncing" | "idle" | "error")
+                        : "idle"
+                    )}`}
                   />
                 </div>
               </div>
@@ -274,108 +302,117 @@ const Webdav: React.FC<WebdavProps> = () => {
               >
                 {translations.webdav.login || "-"}
               </button>
-              <div className="flex flex-col space-y-4 py-2">
-                {/* Auto Sync */}
-                <div className="flex items-center justify-between">
-                  <p
-                    className="text-lg"
-                    aria-label={translations.webdav.autoSync}
-                    id="auto-sync-label"
+              {logged && (
+                <div className="flex flex-col space-y-4 py-2">
+                  <button
+                    className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+                    onClick={forceSyncNow}
+                    aria-label={translations.webdav.sync}
                   >
-                    {translations.webdav.autoSync || "-"}
-                  </p>
-                  <label
-                    htmlFor="auto-sync-switch"
-                    className="relative inline-flex cursor-pointer items-center"
-                    aria-label={translations.webdav.autoSync}
-                  >
-                    <input
-                      id="auto-sync-switch"
-                      type="checkbox"
-                      checked={autoSync}
-                      onChange={handleSyncToggle}
-                      className="peer sr-only"
-                      aria-checked={autoSync}
-                      aria-labelledby="auto-sync-label"
-                    />
-                    <div
-                      className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333]
+                    {translations.webdav.sync || "-"}
+                  </button>
+                  {/* Auto Sync */}
+                  <div className="flex items-center justify-between">
+                    <p
+                      className="text-lg"
+                      aria-label={translations.webdav.autoSync}
+                      id="auto-sync-label"
+                    >
+                      {translations.webdav.autoSync || "-"}
+                    </p>
+                    <label
+                      htmlFor="auto-sync-switch"
+                      className="relative inline-flex cursor-pointer items-center"
+                      aria-label={translations.webdav.autoSync}
+                    >
+                      <input
+                        id="auto-sync-switch"
+                        type="checkbox"
+                        checked={autoSync}
+                        onChange={handleSyncToggle}
+                        className="peer sr-only"
+                        aria-checked={autoSync}
+                        aria-labelledby="auto-sync-label"
+                      />
+                      <div
+                        className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333]
         after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7
         after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all
         after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white
         peer-focus:ring-green-300"
-                    ></div>
-                  </label>
-                </div>
+                      ></div>
+                    </label>
+                  </div>
 
-                <div className="w-full">
-                  <button
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    aria-expanded={showAdvanced}
-                    aria-controls="advanced-settings"
-                    className="flex items-center justify-between w-full"
-                  >
-                    <span>Advanced Settings</span>
-                    {showAdvanced ? (
-                      <Icon name="ArrowUpSLine" className="w-6 h-6 ml-2" />
-                    ) : (
-                      <Icon name="ArrowDownSLine" className="w-6 h-6 ml-2" />
-                    )}
-                  </button>
-                </div>
+                  <div className="w-full">
+                    <button
+                      onClick={() => setShowAdvanced(!showAdvanced)}
+                      aria-expanded={showAdvanced}
+                      aria-controls="advanced-settings"
+                      className="flex items-center justify-between w-full"
+                    >
+                      <span>Advanced Settings</span>
+                      {showAdvanced ? (
+                        <Icon name="ArrowUpSLine" className="w-6 h-6 ml-2" />
+                      ) : (
+                        <Icon name="ArrowDownSLine" className="w-6 h-6 ml-2" />
+                      )}
+                    </button>
+                  </div>
 
-                {/* Advanced Settings Section */}
-                {showAdvanced && (
-                  <div
-                    id="advanced-settings"
-                    className="flex flex-col space-y-4"
-                  >
-                    {/* Insecure Mode */}
-                    <div className="flex items-center justify-between">
-                      <p
-                        className="text-lg"
-                        aria-label={translations.webdav.insecureMode}
-                        id="insecure-mode-label"
-                      >
-                        {translations.webdav.insecureMode || "-"}
-                      </p>
-                      <label
-                        htmlFor="insecure-mode-switch"
-                        className="relative inline-flex cursor-pointer items-center"
-                        aria-label={translations.webdav.insecureMode}
-                      >
-                        <input
-                          id="insecure-mode-switch"
-                          type="checkbox"
-                          checked={insecureMode}
-                          onChange={handleInsecureToggle}
-                          className="peer sr-only"
-                          aria-checked={insecureMode}
-                          aria-labelledby="insecure-mode-label"
-                        />
-                        <div
-                          className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333]
+                  {/* Advanced Settings Section */}
+                  {showAdvanced && (
+                    <div
+                      id="advanced-settings"
+                      className="flex flex-col space-y-4"
+                    >
+                      {/* Insecure Mode */}
+                      <div className="flex items-center justify-between">
+                        <p
+                          className="text-lg"
+                          aria-label={translations.webdav.insecureMode}
+                          id="insecure-mode-label"
+                        >
+                          {translations.webdav.insecureMode || "-"}
+                        </p>
+                        <label
+                          htmlFor="insecure-mode-switch"
+                          className="relative inline-flex cursor-pointer items-center"
+                          aria-label={translations.webdav.insecureMode}
+                        >
+                          <input
+                            id="insecure-mode-switch"
+                            type="checkbox"
+                            checked={insecureMode}
+                            onChange={handleInsecureToggle}
+                            className="peer sr-only"
+                            aria-checked={insecureMode}
+                            aria-labelledby="insecure-mode-label"
+                          />
+                          <div
+                            className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333]
             after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7
             after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all
             after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white
             peer-focus:ring-green-300"
-                        ></div>
+                          ></div>
+                        </label>
+                      </div>
+
+                      {/* File Upload */}
+                      <label className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl">
+                        Upload Certificate
+                        <input
+                          type="file"
+                          accept=".crt,.pem,.cer,.der"
+                          onChange={handleUpload}
+                          className="hidden"
+                        />
                       </label>
                     </div>
-
-                    {/* File Upload */}
-                    <label className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl">
-                      Upload Certificate
-                      <input
-                        type="file"
-                        accept=".crt,.pem,.cer,.der"
-                        onChange={handleUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </section>

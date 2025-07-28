@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { version } from "../../../package.json";
-import Icon from "@/components/UI/Icon";
+import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 
 const Shortcuts: React.FC = () => {

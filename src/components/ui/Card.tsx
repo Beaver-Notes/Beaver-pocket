@@ -19,7 +19,7 @@ const UiCard: React.FC<CardProps> = ({
   const Component = tag as ElementType;
 
   const baseClasses =
-    "bg-[#F8F8F7] dark:bg-[#353333] transform rounded-lg transition-transform ui-card overflow-hidden";
+    "bg-[#F8F8F7] dark:bg-[#353333] transform rounded-xl transition-transform ui-card overflow-hidden";
   const hoverClasses = hover ? "hover:shadow-xl hover:-translate-y-1" : "";
 
   const combinedClasses =

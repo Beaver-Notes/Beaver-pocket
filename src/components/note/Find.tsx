@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "../../utils/translations";
-import Icon from "../UI/Icon";
+import Icon from "../ui/Icon";
 
 interface SearchReplaceBarProps {
   editor: any;
