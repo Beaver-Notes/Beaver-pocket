@@ -1,16 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace
-		dirs '../../node_modules/@capacitor/background-runner/android/src/main/libs', 'libs' "beaver.notes.pocket"
+    namespace "beaver.notes.pocket"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "beaver.notes.pocket"
         android.buildFeatures.buildConfig true
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "1.4.0"
+        versionCode 1
+        versionName "1.5.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         def googleClientId = project.hasProperty("GOOGLE_CLIENT_ID") ? project.GOOGLE_CLIENT_ID : System.getenv("GOOGLE_CLIENT_ID") ?: ""
         buildConfigField "String", "SERVER_CLIENT_ID", "\"${googleClientId}\""
