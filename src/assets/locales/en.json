@@ -112,7 +112,8 @@
     "autoSync": "Auto Sync",
     "logout": "Logout",
     "placeholder": "Paste authorization code here",
-    "icon": "Dropbox icon"
+    "icon": "Dropbox icon",
+    "sync": "Sync Now"
   },
   "gdrive": {
     "import": "Import",
@@ -120,12 +121,14 @@
     "autoSync": "Auto Sync",
     "logout": "Logout",
     "login": "Login",
-    "refreshingToken": "Access token expired, refreshing..."
+    "refreshingToken": "Access token expired, refreshing...",
+    "sync": "Sync Now"
   },
   "icloud": {
     "import": "Import",
     "export": "Export",
-    "autoSync": "Auto Sync"
+    "autoSync": "Auto Sync",
+    "sync": "Sync Now"
   },
   "webdav": {
     "login": "Login",
@@ -135,7 +138,7 @@
     "import": "Import",
     "autoSync": "Auto Sync",
     "insecureMode": "Insecure mode",
-    "toggleSync": "Sync Now",
+    "sync": "Sync Now",
     "advancedSettings": "Advanced Settings",
     "insicureMode": "Insecure mode",
     "uploadCertificate": "Upload Certificate",
@@ -148,7 +151,8 @@
     "login": "Login",
     "logout": "Logout",
     "autoSync": "Auto Sync",
-    "refreshingToken": "Access token expired, refreshing..."
+    "refreshingToken": "Access token expired, refreshing...",
+    "sync": "Sync Now"
   },
   "welcome": {
     "welcomeTitle": "🎉 Welcome to Beaver Pocket",

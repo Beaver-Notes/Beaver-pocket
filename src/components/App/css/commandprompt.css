@@ -1,6 +1,0 @@
-.command-prompt {
-  position: fixed;
-  transform: translateX(-50%);
-  left: 50%;
-  z-index: 99999;
-}

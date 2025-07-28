@@ -1,25 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Note } from "@/store/types";
 import { Browser } from "@capacitor/browser";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import { Dropbox } from "dropbox";
+import { forceSyncNow } from "@/composable/sync";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 
 interface DropboxProps {
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
-  darkMode: any;
-  themeMode: any;
+  syncStatus: string;
 }
 
-const DropboxSync: React.FC<DropboxProps> = () => {
+const DropboxSync: React.FC<DropboxProps> = ({ syncStatus }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [authorizationCode, setAuthorizationCode] = useState<string>("");
-  const SYNC_FOLDER_NAME = "BeaverNotesSync"; // Fixed folder name instead of date-based
+  const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
   const [translations, setTranslations] = useState<Record<string, any>>({
     dropbox: {},
@@ -272,6 +269,19 @@ const DropboxSync: React.FC<DropboxProps> = () => {
     setAutoSync(!autoSync);
   };
 
+  const getIconClass = (status: "syncing" | "idle" | "error") => {
+    switch (status) {
+      case "syncing":
+        return "text-blue-500 animate-pulse"; // or use animate-blink if defined
+      case "idle":
+        return "text-blue-500";
+      case "error":
+        return "text-red-500";
+      default:
+        return "text-neutral-400";
+    }
+  };
+
   return (
     <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
@@ -280,7 +290,14 @@ const DropboxSync: React.FC<DropboxProps> = () => {
         </p>
         <div className="flex justify-center items-center">
           <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
-            <Icon name="DropboxFill" className="w-32 h-32 text-blue-700 z-0" />
+            <Icon
+              name="DropboxFill"
+              className={`w-32 h-32 ${getIconClass(
+                ["syncing", "idle", "error"].includes(syncStatus)
+                  ? (syncStatus as "syncing" | "idle" | "error")
+                  : "idle"
+              )}`}
+            />
           </div>
         </div>
         {accessToken ? (
@@ -295,6 +312,13 @@ const DropboxSync: React.FC<DropboxProps> = () => {
                   }
                 >
                   {translations.dropbox.logout || "-"}
+                </button>
+                <button
+                  className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+                  onClick={forceSyncNow}
+                  aria-label={translations.dropbox.sync}
+                >
+                  {translations.dropbox.sync || "-"}
                 </button>
               </div>
             </div>

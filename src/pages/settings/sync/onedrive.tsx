@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { MsAuthPlugin } from "@recognizebv/capacitor-plugin-msauth";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import { Note } from "@/store/types";
 import Icon from "@/components/ui/Icon";
 import { OneDriveAPI } from "@/utils/Onedrive/oneDriveApi";
 import { useTranslation } from "@/utils/translations";
+import { forceSyncNow } from "@/composable/sync";
 
 interface OneDriveProps {
-  setNotesState: (notes: Record<string, Note>) => void;
+  syncStatus: string;
 }
 
-const OneDriveAuth: React.FC<OneDriveProps> = () => {
+const OneDriveAuth: React.FC<OneDriveProps> = ({ syncStatus }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
@@ -166,6 +166,19 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
     setAutoSync(!autoSync);
   };
 
+  const getIconClass = (status: "syncing" | "idle" | "error") => {
+    switch (status) {
+      case "syncing":
+        return "text-neutral-800 dark:text-neutral-200 animate-pulse";
+      case "idle":
+        return "text-neutral-800 dark:text-neutral-200";
+      case "error":
+        return "text-red-500";
+      default:
+        return "text-neutral-800 dark:text-neutral-200";
+    }
+  };
+
   return (
     <div className="sm:flex sm:justify-center sm:items-center sm:h-[80vh]">
       <div className="mx-4 sm:px-20 mb-2 items-center align-center text-center space-y-4">
@@ -176,7 +189,11 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
           <div className="relative bg-opacity-40 rounded-full w-34 h-34 flex justify-center items-center">
             <Icon
               name="OneDrive"
-              className="w-32 h-32 text-neutral-800 dark:text-neutral-200"
+              className={`w-32 h-32 ${getIconClass(
+                ["syncing", "idle", "error"].includes(syncStatus)
+                  ? (syncStatus as "syncing" | "idle" | "error")
+                  : "idle"
+              )}`}
             />
           </div>
         </div>
@@ -193,6 +210,13 @@ const OneDriveAuth: React.FC<OneDriveProps> = () => {
                     }
                   >
                     {translations.onedrive.logout || "-"}
+                  </button>
+                  <button
+                    className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+                    onClick={forceSyncNow}
+                    aria-label={translations.onedrive.sync}
+                  >
+                    {translations.drive.sync || "-"}
                   </button>
                 </div>
               </div>
