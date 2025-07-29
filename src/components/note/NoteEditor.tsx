@@ -11,7 +11,6 @@ import LabelSuggestion from "../../lib/tiptap/exts/label-suggestion";
 import LinkNote from "../../lib/tiptap/exts/link-note";
 import DOMPurify from "dompurify";
 import useNoteEditor from "../../store/useNoteActions";
-import { useNotesState } from "../../store/Activenote";
 import Mousetrap from "mousetrap";
 import { labelStore } from "../../store/label";
 import { WebviewPrint } from "capacitor-webview-print";
@@ -34,12 +33,12 @@ function EditorComponent({
   setNotesState,
   translations,
 }: Props) {
-  const { activeNoteId, setActiveNoteId } = useNotesState();
+  const [isExporting, setIsExporting] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const findRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const { title, handleChangeNoteContent } = useNoteEditor(
-    activeNoteId,
+    note.id,
     notesState,
     setNotesState
   );
@@ -93,13 +92,9 @@ function EditorComponent({
   const titleRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<any>(null);
 
-  useEffect(() => {
-    setActiveNoteId(note.id);
-  }, [note.id, setActiveNoteId]);
-
   const exts = [
     ...extensions,
-    LinkNote(notesList, activeNoteId ?? ""),
+    LinkNote(notesList, note.id ?? ""),
     LabelSuggestion,
     Commands.configure({
       noteId: note.id,
@@ -343,6 +338,15 @@ function EditorComponent({
     }
   }
 
+  const shareBEA = async () => {
+    setIsExporting(true);
+    try {
+      await shareNote(note.id, notesState);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="relative h-auto" onDragOver={(e) => e.preventDefault()}>
       <div className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] sm:top-0 sm:bottom-auto print:hidden bg-white dark:bg-[#232222] z-20">
@@ -379,37 +383,60 @@ function EditorComponent({
               onClose={closeDialog}
               header={translations.editor.exportas}
               allowSwipeToDismiss={true}
-              className="fixed inset-0 flex items-end sm:items-center pb-6 justify-center bg-black bg-opacity-20 p-5 overflow-y-auto z-50 print:hidden"
+              className="fixed inset-0 flex items-end sm:items-center justify-center p-5 overflow-y-auto z-50 bg-black bg-opacity-20 print:hidden"
             >
-              <div className="my-2 border-b dark:border-neutral-500"></div>
-              <div className="mt-4 space-y-4 p-2 bg-[#F8F8F7] dark:bg-neutral-800 rounded-xl">
-                <div className="flex items-center w-full">
-                  <p className="text-base pl-2 font-bold">BEA</p>
-
-                  <button
-                    onClick={() => shareNote(note.id, notesState)}
-                    className="w-full bg-[#F8F8F7] dark:bg-neutral-800 p-4 text-lg rounded-xl inline-flex justify-between items-center"
-                  >
+              <div className="flex flex-col rounded-xl overflow-hidden divide-y divide-neutral-200 dark:divide-neutral-700 text-sm">
+                {/* Export as BEA */}
+                <button
+                  onClick={shareBEA}
+                  disabled={isExporting}
+                  className={`flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200
+      ${isExporting ? "cursor-not-allowed opacity-70" : "cursor-pointer"}
+    `}
+                >
+                  <p className="font-medium w-16 flex-shrink-0">BEA</p>
+                  {isExporting ? (
+                    <svg
+                      className="animate-spin h-5 w-5 text-primary"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      />
+                    </svg>
+                  ) : (
                     <Icon
                       name="FileTextLine"
-                      className="w-6 h-6"
+                      className="w-5 h-5"
                       aria-hidden="true"
                     />
-                  </button>
-                </div>
-                <div className="flex items-center w-full">
-                  <p className="text-base pl-2 font-bold">PDF</p>
-                  <button
-                    onClick={() => handlePrint(`${note.title}.pdf`)}
-                    className="w-full bg-[#F8F8F7] dark:bg-neutral-800 p-4 text-lg rounded-xl inline-flex justify-between items-center"
-                  >
-                    <Icon
-                      name="FileArticleLine"
-                      className="w-6 h-6"
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
+                  )}
+                </button>
+
+                {/* Export as PDF */}
+                <button
+                  onClick={() => handlePrint(`${note.title}.pdf`)}
+                  className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200"
+                >
+                  <p className="font-medium w-16 flex-shrink-0">PDF</p>
+                  <Icon
+                    name="FileArticleLine"
+                    className="w-5 h-5"
+                    aria-hidden="true"
+                  />
+                </button>
               </div>
             </UiModal>
 
