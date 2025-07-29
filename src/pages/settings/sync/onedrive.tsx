@@ -8,10 +8,13 @@ import { forceSyncNow } from "@/composable/sync";
 
 interface OneDriveProps {
   syncStatus: string;
-  disableClass?: boolean,
+  disableClass?: boolean;
 }
 
-const OneDriveAuth: React.FC<OneDriveProps> = ({ syncStatus, disableClass }) => {
+const OneDriveAuth: React.FC<OneDriveProps> = ({
+  syncStatus,
+  disableClass,
+}) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
@@ -42,7 +45,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ syncStatus, disableClass }) => 
   const login = async () => {
     try {
       const result = await MsAuthPlugin.login({
-        clientId: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
+        clientId: import.meta.env.VITE_ONEDRIVE_CLIENT_ID,
         tenant: "common",
         keyHash: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
         scopes: ["Files.ReadWrite", "User.Read"],
@@ -59,8 +62,6 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ syncStatus, disableClass }) => 
       const expirationTime = tokenData?.exp
         ? tokenData.exp * 1000 // Convert `exp` from seconds to milliseconds
         : Date.now() + 3600 * 1000; // Default to 1 hour if `exp` is missing
-
-      alert(new Date(expirationTime));
 
       // Save the access token and expiration time to secure storage
       await SecureStoragePlugin.set({
@@ -95,7 +96,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ syncStatus, disableClass }) => 
     try {
       setAccessToken(null);
       await MsAuthPlugin.logout({
-        clientId: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
+        clientId: import.meta.env.VITE_ONEDRIVE_CLIENT_ID,
         tenant: "common",
         keyHash: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
       });
@@ -225,7 +226,7 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({ syncStatus, disableClass }) => 
                     onClick={forceSyncNow}
                     aria-label={translations.onedrive.sync}
                   >
-                    {translations.drive.sync || "-"}
+                    {translations.onedrive.sync || "-"}
                   </button>
                 </div>
               </div>
