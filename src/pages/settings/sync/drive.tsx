@@ -125,19 +125,19 @@ const GoogleDrive: React.FC<DriveProps> = ({ syncStatus, disableClass }) => {
           </div>
         </div>
         {user ? (
-          <section>
+          <section className="space-y-2">
             <button
-              className="bg-neutral-200 dark:bg-[#2D2C2C] w-full text-black p-3 text-lg font-bold rounded-xl"
+              className="bg-neutral-50 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] w-full text-black p-3 text-lg font-bold rounded-xl"
               onClick={Logout}
             >
               {translations.gdrive.logout || "Logout"}
             </button>{" "}
             <button
-              className="bg-neutral-200 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] bg-opacity-40 w-full text-black p-3 text-lg font-bold rounded-xl"
+              className="bg-neutral-50 dark:text-[color:var(--selected-dark-text)] dark:bg-[#2D2C2C] w-full text-black p-3 text-lg font-bold rounded-xl"
               onClick={forceSyncNow}
-              aria-label={translations.drive.sync}
+              aria-label={translations.gdrive.sync}
             >
-              {translations.drive.sync || "-"}
+              {translations.gdrive.sync || "-"}
             </button>
             <div className="flex items-center py-2 justify-between">
               <p className="text-lg">{translations.gdrive.autoSync || "-"}</p>
