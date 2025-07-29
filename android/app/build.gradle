@@ -8,7 +8,7 @@ android {
         android.buildFeatures.buildConfig true
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode 4
         versionName "1.5.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         def googleClientId = project.hasProperty("GOOGLE_CLIENT_ID") ? project.GOOGLE_CLIENT_ID : System.getenv("GOOGLE_CLIENT_ID") ?: ""
