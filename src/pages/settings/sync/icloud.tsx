@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import iCloud from "@/utils/iCloud/iCloud";
-import { forceSyncNow } from "@/composable/sync";
+import { forceSyncNow } from "@/utils/sync";
 
 interface iCloudProps {
   syncStatus: string;

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import enTranslations from "./assets/locales/en.json";
 import deTranslations from "./assets/locales/de.json";
 import { useNavigate } from "react-router-dom";
-import { Capacitor } from "@capacitor/core";
 import { useTranslation } from "./utils/translations";
 import Icon from "./components/ui/Icon";
 
@@ -20,7 +19,6 @@ const Settings: React.FC<SettingsProps> = ({
   toggleTheme,
   setAutoMode,
 }) => {
-  const platform = Capacitor.getPlatform();
   const navigate = useNavigate();
   const [translations, setTranslations] = useState<Record<string, any>>({
     settings: {},
@@ -31,6 +29,7 @@ const Settings: React.FC<SettingsProps> = ({
   const [selectedCodeFont, setSelectedCodeFont] = useState<string>(
     localStorage.getItem("selected-font-code") || "JetBrains Mono"
   );
+  const [collapsibleChecked, setCollapsibleChecked] = useState(false);
 
   const Codefonts = [
     "Anonymous Pro",
@@ -123,6 +122,17 @@ const Settings: React.FC<SettingsProps> = ({
       newValue ? "#CCCCCC" : "white"
     );
     window.location.reload();
+  };
+
+  useEffect(() => {
+    const storedValue = localStorage.getItem("collapsibleHeading") === "true";
+    setCollapsibleChecked(storedValue);
+  }, []);
+
+  const toggleCollapsible = () => {
+    const newValue = !collapsibleChecked;
+    setCollapsibleChecked(newValue);
+    localStorage.setItem("collapsibleHeading", newValue.toString());
   };
 
   const [selectedOption, setSelectedOption] = useState(
@@ -333,7 +343,7 @@ const Settings: React.FC<SettingsProps> = ({
                 </p>
 
                 {/* Toggle Expand Page */}
-                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                <div className="hidden sm:block flex items-center py-2 dark:border-neutral-600 justify-between">
                   <p
                     id="expand-page-label"
                     className="block text-lg align-left"
@@ -375,6 +385,25 @@ const Settings: React.FC<SettingsProps> = ({
                   </label>
                 </div>
 
+                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                  <p id="clear-font-label" className="block text-lg align-left">
+                    Collapsible Headings
+                  </p>
+                  <label
+                    className="relative inline-flex cursor-pointer items-center"
+                    aria-labelledby="clear-font-label"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={collapsibleChecked}
+                      onChange={toggleCollapsible}
+                      className="peer sr-only"
+                      aria-checked={collapsibleChecked}
+                    />
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  </label>
+                </div>
+
                 {/* Links */}
                 <div className="pb-4">
                   <div className="flex flex-col gap-2 pt-2">
@@ -390,9 +419,7 @@ const Settings: React.FC<SettingsProps> = ({
                     <button
                       onClick={() => navigate("/icons")}
                       aria-label={translations.settings.Shortcuts || "-"}
-                      className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center ${
-                        platform === "android" ? "hidden" : ""
-                      }`}
+                      className={`hidden sm:block w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center`}
                     >
                       <Icon name="Brush2Fill" className="w-6 h-6 mr-2" />
                       {translations.settings.appIcon || "-"}

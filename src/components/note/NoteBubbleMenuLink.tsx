@@ -1,17 +1,18 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Note } from "../../store/types";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "@/utils/translations";
 import Icon from "../ui/Icon";
 import UiList from "../ui/List";
 import UiListItem from "../ui/ListItem";
+import { useNoteStore } from "@/store/note";
+import { Note } from "@/store/types";
 
 interface Props {
   editor: any;
-  notes: Note[];
 }
 
-const NoteBubbleMenuLink: React.FC<Props> = ({ editor, notes }) => {
+const NoteBubbleMenuLink: React.FC<Props> = ({ editor }) => {
+  const noteStore = useNoteStore();
   const [currentLinkVal, setCurrentLinkVal] = useState("");
   const [selectedNoteIndex, setSelectedNoteIndex] = useState(0);
   const [translations, setTranslations] = useState<Record<string, any>>({
@@ -54,6 +55,25 @@ const NoteBubbleMenuLink: React.FC<Props> = ({ editor, notes }) => {
       setSelectedNoteIndex(0);
     }
   }, [currentLinkVal]);
+
+  const params = useParams<{ id: string }>();
+
+  const notes = useMemo(() => {
+    if (!currentLinkVal.startsWith("@")) return [];
+
+    const query = currentLinkVal.substring(1).toLowerCase();
+
+    const notes = Object.values(noteStore.data as Record<string, Note>);
+
+    return notes
+      .filter(
+        (note: Note) =>
+          note.id !== params.id &&
+          (note.title.toLowerCase().includes(query) ||
+            note.id.toLowerCase().includes(query))
+      )
+      .slice(0, 6);
+  }, [currentLinkVal, noteStore.data, params.id]);
 
   const updateCurrentLink = useCallback(
     (id?: string) => {
@@ -120,7 +140,7 @@ const NoteBubbleMenuLink: React.FC<Props> = ({ editor, notes }) => {
     <div>
       {currentLinkVal.startsWith("@") && notes.length > 0 && (
         <UiList className="transition-all p-2 space-y-1 border-b max-h-48 overflow-auto">
-          {notes.map((note, index) => (
+          {notes.map((note: Note, index: number) => (
             <UiListItem
               key={note.id}
               active={index === selectedNoteIndex}

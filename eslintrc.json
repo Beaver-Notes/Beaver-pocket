@@ -1,0 +1,20 @@
+{
+  "root": true,
+  "env": {
+    "es2021": true,
+    "node": true,
+    "browser": false
+  },
+  "extends": ["eslint:recommended"],
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  "ignorePatterns": ["node_modules/**", "**/dist/**"],
+  "rules": {
+    "semi": ["error", "always"],
+    "comma-dangle": ["warn", "always-multiline"],
+    "quotes": ["warn", "single"]
+  }
+}

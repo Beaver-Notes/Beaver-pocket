@@ -10,6 +10,7 @@ import { OneDriveAPI } from "./oneDriveApi";
 import { base64ToBlob } from "../../utils/base64";
 import mime from "mime";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
+import { useStorage } from "@/composable/storage";
 
 const decodeJwt = (token: string) => {
   try {
@@ -110,7 +111,8 @@ interface AssetSyncLog {
 const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
+const useOneDriveSync = (): OneDriveSyncHookReturn => {
+  const storage = useStorage();
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
     syncError: null,
@@ -195,7 +197,7 @@ const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.data.notes);
+      await storage.set('notes', mergedData.data.notes);
 
       // Reverse paths before uploading
       const cleanedData = { ...mergedData };

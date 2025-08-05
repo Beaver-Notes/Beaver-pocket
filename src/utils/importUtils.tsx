@@ -1,13 +1,15 @@
-import { Note } from "../store/types";
 import {
   Directory,
   Filesystem,
   FilesystemEncoding,
 } from "@capacitor/filesystem";
-import { loadNotes } from "../store/notes";
 import { mergeData, revertAssetPaths } from "./merge";
+import { useNoteStore } from "@/store/note";
+import { useStorage } from "@/composable/storage";
 
 const STORAGE_PATH = "notes/data.json";
+
+const noteStore = useNoteStore.getState();
 
 export const useHandleImportData = () => {
   const readJsonFile = async (path: string): Promise<any> => {
@@ -25,10 +27,9 @@ export const useHandleImportData = () => {
     }
   };
 
-  const importUtils = async (
-    setNotesState: (notes: Record<string, Note>) => void
-  ) => {
+  const importUtils = async () => {
     try {
+      const storage = useStorage();
       const currentDate = new Date();
       const oneDayInMs = 24 * 60 * 60 * 1000;
       let importFolderPath = "";
@@ -123,7 +124,8 @@ export const useHandleImportData = () => {
 
       if (parsedData?.data?.notes) {
         // First load existing notes
-        const localData = await loadNotes();
+        await noteStore.retrieve();
+        const localData = noteStore.data;
 
         // Merge imported data (assumes imported notes are already in assets:// and file-assets:// format)
         const merged = mergeData(
@@ -162,7 +164,7 @@ export const useHandleImportData = () => {
           encoding: FilesystemEncoding.UTF8,
         });
 
-        setNotesState(await cleanedNotes);
+        await storage.set('notes', await cleanedNotes);
         document.dispatchEvent(new Event("reload"));
       }
     } catch (error) {

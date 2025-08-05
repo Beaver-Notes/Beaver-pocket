@@ -6,10 +6,12 @@ import {
 import { Share } from "@capacitor/share";
 import dayjs from "dayjs";
 import { useState, useEffect } from "react";
-import { Note } from "../store/types";
 import { Zip } from "capa-zip";
+import { useNoteStore } from "@/store/note";
+import { Note } from "@/store/types";
 
 export const useExportData = () => {
+  const noteStore = useNoteStore.getState();
   const [translations, setTranslations] = useState({
     home: {
       exportSuccess: "home.exportSuccess",
@@ -37,7 +39,7 @@ export const useExportData = () => {
     loadTranslations();
   }, []); // Empty dependency array to run once on mount
 
-  const exportUtils = async (notesState: Record<string, Note>) => {
+  const exportUtils = async () => {
     try {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
@@ -82,7 +84,7 @@ export const useExportData = () => {
         deletedIds: {},
       };
 
-      Object.values(notesState).forEach((note) => {
+      (Object.values(noteStore.data) as Note[]).forEach((note: Note) => {
         // Check if note.content exists and is not null
         if (
           note.content &&

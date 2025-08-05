@@ -9,6 +9,7 @@ import { useState } from "react";
 import { base64ToBlob } from "../../utils/base64";
 import mime from "mime";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
+import { useStorage } from "@/composable/storage";
 
 // Types for improved type safety
 interface SyncState {
@@ -38,7 +39,8 @@ interface AssetSyncLog {
 const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useDropboxSync = (setNotesState: any): DropboxSyncHookReturn => {
+const useDropboxSync = (): DropboxSyncHookReturn => {
+  const storage = useStorage();
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
     syncError: null,
@@ -124,7 +126,7 @@ const useDropboxSync = (setNotesState: any): DropboxSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.data.notes);
+      await storage.set("notes", mergedData.data.notes);
 
       // Prepare data for remote storage - revert asset paths
       const cleanedData = { ...mergedData };

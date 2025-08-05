@@ -203,23 +203,25 @@
     "ReadingMode": "Reading Mode",
     "deleteTable": "Delete Table",
     "undo": "Undo",
-    "redo": "Redo"
+    "redo": "Redo",
+    "untitledNote": "Untitled Note"
   },
   "archive": {
     "archived": "Archived",
     "messagePt1": "No notes have been Archived. Click",
     "messagePt2": "to archive a note.",
-    "unlocktoedit": "Unlock to edit",
-    "noContent": "No content..."
+    "unlocktoedit": "Unlock to edit"
   },
   "card": {
-    "noContent": "No content...",
+    "biometricLockReason": "Authenticate to lock note",
+    "biometricUnlockReason": "Authenticate to unlock note",
+    "biometricTitle": "Note Security",
+    "enableBiometric": "Would you like to enable biometric authentication for faster access?",
+    "biometricEnabled": "Biometric authentication enabled!",
+    "biometricFailed": "Failed to enable biometric authentication",
+    "lockToggleError": "Failed to toggle note lock",
+    "lockError": "Failed to lock note",
     "confirmDelete": "Are you sure you want to delete this note?",
-    "bookmarkError": "The following error accured while bookmarking a note:",
-    "archiveError": "The following error accured while archiving a note:",
-    "lockerror": "Note cannot be unlocked.",
-    "biometricReason": "Lock/Unlock notes",
-    "biometricTitle": "Lock/Unlock with Biometrics",
     "enterpasswd": "Enter the Password",
     "islocked": "This note is locked",
     "cancel": "Cancel",
@@ -234,7 +236,9 @@
     "unlock": "Unlock",
     "unlocktoedit": "Unlock to edit",
     "warning": "Warning, if you forget your password, you'll lose access to your locked notes, and setting a new password will require knowing the old one.",
-    "wrongpasswd": "Incorrect password. Note cannot be unlocked."
+    "wrongpasswd": "Incorrect password. Note cannot be unlocked.",
+    "untitledNote": "Untitled Note",
+    "content": "No content..."
   },
   "filter": {
     "searchNotes": "Search Notes",
@@ -280,11 +284,15 @@
     "Blockcode": "Block code",
     "Previousnote": "Previous notes"
   },
-  "commandprompt": {
+  "commands": {
     "newNote": "Create new note",
     "settings": "Settings",
-    "theme": "Change Theme",
-    "placeholder": "Search file or type '>' to search commands"
+    "darkTheme": "Dark Theme",
+    "lightTheme": "Light Theme"
+  },
+  "commandPrompt": {
+    "placeholder": "Search file or type '>' to search commands",
+    "untitledNote": "Untitled Note"
   },
   "about": {
     "title": "About",

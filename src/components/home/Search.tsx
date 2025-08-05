@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { labelStore } from "../../store/label";
+import { useLabelStore } from "@/store/label";
 import { useSearchParams } from "react-router-dom";
 import Icon from "../ui/Icon";
 import { useTranslation } from "@/utils/translations";
@@ -20,7 +20,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const urlLabel = searchParams.get("label");
   const [selectedLabel, setSelectedLabel] = useState(urlLabel || "");
-  const labels = labelStore.labels;
+  const labelStore = useLabelStore.getState();
+  const labels = labelStore.data;
   const [translations, setTranslations] = useState<Record<string, any>>({
     filter: {},
   });

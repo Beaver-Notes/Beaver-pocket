@@ -1,14 +1,12 @@
 import React from "react";
 import { BubbleMenu, Editor } from "@tiptap/react";
 import NoteBubbleMenuLink from "./NoteBubbleMenuLink";
-import { Note } from "../../store/types";
 
 interface Props {
   editor: Editor | null;
-  notes: Note[];
 }
 
-const NoteBubbleMenu: React.FC<Props> = ({ editor, notes }) => {
+const NoteBubbleMenu: React.FC<Props> = ({ editor }) => {
   return (
     <BubbleMenu
       editor={editor}
@@ -17,7 +15,7 @@ const NoteBubbleMenu: React.FC<Props> = ({ editor, notes }) => {
       }
       className="bg-white dark:bg-neutral-800 rounded-lg max-w-xs border shadow-xl print:hidden"
     >
-      <NoteBubbleMenuLink editor={editor} notes={notes} />
+      <NoteBubbleMenuLink editor={editor} />
     </BubbleMenu>
   );
 };

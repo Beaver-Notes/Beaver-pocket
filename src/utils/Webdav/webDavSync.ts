@@ -8,6 +8,7 @@ import {
 import { base64Encode, blobToBase64, blobToString } from "../base64";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
+import { useStorage } from "@/composable/storage";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -36,7 +37,8 @@ interface AssetSyncLog {
 const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
+const useWebDAVSync = (): WebDAVSyncHookReturn => {
+  const storage = useStorage();
   const [progress, setProgress] = useState<number>(0);
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
@@ -107,7 +109,7 @@ const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.data.notes);
+      await storage.set('notes', mergedData.data.notes);
 
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
@@ -328,7 +330,7 @@ async function syncWebDAVAssets(
                   directory: FilesystemDirectory.Data,
                   recursive: true,
                 });
-              } catch (e) {}
+              } catch (e) { }
 
               const fileData = await webDavService.get(remoteFilePath);
               const fileBase64String = await blobToBase64(fileData);

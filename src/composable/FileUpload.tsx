@@ -7,7 +7,7 @@ import {
 import Icon from "@/components/ui/Icon";
 
 interface FileUploadProps {
-  onFileUpload: (fileUrl: string, fileName: string) => void;
+  onFileUpload: (fileUrl: string, fileName: string, file: any) => void;
   noteId: string;
   menu?: boolean;
   translations?: any;
@@ -25,7 +25,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
     const file = event.target.files?.[0]; // Use optional chaining
     if (file) {
       const { fileUrl, fileName } = await saveFileToFileSystem(file);
-      onFileUpload(fileUrl, fileName);
+      onFileUpload(fileUrl, fileName, file);
     }
   };
 
@@ -104,10 +104,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
 
             {/* Text Container */}
             <div className="flex flex-col text-left">
-              <h3
-                className="text-lg font-medium"
-                aria-hidden="true"
-              >
+              <h3 className="text-lg font-medium" aria-hidden="true">
                 {translations.menu.file || "Upload File"}
               </h3>
             </div>

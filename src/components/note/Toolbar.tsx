@@ -99,10 +99,20 @@ const Toolbar: React.FC<ToolbarProps> = ({
     editor?.chain().focus().setIframe({ src: formattedUrl }).run();
   };
 
-  const handlefileUpload = (fileUrl: string, fileName: string) => {
+  const handlefileUpload = (fileUrl: string, fileName: string, file: any) => {
     if (editor) {
-      //@ts-expect-error
-      editor.chain().setFileEmbed(fileUrl, fileName).run();
+      const mimeType = file.type;
+
+      if (mimeType.startsWith("audio/")) {
+        //@ts-ignore
+        editor.chain().setAudio(fileUrl).run();
+      } else if (mimeType.startsWith("video/")) {
+        //@ts-ignore
+        editor.chain().setVideo(fileUrl).run();
+      } else {
+        //@ts-ignore
+        editor.chain().setFileEmbed(fileUrl, fileName).run();
+      }
     }
   };
 
@@ -475,7 +485,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <div className="grid grid-cols-4 gap-2">
               {textColors.map((color, index) => (
                 <button
-                  key={index}
+                  key={color}
                   role="menuitem"
                   aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
                   className={`w-7 h-7 cursor-pointer rounded${color}`}
@@ -493,7 +503,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <div className="grid grid-cols-4 gap-2">
               {highlighterColors.map((color, index) => (
                 <button
-                  key={index}
+                  key={color}
                   role="menuitem"
                   aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
                   className={`w-7 h-7 cursor-pointer ${color}`}
@@ -582,7 +592,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <>
                 {lists.map((item) => (
                   <button
-                    key={item.active}
+                    key={item.label}
                     className={`flex items-center p-1 rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200 ${
                       editor?.isActive(item.active.toLowerCase())
                         ? "text-primary"
@@ -709,6 +719,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
             {draw.map((item) => (
               <button
+                key={item.label}
                 className={
                   editor?.isActive(item.active.toLowerCase())
                     ? "p-1 rounded-md text-primary hoverable cursor-pointer"

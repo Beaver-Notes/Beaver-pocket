@@ -1,280 +1,197 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Note } from "../../store/types";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { v4 as uuid } from "uuid";
-import { useSaveNote } from "../../store/notes";
+import dayjs from "dayjs";
 import Mousetrap from "mousetrap";
-import { formatTime } from "../../utils/time-format";
-import { JSONContent } from "@tiptap/react";
+import { useNoteStore } from "@/store/note";
+import useCommands from "@/utils/commands";
+import { debounce } from "@/utils/helper";
 import Icon from "../ui/Icon";
 import UiCard from "../ui/Card";
+import UiList from "../ui/List";
 import UiListItem from "../ui/ListItem";
 import { useTranslation } from "@/utils/translations";
-import "./css/commandprompt.css";
 
-interface CommandPromptProps {
-  isOpen: boolean;
-  setIsCommandPromptOpen: (value: boolean) => void;
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
-}
+type CommandItem = {
+  id: string;
+  title?: string;
+  content?: string;
+  updatedAt?: string | number;
+  isLocked?: boolean;
+  handler?: () => void;
+};
 
-const MAX_CONTENT_PREVIEW_LENGTH = 100;
+type CommandPromptProps = {
+  showPrompt: boolean;
+  setShowPrompt: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
-const CommandPrompt: React.FC<CommandPromptProps> = ({
-  isOpen,
-  setIsCommandPromptOpen,
-  notesState,
-  setNotesState,
+export const CommandPrompt: React.FC<CommandPromptProps> = ({
+  showPrompt,
+  setShowPrompt,
 }) => {
-  const { saveNote } = useSaveNote(setNotesState);
   const navigate = useNavigate();
+  const noteStore = useNoteStore();
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const [translations, setTranslations] = useState<Record<string, any>>({
-    commandprompt: {},
-    accessibility: {},
-    home: {},
-    card: {},
+  const [query, setQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [translations, setTranslations] = useState({
+    commandPrompt: {} as any,
   });
 
-  const [state, setState] = useState({
-    query: "",
-    selectedIndex: 0,
-  });
+  const isCommand = query.startsWith(">");
+  const queryTerm = useMemo(() => {
+    return (isCommand ? query.slice(1) : query).trim().toLowerCase();
+  }, [query, isCommand]);
 
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  const isCommand = state.query.startsWith(">");
-  const queryTerm = isCommand
-    ? state.query.slice(1).toLowerCase().trim()
-    : state.query.toLowerCase().trim();
-
-  useEffect(() => {
-    useTranslation().then((trans) => {
-      if (trans) setTranslations(trans);
-    });
-  }, []);
-
-  const truncateContentPreview = (
-    content: JSONContent | string | JSONContent[]
-  ): string => {
-    let text = "";
-
-    const extractParagraphText = (json: JSONContent): string => {
-      if (!json || !Array.isArray(json.content)) return "";
-      return json.content
-        .filter((node) => node.type === "paragraph")
-        .map((node) =>
-          Array.isArray(node.content)
-            ? node.content
-                .filter((n) => n.type === "text")
-                .map((n) => n.text)
-                .join(" ")
-            : ""
-        )
-        .join(" ");
-    };
-
-    if (typeof content === "string") {
-      text = content;
-    } else if (Array.isArray(content)) {
-      text = extractParagraphText({ type: "doc", content });
-    } else {
-      const { title, ...rest } = content;
-      text = extractParagraphText(rest);
-    }
-
-    text = text.replace(/(\S{30,})/g, "$1 ");
-    return text.length > MAX_CONTENT_PREVIEW_LENGTH
-      ? text.slice(0, MAX_CONTENT_PREVIEW_LENGTH) + "..."
-      : text;
+  const mergeContent = (content: any): string => {
+    if (typeof content === "string") return content;
+    if (Array.isArray(content)) return content.map(mergeContent).join("");
+    if (content == null) return "";
+    if ("content" in content) return mergeContent(content.content);
+    if (content.type?.toLowerCase()?.includes("label"))
+      return `#${content.attrs?.id}`;
+    return content.label ?? content.text ?? "";
   };
 
-  const handleCreateNewNote = async () => {
-    const newNote: Note = {
-      id: uuid(),
-      title: `${translations.home.title || "Untitled"}`,
-      content: { type: "doc", content: [] },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
+  const commands = useCommands();
 
-    await saveNote(newNote);
-    navigate(`/editor/${newNote.id}`);
-    setIsCommandPromptOpen(false);
+  const items: CommandItem[] = useMemo(() => {
+    const source = isCommand ? commands : Object.values(noteStore.data || {});
+
+    return source
+      .map(
+        (item: any): CommandItem =>
+          isCommand ? item : { ...item, content: mergeContent(item.content) }
+      )
+      .filter(({ title, content }: { title?: string; content?: string }) => {
+        const lowerTitle = title?.toLowerCase() || "";
+        const inTitle = lowerTitle.includes(queryTerm);
+        return isCommand ? inTitle : inTitle || content?.includes(queryTerm);
+      });
+  }, [isCommand, queryTerm, noteStore.data, commands]);
+
+  const formatDate = (timestamp: string | number) => {
+    return dayjs(timestamp).format("YYYY-MM-DD hh:mm");
   };
 
-  const goToSettings = () => {
-    navigate("/settings");
-    setIsCommandPromptOpen(false);
+  const clear = () => {
+    setShowPrompt(false);
+    setQuery("");
+    setSelectedIndex(0);
   };
 
-  const toggleTheme = () => {
-    const current = localStorage.getItem("themeMode") || "auto";
-    const newMode = current === "dark" ? "light" : "dark";
-    localStorage.setItem("themeMode", newMode);
-    setIsCommandPromptOpen(false);
-  };
-
-  const commandItems = [
-    {
-      id: "new",
-      title: translations.commandprompt.newNote,
-      handler: handleCreateNewNote,
-    },
-    {
-      id: "settings",
-      title: translations.commandprompt.settings,
-      handler: goToSettings,
-    },
-    {
-      id: "theme",
-      title: translations.commandprompt.theme,
-      handler: toggleTheme,
-    },
-  ];
-
-  const items = useMemo(() => {
-    if (isCommand) {
-      return commandItems.filter((item) =>
-        item.title?.toLowerCase().includes(queryTerm)
-      );
-    }
-
-    return Object.values(notesState)
-      .map((note) => ({
-        ...note,
-        content: truncateContentPreview(note.content ?? ""),
-      }))
-      .filter((note) => {
-        const title = note.title?.toLowerCase() || "";
-        const content = note.content?.toLowerCase() || "";
-        return title.includes(queryTerm) || content.includes(queryTerm);
-      })
-      .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  }, [notesState, queryTerm, isCommand]);
-
-  const handleSelectItem = (item: any) => {
-    if (item.handler) {
-      item.handler();
-    } else {
-      navigate(`/editor/${item.id}`);
-    }
-    setIsCommandPromptOpen(false);
+  const selectItem = (itemArg?: any, isManual?: boolean) => {
+    const selected = isManual ? itemArg : items[selectedIndex];
+    if (selected.handler) selected.handler();
+    else if (selected.id) navigate(`/editor/${selected.id}`);
+    clear();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowUp") {
       e.preventDefault();
-      setState((s) => ({
-        ...s,
-        selectedIndex: (s.selectedIndex + items.length - 1) % items.length,
-      }));
+      setSelectedIndex((prev) => (prev + items.length - 1) % items.length);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      setState((s) => ({
-        ...s,
-        selectedIndex: (s.selectedIndex + 1) % items.length,
-      }));
+      setSelectedIndex((prev) => (prev + 1) % items.length);
     } else if (e.key === "Enter") {
-      const item = items[state.selectedIndex];
-      item && handleSelectItem(item);
+      selectItem();
     } else if (e.key === "Escape") {
-      setIsCommandPromptOpen(false);
-      setState({ query: "", selectedIndex: 0 });
+      clear();
     }
   };
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
+    const loadTranslations = async () => {
+      const t = await useTranslation();
+      if (t) setTranslations(t);
+    };
+    loadTranslations();
+  }, []);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === "Escape") clear();
+    };
+    document.addEventListener("keyup", onKey);
+    return () => document.removeEventListener("keyup", onKey);
+  }, []);
+
+  useEffect(() => {
     Mousetrap.bind("mod+shift+p", () => {
-      if (isOpen) {
-        setIsCommandPromptOpen(false);
-      } else {
-        setIsCommandPromptOpen(true);
-        setTimeout(() => inputRef.current?.focus(), 0);
-      }
+      if (showPrompt) return clear();
+      setShowPrompt(true);
+      inputRef.current?.focus();
     });
-
     return () => {
       Mousetrap.unbind("mod+shift+p");
     };
-  }, [isOpen]);
+  }, [showPrompt, setShowPrompt]);
 
-  return isOpen ? (
-    <UiCard
-      className="command-prompt w-full max-w-lg mx-auto shadow-xl m-4"
-      padding="p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={translations.accessibility.commandPrompt}
-    >
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [items]);
+
+  useEffect(() => {
+    const scrollToActive = debounce(() => {
+      if (items.length <= 6) return;
+      const el = document.querySelector(".active-command-item");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+    scrollToActive();
+  }, [selectedIndex]);
+
+  if (!showPrompt) return null;
+
+  return (
+    <UiCard className="command-prompt w-full max-w-lg mx-auto shadow-xl m-4 p-4 fixed left-1/2 transform -translate-x-1/2 z-[99999]">
       <div className="flex items-center border-b pb-4 mb-4">
         <Icon
           name="Search2Line"
-          className="mr-3 text-neutral-600 dark:text-neutral-200"
-          aria-hidden="true"
+          className="mr-3 text-gray-600 dark:text-gray-200"
         />
         <input
           ref={inputRef}
-          className="w-full bg-transparent command-input"
-          type="text"
-          placeholder={translations.commandprompt.placeholder || "-"}
-          value={state.query}
-          onChange={(e) =>
-            setState({ ...state, query: e.target.value, selectedIndex: 0 })
-          }
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          aria-label={translations.accessibility.search}
-          role="combobox"
+          placeholder={translations.commandPrompt.placeholder || "-"}
+          className="w-full bg-transparent command-input"
         />
       </div>
 
-      <UiListItem className="max-h-80 overflow-auto space-y-1 scroll command-scroll">
-        {items.slice(0, 5).map((item, index) => (
-          <div
+      <UiList className="max-h-80 overflow-auto space-y-1 scroll command-scroll">
+        {items.map((item: CommandItem, index: number) => (
+          <UiListItem
             key={item.id}
-            className={`note-item cursor-pointer flex justify-between rounded-lg p-2 ${
-              index === state.selectedIndex
-                ? "active-command-item bg-primary bg-opacity-10 text-primary"
-                : "hover:bg-primary hover:bg-opacity-10 hover:text-primary"
-            }`}
-            onClick={() => handleSelectItem(item)}
-            role="option"
+            onClick={() => selectItem(item, true)}
+            className={
+              index === selectedIndex
+                ? "cursor-pointer flex items-center justify-between active-command-item"
+                : "cursor-pointer flex items-center justify-between"
+            }
           >
             <div className="w-full">
               <p className="text-overflow w-full flex justify-between">
                 <span>
-                  {item.title || translations.commandprompt.untitlednote}
-                  {"isLocked" in item && item.isLocked && (
+                  {item.title || translations.commandPrompt.untitledNote}
+                  {item.isLocked && (
                     <Icon
-                      name="LockClosed"
-                      className="text-neutral-600 ml-2 w-4 translate-y-[-1.5px]"
-                      aria-label={translations.accessibility.lockedNote}
+                      name="LockLine"
+                      className="text-gray-600 dark:text-[color:var(--selected-dark-text)] ml-2 w-4 translate-y-[-1.5px]"
                     />
                   )}
                 </span>
-                {!isCommand && "updatedAt" in item && item.updatedAt && (
-                  <span>{formatTime(item.updatedAt)}</span>
-                )}
+                {!isCommand && <span>{formatDate(item.updatedAt!)}</span>}
               </p>
-              {!isCommand && "isLocked" in item && !item.isLocked && (
+              {!isCommand && !item.isLocked && (
                 <p className="text-overflow text-xs">{item.content}</p>
               )}
             </div>
-          </div>
+          </UiListItem>
         ))}
-      </UiListItem>
+      </UiList>
     </UiCard>
-  ) : null;
+  );
 };
-
-export default CommandPrompt;

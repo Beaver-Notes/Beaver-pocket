@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Note } from "../../store/types";
 import { useExportData } from "../../utils/exportUtils";
 import { useHandleImportData } from "../../utils/importUtils";
 import { useNavigate } from "react-router-dom";
@@ -9,12 +8,7 @@ import { Zip } from "capa-zip";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 
-interface SyncProps {
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
-}
-
-const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
+const Sync: React.FC = () => {
   const platform = Capacitor.getPlatform();
   const { exportUtils } = useExportData();
   const { importUtils } = useHandleImportData();
@@ -38,7 +32,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
   }, [darkMode, themeMode]);
 
   const exportData = () => {
-    exportUtils(notesState); // Pass notesState as an argument
+    exportUtils(); // Pass notesState as an argument
   };
 
   const handleImportData = async (
@@ -88,7 +82,7 @@ const Sync: React.FC<SyncProps> = ({ notesState, setNotesState }) => {
         };
       });
     }
-    importUtils(setNotesState); // Pass notesState as an argument
+    importUtils();
   };
 
   // @ts-ignore

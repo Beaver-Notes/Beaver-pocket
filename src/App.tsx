@@ -2,16 +2,13 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { SafeArea } from "@capacitor-community/safe-area";
 import { useNavigate, useLocation } from "react-router-dom";
 import Router from "./router";
-import { Auth0Provider } from "@auth0/auth0-react";
-import Auth0Config from "./utils/auth0-config";
 import BottomNavBar from "./components/app/BottomNavBar";
-import CommandPrompt from "./components/app/CommandPrompt";
+import { CommandPrompt } from "./components/app/CommandPrompt";
 import { setStoreRemotePath } from "./store/useDataPath";
-import { loadNotes } from "./store/notes";
-import { useNotesState } from "./store/Activenote";
 import Mousetrap from "mousetrap";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { Capacitor } from "@capacitor/core";
+import { useStore } from "@/store/index";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { SplashScreen } from "@capacitor/splash-screen";
 import Dialog from "./components/ui/Dialog";
@@ -24,6 +21,7 @@ import useiCloudSync from "./utils/iCloud/iCloudSync";
 import useOneDriveSync from "./utils/Onedrive/oneDriveSync";
 import useWebDAVSync from "./utils/Webdav/webDavSync";
 import useDriveSync from "./utils/Google Drive/GoogleDriveSync";
+import { useNoteStore } from "./store/note";
 
 // Memoized theme detection
 const getInitialTheme = () => {
@@ -48,18 +46,21 @@ const App: React.FC = () => {
   const location = useLocation();
   const platform = Capacitor.getPlatform();
   const initialTheme = useMemo(() => getInitialTheme(), []);
-  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "error">("idle");
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "error">(
+    "idle"
+  );
+  const noteStore = useNoteStore.getState();
   const [themeMode, setThemeMode] = useState<string>(initialTheme.mode);
   const [darkMode, setDarkMode] = useState<boolean>(initialTheme.isDark);
-  const [isCommandPromptOpen, setIsCommandPromptOpen] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [notesLoaded, setNotesLoaded] = useState(false);
-  const { notesState, setNotesState } = useNotesState();
-  const { syncDropbox } = useDropboxSync(setNotesState);
-  const { synciCloud } = useiCloudSync(setNotesState);
-  const { syncOneDrive } = useOneDriveSync(setNotesState);
-  const { syncWebDAV } = useWebDAVSync(setNotesState);
-  const { syncDrive } = useDriveSync(setNotesState);
+  const store = useStore();
+  const { syncDropbox } = useDropboxSync();
+  const { synciCloud } = useiCloudSync();
+  const { syncOneDrive } = useOneDriveSync();
+  const { syncWebDAV } = useWebDAVSync();
+  const { syncDrive } = useDriveSync();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
@@ -103,9 +104,12 @@ const App: React.FC = () => {
         });
         setStoreRemotePath(Capacitor.convertFileSrc(uri));
 
-        if (isIPad()) {
+        if (isIPad() && Capacitor.getPlatform() !== "web") {
           Keyboard.setResizeMode({ mode: KeyboardResize.None });
-        } else if (platform !== "android") {
+        } else if (
+          platform !== "android" &&
+          Capacitor.getPlatform() !== "web"
+        ) {
           Keyboard.setResizeMode({ mode: KeyboardResize.Native });
         }
 
@@ -131,8 +135,7 @@ const App: React.FC = () => {
 
     const loadNotesAsync = async () => {
       try {
-        const notes = (await loadNotes()).notes;
-        setNotesState(notes);
+        await store.retrieve();
         setNotesLoaded(true);
       } catch (error) {
         console.error("Error loading notes:", error);
@@ -142,7 +145,7 @@ const App: React.FC = () => {
 
     const timeoutId = setTimeout(loadNotesAsync, 50);
     return () => clearTimeout(timeoutId);
-  }, [isInitialized, notesLoaded, setNotesState]);
+  }, [isInitialized, notesLoaded]);
 
   useEffect(() => {
     if (isInitialized && notesLoaded) {
@@ -198,12 +201,7 @@ const App: React.FC = () => {
     if (!isInitialized) return;
 
     const loadNotesFromStorage = async () => {
-      try {
-        const notes = (await loadNotes()).notes;
-        setNotesState(notes);
-      } catch (error) {
-        console.error("Error reloading notes:", error);
-      }
+      await noteStore.retrieve();
     };
 
     document.addEventListener("reload", loadNotesFromStorage);
@@ -213,28 +211,14 @@ const App: React.FC = () => {
       document.removeEventListener("reload", loadNotesFromStorage);
       document.removeEventListener("sync", handleSync);
     };
-  }, [isInitialized, handleSync, setNotesState]);
-
-  useEffect(() => {
-    const loadNotesFromStorage = async () => {
-      const notes = await (await loadNotes()).notes;
-      console.log(notes);
-      setNotesState(notes);
-    };
-
-    document.addEventListener("reload", loadNotesFromStorage);
-
-    return () => {
-      document.removeEventListener("reload", loadNotesFromStorage);
-    };
-  }, []);
+  }, [isInitialized, handleSync]);
 
   useEffect(() => {
     if (!isInitialized) return;
 
     const shortcuts: Array<[string, () => void]> = [
-      ["mod+shift+p", () => setIsCommandPromptOpen(true)],
-      ["mod+backspace", () => setIsCommandPromptOpen(false)],
+      ["mod+shift+p", () => setShowPrompt(true)],
+      ["mod+shift+n", () => navigate("/")],
       ["mod+shift+n", () => navigate("/")],
       ["mod+shift+a", () => navigate("/archive")],
       ["mod+,", () => navigate("/settings")],
@@ -291,35 +275,17 @@ const App: React.FC = () => {
   return (
     <div>
       <div className="safe-area"></div>
-      <Auth0Provider
-        domain={Auth0Config.domain}
-        clientId={Auth0Config.clientId}
-        authorizationParams={{
-          redirect_uri: window.location.origin,
-        }}
-      >
-        <Router
-          notesState={notesState}
-          setNotesState={setNotesState}
-          themeMode={themeMode}
-          setThemeMode={setThemeMode}
-          toggleTheme={toggleTheme}
-          setAutoMode={setAutoMode}
-          darkMode={darkMode}
-          syncStatus={syncStatus}
-        />
-      </Auth0Provider>
-
-      <CommandPrompt
-        setIsCommandPromptOpen={setIsCommandPromptOpen}
-        isOpen={isCommandPromptOpen}
-        setNotesState={setNotesState}
-        notesState={notesState}
+      <CommandPrompt showPrompt={showPrompt} setShowPrompt={setShowPrompt} />
+      <Router
+        themeMode={themeMode}
+        setThemeMode={setThemeMode}
+        toggleTheme={toggleTheme}
+        setAutoMode={setAutoMode}
+        darkMode={darkMode}
+        syncStatus={syncStatus}
       />
 
-      {shouldShowNavBar && (
-        <BottomNavBar notesState={notesState} setNotesState={setNotesState} />
-      )}
+      {shouldShowNavBar && <BottomNavBar />}
       <Dialog />
     </div>
   );

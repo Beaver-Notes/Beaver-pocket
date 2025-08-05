@@ -2,7 +2,6 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./Home";
-import Archive from "./Archive";
 import Settings from "./Settings";
 import About from "./pages/settings/about";
 import Dropbox from "./pages/settings/sync/dropbox";
@@ -15,11 +14,8 @@ import Welcome from "./Welcome";
 import Sync from "./pages/settings/sync";
 import Editor from "./pages/notes/_id";
 import Icons from "./pages/settings/icons";
-import { Note } from "./store/types";
 
 interface routerProps {
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
   themeMode: string;
   setThemeMode: (mode: string) => void;
   toggleTheme: (val: boolean | ((prev: boolean) => boolean)) => void;
@@ -29,8 +25,6 @@ interface routerProps {
 }
 
 const router: React.FC<routerProps> = ({
-  notesState,
-  setNotesState,
   themeMode,
   setThemeMode,
   toggleTheme,
@@ -42,16 +36,8 @@ const router: React.FC<routerProps> = ({
 
   return (
     <Routes location={location}>
-      <Route
-        path="/"
-        element={<Home notesState={notesState} setNotesState={setNotesState} />}
-      />
-      <Route
-        path="/archive"
-        element={
-          <Archive notesState={notesState} setNotesState={setNotesState} />
-        }
-      />
+      <Route path="/" element={<Home />} />
+      <Route path="/archive" element={<Home showArchived={true} />} />
       <Route
         path="/settings"
         element={
@@ -65,59 +51,16 @@ const router: React.FC<routerProps> = ({
         }
       />
       <Route path="/about" element={<About />} />
-      <Route
-        path="/dropbox"
-        element={
-          <Dropbox
-            syncStatus={syncStatus}
-          />
-        }
-      />
-      <Route
-        path="/onedrive"
-        element={
-          <Onedrive
-            syncStatus={syncStatus}
-          />
-        }
-      />
-      <Route
-        path="/dav"
-        element={
-          <Dav
-            syncStatus={syncStatus}
-          />
-        }
-      />
-      <Route
-        path="/icloud"
-        element={
-          <Icloud
-            syncStatus={syncStatus}
-          />
-        }
-      />
-      <Route
-        path="/drive"
-        element={
-          <Drive
-            syncStatus={syncStatus}
-          />
-        }
-      />
+      <Route path="/dropbox" element={<Dropbox syncStatus={syncStatus} />} />
+      <Route path="/onedrive" element={<Onedrive syncStatus={syncStatus} />} />
+      <Route path="/dav" element={<Dav syncStatus={syncStatus} />} />
+      <Route path="/icloud" element={<Icloud syncStatus={syncStatus} />} />
+      <Route path="/drive" element={<Drive syncStatus={syncStatus} />} />
       <Route path="/shortcuts" element={<Shortcuts />} />
       <Route path="/icons" element={<Icons />} />
       <Route path="/welcome" element={<Welcome />} />
-      <Route
-        path="/sync"
-        element={<Sync notesState={notesState} setNotesState={setNotesState} />}
-      />
-      <Route
-        path="/editor/:note"
-        element={
-          <Editor notesState={notesState} setNotesState={setNotesState} />
-        }
-      />
+      <Route path="/sync" element={<Sync />} />
+      <Route path="/editor/:note" element={<Editor />} />
     </Routes>
   );
 };

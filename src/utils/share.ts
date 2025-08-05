@@ -4,11 +4,13 @@ import {
   Encoding as FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
-import { Note } from "../store/types";
+import { useNoteStore } from "@/store/note";
+import { useStorage } from "@/composable/storage";
+
+const noteStore = useNoteStore.getState();
 
 export const shareNote = async (
   noteId: string,
-  notesState: Record<string, Note>
 ) => {
   try {
     const currentDate = new Date();
@@ -32,7 +34,7 @@ export const shareNote = async (
       recursive: true,
     });
 
-    const note = notesState[noteId];
+    const note = noteStore.getById[noteId];
 
     if (!note) {
       throw new Error(`Note with ID ${noteId} not found.`);
@@ -62,7 +64,7 @@ export const shareNote = async (
       "content" in note.content
     ) {
       if (note.content.content) {
-        const updatedContent = note.content.content.map((node) => {
+        const updatedContent = note.content.content.map((node: any) => {
           if (node.type === "image" && node.attrs?.src) {
             node.attrs.src = node.attrs.src.replace(
               "note-assets/",
@@ -181,17 +183,10 @@ const base64ToFile = async (base64Data: string, filePath: string) => {
 
 export const useImportBea = () => {
   const importUtils = async (
-    setNotesState: (notes: Record<string, Note>) => void,
-    loadNotes: () => Promise<{
-      notes: Record<string, Note>;
-      labels: string[];
-      lockStatus: Record<string, boolean>;
-      isLocked: Record<string, boolean>;
-      deletedIds: Record<string, boolean>;
-    }>,
     fileContent: string
   ) => {
     try {
+      const storage = useStorage();
       const parsedData = JSON.parse(fileContent);
 
       const updateAssetLinks = (obj: any) => {
@@ -260,7 +255,7 @@ export const useImportBea = () => {
         }
       }
 
-      const existingData = await loadNotes();
+      const existingData = noteStore.data;
 
       const mergedNotes = {
         ...existingData.notes,
@@ -298,7 +293,7 @@ export const useImportBea = () => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedNotes);
+      await storage.set('notes', mergedNotes);
 
       const event = new CustomEvent("notelink", { detail: { noteId } });
       document.dispatchEvent(event);

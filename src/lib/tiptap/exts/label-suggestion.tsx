@@ -1,5 +1,7 @@
-import { labelStore } from "../../../store/label";
+import { useLabelStore } from "@/store/label";
 import Suggestion from "./suggestion";
+
+const labelStore = useLabelStore.getState();
 
 const LabelSuggestion = Suggestion({
   name: "noteLabel",
@@ -30,7 +32,9 @@ const LabelSuggestion = Suggestion({
     items: async ({ query }: { query: string }) => {
       const labels = await labelStore.retrieve();
       return labels
-        .filter((label) => label.toLowerCase().startsWith(query.toLowerCase()))
+        .filter((label: any) =>
+          label.toLowerCase().startsWith(query.toLowerCase())
+        )
         .slice(0, 7);
     },
   },

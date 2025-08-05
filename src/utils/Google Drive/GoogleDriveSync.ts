@@ -9,6 +9,7 @@ import {
 import mime from "mime";
 import { driveService } from "./GoogleOauth";
 import { GoogleDriveAPI } from "./GoogleDriveAPI";
+import { useStorage } from "@/composable/storage";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -65,7 +66,8 @@ export const useDrive = () => {
   return { user, loadAccessToken };
 };
 
-export const useDriveSync = (setNotesState: any): DriveSyncHookReturn => {
+export const useDriveSync = (): DriveSyncHookReturn => {
+  const storage = useStorage();
   const drive = useDrive();
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
@@ -161,7 +163,7 @@ export const useDriveSync = (setNotesState: any): DriveSyncHookReturn => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.data.notes);
+      await storage.set("notes", mergedData.data.notes);
 
       // Prepare cleaned data and upload
       const cleanedData = { ...mergedData };
@@ -221,7 +223,7 @@ export async function syncGoogleDriveAssets(
         path: localRootPath,
         directory: FilesystemDirectory.Data,
         recursive: true,
-      }).catch(() => {});
+      }).catch(() => { });
 
       remoteRootId = await driveAPI.checkFolderExists(
         assetType.remote,
@@ -245,7 +247,7 @@ export async function syncGoogleDriveAssets(
           directory: FilesystemDirectory.Data,
         });
         localSubfolders = listing.files.map((f) => f.name);
-      } catch {}
+      } catch { }
 
       const remoteFolderContents = await driveAPI.listContents(remoteRootId);
       const remoteSubfolders = remoteFolderContents
@@ -270,7 +272,7 @@ export async function syncGoogleDriveAssets(
             path: localFolderPath,
             directory: FilesystemDirectory.Data,
             recursive: true,
-          }).catch(() => {});
+          }).catch(() => { });
         }
 
         if (!remoteNoteFolderId) {
@@ -291,7 +293,7 @@ export async function syncGoogleDriveAssets(
             directory: FilesystemDirectory.Data,
           });
           localFiles = res.files.map((f) => f.name);
-        } catch {}
+        } catch { }
 
         const remoteFiles = await driveAPI.listContents(remoteNoteFolderId);
         const remoteFileMap = new Map(remoteFiles.map((f) => [f.name, f.id]));

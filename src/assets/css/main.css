@@ -161,3 +161,11 @@ input[type="checkbox"]:checked::before {
 .dark * {
   border-color: rgba(255, 255, 255, 0.1);
 }
+
+.contenteditable.title-placeholder:empty::before {
+  content: attr(data-placeholder);
+  color: #aaa;
+  pointer-events: none;
+  user-select: none;
+  display: block;
+}

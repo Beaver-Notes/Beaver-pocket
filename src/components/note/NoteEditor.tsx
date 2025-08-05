@@ -1,78 +1,35 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { debounce } from "@/utils/helper";
 import { Note } from "../../store/types";
 import { EditorContent, useEditor } from "@tiptap/react";
 import Toolbar from "./Toolbar";
 import Find from "./Find";
 import "../../assets/css/editor.css";
-import { extensions } from "../../lib/tiptap/index";
+import { extensions, CollapseHeading, heading, dropFile } from "@/lib/tiptap";
 import Commands from "../../lib/tiptap/exts/commands";
-import LabelSuggestion from "../../lib/tiptap/exts/label-suggestion";
 import LinkNote from "../../lib/tiptap/exts/link-note";
-import DOMPurify from "dompurify";
-import useNoteEditor from "../../store/useNoteActions";
 import Mousetrap from "mousetrap";
-import { labelStore } from "../../store/label";
 import { WebviewPrint } from "capacitor-webview-print";
-import { cleanEmptyParagraphs } from "../../utils/editor";
 import NoteBubbleMenu from "./NoteBubbleMenu";
 import Icon from "../ui/Icon";
 import { UiModal } from "../ui/Modal";
 import { shareNote } from "../../utils/share";
+import { useLabelStore } from "@/store/label";
+import { useNoteStore } from "@/store/note";
 
 type Props = {
   note: Note;
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
   translations: any;
 };
 
-function EditorComponent({
-  note,
-  notesState,
-  setNotesState,
-  translations,
-}: Props) {
+function EditorComponent({ note, translations }: Props) {
+  const labelStore = useLabelStore();
+  const noteStore = useNoteStore();
   const [isExporting, setIsExporting] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const findRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const { title, handleChangeNoteContent } = useNoteEditor(
-    note.id,
-    notesState,
-    setNotesState
-  );
-  const [searchQuery] = useState<string>("");
-  const [filteredNotes, setFilteredNotes] =
-    useState<Record<string, Note>>(notesState);
-  const [sortingOption] = useState("updatedAt");
-
-  useEffect(() => {
-    const filtered = Object.values(notesState).filter((note) => {
-      const noteTitle = note.title ?? ""; // fallback to empty string
-      return noteTitle.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-
-    setFilteredNotes(
-      Object.fromEntries(filtered.map((note) => [note.id, note]))
-    );
-  }, [searchQuery, notesState]);
-
-  const notesList = Object.values(filteredNotes).sort((a, b) => {
-    switch (sortingOption) {
-      case "alphabetical":
-        return (a.title ?? "").localeCompare(b.title ?? "");
-      case "createdAt":
-        const createdAtA = typeof a.createdAt === "number" ? a.createdAt : 0;
-        const createdAtB = typeof b.createdAt === "number" ? b.createdAt : 0;
-        return createdAtA - createdAtB;
-      case "updatedAt":
-      default:
-        const updatedAtA = typeof a.updatedAt === "number" ? a.updatedAt : 0;
-        const updatedAtB = typeof b.updatedAt === "number" ? b.updatedAt : 0;
-        return updatedAtA - updatedAtB;
-    }
-  });
 
   const openDialog = () => {
     setIsOpen(true);
@@ -89,60 +46,54 @@ function EditorComponent({
   );
   const navigate = useNavigate();
 
-  const titleRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<any>(null);
-
   const exts = [
     ...extensions,
-    LinkNote(notesList, note.id ?? ""),
-    LabelSuggestion,
+    LinkNote(() => note.id ?? ""),
+    dropFile.configure({ id: note.id }),
     Commands.configure({
       noteId: note.id,
     }),
   ];
+
+  const isCollapsibleEnabled =
+    localStorage.getItem("collapsibleHeading") === "true";
+
+  exts.push(isCollapsibleEnabled ? CollapseHeading : heading);
 
   const editor = useEditor(
     {
       extensions: exts,
       content: note.content,
       onUpdate: ({ editor }) => {
-        let editorContent = editor.getJSON();
-        editorContent = cleanEmptyParagraphs(editorContent);
+        let data = editor.getJSON();
 
-        const labelEls = editor.view.dom.querySelectorAll("[data-mention]");
-        const labelsSet = new Set<string>();
+        data.content = data.content?.filter(
+          (node) =>
+            !(
+              node.type === "paragraph" &&
+              (!node.content || node.content.length === 0)
+            )
+        );
+
+        const labels = new Set<string>();
+        const labelEls =
+          editor.options.element?.querySelectorAll("[data-mention]") ?? [];
+
         labelEls.forEach((el) => {
-          const labelId = el.getAttribute("data-id");
-          if (labelId && labelStore.labels.includes(labelId)) {
-            labelsSet.add(labelId);
+          const labelId = (el as HTMLElement).dataset.id;
+          if (labelId && labelStore.data.includes(labelId)) {
+            labels.add(labelId);
           }
         });
-        const extractedLabels = Array.from(labelsSet);
 
-        handleChangeNoteContent(editorContent || {}, title, extractedLabels);
+        updateNote({
+          content: data,
+          labels: [...labels],
+        });
       },
     },
     [note.id]
   );
-
-  useEffect(() => {
-    if (editor && !editor.isDestroyed) {
-      const editorContent = editor.getJSON();
-      const labelEls = editor.view.dom.querySelectorAll("[data-mention]");
-      const labelsSet = new Set<string>();
-      labelEls.forEach((el) => {
-        const labelId = el.getAttribute("data-id");
-        if (labelId && labelStore.labels.includes(labelId)) {
-          labelsSet.add(labelId);
-        }
-      });
-      const extractedLabels = Array.from(labelsSet);
-
-      if (JSON.stringify(extractedLabels) !== JSON.stringify(note.labels)) {
-        handleChangeNoteContent(editorContent, title, extractedLabels);
-      }
-    }
-  }, [labelStore.labels, editor, note.labels, title]);
 
   useEffect(() => {
     function toggleFindListener() {
@@ -158,32 +109,6 @@ function EditorComponent({
   useEffect(() => {
     setWd(localStorage.getItem("expand-editor") === "true");
   }, []);
-
-  function decodeHtml(html: string) {
-    const txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value;
-  }
-
-  const handleTitleChange = (event: React.ChangeEvent<HTMLDivElement>) => {
-    let rawHtml = event.currentTarget.innerHTML;
-    const decoded = decodeHtml(rawHtml);
-    const sanitized = DOMPurify.sanitize(decoded, { ALLOWED_TAGS: [] }); // allow no tags - plain text
-    handleChangeNoteContent(editor?.getJSON() || {}, sanitized.trim());
-  };
-
-  const handleTitlePaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const text = event.clipboardData.getData("text/plain");
-    document.execCommand("insertText", false, text);
-  };
-
-  const handleKeyDownTitle = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      editorRef.current?.commands.focus();
-    }
-  };
 
   useEffect(() => {
     Mousetrap.bind("mod+f", (e) => {
@@ -341,9 +266,30 @@ function EditorComponent({
   const shareBEA = async () => {
     setIsExporting(true);
     try {
-      await shareNote(note.id, notesState);
+      await shareNote(note.id);
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const updateNote = debounce((data: Partial<Note>) => {
+    Object.assign(data, { updatedAt: Date.now() });
+
+    noteStore.update(note.id, data);
+  }, 250);
+
+  const noteEditor = useRef<HTMLDivElement | null>(null);
+
+  const focusEditor = (): void => {
+    noteEditor.current?.querySelector<HTMLElement>('*[tabindex="0"]')?.focus();
+  };
+
+  const disallowedEnter = (
+    event: React.KeyboardEvent<HTMLDivElement>
+  ): void => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      focusEditor();
     }
   };
 
@@ -383,6 +329,7 @@ function EditorComponent({
               onClose={closeDialog}
               header={translations.editor.exportas}
               allowSwipeToDismiss={true}
+              persist={true}
               className="fixed inset-0 flex items-end sm:items-center justify-center p-5 overflow-y-auto z-50 bg-black bg-opacity-20 print:hidden"
             >
               <div className="flex flex-col rounded-xl overflow-hidden divide-y divide-neutral-200 dark:divide-neutral-700 text-sm">
@@ -485,24 +432,27 @@ function EditorComponent({
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
         } text-black dark:text-[color:var(--selected-dark-text)]`}
       >
-        <div
-          contentEditable
-          onPaste={handleTitlePaste}
-          suppressContentEditableWarning
-          className={`text-3xl font-bold overflow-y-scroll outline-none`}
-          onBlur={handleTitleChange}
-          onKeyDown={handleKeyDownTitle}
-          dangerouslySetInnerHTML={{ __html: note.title }}
-          ref={titleRef}
-        />
+        {!note.isLocked && (
+          <div
+            contentEditable
+            className="text-4xl outline-none block font-bold bg-transparent w-full cursor-text contenteditable title-placeholder"
+            data-placeholder={translations.editor.untitledNote || "-"}
+            onInput={(e) => updateNote({ title: e.currentTarget.innerText })}
+            onKeyDown={disallowedEnter}
+            suppressContentEditableWarning={true}
+          >
+            {note.title.trim() !== "" ? note.title : null}
+          </div>
+        )}
+
         <div>
-          <div className="py-2 h-full w-full" id="container">
+          <div className="py-2 h-full w-full" ref={noteEditor} id="container">
             <EditorContent
               editor={editor}
               className="prose dark:text-neutral-100 max-w-none prose-indigo mb-[5em]"
             />
           </div>
-          <NoteBubbleMenu editor={editor} notes={notesList} />
+          <NoteBubbleMenu editor={editor} />
         </div>
       </div>
     </div>

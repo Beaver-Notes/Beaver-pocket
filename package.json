@@ -14,7 +14,7 @@
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
     "@benrbray/prosemirror-math": "0.2.2",
-    "@capacitor-community/app-icon": "^5.0.0",
+    "@capacitor-community/app-icon": "^6.0.0",
     "@capacitor-community/safe-area": "^7.0.0-alpha.1",
     "@capacitor/android": "^7.0.0",
     "@capacitor/app": "^7.0.0",
@@ -80,11 +80,13 @@
     "@types/uuid": "^9.0.7",
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.8",
+    "bcryptjs": "^3.0.2",
     "capa-zip": "^7.0.3",
     "capacitor": "^0.5.6",
     "capacitor-secure-storage-plugin": "^0.10.0",
     "capacitor-voice-recorder": "^5.0.0",
     "capacitor-webview-print": "^6.0.1",
+    "crypto-es": "^2.1.0",
     "crypto-js": "^4.2.0",
     "d3": "^7.9.0",
     "dayjs": "^1.11.10",
@@ -97,6 +99,7 @@
     "mermaid": "^10.9.1",
     "mime": "^4.0.6",
     "mousetrap": "^1.6.5",
+    "nanoid": "^5.1.5",
     "native-run": "^2.0.0",
     "perfect-freehand": "^1.2.2",
     "postcss": "^8.4.32",
@@ -121,7 +124,8 @@
     "tiptap-commands": "^1.17.1",
     "tiptap-extension-resize-image": "^1.1.5",
     "tw-colors": "^3.3.2",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@types/katex": "^0.16.7",

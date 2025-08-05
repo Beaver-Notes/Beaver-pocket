@@ -1,23 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { v4 as uuid } from "uuid";
 import { Keyboard } from "@capacitor/keyboard";
-import { useSaveNote } from "../../store/notes";
-import { Note } from "../../store/types";
+import { useNoteStore } from "@/store/note";
 import Mousetrap from "../../utils/mousetrap";
 import Icon from "../ui/Icon";
 import { Capacitor } from "@capacitor/core";
 import { useTranslation } from "@/utils/translations";
 
-interface NavbarProps {
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
-}
-
-const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
+const BottomNavBar: React.FC = () => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const { saveNote } = useSaveNote(setNotesState);
-  const navigate = useNavigate();
+  const noteStore = useNoteStore.getState();
+  const router = useNavigate();
 
   useEffect(() => {
     if (Capacitor.getPlatform() === "web") return;
@@ -38,7 +31,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
   const handleEditNote = () => {
     const editedNote = localStorage.getItem("lastNoteEdit");
     if (editedNote) {
-      navigate(`/editor/${editedNote}`);
+      router(`/editor/${editedNote}`);
     }
   };
 
@@ -57,33 +50,21 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
     fetchTranslations();
   }, []);
 
-  const handleCreateNewNote = async () => {
-    const newNote = {
-      id: uuid(),
-      title: `${translations.home.title || "-"}`,
-      content: { type: "doc", content: [] },
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      labels: [],
-      isBookmarked: false,
-      isArchived: false,
-      isLocked: false,
-      lastCursorPosition: 0,
-    };
-
-    await saveNote(newNote);
-    navigate(`/editor/${newNote.id}`);
-  };
+  function addNote() {
+    noteStore.add().then(({ id }: { id: string }) => {
+      router(`/editor/${id}`);
+    });
+  }
 
   useEffect(() => {
-    Mousetrap.bind("mod+n", (e) => {
+    Mousetrap.bind("alt+n", (e) => {
       e.preventDefault();
-      handleCreateNewNote();
+      addNote();
     });
 
     Mousetrap.bind("mod+shift+n", (e) => {
       e.preventDefault();
-      navigate("/");
+      router("/");
     });
 
     Mousetrap.bind("mod+shift+w", (e) => {
@@ -93,16 +74,16 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
 
     Mousetrap.bind("mod+shift+a", (e) => {
       e.preventDefault();
-      navigate("/archive");
+      router("/archive");
     });
 
     Mousetrap.bind("mod+,", (e) => {
       e.preventDefault();
-      navigate("/archive");
+      router("/archive");
     });
 
     return () => {
-      Mousetrap.unbind("mod+n");
+      Mousetrap.unbind("alt+n");
       Mousetrap.unbind("mod+shift+n");
       Mousetrap.unbind("mod+shift+w");
       Mousetrap.unbind("mod+shift+a");
@@ -131,7 +112,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
           <button
             onClick={() => {
               const last = localStorage.getItem("lastNoteEdit");
-              if (last) navigate(`/editor/${last}`);
+              if (last) router(`/editor/${last}`);
             }}
             aria-label={translations.accessibility.editNote}
             className="w-12 h-12 flex items-center justify-center"
@@ -143,7 +124,7 @@ const BottomNavBar: React.FC<NavbarProps> = ({ setNotesState }) => {
           </button>
 
           <button
-            onClick={handleCreateNewNote}
+            onClick={addNote}
             aria-label={translations.accessibility.createNew}
             className="w-12 h-12 flex items-center justify-center"
           >

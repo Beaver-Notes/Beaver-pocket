@@ -4,7 +4,7 @@ import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import { Dropbox } from "dropbox";
-import { forceSyncNow } from "@/composable/sync";
+import { forceSyncNow } from "@/utils/sync";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 

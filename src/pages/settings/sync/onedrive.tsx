@@ -4,7 +4,7 @@ import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import Icon from "@/components/ui/Icon";
 import { OneDriveAPI } from "@/utils/Onedrive/oneDriveApi";
 import { useTranslation } from "@/utils/translations";
-import { forceSyncNow } from "@/composable/sync";
+import { forceSyncNow } from "@/utils/sync";
 
 interface OneDriveProps {
   syncStatus: string;

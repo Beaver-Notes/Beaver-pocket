@@ -14,6 +14,7 @@ import {
   FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
+import { useStorage } from "@/composable/storage";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -42,7 +43,8 @@ interface AssetSyncLog {
 const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
+const useiCloudSync = (): iCloudSyncHooks => {
+  const storage = useStorage();
   const [progress, setProgress] = useState(0);
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
@@ -106,7 +108,7 @@ const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
         encoding: FilesystemEncoding.UTF8,
       });
 
-      setNotesState(mergedData.data.notes);
+      await storage.set('notes', mergedData.data.notes);
 
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
@@ -327,7 +329,7 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
                   directory: FilesystemDirectory.Data,
                   recursive: true,
                 });
-              } catch (e) {}
+              } catch (e) { }
 
               const { fileData: base64FileData } = await iCloud.downloadFile({
                 fileName: remoteFilePath,

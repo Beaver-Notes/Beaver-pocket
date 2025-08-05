@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { driveService } from "@/utils/Google Drive/GoogleOauth";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
-import { forceSyncNow } from "@/composable/sync";
+import { forceSyncNow } from "@/utils/sync";
 
 interface DriveProps {
   syncStatus: string;

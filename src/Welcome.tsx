@@ -385,8 +385,8 @@ const Welcome: React.FC = () => {
       )}
 
       {currentView === "view3" && (
-        <div className="min-h-screen flex flex-col justify-start items-center py-10">
-          <div className="flex justify-center">
+        <div className="min-h-screen flex flex-col justify-start items-center">
+          <div className="mt-5 flex flex-col justify-center">
             <Icon
               name="CloudLine"
               className="w-12 h-12 mx-auto rounded-xl"
@@ -394,9 +394,9 @@ const Welcome: React.FC = () => {
             />
           </div>
 
-          <div className="flex view items-center justify-center w-full">
+          <div className="flex view w-full">
             <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between min-h-[80vh]">
-              <div className="flex flex-col w-full items-center justify-center flex-grow">
+              <div className="flex flex-col w-full flex-grow">
                 {/* Cloud selection buttons */}
                 {selectedCloud === null ? (
                   <div className="flex flex-col gap-2 pt-2 w-full">

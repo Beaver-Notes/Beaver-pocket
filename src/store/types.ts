@@ -10,5 +10,18 @@ export type Note = {
   isBookmarked: boolean;
   isArchived: boolean;
   isLocked: boolean;
+  folderId: string | null;
   lastCursorPosition: number;
 };
+
+export interface Folder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  createdAt: number;
+  updatedAt: number;
+  color?: string | null;
+  isExpanded?: boolean;
+  icon?: string;
+  sortOrder?: number;
+}

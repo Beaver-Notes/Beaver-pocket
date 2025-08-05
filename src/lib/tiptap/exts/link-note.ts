@@ -1,5 +1,6 @@
 import { mergeAttributes } from "@tiptap/core";
 import Suggestion from "./suggestion";
+import { useNoteStore } from '@/store/note';
 import { Note } from "../../../store/types";
 
 type Item = Note;
@@ -11,13 +12,13 @@ type OnSelectParams = {
   range: { from: number; to: number };
 };
 
-function createProps(notes: Item[], activeNoteId: string) {
+function createProps(activeNoteId: string) {
   return {
     labelKey: "title",
-    notes,
     activeNoteId,
     onSelect: ({ item, command, editor, range }: OnSelectParams) => {
-      command({ id: item.id, label: item.title });
+      const label = item.title?.trim() || item.id;
+      command({ id: item.id, label });
 
       const { from, to } = range;
       editor
@@ -27,7 +28,7 @@ function createProps(notes: Item[], activeNoteId: string) {
         .setLink({ href: `note://${item.id}` })
         .setTextSelection(to)
         .run();
-    },
+    }
   };
 }
 
@@ -64,21 +65,32 @@ const configure = {
   },
 };
 
-function LinkNote(notes: Item[], currentNoteId: string) {
-  const props = createProps(notes, currentNoteId);
+function LinkNote(getActiveNoteId: () => string) {
+  const props = createProps(getActiveNoteId());
 
   return Suggestion({ name: "linkNote", props, configure }).configure({
     renderLabel({ node }: { node: any }) {
-      return node.attrs.label ?? node.attrs.id;
+      const label = node.attrs.label?.trim();
+      return label || node.attrs.id;
     },
     suggestion: {
       char: "@@",
       items: ({ query }: { query: string }) => {
-        return props.notes
+        const noteStore = useNoteStore.getState();
+
+        const notes = Object.values(noteStore.data as Record<string, Note>);
+
+        if (!notes.length) {
+          console.log('No notes data available');
+        }
+
+        const activeNoteId = getActiveNoteId();
+
+        return notes
           .filter(
-            (item) =>
+            (item: { title: string; id: string }) =>
               item.title.toLowerCase().startsWith(query.toLowerCase()) &&
-              item.id !== props.activeNoteId
+              item.id !== activeNoteId
           )
           .slice(0, 7);
       },

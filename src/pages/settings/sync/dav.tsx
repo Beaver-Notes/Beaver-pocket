@@ -4,7 +4,7 @@ import { WebDavService } from "@/utils/Webdav/webDavApi";
 import WebDAV from "@/utils/Webdav/WebDAVPlugin";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
-import { forceSyncNow } from "@/composable/sync";
+import { forceSyncNow } from "@/utils/sync";
 
 interface WebdavProps {
   syncStatus: string;

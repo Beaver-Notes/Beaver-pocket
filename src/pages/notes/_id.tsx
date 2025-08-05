@@ -1,27 +1,16 @@
 import EditorComponent from "../../components/note/NoteEditor";
 import { useNavigate, useParams } from "react-router-dom";
-import * as CryptoJS from "crypto-js";
 import { useEffect, useState } from "react";
-import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
-import {
-  Directory,
-  Filesystem,
-  FilesystemEncoding,
-} from "@capacitor/filesystem";
 import { NativeBiometric } from "@capgo/capacitor-native-biometric";
-import { Note } from "../../store/types";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import emitter from "tiny-emitter/instance";
+import { useNoteStore } from "@/store/note";
+import { usePasswordStore } from "@/store/passwd";
 
-const STORAGE_PATH = "notes/data.json";
-
-interface Props {
-  notesState: Record<string, Note>;
-  setNotesState: (notes: Record<string, Note>) => void;
-}
-
-function Editor({ notesState, setNotesState }: Props) {
+function Editor() {
+  const passwordStore = usePasswordStore();
+  const noteStore = useNoteStore();
   const navigate = useNavigate();
   const { note } = useParams<{ note: string }>();
   const [translations, setTranslations] = useState<Record<string, any>>({
@@ -38,145 +27,80 @@ function Editor({ notesState, setNotesState }: Props) {
     fetchTranslations();
   }, []);
 
-  const unlockNote = async (noteId: string): Promise<void> => {
-    console.time("unlockNote");
+  const unlockNote = async (noteid: any): Promise<void> => {
     try {
-      let password: string | null = null;
-      console.time("SecureStoragePlugin.get");
-      const globalPasswordResult = await SecureStoragePlugin.get({
-        key: "globalPassword",
-      }).catch(() => null);
-      console.timeEnd("SecureStoragePlugin.get");
-      const storedGlobalPassword = globalPasswordResult?.value;
-
+      await passwordStore.retrieve();
       const biometricAvailable = await NativeBiometric.isAvailable();
 
-      if (!storedGlobalPassword) {
-        password = await promptForPassword();
-        if (password) {
-          console.time("SecureStoragePlugin.set");
-          await SecureStoragePlugin.set({
-            key: "globalPassword",
-            value: password,
+      const promptForPassword = (): Promise<string | null> => {
+        return new Promise((resolve) => {
+          emitter.emit("show-dialog", "prompt", {
+            title:
+              translations.card.setPasswordTitle ||
+              "Enter your master password",
+            placeholder: translations.card.password || "Enter password",
+            okText: translations.card.ok || "OK",
+            cancelText: translations.card.cancel || "Cancel",
+            onConfirm: (password: string) => {
+              if (!password) {
+                alert(
+                  translations.card.passwordRequired || "Password required"
+                );
+                resolve(null);
+              } else {
+                resolve(password);
+              }
+            },
+            onCancel: () => resolve(null),
           });
-          console.timeEnd("SecureStoragePlugin.set");
-        } else {
-          return;
-        }
-      } else {
-        if (biometricAvailable) {
-          try {
-            console.time("NativeBiometric.verifyIdentity");
-            await NativeBiometric.verifyIdentity({
-              reason: `${translations.editor.biometricReason}`,
-              title: `${translations.editor.biometricTitle}`,
-            });
-            console.timeEnd("NativeBiometric.verifyIdentity");
-            password = storedGlobalPassword;
-          } catch {
-            password = await promptForPassword();
-            if (!password) {
-              return;
-            }
-          }
-        } else {
-          password = await promptForPassword();
-          if (!password) {
-            return;
-          }
-        }
-      }
-
-      console.time("Filesystem read for unlock");
-      const result = await Filesystem.readFile({
-        path: STORAGE_PATH,
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-      console.timeEnd("Filesystem read for unlock");
-
-      let notes;
-      if (typeof result.data === "string") {
-        console.time("JSON parse for unlock");
-        notes = JSON.parse(result.data).data.notes;
-        console.timeEnd("JSON parse for unlock");
-      } else {
-        const dataText = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsText(result.data as Blob);
         });
-        console.time("JSON parse for unlock from Blob");
-        notes = JSON.parse(dataText).data.notes;
-        console.timeEnd("JSON parse for unlock from Blob");
+      };
+
+      let encryptionKey: string | null = null;
+
+      if (biometricAvailable.isAvailable) {
+        try {
+          const verified = await NativeBiometric.verifyIdentity({
+            reason:
+              translations.card.biometricReason || "Authenticate to lock note",
+            title:
+              translations.card.biometricTitle || "Biometric Authentication",
+          })
+            .then(() => true)
+            .catch(() => false);
+
+          if (!verified) return;
+
+          const creds = await NativeBiometric.getCredentials({
+            server: "beaver-pocket",
+          });
+
+          encryptionKey = creds.password;
+        } catch (biometricError) {
+          console.warn("Biometric failed or cancelled:", biometricError);
+        }
       }
 
-      const updatedNote = { ...notes[noteId] };
-
-      if (updatedNote.isLocked) {
-        console.time("CryptoJS.AES.decrypt");
-        const decryptedContent = CryptoJS.AES.decrypt(
-          updatedNote.content.content[0],
-          password
-        ).toString(CryptoJS.enc.Utf8);
-        console.timeEnd("CryptoJS.AES.decrypt");
-
-        if (!decryptedContent) {
-          alert(translations.editor.wrongpasswd);
+      if (!encryptionKey) {
+        const password = await promptForPassword();
+        if (!password) {
+          console.log("Unlock cancelled by user.");
           return;
         }
-
-        updatedNote.content = JSON.parse(decryptedContent);
-        updatedNote.isLocked = false;
-      } else {
-        console.time("CryptoJS.AES.encrypt");
-        const encryptedContent = CryptoJS.AES.encrypt(
-          JSON.stringify(updatedNote.content),
-          password
-        ).toString();
-        console.timeEnd("CryptoJS.AES.encrypt");
-
-        updatedNote.content = { type: "doc", content: [encryptedContent] };
-        updatedNote.isLocked = true;
+        encryptionKey = passwordStore.deriveEncryptionKey(password);
       }
 
-      notes[noteId] = updatedNote;
+      await noteStore.unlockNote(noteid, encryptionKey);
+      console.log(`Note (ID: ${noteid}) is unlocked`);
 
-      console.time("Filesystem write");
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify({ data: { notes } }),
-        directory: Directory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-      console.timeEnd("Filesystem write");
-
-      setNotesState(notes);
+      const updatedNote = await noteStore.getById(noteid);
+      if (noteStore.update && updatedNote) {
+        noteStore.update(updatedNote);
+      }
     } catch (error) {
-      alert(translations.editor.lockerror);
+      console.error("Error unlocking note:", error);
+      alert(translations.card.unlockError || "Failed to unlock note");
     }
-    console.timeEnd("unlockNote");
-  };
-
-  const promptForPassword = async (): Promise<string | null> => {
-    return new Promise((resolve) => {
-      emitter.emit("show-dialog", "prompt", {
-        title: translations.card.enterpasswd,
-        okText: translations.card.setkey,
-        body: translations.settings.warning,
-        cancelText: translations.card.cancel,
-        placeholder: translations.card.Password,
-        allowedEmpty: false,
-        onConfirm: (value: string) => {
-          resolve(value); // Resolve with password
-          return true; // Close modal
-        },
-        onCancel: () => {
-          resolve(null); // Resolve as cancelled
-        },
-      });
-    });
   };
 
   const Cancel = () => {
@@ -187,7 +111,7 @@ function Editor({ notesState, setNotesState }: Props) {
     return <div>{translations.editor.noNoteId || "-"}</div>;
   }
 
-  const noteData = notesState[note];
+  const noteData = noteStore.getById(note);
 
   if (!noteData) {
     return (
@@ -207,7 +131,7 @@ function Editor({ notesState, setNotesState }: Props) {
         <div className="flex flex-col gap-2 pt-2 w-2/4">
           <button
             className="w-full p-3 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl text-center"
-            onClick={() => unlockNote(note)}
+            onClick={() => unlockNote(noteData.id)}
           >
             {translations.editor.unlock || "-"}
           </button>
@@ -224,14 +148,7 @@ function Editor({ notesState, setNotesState }: Props) {
 
   localStorage.setItem("lastNoteEdit", note);
 
-  return (
-    <EditorComponent
-      note={noteData}
-      notesState={notesState}
-      setNotesState={setNotesState}
-      translations={translations}
-    />
-  );
+  return <EditorComponent note={noteData} translations={translations} />;
 }
 
 export default Editor;
