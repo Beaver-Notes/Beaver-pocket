@@ -11,7 +11,7 @@ PODS:
     - Capacitor
   - CapacitorBrowser (7.0.1):
     - Capacitor
-  - CapacitorCommunityAppIcon (5.0.0):
+  - CapacitorCommunityAppIcon (6.0.0):
     - Capacitor
   - CapacitorCommunitySafeArea (7.0.0-alpha.1):
     - Capacitor
@@ -149,7 +149,7 @@ SPEC CHECKSUMS:
   Capacitor: 9d9e481b79ffaeacaf7a85d6a11adec32bd33b59
   CapacitorApp: febecbb9582cb353aed037e18ec765141f880fe9
   CapacitorBrowser: 6299776d496e968505464884d565992faa20444a
-  CapacitorCommunityAppIcon: 8b88021902a5c3e9d836a69348e286104d61aaea
+  CapacitorCommunityAppIcon: a937eb756114f0f1aa2de894d23b63db02d042e6
   CapacitorCommunitySafeArea: 3f049619072ab5d0da2529bcb05b358ff6c13dc1
   CapacitorCordova: 5e58d04631bc5094894ac106e2bf1da18a9e6151
   CapacitorDevice: c6f6d587dd310527f8a48bf09c4e7b4a4cf14329

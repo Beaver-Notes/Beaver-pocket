@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Permissions -->
-    <uses-permission android:name="android.permissionx.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -21,9 +21,9 @@
         android:allowBackup="true"
         android:enableOnBackInvokedCallback="true"
         android:label="@string/app_name"
-        android:largeHeap="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:largeHeap="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="UnusedAttribute">
@@ -40,9 +40,86 @@
             </intent-filter>
         </activity>
 
+        <activity-alias
+            android:name=".dev"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/dev"
+            android:label="@string/title_activity_main"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".dark"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/dark"
+            android:label="@string/title_activity_main"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".rainbow"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/rainbow"
+            android:label="@string/title_activity_main"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".full"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/full"
+            android:label="@string/title_activity_main"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".space"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/space"
+            android:label="@string/title_activity_main"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".darkoutline"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/dark_outline"
+            android:label="@string/title_activity_main"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
         <activity
             android:name="de.mindlib.sendIntent.SendIntentActivity"
-            android:label="@string/app_name"
             android:exported="true"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>

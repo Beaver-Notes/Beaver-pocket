@@ -3,6 +3,11 @@ import Capacitor
 
 @objc(WebDAVPlugin)
 public class WebDAVPlugin: CAPPlugin, CAPBridgedPlugin {
+     
+     public override init() {
+         super.init()
+     }
+     
      public let identifier = "WebDAVPlugin"
      public let jsName = "WebDAV"
      
