@@ -27,6 +27,7 @@ function EditorComponent({ note, translations }: Props) {
   const labelStore = useLabelStore();
   const noteStore = useNoteStore();
   const [isExporting, setIsExporting] = useState(false);
+  const titleRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const findRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -293,6 +294,12 @@ function EditorComponent({ note, translations }: Props) {
     }
   };
 
+  useEffect(() => {
+    if (titleRef.current && note.title !== titleRef.current.innerText) {
+      titleRef.current.innerText = note.title;
+    }
+  }, [note.id, note.title]);
+
   return (
     <div className="relative h-auto" onDragOver={(e) => e.preventDefault()}>
       <div className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] sm:top-0 sm:bottom-auto print:hidden bg-white dark:bg-[#232222] z-20">
@@ -337,7 +344,7 @@ function EditorComponent({ note, translations }: Props) {
                 <button
                   onClick={shareBEA}
                   disabled={isExporting}
-                  className={`flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200
+                  className={`flex items-center justify-between p-3 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200
       ${isExporting ? "cursor-not-allowed opacity-70" : "cursor-pointer"}
     `}
                 >
@@ -375,7 +382,7 @@ function EditorComponent({ note, translations }: Props) {
                 {/* Export as PDF */}
                 <button
                   onClick={() => handlePrint(`${note.title}.pdf`)}
-                  className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200"
+                  className="flex items-center justify-between p-3 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200"
                 >
                   <p className="font-medium w-16 flex-shrink-0">PDF</p>
                   <Icon
@@ -435,14 +442,13 @@ function EditorComponent({ note, translations }: Props) {
         {!note.isLocked && (
           <div
             contentEditable
+            ref={titleRef}
             className="text-4xl outline-none block font-bold bg-transparent w-full cursor-text contenteditable title-placeholder"
             data-placeholder={translations.editor.untitledNote || "-"}
             onInput={(e) => updateNote({ title: e.currentTarget.innerText })}
             onKeyDown={disallowedEnter}
             suppressContentEditableWarning={true}
-          >
-            {note.title.trim() !== "" ? note.title : null}
-          </div>
+          />
         )}
 
         <div>

@@ -63,7 +63,6 @@ export const UiModal: React.FC<UiModalProps> = ({
   }, [show]);
 
   const closeModal = () => {
-    if (persist) return;
     setShow(false);
     onClose(false);
     document.body.classList.remove("overflow-hidden");
