@@ -1,17 +1,14 @@
 import { Dropbox } from "dropbox";
-import {
-  Filesystem,
-  FilesystemDirectory,
-  FilesystemEncoding,
-} from "@capacitor/filesystem";
+import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { useDropbox } from "./DropboxApi";
 import { useState } from "react";
 import { base64ToBlob } from "../../utils/base64";
 import mime from "mime";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
 import { useStorage } from "@/composable/storage";
+import { useNoteStore } from "@/store/note";
+import { useLabelStore } from "@/store/label";
 
-// Types for improved type safety
 interface SyncState {
   syncInProgress: boolean;
   syncError: string | null;
@@ -36,10 +33,15 @@ interface AssetSyncLog {
   }[];
 }
 
-const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
+// ─────────────────────────────────────────────────────────────
+// Dropbox Sync Hook
+// Handles syncing of notes, labels, deleted IDs, and assets
+// ─────────────────────────────────────────────────────────────
 const useDropboxSync = (): DropboxSyncHookReturn => {
+  const noteStore = useNoteStore.getState();
+  const labelStore = useLabelStore.getState();
   const storage = useStorage();
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
@@ -66,12 +68,10 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
       }
       const dbx = new Dropbox({ accessToken });
 
-      // Create sync folder if it doesn't exist
       try {
         await dbx.filesGetMetadata({ path: `/${SYNC_FOLDER_NAME}` });
       } catch (error: any) {
         if (error.status === 409) {
-          // Folder doesn't exist, create it
           await dbx.filesCreateFolderV2({
             path: `/${SYNC_FOLDER_NAME}`,
             autorename: false,
@@ -81,20 +81,12 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
         }
       }
 
-      // Read local data
       let localData: SyncData = { data: { notes: {} } };
-      try {
-        const localFileData = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: FilesystemDirectory.Data,
-          encoding: FilesystemEncoding.UTF8,
-        });
-        localData = JSON.parse(localFileData.data as string);
-      } catch {
-        // No local data, use empty object
-      }
 
-      // Read remote data
+      localData.data.notes = noteStore.data ?? {};
+      localData.data.labels = labelStore.labels ?? [];
+      localData.data.deletedIds = noteStore.deleted ?? {};
+
       let remoteData: SyncData = { data: { notes: {} } };
       try {
         const remoteMetadataResponse = await dbx.filesDownload({
@@ -105,34 +97,23 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
         ).fileBlob.text();
         remoteData = JSON.parse(remoteMetadataText);
       } catch {
-        // No remote data, use empty object
+        // Use empty object
       }
 
       setProgress(20);
 
-      // Merge all data
       const mergedData = await mergeData(localData, remoteData);
 
-      // Sync assets and collect logs
       await syncDropboxAssets(dbx, SYNC_FOLDER_NAME, accessToken);
 
       setProgress(80);
 
-      // Save merged data locally
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify(mergedData),
-        directory: FilesystemDirectory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
       await storage.set("notes", mergedData.data.notes);
+      noteStore.retrieve();
 
-      // Prepare data for remote storage - revert asset paths
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
 
-      // Upload to Dropbox
       await dbx.filesUpload({
         path: `/${SYNC_FOLDER_NAME}/data.json`,
         contents: JSON.stringify(cleanedData),
@@ -159,7 +140,10 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
   return { syncDropbox, syncState, progress };
 };
 
-// Update syncDropboxAssets to handle note ID subfolders
+// ─────────────────────────────────────────────────────────────
+// Asset Synchronization Function
+// Handles two-way sync of asset folders between device and Dropbox
+// ─────────────────────────────────────────────────────────────
 async function syncDropboxAssets(
   dbx: Dropbox,
   syncFolderName: string,
@@ -183,7 +167,6 @@ async function syncDropboxAssets(
     try {
       console.log(`Starting sync for ${assetType.local} assets`);
 
-      // Ensure local root folder exists
       try {
         await Filesystem.mkdir({
           path: localRootPath,
@@ -196,13 +179,11 @@ async function syncDropboxAssets(
         );
       }
 
-      // Ensure remote root folder exists
       let remoteRootExists = true;
       try {
         await dbx.filesGetMetadata({ path: remoteRootPath });
       } catch (error: any) {
         if (error.status === 409) {
-          // Folder doesn't exist, create it
           try {
             await dbx.filesCreateFolderV2({
               path: remoteRootPath,
@@ -228,10 +209,9 @@ async function syncDropboxAssets(
         console.error(
           `Cannot proceed with sync for ${assetType.local} - remote folder issue`
         );
-        continue; // Skip to next asset type
+        continue;
       }
 
-      // Get list of note ID subfolders from Dropbox
       let remoteSubfolders: string[] = [];
       try {
         const remoteFoldersResponse = await dbx.filesListFolder({
@@ -251,11 +231,9 @@ async function syncDropboxAssets(
           `Error listing remote folders in ${remoteRootPath}:`,
           error
         );
-        // Continue even with errors - we'll just use an empty array
         remoteSubfolders = [];
       }
 
-      // Get list of note ID subfolders locally
       let localSubfolders: { files: { name: string }[] } = { files: [] };
       try {
         localSubfolders = await Filesystem.readdir({
@@ -269,13 +247,10 @@ async function syncDropboxAssets(
         console.log(
           `No local subfolders found for ${localRootPath} or directory doesn't exist`
         );
-        // Continue with empty array
       }
 
-      // Convert localSubfolders.files to an array of folder names
       const localFolderNames = localSubfolders.files.map((file) => file.name);
 
-      // Process all unique noteIds from both local and remote
       const allNoteIds = [
         ...new Set([...localFolderNames, ...remoteSubfolders]),
       ];
@@ -291,7 +266,6 @@ async function syncDropboxAssets(
         console.log(`Local path: ${localFolderPath}`);
         console.log(`Remote path: ${remoteFolderPath}`);
 
-        // Ensure local subfolder exists
         if (!localFolderNames.includes(noteId)) {
           console.log(`Creating missing local folder: ${localFolderPath}`);
           try {
@@ -305,11 +279,9 @@ async function syncDropboxAssets(
               `Error creating local folder ${localFolderPath}:`,
               error
             );
-            // Continue anyway - the folder might already exist or be created during file writes
           }
         }
 
-        // Check if remote subfolder exists and create if needed
         let remoteSubfolderExists = remoteSubfolders.includes(noteId);
         if (!remoteSubfolderExists) {
           try {
@@ -321,19 +293,16 @@ async function syncDropboxAssets(
             remoteSubfolderExists = true;
           } catch (error: any) {
             if (error.status === 409) {
-              // 409 means the folder already exists, which is fine
               remoteSubfolderExists = true;
             } else {
               console.error(
                 `Error creating remote folder ${remoteFolderPath}:`,
                 error
               );
-              // Continue anyway - we'll try to list files in case the folder exists but had another error
             }
           }
         }
 
-        // List local files in subfolder
         let localFiles: { files: { name: string }[] } = { files: [] };
         try {
           localFiles = await Filesystem.readdir({
@@ -347,10 +316,8 @@ async function syncDropboxAssets(
           console.log(
             `No local files found in ${localFolderPath} or directory doesn't exist yet`
           );
-          // Continue with empty array
         }
 
-        // List remote files in subfolder
         let remoteFiles: string[] = [];
         try {
           const remoteFilesResponse = await dbx.filesListFolder({
@@ -366,8 +333,6 @@ async function syncDropboxAssets(
             } remote files in ${remoteFolderPath}: ${remoteFiles.join(", ")}`
           );
         } catch (error: any) {
-          // If status is 409, it means folder not found - we can skip
-          // Any other error, log it but try to continue
           if (error.status !== 409) {
             console.error(
               `Error listing remote files for ${remoteFolderPath}:`,
@@ -376,10 +341,8 @@ async function syncDropboxAssets(
           } else {
             console.log(`Remote folder ${remoteFolderPath} doesn't exist`);
           }
-          // We'll continue with an empty array
         }
 
-        // Download new files from Dropbox - only if we found remote files
         if (remoteFiles.length > 0) {
           const filesToDownload = remoteFiles.filter(
             (file) =>
@@ -390,13 +353,11 @@ async function syncDropboxAssets(
             `Need to download ${filesToDownload.length} files from ${remoteFolderPath}`
           );
 
-          // Replace the existing download code block with this
           for (const file of filesToDownload) {
             const remoteFilePath = `${remoteFolderPath}/${file}`;
             const localFilePath = `${localFolderPath}/${file}`;
 
             try {
-              // Ensure local directory exists before writing file
               try {
                 await Filesystem.mkdir({
                   path: localFolderPath,
@@ -404,10 +365,8 @@ async function syncDropboxAssets(
                   recursive: true,
                 });
               } catch (e) {
-                // Ignore error if directory already exists
               }
 
-              // Use direct API access with Filesystem.downloadFile
               await Filesystem.downloadFile({
                 url: `https://content.dropboxapi.com/2/files/download`,
                 path: localFilePath,
@@ -433,7 +392,6 @@ async function syncDropboxAssets(
           }
         }
 
-        // Upload new local files to Dropbox - only if we have local files
         if (localFiles.files.length > 0 && remoteSubfolderExists) {
           const filesToUpload = localFiles.files.filter(
             (localFile) => !remoteFiles.includes(localFile.name)
@@ -459,17 +417,14 @@ async function syncDropboxAssets(
                 throw new Error("File data is empty");
               }
 
-              // Detect MIME type
               const fileType =
                 mime.getType(file.name) || "application/octet-stream";
 
-              // Convert to Blob and create File object
               const blob = base64ToBlob(String(fileData.data), fileType);
               const uploadedFile = new File([blob], file.name, {
                 type: fileType,
               });
 
-              // Upload the file
               await dbx.filesUpload({
                 path: remoteFilePath,
                 contents: uploadedFile,

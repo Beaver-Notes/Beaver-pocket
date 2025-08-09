@@ -1,4 +1,3 @@
-// Zustand equivalent of the Pinia-based note store
 import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { AES } from "crypto-es/lib/aes.js";
@@ -47,7 +46,6 @@ function unCollapsedFootnotes(note, footnotes) {
   );
 }
 
-// Fixed version with proper migration handling
 export const useNoteStore = create((set, get) => ({
   data: {},
   deletedIds: {},
@@ -94,7 +92,6 @@ export const useNoteStore = create((set, get) => ({
       const localStorageData = await storage.get("notes", {});
       set((state) => ({ data: { ...state.data, ...localStorageData } }));
 
-      // Only run migration if it hasn't been run before
       const migrationCompleted = await storage.get(
         "migration_completed",
         false
@@ -114,7 +111,6 @@ export const useNoteStore = create((set, get) => ({
     const lockStatus = await storage.get("lockStatus", {});
     const isLocked = await storage.get("isLocked", {});
 
-    // Only migrate if there's actually old data to migrate
     if (
       Object.keys(lockStatus).length === 0 &&
       Object.keys(isLocked).length === 0
@@ -144,18 +140,20 @@ export const useNoteStore = create((set, get) => ({
       console.log("Lock data migration completed - no changes needed");
     }
 
-    // Clean up old storage keys
     await storage.delete("lockStatus");
     await storage.delete("isLocked");
   },
 
-  add: async (note = {}) => {
+  add: async (noteId, note = {}) => {
     try {
       const folderStore = useFolderStore.getState();
+
       if (note.folderId && !(await folderStore.exists(note.folderId))) {
         throw new Error("Folder does not exist");
       }
-      const id = nanoid();
+
+      const id = noteId || nanoid();
+
       const newNote = {
         id,
         title: "",
@@ -170,16 +168,12 @@ export const useNoteStore = create((set, get) => ({
         ...note,
       };
 
-      // Retrieve current notes object
       const notes = await storage.get("notes", {});
 
-      // Add new note
       notes[id] = newNote;
 
-      // Save the entire notes object back
       await storage.set("notes", notes);
 
-      // Update Zustand state
       set((state) => ({
         data: {
           ...state.data,
@@ -201,7 +195,6 @@ export const useNoteStore = create((set, get) => ({
       throw new Error("Folder does not exist");
     }
 
-    // Retrieve current notes object
     const notes = await storage.get("notes", {});
 
     if (!notes[id]) {
@@ -216,10 +209,8 @@ export const useNoteStore = create((set, get) => ({
 
     notes[id] = updatedNote;
 
-    // Save full notes object
     await storage.set("notes", notes);
 
-    // Update Zustand state
     set((state) => ({
       data: {
         ...state.data,
@@ -258,7 +249,6 @@ export const useNoteStore = create((set, get) => ({
   },
 
   delete: async (id) => {
-    // Retrieve current notes object
     const notes = await storage.get("notes", {});
 
     if (!notes[id]) return null;
@@ -274,7 +264,6 @@ export const useNoteStore = create((set, get) => ({
       deletedIds,
     });
 
-    // Save updated notes and deletedIds
     await storage.set("notes", notes);
     await storage.set("deletedIds", deletedIds);
 
@@ -358,7 +347,6 @@ export const useNoteStore = create((set, get) => ({
         password
       ).toString();
 
-      // Call update method properly
       await store.update(id, {
         content: { type: "doc", content: [encrypted] },
         isLocked: true,
@@ -402,7 +390,6 @@ export const useNoteStore = create((set, get) => ({
 
       if (!isCollapsible) store.convertNote(id);
 
-      // Call update method properly
       await store.update(id, { content, isLocked: false });
 
       console.log(`Note ${id} unlocked successfully`);
