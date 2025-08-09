@@ -1,7 +1,7 @@
 // AppRoutes.tsx
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import Home from "./Home";
+import Index from "./Index";
 import Settings from "./Settings";
 import About from "./pages/settings/about";
 import Dropbox from "./pages/settings/sync/dropbox";
@@ -36,8 +36,8 @@ const router: React.FC<routerProps> = ({
 
   return (
     <Routes location={location}>
-      <Route path="/" element={<Home />} />
-      <Route path="/archive" element={<Home showArchived={true} />} />
+      <Route path="/" element={<Index />} />
+      <Route path="/archive" element={<Index showArchived={true} />} />
       <Route
         path="/settings"
         element={
