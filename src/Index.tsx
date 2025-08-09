@@ -5,17 +5,16 @@ import { Share } from "@capacitor/share";
 import SearchBar from "./components/home/Search";
 import { useTranslation } from "./utils/translations";
 import { SendIntent } from "send-intent";
-import { useImportBea } from "./utils/share";
+import { ImportBEA } from "./utils/share/BEA";
 import { useNoteStore } from "./store/note";
 import NoteCard from "./components/home/NoteCard";
 import Icon from "./components/ui/Icon";
 
 interface HomeProps {
-  showArchived?: boolean; // Add prop to determine if showing archived notes
+  showArchived?: boolean; 
 }
 
 const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
-  const { importUtils } = useImportBea();
   const noteStore = useNoteStore();
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"createdAt" | string>("createdAt");
@@ -29,12 +28,12 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
     }
 
     if (content && typeof content === "object") {
-      // Handle ProseMirror/TipTap content structure
+      
       if (content.content && Array.isArray(content.content)) {
         return extractTextFromNodes(content.content);
       }
 
-      // Handle direct content property
+      
       if (content.content) {
         return extractNoteText(content.content);
       }
@@ -53,7 +52,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
         text += extractTextFromNodes(node.content);
       }
 
-      // Add space between blocks for better readability
+      
       if (node.type === "paragraph" || node.type === "heading") {
         text += " ";
       }
@@ -78,7 +77,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
       let aVal = a[sortBy];
       let bVal = b[sortBy];
 
-      // Handle different data types
+      
       if (typeof aVal === "string" && typeof bVal === "string") {
         return aVal.localeCompare(bVal);
       }
@@ -87,7 +86,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
         return aVal - bVal;
       }
 
-      // Default comparison
+      
       return String(aVal).localeCompare(String(bVal));
     });
 
@@ -147,10 +146,10 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
     return filteredNotes;
   }
 
-  // Get filtered and sorted notes
+  
   const filteredNotes = filterNotes(notes, query, activeLabel);
 
-  // Sort notes based on selected criteria
+  
   const sortedAll = sortArray(
     filteredNotes.all,
     sortBy === "alphabetical" ? "title" : sortBy,
@@ -171,7 +170,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
     setActiveLabel(selectedLabel);
   };
 
-  // File embed click handler (only for non-archived view)
+  
   useEffect(() => {
     if (showArchived) return;
 
@@ -206,7 +205,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
     };
   }, [showArchived]);
 
-  // Translations
+  
   const [translations, setTranslations] = useState<Record<string, any>>({
     home: {},
     archive: {},
@@ -253,12 +252,13 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
             })
               .then((content) => {
                 if (typeof content.data === "string") {
-                  importUtils(content.data);
+                  ImportBEA(content.data); 
                 } else if (content.data instanceof Blob) {
                   const reader = new FileReader();
                   reader.onload = (event) => {
                     const textContent = event.target?.result as string;
-                    importUtils(textContent);
+                    alert("test 2");
+                    ImportBEA(textContent);
                   };
                   reader.onerror = (error) => {
                     console.error("Error reading Blob content:", error);
@@ -266,6 +266,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
                   };
                   reader.readAsText(content.data);
                 } else {
+                  alert("Unexpected content.data type");
                   console.error(
                     "Unexpected content.data type:",
                     typeof content.data
@@ -291,7 +292,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
       });
   };
 
-  // Send intent handler (only for non-archived view)
+  
   useEffect(() => {
     if (showArchived) return;
 
@@ -302,10 +303,10 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
     };
   }, [showArchived]);
 
-  // Render different content based on showArchived prop
+  
   const renderContent = () => {
     if (showArchived) {
-      // Archive view
+      
       return (
         <div className="py-2 p-2 mx-4 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
           <h2 className="text-3xl font-bold mb-4">
@@ -345,7 +346,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
       );
     }
 
-    // Home view
+    
     return (
       <div className="py-2 p-2 mx-4 mb-10 cursor-pointer rounded-md items-center justify-center h-full">
         {/* Bookmarked Notes Section */}
