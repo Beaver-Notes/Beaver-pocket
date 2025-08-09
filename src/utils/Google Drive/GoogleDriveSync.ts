@@ -4,12 +4,13 @@ import { mergeData, revertAssetPaths, SyncData } from "../merge";
 import {
   Filesystem,
   FilesystemDirectory,
-  FilesystemEncoding,
 } from "@capacitor/filesystem";
 import mime from "mime";
 import { driveService } from "./GoogleOauth";
 import { GoogleDriveAPI } from "./GoogleDriveAPI";
 import { useStorage } from "@/composable/storage";
+import { useNoteStore } from "@/store/note";
+import { useLabelStore } from "@/store/label";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -35,9 +36,13 @@ interface AssetSyncLog {
   }[];
 }
 
-const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
+
+// ─────────────────────────────────────────────────────────────
+// Google Drive Auth Hook
+// Handles authentication and token renewal 
+// ─────────────────────────────────────────────────────────────
 export const useDrive = () => {
   const [user, setUser] = useState<any | null>(null);
 
@@ -66,9 +71,15 @@ export const useDrive = () => {
   return { user, loadAccessToken };
 };
 
+// ─────────────────────────────────────────────────────────────
+// Google Drive Sync Hook
+// Handles syncing of notes, labels, deleted IDs, and assets
+// ─────────────────────────────────────────────────────────────
 export const useDriveSync = (): DriveSyncHookReturn => {
-  const storage = useStorage();
   const drive = useDrive();
+  const storage = useStorage();
+  const noteStore = useNoteStore.getState();
+  const labelStore = useLabelStore.getState();
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
     syncError: null,
@@ -79,6 +90,7 @@ export const useDriveSync = (): DriveSyncHookReturn => {
   const [progress, setProgress] = useState(0);
 
   const syncDrive = async () => {
+
     const driveAPI = await drive.loadAccessToken();
     if (!driveAPI) {
       console.warn("Drive API is not initialized. Please sign in.");
@@ -102,29 +114,12 @@ export const useDriveSync = (): DriveSyncHookReturn => {
         if (!folderId) throw new Error("Failed to create sync folder");
       }
 
-      // Read local data safely
       let localData: SyncData = { data: { notes: {} } };
-      try {
-        const localFileData = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: FilesystemDirectory.Data,
-          encoding: FilesystemEncoding.UTF8,
-        });
-        localData = JSON.parse(
-          typeof localFileData.data === "string"
-            ? localFileData.data
-            : await localFileData.data.text()
-        );
-      } catch (e) {
-        // If local data file doesn't exist or is invalid, start with empty data
-        console.warn(
-          "Failed to read local data.json, starting with empty data:",
-          e
-        );
-        localData = { data: { notes: {} } };
-      }
 
-      // Read remote data safely
+      localData.data.notes = noteStore.data ?? {};
+      localData.data.labels = labelStore.labels ?? [];
+      localData.data.deletedIds = noteStore.deleted ?? {};
+
       let remoteData: SyncData = { data: { notes: {} } };
       const contents = await driveAPI.listContents(folderId);
       const dataFile = contents.find(
@@ -143,29 +138,19 @@ export const useDriveSync = (): DriveSyncHookReturn => {
           console.warn("Failed to download or parse remote data.json:", e);
         }
       } else {
-        // No remote data found, proceed with local data
       }
 
       setProgress(20);
 
-      // Merge all data safely
       const mergedData = await mergeData(localData, remoteData);
 
       await syncGoogleDriveAssets(driveAPI, folderId);
 
       setProgress(80);
 
-      // Save merged data locally
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify(mergedData),
-        directory: FilesystemDirectory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
       await storage.set("notes", mergedData.data.notes);
+      noteStore.retrieve();
 
-      // Prepare cleaned data and upload
       const cleanedData = { ...mergedData };
 
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
@@ -199,6 +184,10 @@ export const useDriveSync = (): DriveSyncHookReturn => {
   return { syncDrive, syncState, progress };
 };
 
+// ─────────────────────────────────────────────────────────────
+// Asset Synchronization Function
+// Handles two-way sync of asset folders between device and google drive
+// ─────────────────────────────────────────────────────────────
 export async function syncGoogleDriveAssets(
   driveAPI: GoogleDriveAPI,
   folderId: string
@@ -298,7 +287,6 @@ export async function syncGoogleDriveAssets(
         const remoteFiles = await driveAPI.listContents(remoteNoteFolderId);
         const remoteFileMap = new Map(remoteFiles.map((f) => [f.name, f.id]));
 
-        // Download new files
         for (const [name, id] of remoteFileMap) {
           if (!localFiles.includes(name)) {
             try {
@@ -329,7 +317,6 @@ export async function syncGoogleDriveAssets(
           }
         }
 
-        // Upload new files
         for (const fileName of localFiles) {
           if (!remoteFileMap.has(fileName)) {
             try {

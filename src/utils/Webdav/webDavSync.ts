@@ -3,12 +3,13 @@ import { WebDavService } from "./webDavApi";
 import {
   Filesystem,
   FilesystemDirectory,
-  FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { base64Encode, blobToBase64, blobToString } from "../base64";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { useStorage } from "@/composable/storage";
+import { useNoteStore } from "@/store/note";
+import { useLabelStore } from "@/store/label";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -34,10 +35,15 @@ interface AssetSyncLog {
   }[];
 }
 
-const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
+// ─────────────────────────────────────────────────────────────
+// Webdav Sync Hook
+// Handles syncing of notes, labels, deleted IDs, and assets
+// ─────────────────────────────────────────────────────────────
 const useWebDAVSync = (): WebDAVSyncHookReturn => {
+  const noteStore = useNoteStore.getState();
+  const labelStore = useLabelStore.getState();
   const storage = useStorage();
   const [progress, setProgress] = useState<number>(0);
   const [syncState, setSyncState] = useState<SyncState>({
@@ -74,16 +80,10 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
       }
 
       let localData: SyncData = { data: { notes: {} } };
-      try {
-        const localFileData = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: FilesystemDirectory.Data,
-          encoding: FilesystemEncoding.UTF8,
-        });
-        localData = JSON.parse(localFileData.data as string);
-      } catch {
-        // No local data, use empty object
-      }
+
+      localData.data.notes = noteStore.data ?? {};
+      localData.data.labels = labelStore.labels ?? [];
+      localData.data.deletedIds = noteStore.deleted ?? {};
 
       let remoteData: SyncData = { data: { notes: {} } };
       try {
@@ -91,7 +91,7 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
         const fileString = await blobToString(fileData);
         remoteData = JSON.parse(fileString);
       } catch {
-        // No remote data, use empty object
+        // Use empty object
       }
 
       setProgress(20);
@@ -102,14 +102,8 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
 
       setProgress(80);
 
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify(mergedData),
-        directory: FilesystemDirectory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
-
-      await storage.set('notes', mergedData.data.notes);
+      await storage.set("notes", mergedData.data.notes);
+      noteStore.retrieve();
 
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
@@ -159,6 +153,10 @@ async function getFolderMetadata(
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Asset Synchronization Function
+// Handles two-way sync of asset folders between device and WebDAV
+// ─────────────────────────────────────────────────────────────
 async function syncWebDAVAssets(
   syncFolderName: string,
   webDavService: WebDavService
@@ -213,7 +211,7 @@ async function syncWebDAVAssets(
         console.error(
           `Cannot proceed with sync for ${assetType.local} - remote folder issue`
         );
-        continue; // Skip to next asset type
+        continue;
       }
 
       let remoteSubfolders: string[] = [];
@@ -266,7 +264,6 @@ async function syncWebDAVAssets(
               `Error creating local folder ${localFolderPath}:`,
               error
             );
-            // Continue anyway - the folder might already exist or be created during file writes
           }
         }
 
@@ -277,14 +274,12 @@ async function syncWebDAVAssets(
             remoteSubfolderExists = true;
           } catch (error: any) {
             if (error.status === 409) {
-              // 409 means the folder already exists, which is fine
               remoteSubfolderExists = true;
             } else {
               console.error(
                 `Error creating remote folder ${remoteFolderPath}:`,
                 error
               );
-              // Continue anyway - we'll try to list files in case the folder exists but had another error
             }
           }
         }
