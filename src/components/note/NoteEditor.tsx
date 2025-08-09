@@ -14,7 +14,7 @@ import { WebviewPrint } from "capacitor-webview-print";
 import NoteBubbleMenu from "./NoteBubbleMenu";
 import Icon from "../ui/Icon";
 import { UiModal } from "../ui/Modal";
-import { shareNote } from "../../utils/share";
+import { exportBEA } from "../../utils/share/BEA";
 import { useLabelStore } from "@/store/label";
 import { useNoteStore } from "@/store/note";
 
@@ -267,7 +267,7 @@ function EditorComponent({ note, translations }: Props) {
   const shareBEA = async () => {
     setIsExporting(true);
     try {
-      await shareNote(note.id);
+      await exportBEA(note.id);
     } finally {
       setIsExporting(false);
     }
