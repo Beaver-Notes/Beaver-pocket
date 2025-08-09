@@ -50,8 +50,6 @@ export interface SyncData {
   data: {
     notes: Record<string, Note>;
     labels?: string[];
-    lockStatus?: Record<string, any>;
-    isLocked?: Record<string, any>;
     deletedIds?: Record<string, number>;
   };
 }
@@ -79,24 +77,12 @@ export function mergeData(
   const allLabels = [...(localData.labels || []), ...(remoteData.labels || [])];
   const mergedLabels = [...new Set(allLabels)];
 
-  const mergedLockStatus = {
-    ...(localData.lockStatus || {}),
-    ...(remoteData.lockStatus || {}),
-  };
-
-  const mergedIsLocked = {
-    ...(localData.isLocked || {}),
-    ...(remoteData.isLocked || {}),
-  };
-
   console.log("Data merged successfully");
 
   return {
     data: {
       notes: mergedNotes,
       labels: mergedLabels,
-      lockStatus: mergedLockStatus,
-      isLocked: mergedIsLocked,
       deletedIds: mergedDeletedIds,
     },
   };
