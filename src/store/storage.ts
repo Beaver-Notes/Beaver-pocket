@@ -1,48 +1,66 @@
+import { Encoding, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import { useNoteStore } from "@/store/note";
+import { useStorage } from "@/composable/storage";
+import { Note } from "./types";
 
-import {
-    Directory,
-    Encoding,
-    Filesystem,
-} from "@capacitor/filesystem";
-
-export async function migrateDataJson() {
+export async function migrateData() {
+    const noteStore = useNoteStore.getState();
+    const storage = useStorage();
     const oldPath = "notes/data.json";
     const newPath = "data.json";
 
     try {
-        // Read the old file if it exists
         const oldFile = await Filesystem.readFile({
             path: oldPath,
-            directory: Directory.Data,
+            directory: FilesystemDirectory.Data,
             encoding: Encoding.UTF8,
         });
 
-        // Write the file to the new location
+        console.log(oldFile.data);
+        const dataJson = JSON.parse(oldFile.data as string);
+
         await Filesystem.writeFile({
             path: newPath,
-            directory: Directory.Data,
+            directory: FilesystemDirectory.Data,
             data: oldFile.data,
             encoding: Encoding.UTF8,
         });
 
-        // Optionally delete the old file (if you want to clean up)
+        // Fix: Extract notes from the nested structure
+        let notesToMigrate = {};
+
+        if (dataJson.data && dataJson.data.notes) {
+            // New nested format
+            notesToMigrate = dataJson.data.notes;
+        } else if (dataJson.notes) {
+            // Old flat format with notes array/object
+            notesToMigrate = Array.isArray(dataJson.notes)
+                ? dataJson.notes.reduce((acc: any, note: Note) => ({ ...acc, [note.id]: note }), {})
+                : dataJson.notes;
+        } else {
+            // Direct notes object
+            notesToMigrate = dataJson;
+        }
+
+        await storage.set("notes", notesToMigrate);
+        await noteStore.retrieve();
+
         await Filesystem.deleteFile({
             path: oldPath,
-            directory: Directory.Data,
+            directory: FilesystemDirectory.Data,
         });
 
-        console.log("Migration successful: data.json moved.");
+        console.log("Migration successful: data.json moved & loaded.");
     } catch (e) {
         console.log("Migration skipped or failed:", e);
     }
 
-    // Ensure required folders exist
     const paths = ["file-assets", "note-assets", "export"];
     for (const path of paths) {
         try {
             await Filesystem.mkdir({
                 path,
-                directory: Directory.Data,
+                directory: FilesystemDirectory.Data,
                 recursive: true,
             });
         } catch (error) {

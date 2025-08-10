@@ -90,7 +90,14 @@ export const useNoteStore = create((set, get) => ({
   retrieve: async () => {
     try {
       const localStorageData = await storage.get("notes", {});
-      set((state) => ({ data: { ...state.data, ...localStorageData } }));
+      const safeData =
+        localStorageData && typeof localStorageData === "object"
+          ? localStorageData
+          : {};
+
+      set((state) => ({
+        data: { ...state.data, ...safeData },
+      }));
 
       const migrationCompleted = await storage.get(
         "migration_completed",
@@ -102,6 +109,7 @@ export const useNoteStore = create((set, get) => ({
       }
     } catch (e) {
       console.error("Error retrieving notes:", e);
+      set({ data: {} });
     }
   },
 

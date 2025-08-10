@@ -54,7 +54,6 @@ export class WebDavService {
     try {
       const exists = await this.folderExists(folderPath);
       if (exists) {
-        console.log(`Folder already exists at ${this.buildUrl(folderPath)}`);
         return;
       }
 
@@ -63,7 +62,6 @@ export class WebDavService {
         username: this.options.username,
         password: this.options.password,
       });
-      console.log(`Folder created at ${this.buildUrl(folderPath)}`);
     } catch (error) {
       throw new Error(`Failed to create folder: ${error}`);
     }
@@ -97,7 +95,6 @@ export class WebDavService {
         password: this.options.password,
         content: base64Content,
       });
-      console.log(`File uploaded: ${this.buildUrl(fileName)}`);
     } catch (error) {
       throw new Error(`Failed to upload file: ${fileName} - ${error}`);
     }
@@ -110,7 +107,6 @@ export class WebDavService {
         username: this.options.username,
         password: this.options.password,
       });
-      console.log(`Folder deleted at ${this.buildUrl(folderPath)}`);
     } catch (error) {
       throw new Error(`Failed to delete folder at ${folderPath}: ${error}`);
     }
@@ -136,32 +132,45 @@ export class WebDavService {
         throw new Error("Error parsing XML response");
       }
 
-      const responses = Array.from(xmlDoc.getElementsByTagName("D:response"));
+
+      let responses = Array.from(xmlDoc.getElementsByTagName("d:response"));
 
       if (responses.length === 0) {
-        const fallbackResponses = Array.from(
-          xmlDoc.getElementsByTagName("response")
-        );
-        console.log(
-          "Fallback to non-namespaced responses:",
-          fallbackResponses.length
-        );
+        responses = Array.from(xmlDoc.getElementsByTagName("D:response"));
+      }
+
+      if (responses.length === 0) {
+        responses = Array.from(xmlDoc.getElementsByTagName("response"));
+      }
+
+
+      if (responses.length === 0) {
+        console.warn("No responses found in XML");
+        return [];
       }
 
       const items = responses.map((responseElem) => {
+
         let hrefElem =
+          responseElem.getElementsByTagName("d:href")[0] ||
           responseElem.getElementsByTagName("D:href")[0] ||
           responseElem.getElementsByTagName("href")[0];
+
         const href = hrefElem?.textContent || "";
 
+
         let resTypeElem =
+          responseElem.getElementsByTagName("d:resourcetype")[0] ||
           responseElem.getElementsByTagName("D:resourcetype")[0] ||
           responseElem.getElementsByTagName("resourcetype")[0];
 
-        const isDirectory = !!(
-          resTypeElem?.getElementsByTagName("D:collection")[0] ||
-          resTypeElem?.getElementsByTagName("collection")[0]
-        );
+
+        const isDirectory = resTypeElem ?
+          Array.from(resTypeElem.getElementsByTagName("*")).some((el) =>
+            el.localName.toLowerCase() === "collection" ||
+            el.nodeName.toLowerCase().includes("collection")
+          ) : false;
+
 
         let name = decodeURIComponent(href).replace(/\/$/, "");
         name = name.substring(name.lastIndexOf("/") + 1);
@@ -172,7 +181,10 @@ export class WebDavService {
         };
       });
 
-      return items.slice(1).filter((item) => item.name.length > 0);
+
+      const filteredItems = items.slice(1).filter((item) => item.name.length > 0);
+
+      return filteredItems;
     } catch (error) {
       console.error("Error getting directory contents:", error);
       throw new Error(`Failed to get directory content: ${error}`);

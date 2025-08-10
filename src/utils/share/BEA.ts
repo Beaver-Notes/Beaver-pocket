@@ -23,7 +23,7 @@ export const exportBEA = async (
                 recursive: true,
             });
         } catch (error) {
-            console.log("No existing export folder found, continuing...");
+            console.error("No existing export folder found", error);
         }
 
         await Filesystem.mkdir({
@@ -165,16 +165,13 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     });
 };
 
-// Helper: Check if a directory exists, and create it only if it doesn't
 const ensureDirExists = async (dirPath: string) => {
     try {
         await Filesystem.stat({
             path: dirPath,
             directory: Directory.Data,
         });
-        // Exists — do nothing
     } catch (err) {
-        // Doesn't exist — create it
         await Filesystem.mkdir({
             path: dirPath,
             directory: Directory.Data,
@@ -183,14 +180,12 @@ const ensureDirExists = async (dirPath: string) => {
     }
 };
 
-// Helper: Write file only if it doesn't exist
 const base64ToFile = async (base64Data: string, filePath: string) => {
     try {
         await Filesystem.stat({
             path: filePath,
             directory: Directory.Data,
         });
-        console.log(`File ${filePath} already exists. Skipping...`);
         return;
     } catch (err) {
         // File does not exist
@@ -202,7 +197,6 @@ const base64ToFile = async (base64Data: string, filePath: string) => {
             data: base64Data,
             directory: Directory.Data,
         });
-        console.log(`Wrote file ${filePath}`);
     } catch (error) {
         console.error(`Error writing file ${filePath}:`, error);
     }
@@ -216,7 +210,6 @@ export const ImportBEA = async (fileContent: any) => {
             ? JSON.parse(fileContent)
             : fileContent;
 
-        // Fix asset paths in data
         const updateAssetLinks = (obj: any) => {
             for (const key in obj) {
                 if (typeof obj[key] === "object" && obj[key] !== null) {
@@ -233,7 +226,6 @@ export const ImportBEA = async (fileContent: any) => {
 
         updateAssetLinks(parsedData);
 
-        // Validate structure
         if (
             !parsedData.data ||
             !parsedData.data.id ||
@@ -262,11 +254,9 @@ export const ImportBEA = async (fileContent: any) => {
         const noteAssetsFolder = `note-assets/${noteId}`;
         const fileAssetsFolder = `file-assets/${noteId}`;
 
-        // Ensure folders exist (fixes "already exists" error)
         await ensureDirExists(noteAssetsFolder);
         await ensureDirExists(fileAssetsFolder);
 
-        // Write assets if they exist
         if (parsedData.data.assets) {
             if (parsedData.data.assets.notesAssets) {
                 for (const assetName in parsedData.data.assets.notesAssets) {
@@ -283,19 +273,14 @@ export const ImportBEA = async (fileContent: any) => {
             }
         }
 
-        // Retrieve existing notes from store
         await noteStore.retrieve();
         const existingData = noteStore.data;
 
         if (existingData[noteId]) {
-            // If note exists, update it
             await noteStore.update(noteId, importedNote);
         } else {
-            // If note does not exist, add it
             await noteStore.add(noteId, importedNote);
         }
-
-        // Merge labels without duplicates
         if (parsedData.data.labels && Array.isArray(parsedData.data.labels)) {
             for (const label of parsedData.data.labels) {
                 if (!existingData.labels?.includes(label)) {
@@ -304,7 +289,6 @@ export const ImportBEA = async (fileContent: any) => {
             }
         }
 
-        // Trigger event
         const event = new CustomEvent("notelink", { detail: { noteId } });
         document.dispatchEvent(event);
 

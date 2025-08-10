@@ -1,6 +1,5 @@
 import { registerPlugin } from "@capacitor/core";
 
-// Define the interface for the WebDAV plugin with full endpoints and comments
 export interface WebDAVPlugin {
   /**
    * Creates a new folder at the specified WebDAV URL.
@@ -37,7 +36,7 @@ export interface WebDAVPlugin {
     password: string;
   }): Promise<{
     message: string;
-    data: string; // raw XML string from PROPFIND response
+    data: string;
   }>;
 
   /**
@@ -48,7 +47,7 @@ export interface WebDAVPlugin {
     url: string;
     username: string;
     password: string;
-    content: string; // base64 encoded string
+    content: string;
   }): Promise<{
     message: string;
   }>;
@@ -74,7 +73,7 @@ export interface WebDAVPlugin {
     username: string;
     password: string;
   }): Promise<{
-    content: string; // base64 encoded string
+    content: string;
   }>;
 
   /**
@@ -90,14 +89,13 @@ export interface WebDAVPlugin {
    * Optionally pass an `alias` to identify the certificate (useful if supporting multiple certs).
    */
   uploadCertificate(options: {
-    certificate: string; // base64 encoded certificate
+    certificate: string;
     alias?: string;
   }): Promise<{
     message: string;
   }>;
 }
 
-// Register the WebDAV plugin with Capacitor
 const WebDAV = registerPlugin<WebDAVPlugin>("WebDAV");
 
 export default WebDAV;

@@ -11,33 +11,40 @@ export function revertAssetPaths(
     if (
       cleanedNote.content &&
       typeof cleanedNote.content === "object" &&
-      "content" in cleanedNote.content
+      "content" in cleanedNote.content &&
+      Array.isArray(cleanedNote.content.content)
     ) {
-      if (cleanedNote.content.content) {
-        cleanedNote.content.content = cleanedNote.content.content.map(
-          (node: any) => {
-            if (node.type === "image" && node.attrs && node.attrs.src) {
-              node.attrs.src = node.attrs.src.replace(
-                `note-assets/${noteId}/`,
-                "assets://"
-              );
+      cleanedNote.content.content = cleanedNote.content.content.map(
+        (node: any) => {
+          // Handle images: note-assets/<id>/file → assets://<id>/file
+          if (node.type === "image" && node.attrs && node.attrs.src) {
+            if (node.attrs.src.startsWith("data:")) {
+              return node; // preserve base64
             }
-            if (
-              (node.type === "fileEmbed" ||
-                node.type === "Audio" ||
-                node.type === "Video") &&
-              node.attrs &&
-              node.attrs.src
-            ) {
-              node.attrs.src = node.attrs.src.replace(
-                `file-assets/${noteId}/`,
-                "file-assets://"
-              );
+
+            // Only process file-path types below
+            if (node.attrs.src.startsWith(`note-assets/${noteId}/`)) {
+              const filename = node.attrs.src.replace(`note-assets/${noteId}/`, "");
+              node.attrs.src = `assets://${noteId}/${filename}`;
             }
-            return node;
           }
-        );
-      }
+
+          // Handle file embeds, audio, video
+          if (
+            (node.type === "fileEmbed" ||
+              node.type === "Audio" ||
+              node.type === "Video") &&
+            node.attrs &&
+            node.attrs.src &&
+            node.attrs.src.startsWith(`file-assets/${noteId}/`)
+          ) {
+            const filename = node.attrs.src.replace(`file-assets/${noteId}/`, "");
+            node.attrs.src = `file-assets://${noteId}/${filename}`;
+          }
+
+          return node;
+        }
+      );
     }
 
     cleanedNotes[noteId] = cleanedNote;
@@ -95,23 +102,25 @@ export function mergeNotesWithDeletedIds(
 ): Record<string, Note> {
   const mergedNotes: Record<string, Note> = {};
 
+  // Process local notes
   for (const [noteId, localNote] of Object.entries(localNotes)) {
     if (deletedIds[noteId]) continue;
-    mergedNotes[noteId] = localNote;
+    mergedNotes[noteId] = processNotePaths(noteId, localNote); // ← Fixed: process local!
   }
 
+  // Process remote notes
   for (const [noteId, remoteNote] of Object.entries(remoteNotes)) {
     if (deletedIds[noteId]) continue;
 
-    const localNote = mergedNotes[noteId];
     const processedRemoteNote = processNotePaths(noteId, remoteNote);
+    const existingNote = mergedNotes[noteId];
 
-    if (!localNote) {
+    if (!existingNote) {
       mergedNotes[noteId] = processedRemoteNote;
     } else if (
       processedRemoteNote.updatedAt &&
-      localNote.updatedAt &&
-      new Date(processedRemoteNote.updatedAt) > new Date(localNote.updatedAt)
+      existingNote.updatedAt &&
+      new Date(processedRemoteNote.updatedAt) > new Date(existingNote.updatedAt)
     ) {
       mergedNotes[noteId] = processedRemoteNote;
     }
@@ -126,36 +135,39 @@ function processNotePaths(noteId: string, note: Note): Note {
   if (
     processedNote.content &&
     typeof processedNote.content === "object" &&
-    "content" in processedNote.content
+    "content" in processedNote.content &&
+    Array.isArray(processedNote.content.content)
   ) {
-    if (processedNote.content.content) {
-      processedNote.content.content = processedNote.content.content.map(
-        (node: any) => {
-          if (node.type === "image" && node.attrs && node.attrs.src) {
-            node.attrs.src = node.attrs.src.replace(
-              "assets://",
-              `note-assets/${noteId}/`
-            );
-          }
-          if (
-            (node.type === "fileEmbed" ||
-              node.type === "Audio" ||
-              node.type === "Video") &&
-            node.attrs &&
-            node.attrs.src
-          ) {
-            node.attrs.src = node.attrs.src.replace(
-              "file-assets://",
-              `file-assets/${noteId}/`
-            );
-          }
-          return node;
+    processedNote.content.content = processedNote.content.content.map(
+      (node: any) => {
+        // Handle images: assets://<noteId>/file → note-assets/<noteId>/file
+        if (
+          node.type === "image" &&
+          node.attrs &&
+          node.attrs.src &&
+          node.attrs.src.startsWith(`assets://${noteId}/`)
+        ) {
+          const filename = node.attrs.src.replace(`assets://${noteId}/`, "");
+          node.attrs.src = `note-assets/${noteId}/${filename}`;
         }
-      );
-    }
-  }
 
-  console.log(`Processed note paths for note ID: ${noteId}`, processedNote);
+        // Handle file embeds, audio, video
+        if (
+          (node.type === "fileEmbed" ||
+            node.type === "Audio" ||
+            node.type === "Video") &&
+          node.attrs &&
+          node.attrs.src &&
+          node.attrs.src.startsWith(`file-assets://${noteId}/`)
+        ) {
+          const filename = node.attrs.src.replace(`file-assets://${noteId}/`, "");
+          node.attrs.src = `file-assets/${noteId}/${filename}`;
+        }
+
+        return node;
+      }
+    );
+  }
 
   return processedNote;
 }

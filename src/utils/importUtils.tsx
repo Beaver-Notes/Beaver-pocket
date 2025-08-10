@@ -7,8 +7,6 @@ import { mergeData, revertAssetPaths } from "./merge";
 import { useNoteStore } from "@/store/note";
 import { useStorage } from "@/composable/storage";
 
-const STORAGE_PATH = "notes/data.json";
-
 const noteStore = useNoteStore.getState();
 
 export const useHandleImportData = () => {
@@ -123,7 +121,6 @@ export const useHandleImportData = () => {
       }
 
       if (parsedData?.data?.notes) {
-        // First load existing notes
         await noteStore.retrieve();
         const localData = noteStore.data;
 
@@ -133,8 +130,6 @@ export const useHandleImportData = () => {
             data: {
               notes: localData.notes,
               labels: localData.labels,
-              lockStatus: localData.lockStatus,
-              isLocked: localData.isLocked,
               deletedIds: localData.deletedIds,
             },
           },
@@ -142,8 +137,6 @@ export const useHandleImportData = () => {
             data: {
               notes: parsedData.data.notes,
               labels: parsedData?.labels || [],
-              lockStatus: parsedData?.lockStatus || {},
-              isLocked: parsedData?.isLocked || {},
               deletedIds: parsedData?.deletedIds || {},
             },
           }
@@ -157,15 +150,8 @@ export const useHandleImportData = () => {
           notes: cleanedNotes,
         };
 
-        await Filesystem.writeFile({
-          path: STORAGE_PATH,
-          data: JSON.stringify(mergedWithRevertedPaths),
-          directory: Directory.Data,
-          encoding: FilesystemEncoding.UTF8,
-        });
-
-        await storage.set('notes', await cleanedNotes);
-        document.dispatchEvent(new Event("reload"));
+        await storage.set("notes", await mergedWithRevertedPaths);
+        await noteStore.retrieve;
       }
     } catch (error) {
       console.error("Import error:", error);

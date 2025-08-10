@@ -9,6 +9,7 @@ import Mousetrap from "mousetrap";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { Capacitor } from "@capacitor/core";
 import { useStore } from "@/store/index";
+import { migrateData } from "@/store/storage";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { SplashScreen } from "@capacitor/splash-screen";
 import Dialog from "./components/ui/Dialog";
@@ -112,6 +113,8 @@ const App: React.FC = () => {
         ) {
           Keyboard.setResizeMode({ mode: KeyboardResize.Native });
         }
+
+        await migrateData();
 
         const selectedDarkText =
           localStorage.getItem("selected-dark-text") || "white";

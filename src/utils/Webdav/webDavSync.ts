@@ -157,6 +157,7 @@ async function getFolderMetadata(
 // Asset Synchronization Function
 // Handles two-way sync of asset folders between device and WebDAV
 // ─────────────────────────────────────────────────────────────
+
 async function syncWebDAVAssets(
   syncFolderName: string,
   webDavService: WebDavService
@@ -177,17 +178,22 @@ async function syncWebDAVAssets(
     const remoteRootPath = `${syncFolderName}/${assetType.remote}`;
 
     try {
-      try {
-        await Filesystem.mkdir({
-          path: localRootPath,
-          directory: FilesystemDirectory.Data,
-          recursive: true,
-        });
-      } catch (error) {
-        console.error(
-          `Local root folder ${localRootPath} already exists or couldn't be created`
-        );
+      async function ensureDir(path: string) {
+        try {
+          await Filesystem.stat({
+            path,
+            directory: FilesystemDirectory.Data,
+          });
+        } catch {
+          await Filesystem.mkdir({
+            path,
+            directory: FilesystemDirectory.Data,
+            recursive: true,
+          });
+        }
       }
+
+      await ensureDir(localRootPath);
 
       let remoteRootExists = true;
       try {
@@ -219,14 +225,13 @@ async function syncWebDAVAssets(
         const remoteFolderResponse = await webDavService.getDirectoryContent(
           remoteRootPath
         );
+
         remoteSubfolders = remoteFolderResponse
           .filter((file) => file.type === "directory")
           .map((file) => file.name);
+
       } catch (error: any) {
-        console.error(
-          `Error listing remote folders in ${remoteRootPath}:`,
-          error
-        );
+        console.error(`Error listing remote folders in ${remoteRootPath}:`, error);
         remoteSubfolders = [];
       }
 
@@ -237,20 +242,17 @@ async function syncWebDAVAssets(
           directory: FilesystemDirectory.Data,
         });
       } catch (error) {
-        console.error(
-          `No local subfolders found for ${localRootPath} or directory doesn't exist`
-        );
+        console.error(`No local subfolders found for ${localRootPath}`);
       }
 
       const localFolderNames = localSubfolders.files.map((file) => file.name);
+      const allNoteIds = [...new Set([...localFolderNames, ...remoteSubfolders])];
 
-      const allNoteIds = [
-        ...new Set([...localFolderNames, ...remoteSubfolders]),
-      ];
 
       for (const noteId of allNoteIds) {
         const localFolderPath = `${localRootPath}/${noteId}`;
         const remoteFolderPath = `${remoteRootPath}/${noteId}`;
+
 
         if (!localFolderNames.includes(noteId)) {
           try {
@@ -284,6 +286,20 @@ async function syncWebDAVAssets(
           }
         }
 
+        let remoteFiles: string[] = [];
+        try {
+          const remoteFilesResponse = await webDavService.getDirectoryContent(
+            remoteFolderPath
+          );
+
+          remoteFiles = remoteFilesResponse
+            .filter((file) => file.type === "file")
+            .map((file) => file.name);
+
+        } catch (error: any) {
+          console.error(`Remote folder ${remoteFolderPath} doesn't exist or error:`, error);
+        }
+
         let localFiles: { files: { name: string }[] } = { files: [] };
         try {
           localFiles = await Filesystem.readdir({
@@ -291,21 +307,7 @@ async function syncWebDAVAssets(
             directory: FilesystemDirectory.Data,
           });
         } catch (error) {
-          console.error(
-            `No local files found in ${localFolderPath} or directory doesn't exist yet`
-          );
-        }
-
-        let remoteFiles: string[] = [];
-        try {
-          const remoteFilesResponse = await webDavService.getDirectoryContent(
-            remoteFolderPath
-          );
-          remoteFiles = remoteFilesResponse
-            .filter((file) => file.type === "file")
-            .map((file) => file.name);
-        } catch (error: any) {
-          console.error(`Remote folder ${remoteFolderPath} doesn't exist`);
+          console.error(`No local files found in ${localFolderPath}`);
         }
 
         if (remoteFiles.length > 0) {
