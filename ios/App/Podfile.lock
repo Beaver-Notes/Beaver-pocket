@@ -25,7 +25,7 @@ PODS:
     - Capacitor
   - CapacitorKeyboard (7.0.1):
     - Capacitor
-  - CapacitorPreferences (7.0.1):
+  - CapacitorPreferences (7.0.2):
     - Capacitor
   - CapacitorSecureStoragePlugin (0.10.0):
     - Capacitor
@@ -46,6 +46,8 @@ PODS:
   - DanieleRolliCapacitorGoogleAuth (0.0.1):
     - Capacitor
     - GoogleSignIn (~> 7.0)
+  - DanieleRolliCapacitorSpotsearch (0.0.2):
+    - Capacitor
   - GoogleSignIn (7.1.0):
     - AppAuth (< 2.0, >= 1.7.3)
     - GTMAppAuth (< 5.0, >= 4.1.1)
@@ -86,6 +88,7 @@ DEPENDENCIES:
   - CapaZip (from `../../node_modules/capa-zip`)
   - "CapgoCapacitorNativeBiometric (from `../../node_modules/@capgo/capacitor-native-biometric`)"
   - "DanieleRolliCapacitorGoogleAuth (from `../../node_modules/@daniele-rolli/capacitor-google-auth`)"
+  - "DanieleRolliCapacitorSpotsearch (from `../../node_modules/@daniele-rolli/capacitor-spotsearch`)"
   - "RecognizebvCapacitorPluginMsauth (from `../../node_modules/@recognizebv/capacitor-plugin-msauth`)"
   - SendIntent (from `../../node_modules/send-intent`)
 
@@ -139,6 +142,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capgo/capacitor-native-biometric"
   DanieleRolliCapacitorGoogleAuth:
     :path: "../../node_modules/@daniele-rolli/capacitor-google-auth"
+  DanieleRolliCapacitorSpotsearch:
+    :path: "../../node_modules/@daniele-rolli/capacitor-spotsearch"
   RecognizebvCapacitorPluginMsauth:
     :path: "../../node_modules/@recognizebv/capacitor-plugin-msauth"
   SendIntent:
@@ -156,7 +161,7 @@ SPEC CHECKSUMS:
   CapacitorFilesystem: 337eeaf16a9fa5a44d2329df411523fa3a9a6ee9
   CapacitorHaptics: 1f1e17041f435d8ead9ff2a34edd592c6aa6a8d6
   CapacitorKeyboard: 09fd91dcde4f8a37313e7f11bde553ad1ed52036
-  CapacitorPreferences: 6c98117d4d7508034a4af9db64d6b26fc75d7b94
+  CapacitorPreferences: 65107ed7437d96ee72583df5763985e3c0ff2bc2
   CapacitorSecureStoragePlugin: 545b51d782d35e61a39231ecf99a966b060a2cbb
   CapacitorShare: e573823f511f260f598d0423c33b1e3d7bbe5fd1
   CapacitorSplashScreen: 1d67815a422a9b61539c94f283c08ed56667c0fc
@@ -165,6 +170,7 @@ SPEC CHECKSUMS:
   CapaZip: a379d937c2db9a882d0be29e63dcb0090e6cd6ae
   CapgoCapacitorNativeBiometric: be4ceeff38739d9c0f59b8c41456a3b01cfeddf0
   DanieleRolliCapacitorGoogleAuth: 81cccde64d5785237c4b0eba77cd50b8996edf91
+  DanieleRolliCapacitorSpotsearch: da232f0c34d2cbb0efe39f915a7eda40ab3384cc
   GoogleSignIn: d4281ab6cf21542b1cfaff85c191f230b399d2db
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
@@ -175,6 +181,6 @@ SPEC CHECKSUMS:
   SSZipArchive: fe6a26b2a54d5a0890f2567b5cc6de5caa600aef
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
 
-PODFILE CHECKSUM: 44950346780707beeccb3607938e838fba4cba97
+PODFILE CHECKSUM: 569e734a385dbfb5085def6c610de022e8ebf34c
 
 COCOAPODS: 1.16.2
