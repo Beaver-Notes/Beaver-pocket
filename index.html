@@ -13,28 +13,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      const darkThemeCSS = document.createElement("link");
-      darkThemeCSS.rel = "stylesheet";
-      document.head.appendChild(darkThemeCSS);
-
-      const themeMode = localStorage.getItem("themeMode");
-
-      if (themeMode === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-
-      window.addEventListener("storage", (e) => {
-        if (e.key === "themeMode") {
-          if (e.newValue === "dark") {
-            document.documentElement.classList.add("dark");
-          } else {
-            document.documentElement.classList.remove("dark");
-          }
-        }
-      });
-    </script>
   </body>
 </html>

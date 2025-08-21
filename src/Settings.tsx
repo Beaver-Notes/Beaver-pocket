@@ -1,35 +1,44 @@
 import React, { useState, useEffect } from "react";
 import enTranslations from "./assets/locales/en.json";
 import deTranslations from "./assets/locales/de.json";
+import { useTheme } from "@/composable/theme";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "./utils/translations";
 import Icon from "./components/ui/Icon";
+import { Preferences } from "@capacitor/preferences";
+import { clearIndex, indexData } from "./utils/spotsearch";
+import UiSelect from "./components/ui/Select";
 
-interface SettingsProps {
-  themeMode: string;
-  setThemeMode: (mode: any) => void;
-  toggleTheme: (newMode: boolean | ((prevState: boolean) => boolean)) => void;
-  setAutoMode: () => void;
-  darkMode: boolean;
-}
+const Settings: React.FC = () => {
+  const theme = useTheme();
+  const [selectedOption, setSelectedOption] = useState<
+    "light" | "dark" | "system"
+  >("system");
 
-const Settings: React.FC<SettingsProps> = ({
-  themeMode,
-  darkMode,
-  toggleTheme,
-  setAutoMode,
-}) => {
+  useEffect(() => {
+    setSelectedOption(theme.currentTheme);
+  }, [theme.currentTheme]);
+
+  const handleChangeMode = async (value: "light" | "dark" | "system") => {
+    setSelectedOption(value);
+    await theme.setTheme(value, value === "system");
+  };
+
+  const modes: Array<"light" | "dark" | "system"> = ["light", "dark", "system"];
+
   const navigate = useNavigate();
   const [translations, setTranslations] = useState<Record<string, any>>({
     settings: {},
   });
-  const [selectedFont, setSelectedFont] = useState<string>(
-    localStorage.getItem("selected-font") || "Arimo"
-  );
-  const [selectedCodeFont, setSelectedCodeFont] = useState<string>(
-    localStorage.getItem("selected-font-code") || "JetBrains Mono"
-  );
+
+  const [selectedFont, setSelectedFont] = useState<string>("Arimo");
+  const [selectedCodeFont, setSelectedCodeFont] =
+    useState<string>("JetBrains Mono");
   const [collapsibleChecked, setCollapsibleChecked] = useState(false);
+  const [indexingChecked, setIndexingChecked] = useState(false);
+  const [wd, setwd] = useState<boolean>(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [ClearFontChecked, setClearFontChecked] = useState(false);
 
   const Codefonts = [
     "Anonymous Pro",
@@ -37,7 +46,6 @@ const Settings: React.FC<SettingsProps> = ({
     "JetBrains Mono",
     "Source Code Pro",
   ];
-
   const fonts = [
     "Arimo",
     "Avenir",
@@ -49,74 +57,69 @@ const Settings: React.FC<SettingsProps> = ({
   ];
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--selected-font", selectedFont);
-    localStorage.setItem("selected-font", selectedFont);
-  }, [selectedFont]);
+    (async () => {
+      const font = await Preferences.get({ key: "selected-font" });
+      if (font.value) setSelectedFont(font.value);
 
-  const updateFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedFont(e.target.value);
-  };
+      const codeFont = await Preferences.get({ key: "selected-font-code" });
+      if (codeFont.value) setSelectedCodeFont(codeFont.value);
+
+      const expandEditor = await Preferences.get({ key: "expand-editor" });
+      setwd(expandEditor.value === "true");
+
+      const lang = await Preferences.get({ key: "selectedLanguage" });
+      if (lang.value) setSelectedLanguage(lang.value);
+
+      const darkText = await Preferences.get({ key: "selected-dark-text" });
+      setClearFontChecked(darkText.value === "#CCCCCC");
+
+      const collapsible = await Preferences.get({ key: "collapsibleHeading" });
+      setCollapsibleChecked(collapsible.value === "true");
+
+      const indexing = await Preferences.get({ key: "indexing" });
+      setIndexingChecked(indexing.value === "true");
+    })();
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--selected-font", selectedFont);
+    Preferences.set({ key: "selected-font", value: selectedFont });
+  }, [selectedFont]);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--selected-font-code",
       selectedCodeFont
     );
-    localStorage.setItem("selected-font-code", selectedCodeFont);
+    Preferences.set({ key: "selected-font-code", value: selectedCodeFont });
   }, [selectedCodeFont]);
 
-  const updatCodeFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCodeFont(e.target.value);
-  };
-
-  const [wd, setwd] = useState<boolean>(
-    localStorage.getItem("expand-editor") === "true"
-  );
-
-  useEffect(() => {
-    setwd(localStorage.getItem("expand-editor") === "true");
-  }, []);
-
-  const toggleBackground = () => {
+  const toggleBackground = async () => {
     const newValue = !wd;
-    localStorage.setItem("expand-editor", newValue.toString());
     setwd(newValue);
+    await Preferences.set({ key: "expand-editor", value: newValue.toString() });
   };
-
-  useEffect(() => {
-    const fetchTranslations = async () => {
-      const trans = await useTranslation();
-      if (trans) {
-        setTranslations(trans);
-      }
-    };
-    fetchTranslations();
-  }, []);
-
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    localStorage.getItem("selectedLanguage") || "en"
-  );
 
   const languages = [
     { code: "en", name: "English", translations: enTranslations },
     { code: "de", name: "Deutsch", translations: deTranslations },
   ];
 
-  const updateLanguage = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const languageCode = event.target.value;
-    setSelectedLanguage(languageCode);
-    localStorage.setItem("selectedLanguage", languageCode);
-    window.location.reload(); // Reload the page
-  };
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) setTranslations(trans);
+    };
+    fetchTranslations();
+  }, []);
 
-  const [ClearFontChecked, setClearFontChecked] = useState(
-    localStorage.getItem("selected-dark-text") === "#CCCCCC"
-  );
-
-  const toggleClearFont = () => {
+  const toggleClearFont = async () => {
     const newValue = !ClearFontChecked;
     setClearFontChecked(newValue);
-    localStorage.setItem("selected-dark-text", newValue ? "#CCCCCC" : "white");
+    await Preferences.set({
+      key: "selected-dark-text",
+      value: newValue ? "#CCCCCC" : "white",
+    });
     document.documentElement.style.setProperty(
       "selected-dark-text",
       newValue ? "#CCCCCC" : "white"
@@ -124,69 +127,56 @@ const Settings: React.FC<SettingsProps> = ({
     window.location.reload();
   };
 
-  useEffect(() => {
-    const storedValue = localStorage.getItem("collapsibleHeading") === "true";
-    setCollapsibleChecked(storedValue);
-  }, []);
-
-  const toggleCollapsible = () => {
+  const toggleCollapsible = async () => {
     const newValue = !collapsibleChecked;
     setCollapsibleChecked(newValue);
-    localStorage.setItem("collapsibleHeading", newValue.toString());
+    await Preferences.set({
+      key: "collapsibleHeading",
+      value: newValue.toString(),
+    });
   };
 
-  const [selectedOption, setSelectedOption] = useState(
-    themeMode === "auto" ? "System" : darkMode ? "Dark" : "Light"
-  );
+  const toggleIndexing = async () => {
+    const newValue = !indexingChecked;
+    setIndexingChecked(newValue);
+    await Preferences.set({ key: "indexing", value: newValue.toString() });
 
-  const handleChangeMode = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedOption(event.target.value);
-    switch (event.target.value) {
-      case translations.settings.light:
-        toggleTheme(false);
-        break;
-      case translations.settings.dark:
-        toggleTheme(true);
-        break;
-      case translations.settings.system:
-        setAutoMode();
-        break;
-      default:
-        break;
+    try {
+      if (newValue) {
+        await indexData();
+      } else {
+        await clearIndex();
+      }
+    } catch (e) {
+      console.error("Indexing toggle error:", e);
     }
   };
 
-  const modes = [
-    translations.settings.light,
-    translations.settings.dark,
-    translations.settings.system,
-  ];
-
   const colors = [
     { name: "red", bg: "bg-red-500" },
-    { name: "light", bg: "bg-amber-400" }, // Amber (yellow/orange)
+    { name: "light", bg: "bg-amber-400" },
     { name: "green", bg: "bg-emerald-500" },
     { name: "blue", bg: "bg-blue-400" },
     { name: "purple", bg: "bg-purple-400" },
     { name: "pink", bg: "bg-pink-400" },
-    { name: "neutral", bg: "bg-neutral-400" }, // Neutral at the end
+    { name: "neutral", bg: "bg-neutral-400" },
   ];
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const savedColor = localStorage.getItem("color-scheme") || "light"; // Default to 'light' if not found
-    setColor(savedColor);
-  });
-
-  const setColor = (color: any) => {
+  const setColor = async (color: string) => {
     const root = document.documentElement;
     root.classList.forEach((cls) => {
-      if (cls !== "light" && cls !== "dark") {
-        root.classList.remove(cls);
-      }
+      if (cls !== "light" && cls !== "dark") root.classList.remove(cls);
     });
     root.classList.add(color);
-    localStorage.setItem("color-scheme", color);
+    await Preferences.set({ key: "color-scheme", value: color });
   };
+
+  useEffect(() => {
+    (async () => {
+      const savedColor = await Preferences.get({ key: "color-scheme" });
+      setColor(savedColor.value || "light");
+    })();
+  }, []);
 
   return (
     <div>
@@ -212,21 +202,13 @@ const Settings: React.FC<SettingsProps> = ({
                   {translations.settings.apptheme || "-"}
                 </p>
                 <div className="relative">
-                  <select
-                    aria-labelledby="app-theme-label"
-                    value={selectedOption}
-                    onChange={handleChangeMode}
-                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                  >
-                    {modes.map((mode) => (
-                      <option key={mode} value={mode}>
-                        {mode}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon
-                    name="ArrowDownSLine"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
+                  <UiSelect
+                    modelValue={selectedOption}
+                    onChange={(val) =>
+                      handleChangeMode(val as "light" | "dark" | "system")
+                    }
+                    options={modes} // if modes = ["light", "dark", "system"]
+                    block
                   />
                 </div>
               </section>
@@ -257,24 +239,13 @@ const Settings: React.FC<SettingsProps> = ({
                 >
                   {translations.settings.selectfont || "-"}
                 </p>
-                <div className="relative">
-                  <select
-                    aria-labelledby="select-font-label"
-                    value={selectedFont}
-                    onChange={updateFont}
-                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                  >
-                    {fonts.map((font) => (
-                      <option key={font} value={font}>
-                        {font}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon
-                    name="ArrowDownSLine"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
-                  />
-                </div>
+                <UiSelect
+                  modelValue={selectedFont}
+                  onChange={(val) => setSelectedFont(val as string)}
+                  options={fonts}
+                  search={true}
+                  block
+                />
               </section>
 
               {/* Code Font */}
@@ -285,24 +256,12 @@ const Settings: React.FC<SettingsProps> = ({
                 >
                   {translations.settings.codeFont || "-"}
                 </p>
-                <div className="relative">
-                  <select
-                    aria-labelledby="code-font-label"
-                    value={selectedCodeFont}
-                    onChange={updatCodeFont}
-                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                  >
-                    {Codefonts.map((Codefont) => (
-                      <option key={Codefont} value={Codefont}>
-                        {Codefont}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon
-                    name="ArrowDownSLine"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
-                  />{" "}
-                </div>
+                <UiSelect
+                  modelValue={selectedCodeFont}
+                  onChange={(val) => setSelectedCodeFont(val as string)}
+                  options={Codefonts}
+                  block
+                />
               </section>
 
               {/* Select Language */}
@@ -313,24 +272,22 @@ const Settings: React.FC<SettingsProps> = ({
                 >
                   {translations.settings.selectlanguage || "-"}
                 </p>
-                <div className="relative">
-                  <select
-                    aria-labelledby="select-language-label"
-                    value={selectedLanguage}
-                    onChange={updateLanguage}
-                    className="rounded-full w-full p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-                  >
-                    {languages.map((language) => (
-                      <option key={language.code} value={language.code}>
-                        {language.name}
-                      </option>
-                    ))}
-                  </select>
-                  <Icon
-                    name="ArrowDownSLine"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
-                  />
-                </div>
+                <UiSelect
+                  modelValue={selectedLanguage}
+                  onChange={async (val) => {
+                    setSelectedLanguage(val as string);
+                    await Preferences.set({
+                      key: "selectedLanguage",
+                      value: val as string,
+                    });
+                    window.location.reload();
+                  }}
+                  options={languages.map((l) => ({
+                    value: l.code,
+                    text: l.name,
+                  }))}
+                  block
+                />
               </section>
 
               {/* Interface Options */}
@@ -343,7 +300,7 @@ const Settings: React.FC<SettingsProps> = ({
                 </p>
 
                 {/* Toggle Expand Page */}
-                <div className="hidden sm:block flex items-center py-2 dark:border-neutral-600 justify-between">
+                <div className="hidden sm:flex items-center py-2 dark:border-neutral-600 justify-between">
                   <p
                     id="expand-page-label"
                     className="block text-lg align-left"
@@ -404,6 +361,25 @@ const Settings: React.FC<SettingsProps> = ({
                   </label>
                 </div>
 
+                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                  <p id="clear-font-label" className="block text-lg align-left">
+                    Allow Indexing
+                  </p>
+                  <label
+                    className="relative inline-flex cursor-pointer items-center"
+                    aria-labelledby="clear-font-label"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={indexingChecked}
+                      onChange={toggleIndexing}
+                      className="peer sr-only"
+                      aria-checked={indexingChecked}
+                    />
+                    <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
+                  </label>
+                </div>
+
                 {/* Links */}
                 <div className="pb-4">
                   <div className="flex flex-col gap-2 pt-2">
@@ -419,7 +395,7 @@ const Settings: React.FC<SettingsProps> = ({
                     <button
                       onClick={() => navigate("/icons")}
                       aria-label={translations.settings.Shortcuts || "-"}
-                      className={`hidden sm:block w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center`}
+                      className={`w-full p-4 text-xl bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl inline-flex items-center`}
                     >
                       <Icon name="Brush2Fill" className="w-6 h-6 mr-2" />
                       {translations.settings.appIcon || "-"}

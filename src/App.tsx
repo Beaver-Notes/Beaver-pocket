@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { SafeArea } from "@capacitor-community/safe-area";
 import { useNavigate, useLocation } from "react-router-dom";
 import Router from "./router";
@@ -10,11 +10,9 @@ import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { Capacitor } from "@capacitor/core";
 import { useStore } from "@/store/index";
 import { migrateData } from "@/store/storage";
-import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import { Encoding, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { SplashScreen } from "@capacitor/splash-screen";
 import Dialog from "./components/ui/Dialog";
-
-// Import styles
 import "./assets/css/main.css";
 import "./assets/css/fonts.css";
 import useDropboxSync from "./utils/Dropbox/DropboxSync";
@@ -23,18 +21,23 @@ import useOneDriveSync from "./utils/Onedrive/oneDriveSync";
 import useWebDAVSync from "./utils/Webdav/webDavSync";
 import useDriveSync from "./utils/Google Drive/GoogleDriveSync";
 import { useNoteStore } from "./store/note";
+import { Preferences } from "@capacitor/preferences";
+import { useTheme } from "./composable/theme";
+import { SendIntent } from "send-intent";
+import { ImportBEA } from "./utils/share/BEA";
 
-// Memoized theme detection
-const getInitialTheme = () => {
-  const stored = localStorage.getItem("themeMode") || "auto";
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return {
-    mode: stored,
-    isDark: stored === "auto" ? prefersDark : stored === "dark",
-  };
-};
+function normalizeFilePath(encodedUrl: any) {
+  try {
+    let decodedUrl = decodeURIComponent(encodedUrl);
+    if (decodedUrl.startsWith("file%3A%2F%2F")) {
+      decodedUrl = decodedUrl.replace("file%3A%2F%2F", "file://");
+    }
+    return decodedUrl;
+  } catch {
+    return "";
+  }
+}
 
-// Memoized iPad detection
 const isIPad = (): boolean => {
   const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
   const isModernIPad =
@@ -43,20 +46,18 @@ const isIPad = (): boolean => {
 };
 
 const App: React.FC = () => {
+  const store = useStore();
+  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const platform = Capacitor.getPlatform();
-  const initialTheme = useMemo(() => getInitialTheme(), []);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "error">(
     "idle"
   );
   const noteStore = useNoteStore.getState();
-  const [themeMode, setThemeMode] = useState<string>(initialTheme.mode);
-  const [darkMode, setDarkMode] = useState<boolean>(initialTheme.isDark);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [notesLoaded, setNotesLoaded] = useState(false);
-  const store = useStore();
   const { syncDropbox } = useDropboxSync();
   const { synciCloud } = useiCloudSync();
   const { syncOneDrive } = useOneDriveSync();
@@ -64,27 +65,61 @@ const App: React.FC = () => {
   const { syncDrive } = useDriveSync();
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
+    const onSendIntent = () => {
+      SendIntent.checkSendIntentReceived().then(async (result) => {
+        if (!result?.url) return;
 
-  useEffect(() => {
-    if (themeMode !== "auto") return;
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-      setDarkMode(e.matches);
+        const normalizedUrl = normalizeFilePath(result.url);
+        try {
+          const content = await Filesystem.readFile({
+            path: normalizedUrl,
+            encoding: Encoding.UTF8,
+          });
+          if (typeof content.data === "string") {
+            ImportBEA(content.data);
+          }
+        } catch (err) {
+          console.error("Error reading file:", err);
+        }
+      });
     };
 
-    setDarkMode(mediaQuery.matches);
+    const onSpotOpen = (ev: any) => {
+      alert("test");
+      const id: string | undefined = ev?.id;
+      if (!id) return;
+      const [, noteId] = id.includes(":") ? id.split(":") : [undefined, id];
+      navigate(`/note/${noteId}`);
+    };
 
-    mediaQuery.addEventListener("change", handleSystemThemeChange);
+    window.addEventListener("sendIntentReceived", onSendIntent);
+    window.addEventListener("spotsearchOpen", onSpotOpen);
 
     return () => {
-      mediaQuery.removeEventListener("change", handleSystemThemeChange);
+      window.removeEventListener("sendIntentReceived", onSendIntent);
+      window.removeEventListener("spotsearchOpen", onSpotOpen);
     };
-  }, [themeMode]);
+  }, [navigate]);
+
+  useEffect(() => {
+    const initTheme = async () => {
+      await theme.loadTheme();
+    };
+    initTheme();
+    const setColor = async (color: string) => {
+      const root = document.documentElement;
+      root.classList.forEach((cls) => {
+        if (cls !== "light" && cls !== "dark") root.classList.remove(cls);
+      });
+      root.classList.add(color);
+      await Preferences.set({ key: "color-scheme", value: color });
+    };
+
+    (async () => {
+      const savedColor = await Preferences.get({ key: "color-scheme" });
+      setColor(savedColor.value || "light");
+    })();
+  }, []);
 
   useEffect(() => {
     const criticalInit = async () => {
@@ -105,22 +140,20 @@ const App: React.FC = () => {
         });
         setStoreRemotePath(Capacitor.convertFileSrc(uri));
 
-        if (isIPad() && Capacitor.getPlatform() !== "web") {
+        if (isIPad() && platform !== "web") {
           Keyboard.setResizeMode({ mode: KeyboardResize.None });
-        } else if (
-          platform !== "android" &&
-          Capacitor.getPlatform() !== "web"
-        ) {
+        } else if (platform !== "android" && platform !== "web") {
           Keyboard.setResizeMode({ mode: KeyboardResize.Native });
         }
 
         await migrateData();
 
-        const selectedDarkText =
-          localStorage.getItem("selected-dark-text") || "white";
+        const { value: selectedDarkText } = await Preferences.get({
+          key: "selected-dark-text",
+        });
         document.documentElement.style.setProperty(
           "--selected-dark-text",
-          selectedDarkText
+          selectedDarkText ?? "white"
         );
 
         setIsInitialized(true);
@@ -129,13 +162,11 @@ const App: React.FC = () => {
         setIsInitialized(true);
       }
     };
-
     criticalInit();
   }, [platform]);
 
   useEffect(() => {
     if (!isInitialized || notesLoaded) return;
-
     const loadNotesAsync = async () => {
       try {
         await store.retrieve();
@@ -145,7 +176,6 @@ const App: React.FC = () => {
         setNotesLoaded(true);
       }
     };
-
     const timeoutId = setTimeout(loadNotesAsync, 50);
     return () => clearTimeout(timeoutId);
   }, [isInitialized, notesLoaded]);
@@ -159,7 +189,6 @@ const App: React.FC = () => {
           console.error("Error hiding splash screen:", error);
         }
       };
-
       const timeoutId = setTimeout(hideSplash, 100);
       return () => clearTimeout(timeoutId);
     }
@@ -167,13 +196,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const checkFirstTime = () => {
-      const isFirstTime = localStorage.getItem("isFirstTime");
-      if (isFirstTime === null || isFirstTime === "true") {
-        navigate("/welcome");
-        localStorage.setItem("isFirstTime", "false");
-      }
+      (async () => {
+        const { value } = await Preferences.get({ key: "isFirstTime" });
+        if (value === null || value === "true") {
+          navigate("/welcome");
+          await Preferences.set({ key: "isFirstTime", value: "false" });
+        }
+      })();
     };
-
     const timeoutId = setTimeout(checkFirstTime, 100);
     return () => clearTimeout(timeoutId);
   }, [navigate]);
@@ -181,19 +211,13 @@ const App: React.FC = () => {
   const handleSync = async () => {
     setSyncStatus("syncing");
     try {
-      const syncValue = localStorage.getItem("sync");
-      if (syncValue === "dropbox") {
-        await syncDropbox();
-      } else if (syncValue === "iCloud") {
-        await synciCloud();
-      } else if (syncValue === "onedrive") {
-        await syncOneDrive();
-      } else if (syncValue === "webdav") {
-        await syncWebDAV();
-      } else if (syncValue === "googledrive") {
-        await syncDrive();
-      }
-      setSyncStatus("idle"); // done
+      const { value: syncValue } = await Preferences.get({ key: "sync" });
+      if (syncValue === "dropbox") await syncDropbox();
+      else if (syncValue === "iCloud") await synciCloud();
+      else if (syncValue === "onedrive") await syncOneDrive();
+      else if (syncValue === "webdav") await syncWebDAV();
+      else if (syncValue === "googledrive") await syncDrive();
+      setSyncStatus("idle");
     } catch (error) {
       console.error("Sync error:", error);
       setSyncStatus("error");
@@ -202,14 +226,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!isInitialized) return;
-
     const loadNotesFromStorage = async () => {
       await noteStore.retrieve();
     };
-
     document.addEventListener("reload", loadNotesFromStorage);
     document.addEventListener("sync", handleSync);
-
     return () => {
       document.removeEventListener("reload", loadNotesFromStorage);
       document.removeEventListener("sync", handleSync);
@@ -218,49 +239,25 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!isInitialized) return;
-
     const shortcuts: Array<[string, () => void]> = [
       ["mod+shift+p", () => setShowPrompt(true)],
-      ["mod+shift+n", () => navigate("/")],
       ["mod+shift+n", () => navigate("/")],
       ["mod+shift+a", () => navigate("/archive")],
       ["mod+,", () => navigate("/settings")],
     ];
-
     shortcuts.forEach(([shortcut, handler]) => {
       Mousetrap.bind(shortcut, (e: KeyboardEvent) => {
         e.preventDefault();
         handler();
       });
     });
-
     return () => {
-      shortcuts.forEach(([shortcut]) => {
-        Mousetrap.unbind(shortcut);
-      });
+      shortcuts.forEach(([shortcut]) => Mousetrap.unbind(shortcut));
     };
   }, [isInitialized, navigate]);
 
-  const toggleTheme = useCallback(
-    (newMode: boolean | ((prevState: boolean) => boolean)) => {
-      const isDark =
-        typeof newMode === "function" ? newMode(darkMode) : newMode;
-      setDarkMode(isDark);
-      setThemeMode(isDark ? "dark" : "light");
-    },
-    [darkMode]
-  );
-
-  const setAutoMode = useCallback(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    setThemeMode("auto");
-    setDarkMode(prefersDarkMode);
-  }, []);
-
   const shouldShowNavBar = useMemo(() => {
-    return !["/welcome", "/editor"].some((path) =>
+    return !["/welcome", "/note"].some((path) =>
       location.pathname.startsWith(path)
     );
   }, [location.pathname]);
@@ -279,15 +276,7 @@ const App: React.FC = () => {
     <div>
       <div className="safe-area"></div>
       <CommandPrompt showPrompt={showPrompt} setShowPrompt={setShowPrompt} />
-      <Router
-        themeMode={themeMode}
-        setThemeMode={setThemeMode}
-        toggleTheme={toggleTheme}
-        setAutoMode={setAutoMode}
-        darkMode={darkMode}
-        syncStatus={syncStatus}
-      />
-
+      <Router syncStatus={syncStatus} />
       {shouldShowNavBar && <BottomNavBar />}
       <Dialog />
     </div>
