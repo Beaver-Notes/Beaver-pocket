@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 import { AES } from "crypto-es/lib/aes.js";
 import { Utf8 } from "crypto-es/lib/core.js";
 import { useStorage } from "@/composable/storage";
-import { trackChange } from "@/utils/sync";
+import { trackChange } from "@/composable/sync";
 import { useFolderStore } from "./folder";
 import { SpotSearch } from "@daniele-rolli/capacitor-spotsearch";
 import { Preferences } from "@capacitor/preferences";

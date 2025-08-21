@@ -41,6 +41,9 @@ project(':capgo-capacitor-native-biometric').projectDir = new File('../node_modu
 include ':daniele-rolli-capacitor-google-auth'
 project(':daniele-rolli-capacitor-google-auth').projectDir = new File('../node_modules/@daniele-rolli/capacitor-google-auth/android')
 
+include ':daniele-rolli-capacitor-scoped-storage'
+project(':daniele-rolli-capacitor-scoped-storage').projectDir = new File('../../capacitor-scoped-storage/android')
+
 include ':recognizebv-capacitor-plugin-msauth'
 project(':recognizebv-capacitor-plugin-msauth').projectDir = new File('../node_modules/@recognizebv/capacitor-plugin-msauth/android')
 

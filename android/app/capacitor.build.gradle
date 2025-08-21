@@ -22,6 +22,7 @@ dependencies {
     implementation project(':capacitor-splash-screen')
     implementation project(':capgo-capacitor-native-biometric')
     implementation project(':daniele-rolli-capacitor-google-auth')
+    implementation project(':daniele-rolli-capacitor-scoped-storage')
     implementation project(':recognizebv-capacitor-plugin-msauth')
     implementation project(':capa-zip')
     implementation project(':capacitor-secure-storage-plugin')

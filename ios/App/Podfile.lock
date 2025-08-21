@@ -46,6 +46,8 @@ PODS:
   - DanieleRolliCapacitorGoogleAuth (0.0.1):
     - Capacitor
     - GoogleSignIn (~> 7.0)
+  - DanieleRolliCapacitorScopedStorage (0.0.2):
+    - Capacitor
   - DanieleRolliCapacitorSpotsearch (0.0.2):
     - Capacitor
   - GoogleSignIn (7.1.0):
@@ -88,6 +90,7 @@ DEPENDENCIES:
   - CapaZip (from `../../node_modules/capa-zip`)
   - "CapgoCapacitorNativeBiometric (from `../../node_modules/@capgo/capacitor-native-biometric`)"
   - "DanieleRolliCapacitorGoogleAuth (from `../../node_modules/@daniele-rolli/capacitor-google-auth`)"
+  - DanieleRolliCapacitorScopedStorage (from `../../../capacitor-scoped-storage`)
   - "DanieleRolliCapacitorSpotsearch (from `../../node_modules/@daniele-rolli/capacitor-spotsearch`)"
   - "RecognizebvCapacitorPluginMsauth (from `../../node_modules/@recognizebv/capacitor-plugin-msauth`)"
   - SendIntent (from `../../node_modules/send-intent`)
@@ -142,6 +145,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capgo/capacitor-native-biometric"
   DanieleRolliCapacitorGoogleAuth:
     :path: "../../node_modules/@daniele-rolli/capacitor-google-auth"
+  DanieleRolliCapacitorScopedStorage:
+    :path: "../../../capacitor-scoped-storage"
   DanieleRolliCapacitorSpotsearch:
     :path: "../../node_modules/@daniele-rolli/capacitor-spotsearch"
   RecognizebvCapacitorPluginMsauth:
@@ -170,6 +175,7 @@ SPEC CHECKSUMS:
   CapaZip: a379d937c2db9a882d0be29e63dcb0090e6cd6ae
   CapgoCapacitorNativeBiometric: be4ceeff38739d9c0f59b8c41456a3b01cfeddf0
   DanieleRolliCapacitorGoogleAuth: 81cccde64d5785237c4b0eba77cd50b8996edf91
+  DanieleRolliCapacitorScopedStorage: 0526430f0a03dc275edbab75dc9fe780cc293e3c
   DanieleRolliCapacitorSpotsearch: da232f0c34d2cbb0efe39f915a7eda40ab3384cc
   GoogleSignIn: d4281ab6cf21542b1cfaff85c191f230b399d2db
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
@@ -181,6 +187,6 @@ SPEC CHECKSUMS:
   SSZipArchive: fe6a26b2a54d5a0890f2567b5cc6de5caa600aef
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
 
-PODFILE CHECKSUM: 569e734a385dbfb5085def6c610de022e8ebf34c
+PODFILE CHECKSUM: a242e4351ce87e76a0f8b1b677c3663a6aad4584
 
 COCOAPODS: 1.16.2

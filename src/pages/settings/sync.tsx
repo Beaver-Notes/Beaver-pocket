@@ -1,22 +1,109 @@
 import React, { useState, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
-import { useExportData } from "../../utils/exportUtils";
 import { useHandleImportData } from "../../utils/importUtils";
 import { useNavigate } from "react-router-dom";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 import { Zip } from "capa-zip";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
+import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
+import { useStorage } from "@/composable/storage";
 
 const Sync: React.FC = () => {
+  const storage = useStorage();
   const platform = Capacitor.getPlatform();
-  const { exportUtils } = useExportData();
   const { importUtils } = useHandleImportData();
   const navigate = useNavigate();
 
-  const exportData = () => {
-    exportUtils();
-  };
+  async function exportData() {
+    const { folder } = await ScopedStorage.pickFolder();
+    if (!folder?.id) return;
+
+    const folderName = `Beaver Notes ${new Date().toISOString().slice(0, 10)}`;
+    await ScopedStorage.mkdir({ folder, path: folderName, recursive: true });
+
+    // Collect data
+    let data: any = await storage.store();
+    try {
+      data.lockedNotes = JSON.parse(
+        localStorage.getItem("lockedNotes") || "{}"
+      );
+    } catch {
+      data.lockedNotes = {};
+    }
+
+    // Write main export file
+    await ScopedStorage.writeFile({
+      folder,
+      path: `${folderName}/data.json`,
+      data: JSON.stringify({ data }),
+      encoding: "utf8",
+    });
+
+    // Copy assets
+    await Promise.all([
+      copyDir(folder, "note-assets", `${folderName}/assets`),
+      copyDir(folder, "file-assets", `${folderName}/file-assets`),
+    ]);
+  }
+
+  async function copyDir(
+    folder: { id: string; name?: string },
+    src: string,
+    dest: string
+  ) {
+    await ScopedStorage.mkdir({ folder, path: dest, recursive: true });
+
+    const items = await readDir(src);
+    for (const name of items) {
+      const srcPath = join(src, name);
+      const destPath = join(dest, name);
+
+      if (await isDirectory(srcPath)) {
+        await ScopedStorage.mkdir({ folder, path: destPath, recursive: true });
+        await copyDir(folder, srcPath, destPath);
+      } else {
+        const file = await Filesystem.readFile({
+          path: srcPath,
+          directory: FilesystemDirectory.Data,
+        });
+        await ScopedStorage.writeFile({
+          folder,
+          path: destPath,
+          data: file.data.toString(),
+          encoding: "base64",
+        });
+      }
+    }
+  }
+
+  async function readDir(path: string): Promise<string[]> {
+    try {
+      const res: any = await Filesystem.readdir({
+        path,
+        directory: FilesystemDirectory.Data,
+      });
+      const list = res.files ?? [];
+      return list.map((f: any) => (typeof f === "string" ? f : f.name));
+    } catch {
+      return [];
+    }
+  }
+
+  async function isDirectory(path: string): Promise<boolean> {
+    try {
+      const stat: any = await Filesystem.stat({
+        path,
+        directory: FilesystemDirectory.Data,
+      });
+      return stat?.type === "directory" || (await readDir(path)).length > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  const join = (...parts: string[]) =>
+    parts.filter(Boolean).join("/").replace(/\/+/g, "/");
 
   const handleImportData = async (
     event: React.ChangeEvent<HTMLInputElement>
