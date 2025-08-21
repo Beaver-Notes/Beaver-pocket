@@ -10,8 +10,11 @@ import Drive from "./pages/settings/sync/drive";
 import Dav from "./pages/settings/sync/dav";
 import { useTranslation } from "./utils/translations";
 import { IconName } from "./lib/remixicon-react";
+import { useTheme } from "./composable/theme";
+import { Preferences } from "@capacitor/preferences";
 
 const Welcome: React.FC = () => {
+  const theme = useTheme();
   const [selectedCloud, setSelectedCloud] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<
     "view1" | "view2" | "view3" | "view4"
@@ -21,14 +24,30 @@ const Welcome: React.FC = () => {
   const handleViewChange = (view: "view1" | "view2" | "view3" | "view4") => {
     setCurrentView(view);
   };
+  const [selectedFont, setSelectedFont] = useState("Arimo");
+  const [selectedCodeFont, setSelectedCodeFont] = useState("JetBrains Mono");
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [selectedOption, setSelectedOption] = useState<
+    "light" | "dark" | "system"
+  >("system");
 
-  const [selectedFont, setSelectedFont] = useState<string>(
-    localStorage.getItem("selected-font") || "Arimo"
-  );
+  useEffect(() => {
+    (async () => {
+      const font = await Preferences.get({ key: "selected-font" });
+      if (font.value) setSelectedFont(font.value);
 
-  const [selectedCodeFont, setSelectedCodeFont] = useState<string>(
-    localStorage.getItem("selected-font-code") || "JetBrains Mono"
-  );
+      const codeFont = await Preferences.get({ key: "selected-font-code" });
+      if (codeFont.value) setSelectedCodeFont(codeFont.value);
+
+      const lang = await Preferences.get({ key: "selectedLanguage" });
+      if (lang.value) setSelectedLanguage(lang.value);
+
+      const themePref = await Preferences.get({ key: "theme" });
+      if (themePref.value)
+        setSelectedOption(themePref.value as "light" | "dark" | "system");
+      else setSelectedOption("system"); // default
+    })();
+  }, []);
 
   const Codefonts = [
     "JetBrains Mono",
@@ -36,7 +55,6 @@ const Welcome: React.FC = () => {
     "Source Code Pro",
     "Hack",
   ];
-
   const fonts = [
     "Arimo",
     "Avenir",
@@ -47,8 +65,15 @@ const Welcome: React.FC = () => {
   ];
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--selected-font", selectedFont);
-    localStorage.setItem("selected-font", selectedFont);
+    const updateFont = async () => {
+      document.documentElement.style.setProperty(
+        "--selected-font",
+        selectedFont
+      );
+      await Preferences.set({ key: "selected-font", value: selectedFont });
+    };
+
+    updateFont();
   }, [selectedFont]);
 
   const updateFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -56,19 +81,20 @@ const Welcome: React.FC = () => {
   };
 
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--selected-font-code",
-      selectedCodeFont
-    );
-    localStorage.setItem("selected-font-code", selectedCodeFont);
+    const updateCodeFont = async () => {
+      document.documentElement.style.setProperty(
+        "--selected-font-code",
+        selectedCodeFont
+      );
+      await Preferences.set({ key: "selected-font-code", value: selectedFont });
+    };
+
+    updateCodeFont();
   }, [selectedCodeFont]);
 
   const updatCodeFont = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCodeFont(e.target.value);
   };
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    localStorage.getItem("selectedLanguage") || "en"
-  );
 
   const [translations, setTranslations] = useState<Record<string, any>>({
     welcome: {},
@@ -90,71 +116,24 @@ const Welcome: React.FC = () => {
     { code: "de", name: "Deutsch", translations: deTranslations },
   ];
 
-  const updateLanguage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const updateLanguage = async (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const languageCode = event.target.value;
     setSelectedLanguage(languageCode);
-    localStorage.setItem("selectedLanguage", languageCode);
+    await Preferences.set({ key: "selectedLanguage", value: languageCode });
     location.reload();
   };
 
-  const [themeMode, setThemeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode, setDarkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
-  const toggleTheme = (
-    newMode: boolean | ((prevState: boolean) => boolean)
+  const handleChangeMode = async (
+    event: React.ChangeEvent<HTMLSelectElement>
   ) => {
-    setDarkMode(newMode);
-    setThemeMode(newMode ? "dark" : "light");
+    const value = event.target.value as "light" | "dark" | "system";
+    setSelectedOption(value);
+    await theme.setTheme(value, value === "system");
   };
 
-  const setAutoMode = () => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    setDarkMode(prefersDarkMode);
-    setThemeMode("auto");
-  };
-
-  const [selectedOption, setSelectedOption] = useState(
-    themeMode === "auto" ? "System" : darkMode ? "Dark" : "Light"
-  );
-
-  const handleChangeMode = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedOption(event.target.value);
-    switch (event.target.value) {
-      case translations.settings.light:
-        toggleTheme(false);
-        break;
-      case translations.settings.dark:
-        toggleTheme(true);
-        break;
-      case translations.settings.system:
-        setAutoMode();
-        break;
-      default:
-        break;
-    }
-  };
-
-  const modes = [
-    translations.settings.light,
-    translations.settings.dark,
-    translations.settings.system,
-  ];
+  const modes: Array<"light" | "dark" | "system"> = ["light", "dark", "system"];
 
   useEffect(() => {
     if (currentView === "view4") {
@@ -175,24 +154,17 @@ const Welcome: React.FC = () => {
     { name: "neutral", bg: "bg-neutral-400" },
   ];
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const savedColor = localStorage.getItem("color-scheme") || "light";
-    setColor(savedColor);
-  });
-
-  const setColor = (color: any) => {
+  const setColor = async (color: string) => {
     const root = document.documentElement;
     root.classList.forEach((cls) => {
-      if (cls !== "light" && cls !== "dark") {
-        root.classList.remove(cls);
-      }
+      if (cls !== "light" && cls !== "dark") root.classList.remove(cls);
     });
     root.classList.add(color);
-    localStorage.setItem("color-scheme", color);
+    await Preferences.set({ key: "color-scheme", value: color });
   };
-
   return (
     <div className={`view ${currentView} overflow-y-hide`}>
+      {/* View 1 */}
       {currentView === "view1" && (
         <div className="view flex items-center justify-center">
           <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between h-full">
@@ -204,16 +176,10 @@ const Welcome: React.FC = () => {
               />
             </div>
             <div className="flex flex-col items-center justify-center flex-grow">
-              <h3
-                className="text-center"
-                aria-label={translations.welcome.welcomeTitle || "-"}
-              >
+              <h3 className="text-center">
                 {translations.welcome.welcomeTitle || "-"}
               </h3>
-              <p
-                className="text-center sm:mx-10"
-                aria-label={translations.welcome.welcomeMessage || "-"}
-              >
+              <p className="text-center sm:mx-10">
                 {translations.welcome.welcomeMessage || "-"}
               </p>
             </div>
@@ -233,13 +199,11 @@ const Welcome: React.FC = () => {
                 <Icon
                   name="ArrowDownSLine"
                   className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
-                  aria-hidden="true"
                 />
               </div>
               <button
                 className="w-full p-3 rounded-full bg-neutral-800 hover:bg-neutral-800/90 dark:bg-neutral-700/50 hover:bg-neutral-700/60 text-white"
                 onClick={() => handleViewChange("view2")}
-                aria-label={translations.welcome.getStarted || "-"}
               >
                 {translations.welcome.getStarted || "-"}
               </button>
@@ -286,8 +250,7 @@ const Welcome: React.FC = () => {
                   </select>
                   <Icon
                     name="ArrowDownSLine"
-                    className="dark:text-[color:var(--selected-dark-text)] ri-arrow-down-s-line absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-600 pointer-events-none"
-                    aria-hidden="true"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none"
                   />
                 </div>
               </section>
@@ -394,7 +357,7 @@ const Welcome: React.FC = () => {
             />
           </div>
 
-          <div className="flex view w-full">
+          <div className="flex view w-full items-center justify-center">
             <div className="w-full sm:w-[32em] mx-10 rounded-3xl flex flex-col justify-between min-h-[80vh]">
               <div className="flex flex-col w-full flex-grow">
                 {/* Cloud selection buttons */}

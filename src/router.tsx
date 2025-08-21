@@ -12,44 +12,22 @@ import Icloud from "./pages/settings/sync/icloud";
 import Shortcuts from "./pages/settings/shortcuts";
 import Welcome from "./Welcome";
 import Sync from "./pages/settings/sync";
-import Editor from "./pages/notes/_id";
+import Note from "./pages/note/_id";
+import Folder from "./pages/folder/_id";
 import Icons from "./pages/settings/icons";
 
 interface routerProps {
-  themeMode: string;
-  setThemeMode: (mode: string) => void;
-  toggleTheme: (val: boolean | ((prev: boolean) => boolean)) => void;
-  setAutoMode: () => void;
-  darkMode: boolean;
   syncStatus: string;
 }
 
-const router: React.FC<routerProps> = ({
-  themeMode,
-  setThemeMode,
-  toggleTheme,
-  setAutoMode,
-  darkMode,
-  syncStatus,
-}) => {
+const router: React.FC<routerProps> = ({ syncStatus }) => {
   const location = useLocation();
 
   return (
     <Routes location={location}>
       <Route path="/" element={<Index />} />
       <Route path="/archive" element={<Index showArchived={true} />} />
-      <Route
-        path="/settings"
-        element={
-          <Settings
-            themeMode={themeMode}
-            setThemeMode={setThemeMode}
-            toggleTheme={toggleTheme}
-            setAutoMode={setAutoMode}
-            darkMode={darkMode}
-          />
-        }
-      />
+      <Route path="/settings" element={<Settings />} />
       <Route path="/about" element={<About />} />
       <Route path="/dropbox" element={<Dropbox syncStatus={syncStatus} />} />
       <Route path="/onedrive" element={<Onedrive syncStatus={syncStatus} />} />
@@ -60,7 +38,8 @@ const router: React.FC<routerProps> = ({
       <Route path="/icons" element={<Icons />} />
       <Route path="/welcome" element={<Welcome />} />
       <Route path="/sync" element={<Sync />} />
-      <Route path="/editor/:note" element={<Editor />} />
+      <Route path="/note/:note" element={<Note />} />
+      <Route path="/folder/:folderId" element={<Folder />} />
     </Routes>
   );
 };

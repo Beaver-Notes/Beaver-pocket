@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { Zip } from "capa-zip";
 import { useNoteStore } from "@/store/note";
 import { Note } from "@/store/types";
+import { Preferences } from "@capacitor/preferences";
 
 export const useExportData = () => {
   const noteStore = useNoteStore.getState();
@@ -23,14 +24,16 @@ export const useExportData = () => {
 
   useEffect(() => {
     const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+      const selectedLanguage = await Preferences.get({
+        key: "selectedLanguage",
+      });
       try {
         const translationModule = await import(
           `../assets/locales/${selectedLanguage}.json`
         );
 
         setTranslations({ ...translations, ...translationModule.default });
-        dayjs.locale(selectedLanguage);
+        dayjs.locale(selectedLanguage.value || "en");
       } catch (error) {
         console.error("Error loading translations:", error);
       }

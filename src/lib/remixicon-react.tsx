@@ -99,6 +99,23 @@ import MoreLine from "remixicon-react/MoreLineIcon";
 import Brush3Fill from "remixicon-react/Brush3FillIcon";
 import fontColor from "remixicon-react/FontColorIcon";
 import ExternalLink from "remixicon-react/ExternalLinkLineIcon";
+import FolderAddLine from "remixicon-react/FolderAddLineIcon";
+import FoldersLine from "remixicon-react/FoldersLineIcon";
+import EmotionUnhappyFill from "remixicon-react/EmotionUnhappyFillIcon";
+import Folder5Fill from "remixicon-react/Folder5FillIcon";
+import EmotionLine from "remixicon-react/EmotionLineIcon";
+import LeafLine from "remixicon-react/LeafLineIcon";
+import Cake3Line from "remixicon-react/Cake3LineIcon";
+import PlaneLine from "remixicon-react/PlaneLineIcon";
+import FootballLine from "remixicon-react/FootballLineIcon";
+import LightbulbLine from "remixicon-react/LightbulbLineIcon";
+import FlagLine from "remixicon-react/FlagLineIcon";
+import FolderTransferLine from "remixicon-react/FolderTransferLineIcon";
+import ArrowRightSLine from "remixicon-react/ArrowRightSLineIcon";
+import SortAsc from "remixicon-react/SortAscIcon";
+import SortDesc from "remixicon-react/SortDescIcon";
+import CheckLine from "remixicon-react/CheckLineIcon";
+
 
 const Forward5Line: React.FC<{ className?: string }> = ({ className }) => (
   <svg
@@ -343,6 +360,7 @@ export const icons = {
   Superscript,
   PagesLine,
   MicLine,
+  FoldersLine,
   StopCircleLine,
   PlayLine,
   PauseLine,
@@ -375,6 +393,21 @@ export const icons = {
   mdiRegex,
   fontColor,
   Heading,
+  FolderAddLine,
+  EmotionUnhappyFill,
+  Folder5Fill,
+  EmotionLine,
+  LeafLine,
+  Cake3Line,
+  PlaneLine,
+  FootballLine,
+  LightbulbLine,
+  FlagLine,
+  CheckLine,
+  ArrowRightSLine,
+  FolderTransferLine,
+  SortAsc,
+  SortDesc,
 };
 
 export type IconName = keyof typeof icons;

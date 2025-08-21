@@ -9,6 +9,11 @@ interface SearchBarProps {
   setSearchQuery: (value: string) => void;
   handleLabelFilterChange: (value: string) => void;
   setSortingOption: (value: string) => void;
+  setSortOrder: (value: "asc" | "desc") => void;
+  sortOrder: string;
+  sortingOptions: string;
+  setActiveLabel: (value: string) => void;
+  activeLabel: string;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -16,12 +21,19 @@ const SearchBar: React.FC<SearchBarProps> = ({
   setSearchQuery,
   handleLabelFilterChange,
   setSortingOption,
+  setActiveLabel,
+  setSortOrder,
+  sortingOptions,
+  sortOrder,
+  activeLabel,
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlLabel = searchParams.get("label");
-  const [selectedLabel, setSelectedLabel] = useState(urlLabel || "");
   const labelStore = useLabelStore.getState();
   const labels = labelStore.data;
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isLabelOpen, setIsLabelOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
   const [translations, setTranslations] = useState<Record<string, any>>({
     filter: {},
   });
@@ -47,26 +59,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
   // Handle label from URL params on initial load
   useEffect(() => {
     if (urlLabel) {
-      setSelectedLabel(urlLabel);
+      setActiveLabel(urlLabel);
       handleLabelFilterChange(urlLabel);
     }
-  }, []);
-
-  // Load translations
-  useEffect(() => {
-    const loadTranslations = async () => {
-      const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
-      try {
-        const translationModule = await import(
-          `../../assets/locales/${selectedLanguage}.json`
-        );
-        setTranslations(translationModule.default);
-      } catch (error) {
-        console.error("Failed to load translations:", error);
-      }
-    };
-
-    loadTranslations();
   }, []);
 
   const handleClearInput = () => {
@@ -74,7 +69,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const handleLabelChange = (value: string) => {
-    setSelectedLabel(value);
+    setActiveLabel(value);
     handleLabelFilterChange(value);
 
     // Update URL params
@@ -85,104 +80,326 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
     setSearchParams(searchParams);
   };
-
   return (
-    <div className="bg-transparent px-6">
-      <div className="flex justify-center">
-        <div className="relative w-full ring-2 ring-primary sm:w-[22em] mb-2 h-12 p-4 bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-full text-neutral-800 flex items-center justify-start dark:text-[color:var(--selected-dark-text)] mr-2">
-          <div>
-            <Icon name="Search2Line" />
+    <div className="bg-transparent px-4 sm:px-4">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex items-center justify-center gap-2 md:gap-3 lg:justify-center">
+          <div className="relative flex items-center w-full md:w-full lg:w-[22em] h-12 px-4 bg-neutral-50 dark:bg-neutral-750 rounded-full ring-2 ring-primary mb-2">
+            <Icon
+              name="Search2Line"
+              className="text-neutral-600 dark:text-[color:var(--selected-dark-text)]"
+            />
+            <input
+              type="text"
+              placeholder={translations.filter.searchNotes}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="ml-2 w-full bg-transparent text-lg text-neutral-800 dark:text-[color:var(--selected-dark-text)] outline-none placeholder-neutral-400"
+            />
+            {searchQuery && (
+              <button
+                onClick={handleClearInput}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+                aria-label={translations.filter.clear}
+              >
+                <Icon name="DeleteBackLine" />
+              </button>
+            )}
           </div>
-          <input
-            className="text-xl text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] px-2 outline-none dark:text-[color:var(--selected-dark-text)] w-full"
-            type="text"
-            placeholder={translations.filter.searchNotes}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
+
+          <div className="sm:hidden relative">
+            {/* round trigger button */}
             <button
-              onClick={handleClearInput}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-800 dark:text-[color:var(--selected-dark-text)]"
+              type="button"
+              className="p-2.5 bg-neutral-50 dark:bg-neutral-750 rounded-full"
+              onClick={() => setIsMobileOpen((prev) => !prev)}
+              aria-label={translations.filter.sortBy}
             >
-              <Icon name="DeleteBackLine" />
+              <Icon name="ArrowUpDownLine" />
             </button>
-          )}
-        </div>
-        <div className="sm:block hidden relative inline-flex items-center">
-          <div>
-            <select
-              id="labelSelect"
-              value={selectedLabel}
-              onChange={(e) => handleLabelChange(e.target.value)}
-              className="rounded-full ml-2 pl-4 pr-10 p-3 h-12 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-            >
-              <option value="">{translations.filter.selectlabel}</option>
-              {labels?.map((label: string) => (
-                <option key={label} value={label}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <div className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none">
-              <Icon name="ArrowDownSLine" />
+
+            {/* dropdown (simple) */}
+            {isMobileOpen && (
+              <div className="absolute right-0 mt-2 w-44 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                {[
+                  {
+                    value: "updatedAt",
+                    label: translations.filter.lastUpdated,
+                  },
+                  {
+                    value: "createdAt",
+                    label: translations.filter.creationDate,
+                  },
+                  {
+                    value: "alphabetical",
+                    label: translations.filter.alphabetical,
+                  },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    className={`flex items-center w-full text-left px-4 py-2 hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors ${
+                      sortingOptions === opt.value
+                        ? "bg-secondary bg-opacity-20"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      setSortingOption(opt.value);
+                      setIsMobileOpen(false);
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="hidden md:flex items-center gap-2 sm:gap-3">
+            {/* Label Selector */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsLabelOpen((prev) => !prev)}
+                className="h-12 rounded-full pl-4 pr-3 w-full bg-neutral-50 dark:bg-neutral-750 text-neutral-800 dark:text-[color:var(--selected-dark-text)] outline-none flex items-center justify-between"
+              >
+                {activeLabel || translations.filter.selectlabel}
+                <Icon
+                  name="ArrowDownSLine"
+                  className={`ml-4 transition-transform duration-200 pointer-events-none ${
+                    isLabelOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isLabelOpen && (
+                <div className="absolute mt-1 w-full bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                  <button
+                    className={`block w-full text-left px-4 py-2 hover:bg-neutral-200 dark:hover:bg-neutral-600 ${
+                      activeLabel === "" ? "bg-secondary bg-opacity-20" : ""
+                    }`}
+                    onClick={() => {
+                      handleLabelChange("");
+                      setIsLabelOpen(false);
+                    }}
+                  >
+                    {translations.filter.selectlabel}
+                  </button>
+                  {labels?.map((label: string) => (
+                    <button
+                      key={label}
+                      className={`block w-full text-left px-4 py-2 hover:bg-neutral-200 dark:hover:bg-neutral-600 ${
+                        activeLabel === label
+                          ? "bg-secondary bg-opacity-20"
+                          : ""
+                      }`}
+                      onClick={() => {
+                        handleLabelChange(label);
+                        setIsLabelOpen(false);
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Sorting Controls */}
+            <div className="flex items-center">
+              <button
+                onClick={() =>
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                }
+                className="h-12 px-3 border-r rounded-l-full bg-neutral-50 dark:bg-neutral-750 text-neutral-800 dark:text-[color:var(--selected-dark-text)] outline-none"
+              >
+                {sortOrder === "asc" ? (
+                  <Icon name="SortAsc" />
+                ) : (
+                  <Icon name="SortDesc" />
+                )}
+              </button>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsSortOpen((prev) => !prev)}
+                  className="h-12 pl-3 pr-3 rounded-r-full bg-neutral-50 dark:bg-neutral-750 text-neutral-800 dark:text-[color:var(--selected-dark-text)] outline-none flex items-center justify-between w-full"
+                >
+                  {
+                    {
+                      updatedAt: translations.filter.lastUpdated,
+                      createdAt: translations.filter.creationDate,
+                      alphabetical: translations.filter.alphabetical,
+                    }[sortingOptions]
+                  }
+                  <Icon
+                    name="ArrowDownSLine"
+                    className={`ml-4 transition-transform duration-200 pointer-events-none ${
+                      isSortOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {isSortOpen && (
+                  <div className="absolute mt-1 right-0 w-full bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                    {[
+                      {
+                        value: "updatedAt",
+                        label: translations.filter.lastUpdated,
+                      },
+                      {
+                        value: "createdAt",
+                        label: translations.filter.creationDate,
+                      },
+                      {
+                        value: "alphabetical",
+                        label: translations.filter.alphabetical,
+                      },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        className={`block w-full text-left px-4 py-2 hover:bg-neutral-200 dark:hover:bg-neutral-600 ${
+                          sortingOptions === opt.value
+                            ? "bg-secondary bg-opacity-20"
+                            : ""
+                        }`}
+                        onClick={() => {
+                          setSortingOption(opt.value);
+                          setIsSortOpen(false);
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-        <div className="sm:block hidden relative inline-flex items-center">
-          <select
-            onChange={(e) => setSortingOption(e.target.value)}
-            className="rounded-full ml-2 pl-4 pr-10 p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none"
-          >
-            <option value="updatedAt">{translations.filter.lastUpdated}</option>
-            <option value="createdAt">
-              {translations.filter.creationDate}
-            </option>
-            <option value="alphabetical">
-              {translations.filter.alphabetical}
-            </option>
-          </select>
-          <div className="absolute right-3 top-1/2 transform -translate-y-2/3 pointer-events-none">
-            <Icon name="ArrowDownSLine" />
-          </div>
-        </div>
-      </div>
-      <div className="items-center flex gap-2 justify-between w-full">
-        <div className="sm:w-[22em] h-12 flex items-center justify-start sm:hidden overflow-hidden w-full">
-          <div className="block bg-[#F8F8F7] p-3 w-full dark:bg-[#2D2C2C] rounded-full sm:hidden relative inline-flex items-center">
-            <Icon name="ArrowUpDownLine" />
-            <select
-              onChange={(e) => setSortingOption(e.target.value)}
-              className="bg-transparent dark:text-[color:var(--selected-dark-text)] outline-none appearance-none pl-3 w-full"
+
+        <div className="hidden sm:grid md:hidden grid-cols-2 gap-2 md:gap-3 mt-2 w-full">
+          {/* Label Selector */}
+          <div className="relative w-full">
+            <button
+              type="button"
+              onClick={() => setIsLabelOpen((prev) => !prev)}
+              className="h-12 w-full rounded-full pl-4 pr-5 bg-neutral-50 dark:bg-neutral-750 text-neutral-800 dark:text-[color:var(--selected-dark-text)] outline-none flex items-center justify-between"
             >
-              <option value="updatedAt">
-                {translations.filter.lastUpdated}
-              </option>
-              <option value="createdAt">
-                {translations.filter.creationDate}
-              </option>
-              <option value="alphabetical">
-                {translations.filter.alphabetical}
-              </option>
-            </select>
+              {activeLabel || translations.filter.selectlabel}
+              <Icon
+                name="ArrowDownSLine"
+                className={`transition-transform duration-200 pointer-events-none ${
+                  isLabelOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {isLabelOpen && (
+              <div className="absolute mt-1 w-full bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                <button
+                  className={`block w-full text-left px-4 py-2 hover:bg-neutral-200 dark:hover:bg-neutral-600 ${
+                    activeLabel === "" ? "bg-secondary bg-opacity-20" : ""
+                  }`}
+                  onClick={() => {
+                    handleLabelChange("");
+                    setIsLabelOpen(false);
+                  }}
+                >
+                  {translations.filter.selectlabel}
+                </button>
+                {labels?.map((label: string) => (
+                  <button
+                    key={label}
+                    className={`block w-full text-left px-4 py-2 hover:bg-neutral-200 dark:hover:bg-neutral-600 ${
+                      activeLabel === label ? "bg-secondary bg-opacity-20" : ""
+                    }`}
+                    onClick={() => {
+                      handleLabelChange(label);
+                      setIsLabelOpen(false);
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-        <div className="sm:hidden relative inline-flex items-center w-full">
-          <select
-            id="mobileLabelSelect"
-            value={selectedLabel}
-            onChange={(e) => handleLabelChange(e.target.value)}
-            className="rounded-full pr-10 p-3 text-neutral-800 bg-[#F8F8F7] dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] outline-none appearance-none w-full"
-          >
-            <option value="">{translations.filter.selectlabel}</option>
-            {labels?.map((label: string) => (
-              <option key={label} value={label}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-            <Icon name="ArrowDownSLine" />
+
+          {/* Sorting Section */}
+          <div className="flex items-center w-full">
+            <button
+              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              className="h-12 px-3 border-r rounded-l-full bg-neutral-50 dark:bg-neutral-750 text-neutral-800 dark:text-[color:var(--selected-dark-text)] outline-none"
+              aria-label={
+                sortOrder === "asc"
+                  ? translations.filter.ascending
+                  : translations.filter.descending
+              }
+            >
+              {sortOrder === "asc" ? (
+                <Icon name="SortAsc" />
+              ) : (
+                <Icon name="SortDesc" />
+              )}
+            </button>
+
+            <div className="relative w-full">
+              <button
+                type="button"
+                onClick={() => setIsSortOpen((prev) => !prev)}
+                className="h-12 pl-3 pr-3 w-full rounded-r-full bg-neutral-50 dark:bg-neutral-750 text-neutral-800 dark:text-[color:var(--selected-dark-text)] outline-none flex items-center justify-between"
+              >
+                {
+                  {
+                    updatedAt: translations.filter.lastUpdated,
+                    createdAt: translations.filter.creationDate,
+                    alphabetical: translations.filter.alphabetical,
+                  }[sortingOptions]
+                }
+
+                <Icon
+                  name="ArrowDownSLine"
+                  className={`ml-4 transition-transform duration-200 pointer-events-none ${
+                    isSortOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isSortOpen && (
+                <div className="absolute mt-1 right-0 w-full bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg shadow-lg z-50">
+                  {[
+                    {
+                      value: "updatedAt",
+                      label: translations.filter.lastUpdated,
+                    },
+                    {
+                      value: "createdAt",
+                      label: translations.filter.creationDate,
+                    },
+                    {
+                      value: "alphabetical",
+                      label: translations.filter.alphabetical,
+                    },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      className={`block w-full text-left px-4 py-2 hover:bg-neutral-200 dark:hover:bg-neutral-600 ${
+                        sortingOptions === opt.value
+                          ? "bg-secondary bg-opacity-20"
+                          : ""
+                      }`}
+                      onClick={() => {
+                        setSortingOption(opt.value);
+                        setIsSortOpen(false);
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

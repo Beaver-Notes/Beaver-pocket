@@ -76,23 +76,6 @@ const Shortcuts: React.FC = () => {
     },
   ];
 
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
   return (
     <div>
       <div className="overflow-y-hidden mb-24">

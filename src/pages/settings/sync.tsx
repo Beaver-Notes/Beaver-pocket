@@ -14,25 +14,8 @@ const Sync: React.FC = () => {
   const { importUtils } = useHandleImportData();
   const navigate = useNavigate();
 
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
   const exportData = () => {
-    exportUtils(); // Pass notesState as an argument
+    exportUtils();
   };
 
   const handleImportData = async (

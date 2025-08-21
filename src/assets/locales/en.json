@@ -240,6 +240,14 @@
     "untitledNote": "Untitled Note",
     "content": "No content..."
   },
+  "folderTree": {
+    "noFolders": "No folders available",
+    "newFolder": "Create a folder first to organize your notes",
+    "cancel": "Cancel",
+    "move": "Move",
+    "moveToFolder": "Move Note to Folder",
+    "root": "Root"
+  },
   "filter": {
     "searchNotes": "Search Notes",
     "select": "Select ",

@@ -6,9 +6,11 @@ import Mousetrap from "../../utils/mousetrap";
 import Icon from "../ui/Icon";
 import { Capacitor } from "@capacitor/core";
 import { useTranslation } from "@/utils/translations";
+import { useFolderStore } from "@/store/folder";
 
 const BottomNavBar: React.FC = () => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const folderStore = useFolderStore();
   const noteStore = useNoteStore.getState();
   const router = useNavigate();
 
@@ -28,13 +30,6 @@ const BottomNavBar: React.FC = () => {
     };
   }, []);
 
-  const handleEditNote = () => {
-    const editedNote = localStorage.getItem("lastNoteEdit");
-    if (editedNote) {
-      router(`/editor/${editedNote}`);
-    }
-  };
-
   const [translations, setTranslations] = useState<Record<string, any>>({
     accessibility: {},
     home: {},
@@ -52,7 +47,13 @@ const BottomNavBar: React.FC = () => {
 
   function addNote() {
     noteStore.add().then(({ id }: { id: string }) => {
-      router(`/editor/${id}`);
+      router(`/note/${id}`);
+    });
+  }
+
+  function addFolder() {
+    folderStore.add().then(({ id }: { id: string }) => {
+      console.log(`${id}`);
     });
   }
 
@@ -65,11 +66,6 @@ const BottomNavBar: React.FC = () => {
     Mousetrap.bind("mod+shift+n", (e) => {
       e.preventDefault();
       router("/");
-    });
-
-    Mousetrap.bind("mod+shift+w", (e) => {
-      e.preventDefault();
-      handleEditNote();
     });
 
     Mousetrap.bind("mod+shift+a", (e) => {
@@ -95,7 +91,7 @@ const BottomNavBar: React.FC = () => {
 
   return (
     <div className="element-to-hide spacingdiv">
-      <nav className="fixed bottom-6 inset-x-2 bg-[#2D2C2C] p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto z-50">
+      <nav className="fixed bottom-6 inset-x-2 bg-neutral-800 p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto z-50">
         <div className="flex justify-between items-center">
           <Link to="/">
             <button
@@ -110,15 +106,12 @@ const BottomNavBar: React.FC = () => {
           </Link>
 
           <button
-            onClick={() => {
-              const last = localStorage.getItem("lastNoteEdit");
-              if (last) router(`/editor/${last}`);
-            }}
-            aria-label={translations.accessibility.editNote}
+            onClick={addFolder}
+            aria-label={translations.accessibility.addFolder}
             className="w-12 h-12 flex items-center justify-center"
           >
             <Icon
-              name="Edit2Line"
+              name="FolderAddLine"
               className="text-white hover:text-primary h-10 w-10"
             />
           </button>

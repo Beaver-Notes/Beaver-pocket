@@ -50,15 +50,25 @@ import {
 import enTranslations from "../../assets/locales/en.json";
 import deTranslations from "../../assets/locales/de.json";
 import LabelSuggestion from "./exts/label-suggestion";
+import { Preferences } from "@capacitor/preferences";
 
 let translations: any = enTranslations;
 
-const selectedLanguage: string | null =
-  localStorage.getItem("selectedLanguage") || "en";
 
-if (selectedLanguage === "de") {
-  translations = deTranslations;
+
+async function initializeExtensions() {
+  async function loadTranslations() {
+    const { value } = await Preferences.get({ key: "selectedLanguage" });
+    if (value === "de") {
+      translations = deTranslations;
+    }
+  }
+
+  await loadTranslations();
 }
+
+initializeExtensions().catch(console.error);
+
 
 const extensions = [
   StarterKit.configure({

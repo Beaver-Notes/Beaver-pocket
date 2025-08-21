@@ -5,8 +5,32 @@ import { Utf8 } from "crypto-es/lib/core.js";
 import { useStorage } from "@/composable/storage";
 import { trackChange } from "@/utils/sync";
 import { useFolderStore } from "./folder";
+import { SpotSearch } from "@daniele-rolli/capacitor-spotsearch";
+import { Preferences } from "@capacitor/preferences";
 
 const storage = useStorage();
+
+async function isIndexingEnabled() {
+  const { value } = await Preferences.get({ key: "indexing" });
+  return value === "true";
+}
+
+function getPlainText(node) {
+  if (!node) return "";
+  if (typeof node === "string") return node;
+
+  if (Array.isArray(node)) {
+    return node.map(getPlainText).join(" ");
+  }
+
+  if (typeof node === "object" && node.text) return node.text;
+
+  if (typeof node === "object" && Array.isArray(node.content)) {
+    return node.content.map(getPlainText).join(" ");
+  }
+
+  return "";
+}
 
 function findAllNodesInRange(fragment, name) {
   if (!fragment) return [];
@@ -47,10 +71,12 @@ function unCollapsedFootnotes(note, footnotes) {
 }
 
 export const useNoteStore = create((set, get) => ({
+  //state
   data: {},
   deletedIds: {},
   syncInProgress: false,
 
+  //getters
   getById: (id) => get().data[id],
 
   getByFolder: (folderId = null) => {
@@ -87,6 +113,7 @@ export const useNoteStore = create((set, get) => ({
     ).length;
   },
 
+  // actions
   retrieve: async () => {
     try {
       const localStorageData = await storage.get("notes", {});
@@ -191,6 +218,21 @@ export const useNoteStore = create((set, get) => ({
 
       await trackChange(`notes.${id}`, newNote);
 
+      if (isIndexingEnabled) {
+        await SpotSearch.indexItems({
+          items: [
+            {
+              id,
+              domain: "notes",
+              title: newNote.title,
+              snippet: getPlainText(newNote.content).slice(0, 500),
+              keywords: [],
+              url: `beaver-pocket://note/${id}`,
+            },
+          ],
+        });
+      }
+
       return newNote;
     } catch (e) {
       console.error("Error adding note:", e);
@@ -228,6 +270,21 @@ export const useNoteStore = create((set, get) => ({
 
     await trackChange(`notes.${id}`, updatedNote);
 
+    if (isIndexingEnabled) {
+      await SpotSearch.indexItems({
+        items: [
+          {
+            id,
+            domain: "notes",
+            title: updatedNote.title,
+            snippet: getPlainText(updatedNote.content).slice(0, 500),
+            keywords: updatedNote.labels,
+            url: `beaver-pocket://note/${id}`,
+          },
+        ],
+      });
+    }
+
     return updatedNote;
   },
 
@@ -236,8 +293,7 @@ export const useNoteStore = create((set, get) => ({
     if (folderId && !(await folderStore.exists(folderId))) {
       throw new Error("Target folder does not exist");
     }
-    const store = get();
-    return await store.update(noteId, { folderId });
+    return await get().update(noteId, { folderId });
   },
 
   moveMultipleToFolder: async (noteIds, folderId) => {
@@ -277,6 +333,10 @@ export const useNoteStore = create((set, get) => ({
 
     await trackChange(`notes.${id}`, null);
     await trackChange("deletedIds", deletedIds);
+
+    if (isIndexingEnabled) {
+      await SpotSearch.deleteItems({ ids: [id] });
+    }
 
     return id;
   },
@@ -393,7 +453,7 @@ export const useNoteStore = create((set, get) => ({
 
       console.log("Note decrypted successfully");
 
-      const collapsibleHeading = localStorage.getItem("collapsibleHeading");
+      const collapsibleHeading = Preferences.get("collapsible");
       const isCollapsible = collapsibleHeading === "true";
 
       if (!isCollapsible) store.convertNote(id);

@@ -135,7 +135,7 @@ export const UiModal: React.FC<UiModalProps> = ({
             style={{
               transition: dragging ? "none" : undefined,
             }}
-            className={`w-full`}
+            className={`flex justify-center w-full`}
           >
             <UiCard
               className={`modal-ui__content shadow-lg w-full ${contentClass}`}
@@ -146,18 +146,16 @@ export const UiModal: React.FC<UiModalProps> = ({
                 transition: dragging ? "none" : undefined,
               }}
             >
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="content-header">{header}</span>
-                  {!persist && (
-                    <button
-                      onClick={closeModal}
-                      className="text-neutral-600 cursor-pointer"
-                    >
-                      <Icon name="CloseLine" className="text-2xl" />
-                    </button>
-                  )}
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">{header}</span>
+                {!persist && (
+                  <button
+                    onClick={closeModal}
+                    className="text-neutral-600 cursor-pointer"
+                  >
+                    <Icon name="CloseLine" className="text-2xl" />
+                  </button>
+                )}
               </div>
               {children}
             </UiCard>

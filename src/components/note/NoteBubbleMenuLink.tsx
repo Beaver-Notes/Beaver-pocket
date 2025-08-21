@@ -130,7 +130,7 @@ const NoteBubbleMenuLink: React.FC<Props> = ({ editor }) => {
 
     if (href.startsWith("note://")) {
       const noteId = href.split("note://")[1];
-      navigate(`/editor/${noteId}`);
+      navigate(`/note/${noteId}`);
     } else {
       window.open(href, "_blank", "noopener");
     }

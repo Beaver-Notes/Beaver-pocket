@@ -7,8 +7,11 @@ import { useTranslation } from "@/utils/translations";
 import emitter from "tiny-emitter/instance";
 import { useNoteStore } from "@/store/note";
 import { usePasswordStore } from "@/store/passwd";
+import { Preferences } from "@capacitor/preferences";
+import { Directory, Filesystem } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 
-function Editor() {
+function Note() {
   const passwordStore = usePasswordStore();
   const noteStore = useNoteStore();
   const navigate = useNavigate();
@@ -103,6 +106,38 @@ function Editor() {
     }
   };
 
+  useEffect(() => {
+    const handleFileEmbedClick = async (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const eventData = customEvent.detail;
+      const { src, fileName } = eventData;
+
+      try {
+        const result = await Filesystem.getUri({
+          directory: Directory.Data,
+          path: src,
+        });
+
+        const resolvedFilePath = result.uri;
+        const encodedFilePath = resolvedFilePath.replace(/ /g, "%20");
+
+        await Share.share({
+          title: `Open ${fileName}`,
+          url: encodedFilePath,
+          dialogTitle: `Share ${fileName}`,
+        });
+      } catch (error) {
+        console.log(`Error sharing ${fileName}: ${(error as any).message}`);
+      }
+    };
+
+    document.addEventListener("fileEmbedClick", handleFileEmbedClick);
+
+    return () => {
+      document.removeEventListener("fileEmbedClick", handleFileEmbedClick);
+    };
+  });
+
   const Cancel = () => {
     navigate(-1);
   };
@@ -146,9 +181,9 @@ function Editor() {
     );
   }
 
-  localStorage.setItem("lastNoteEdit", note);
+  Preferences.set({ key: "lastNoteEdit", value: note });
 
   return <EditorComponent note={noteData} translations={translations} />;
 }
 
-export default Editor;
+export default Note;

@@ -1,5 +1,5 @@
 import { Note } from "../../store/types";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { JSONContent } from "@tiptap/react";
 import dayjs from "@/lib/dayjs";
@@ -22,15 +22,23 @@ import "dayjs/locale/uk";
 import "dayjs/locale/ru";
 import "dayjs/locale/fr";
 import "dayjs/locale/tr";
+import { Preferences } from "@capacitor/preferences";
+import FolderTree from "./FolderTree";
 
 interface BookmarkedProps {
   note: Note;
   onUpdate?: (updatedNote: Note) => void;
+  onLabelSelect?: (label: string) => void;
 }
 
 dayjs.extend(relativeTime);
 
-const NoteCard: React.FC<BookmarkedProps> = ({ note, onUpdate }) => {
+const NoteCard: React.FC<BookmarkedProps> = ({
+  note,
+  onUpdate,
+  onLabelSelect,
+}) => {
+  const [showModal, setShowModal] = useState<boolean>(false);
   const passwordStore = usePasswordStore();
   const noteStore = useNoteStore();
   const navigate = useNavigate();
@@ -41,16 +49,20 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, onUpdate }) => {
   });
 
   useEffect(() => {
-    const fetchTranslations = async () => {
+    const run = async () => {
       const trans = await useTranslation();
       if (trans) {
         setTranslations(trans);
       }
-    };
-    const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
 
-    dayjs.locale(selectedLanguage);
-    fetchTranslations();
+      const selectedLanguage = await Preferences.get({
+        key: "selectedLanguage",
+      });
+
+      dayjs.locale(selectedLanguage.value ?? "en"); // fallback if null
+    };
+
+    run();
   }, []);
 
   function formatDate(date: string | number) {
@@ -71,6 +83,12 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, onUpdate }) => {
     await emitUpdate({ ...note, isArchived: !note.isArchived });
   }
 
+  async function setActiveLabel(label: string) {
+    if (onLabelSelect) {
+      onLabelSelect(label);
+    }
+  }
+
   const handleDeleteNote = async (note: Note) => {
     const isConfirmed = window.confirm(translations.card.confirmDelete);
 
@@ -84,7 +102,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, onUpdate }) => {
   };
 
   const handleClickNote = async (note: Note) => {
-    navigate(`/editor/${note.id}`);
+    navigate(`/note/${note.id}`);
   };
 
   function getPlainText(content: JSONContent | string): string {
@@ -307,158 +325,176 @@ const NoteCard: React.FC<BookmarkedProps> = ({ note, onUpdate }) => {
   };
 
   return (
-    <UiCard
-      className="hover:ring-2 ring-secondary group note-card transition flex flex-col"
-      padding="p-5"
-    >
-      <div>
-        <div className="font-semibold text-lg block line-clamp leading-tight">
-          {note.title || translations.card.untitledNote}
-        </div>
-
-        {note.isLocked ? (
-          <div>
-            <p></p>
+    <div>
+      <UiCard
+        className="hover:ring-2 ring-secondary group note-card transition flex flex-col"
+        padding="p-5"
+      >
+        <div>
+          <div className="font-semibold text-lg block line-clamp leading-tight">
+            {note.title || translations.card.untitledNote}
           </div>
-        ) : (
-          <div>
-            {note.labels?.length > 0 && (
-              <div className="text-primary dark:text-primary mt-2 mb-1 line-clamp w-full space-x-1">
-                {note.labels.map((label) => (
-                  <Link
-                    to={`/?label=${label}`}
-                    key={label}
-                    className="inline-block hover:underline cursor-pointer"
-                    aria-label={`${translations.accessibility.label} ${label}`}
-                  >
-                    #{label}
-                  </Link>
-                ))}
+
+          {note.isLocked ? (
+            <div>
+              <p></p>
+            </div>
+          ) : (
+            <div>
+              {note.labels?.length > 0 && (
+                <div className="text-primary dark:text-primary mt-2 mb-1 line-clamp w-full space-x-1">
+                  {note.labels.map((label) => (
+                    <button
+                      key={label}
+                      className="inline-block hover:underline cursor-pointer"
+                      aria-label={`${translations.accessibility.label} ${label}`}
+                      onClick={() => {
+                        setActiveLabel(label);
+                      }}
+                    >
+                      #{label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div
+            className="text-neutral-600 block dark:text-[color:var(--selected-dark-text)] flex-1 overflow-hidden overflow-ellipsis"
+            style={{ minHeight: "64px" }}
+            onClick={() => handleClickNote(note)}
+            aria-label={`${translations.accessibility.openNote} ${note.title}`}
+          >
+            {note.isLocked ? (
+              <div className="flex flex-col items-center">
+                <button
+                  className="flex items-center justify-center"
+                  aria-label="Unlock note"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    unlockNote(note);
+                  }}
+                >
+                  <Icon
+                    name="LockClosed"
+                    className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]"
+                  />
+                </button>
+                <p>{translations.card.unlocktoedit || "Tap to unlock"}</p>
+              </div>
+            ) : (
+              <div
+                aria-label={`Content: ${
+                  truncateText(getPlainText(note.content ?? ""), 160) ||
+                  translations.card.content
+                }`}
+              >
+                {truncateText(getPlainText(note.content ?? ""), 160) ||
+                  translations.card.content}
               </div>
             )}
           </div>
-        )}
-
-        <div
-          className="text-neutral-600 block dark:text-[color:var(--selected-dark-text)] flex-1 overflow-hidden overflow-ellipsis"
-          style={{ minHeight: "64px" }}
-          onClick={() => handleClickNote(note)}
-          aria-label={`${translations.accessibility.openNote} ${note.title}`}
-        >
-          {note.isLocked ? (
-            <div className="flex flex-col items-center">
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center">
               <button
-                className="flex items-center justify-center"
-                aria-label="Unlock note"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  unlockNote(note);
+                className={
+                  note.isBookmarked
+                    ? "text-primary opacity-90 hover:opacity-100"
+                    : "hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)] transition"
+                }
+                aria-pressed={note.isBookmarked}
+                aria-label={`Bookmark note ${
+                  note.isBookmarked ? "Remove" : "Add"
+                }`}
+                onClick={() => {
+                  toggleBookmark(note);
                 }}
               >
-                <Icon
-                  name="LockClosed"
-                  className="w-24 h-24 text-[#52525C] dark:text-[color:var(--selected-dark-text)]"
-                />
+                {note.isBookmarked ? (
+                  <Icon
+                    name="Bookmark3Fill"
+                    className="w-8 h-8 mr-2 text-primary"
+                  />
+                ) : (
+                  <Icon name="Bookmark3Line" className="w-8 h-8 mr-2" />
+                )}
               </button>
-              <p>{translations.card.unlocktoedit || "Tap to unlock"}</p>
-            </div>
-          ) : (
-            <div
-              aria-label={`Content: ${
-                truncateText(getPlainText(note.content ?? ""), 160) ||
-                translations.card.content
-              }`}
-            >
-              {truncateText(getPlainText(note.content ?? ""), 160) ||
-                translations.card.content}
-            </div>
-          )}
-        </div>
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center">
-            <button
-              className={
-                note.isBookmarked
-                  ? "text-primary opacity-90 hover:opacity-100"
-                  : "hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)] transition"
-              }
-              aria-pressed={note.isBookmarked}
-              aria-label={`Bookmark note ${
-                note.isBookmarked ? "Remove" : "Add"
-              }`}
-              onClick={() => {
-                toggleBookmark(note);
-              }}
-            >
-              {note.isBookmarked ? (
-                <Icon
-                  name="Bookmark3Fill"
-                  className="w-8 h-8 mr-2 text-primary"
-                />
+              <button
+                className="hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)]"
+                aria-pressed={note.isArchived}
+                aria-label={`Archive note ${
+                  note.isArchived ? "Unarchive" : "Archive"
+                }`}
+                onClick={() => {
+                  toggleArchive(note);
+                }}
+              >
+                {note.isArchived ? (
+                  <Icon name="ArchiveDrawerFill" className="w-8 h-8 mr-2" />
+                ) : (
+                  <Icon name="ArchiveDrawerLine" className="w-8 h-8 mr-2" />
+                )}
+              </button>
+              {note.isLocked ? (
+                <button
+                  className="hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)]"
+                  aria-pressed={note.isLocked}
+                  aria-label={`Lock note ${note.isLocked ? "Unlock" : "Lock"}`}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await unlockNote(note);
+                  }}
+                >
+                  <Icon name="LockOpen" className="w-8 h-8 mr-2" />
+                </button>
               ) : (
-                <Icon name="Bookmark3Line" className="w-8 h-8 mr-2" />
+                <button
+                  className="hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)]"
+                  aria-pressed={note.isLocked}
+                  aria-label={`Lock note ${note.isLocked ? "Unlock" : "Lock"}`}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await lockNote(note);
+                  }}
+                >
+                  <Icon name="LockClosed" className="w-8 h-8 mr-2" />
+                </button>
               )}
-            </button>
-            <button
-              className="hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)]"
-              aria-pressed={note.isArchived}
-              aria-label={`Archive note ${
-                note.isArchived ? "Unarchive" : "Archive"
-              }`}
-              onClick={() => {
-                toggleArchive(note);
-              }}
-            >
-              {note.isArchived ? (
-                <Icon name="ArchiveDrawerFill" className="w-8 h-8 mr-2" />
-              ) : (
-                <Icon name="ArchiveDrawerLine" className="w-8 h-8 mr-2" />
-              )}
-            </button>
-            {note.isLocked ? (
               <button
                 className="hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)]"
                 aria-pressed={note.isLocked}
                 aria-label={`Lock note ${note.isLocked ? "Unlock" : "Lock"}`}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  await unlockNote(note);
-                }}
+                onClick={() => setShowModal(true)}
               >
-                <Icon name="LockOpen" className="w-8 h-8 mr-2" />
+                <Icon name="FolderTransferLine" className="w-8 h-8 mr-2" />
               </button>
-            ) : (
               <button
-                className="hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)]"
-                aria-pressed={note.isLocked}
-                aria-label={`Lock note ${note.isLocked ? "Unlock" : "Lock"}`}
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  await lockNote(note);
+                className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
+                aria-label="Delete note"
+                onClick={() => {
+                  handleDeleteNote(note);
                 }}
               >
-                <Icon name="LockClosed" className="w-8 h-8 mr-2" />
+                <Icon name="DeleteBinLine" className="w-8 h-8 mr-2" />
               </button>
-            )}
-            <button
-              className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
-              aria-label="Delete note"
-              onClick={() => {
-                handleDeleteNote(note);
-              }}
-            >
-              <Icon name="DeleteBinLine" className="w-8 h-8 mr-2" />
-            </button>
+            </div>
+            <div className="flex-grow"></div>
+            <p className="text-overflow">
+              {note.isLocked
+                ? translations.card.isLocked
+                : formatDate(note.createdAt)}
+            </p>
           </div>
-          <div className="flex-grow"></div>
-          <p className="text-overflow">
-            {note.isLocked
-              ? translations.card.isLocked
-              : formatDate(note.createdAt)}
-          </p>
         </div>
-      </div>
-    </UiCard>
+      </UiCard>
+      <FolderTree
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        note={note}
+        mode="note"
+      />
+    </div>
   );
 };
 

@@ -17,6 +17,8 @@ import { UiModal } from "../ui/Modal";
 import { exportBEA } from "../../utils/share/BEA";
 import { useLabelStore } from "@/store/label";
 import { useNoteStore } from "@/store/note";
+import { Preferences } from "@capacitor/preferences";
+import { EditorView } from "@tiptap/pm/view";
 
 type Props = {
   note: Note;
@@ -26,6 +28,7 @@ type Props = {
 function EditorComponent({ note, translations }: Props) {
   const labelStore = useLabelStore();
   const noteStore = useNoteStore();
+  const [isCollapsibleEnabled, setIsCollapsibleEnabled] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const titleRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -42,9 +45,7 @@ function EditorComponent({ note, translations }: Props) {
 
   const [focusMode, setFocusMode] = useState(false);
   const [showFind, setShowFind] = useState(false);
-  const [wd, setWd] = useState<boolean>(
-    localStorage.getItem("expand-editor") === "true"
-  );
+  const [wd, setWd] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const exts = [
@@ -56,15 +57,15 @@ function EditorComponent({ note, translations }: Props) {
     }),
   ];
 
-  const isCollapsibleEnabled =
-    localStorage.getItem("collapsibleHeading") === "true";
-
   exts.push(isCollapsibleEnabled ? CollapseHeading : heading);
 
   const editor = useEditor(
     {
       extensions: exts,
       content: note.content,
+      editorProps: {
+        handleClick,
+      },
       onUpdate: ({ editor }) => {
         let data = editor.getJSON();
 
@@ -108,7 +109,16 @@ function EditorComponent({ note, translations }: Props) {
   }, []);
 
   useEffect(() => {
-    setWd(localStorage.getItem("expand-editor") === "true");
+    const loadPreference = async () => {
+      const expand = await Preferences.get({ key: "expand-editor" });
+      if (expand.value) setWd(expand.value === "true");
+
+      const collapsible = await Preferences.get({ key: "collapsibleHeading" });
+      if (collapsible.value)
+        setIsCollapsibleEnabled(collapsible.value === "true");
+    };
+
+    loadPreference();
   }, []);
 
   useEffect(() => {
@@ -300,6 +310,19 @@ function EditorComponent({ note, translations }: Props) {
     }
   }, [note.id, note.title]);
 
+  function handleClick(_view: EditorView, _pos: number, event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    const isMentionURL = target.hasAttribute("data-mention");
+
+     if (isMentionURL) {
+      const labelId = target.dataset.id;
+      if (labelId) {
+        navigate(`/?label=${encodeURIComponent(labelId)}`);
+      }
+    }
+  }
+
   return (
     <div className="relative h-auto" onDragOver={(e) => e.preventDefault()}>
       <div className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] sm:top-0 sm:bottom-auto print:hidden bg-white dark:bg-[#232222] z-20">
@@ -344,7 +367,7 @@ function EditorComponent({ note, translations }: Props) {
                 <button
                   onClick={shareBEA}
                   disabled={isExporting}
-                  className={`flex items-center justify-between p-3 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200
+                  className={`flex items-center justify-between p-3 bg-neutral-200/30 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200
       ${isExporting ? "cursor-not-allowed opacity-70" : "cursor-pointer"}
     `}
                 >
@@ -382,7 +405,7 @@ function EditorComponent({ note, translations }: Props) {
                 {/* Export as PDF */}
                 <button
                   onClick={() => handlePrint(`${note.title}.pdf`)}
-                  className="flex items-center justify-between p-3 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200"
+                  className="flex items-center justify-between p-3 bg-neutral-200/30 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200"
                 >
                   <p className="font-medium w-16 flex-shrink-0">PDF</p>
                   <Icon

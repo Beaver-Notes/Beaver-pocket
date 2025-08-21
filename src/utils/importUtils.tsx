@@ -115,11 +115,6 @@ export const useHandleImportData = () => {
 
       const parsedData = await readJsonFile(importDataPath);
 
-      const existingSharedKey = localStorage.getItem("sharedKey");
-      if (!existingSharedKey && parsedData?.sharedKey) {
-        localStorage.setItem("sharedKey", parsedData.sharedKey);
-      }
-
       if (parsedData?.data?.notes) {
         await noteStore.retrieve();
         const localData = noteStore.data;
