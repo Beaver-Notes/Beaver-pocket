@@ -16,6 +16,7 @@ import { mergeData, revertAssetPaths, SyncData } from "../merge";
 import { useStorage } from "@/composable/storage";
 import { useNoteStore } from "@/store/note";
 import { useLabelStore } from "@/store/label";
+import { useFolderStore } from "@/store/folder";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -49,6 +50,7 @@ const SYNC_FOLDER_NAME = "BeaverNotesSync";
 // ─────────────────────────────────────────────────────────────
 const useiCloudSync = (): iCloudSyncHooks => {
   const noteStore = useNoteStore.getState();
+  const folderStore = useFolderStore.getState();
   const labelStore = useLabelStore.getState();
   const storage = useStorage();
   const [progress, setProgress] = useState(0);
@@ -79,6 +81,7 @@ const useiCloudSync = (): iCloudSyncHooks => {
       let localData: SyncData = { data: { notes: {} } };
 
       localData.data.notes = noteStore.data ?? {};
+      localData.data.folders = folderStore.data ?? {};
       localData.data.labels = labelStore.labels ?? [];
       localData.data.deletedIds = noteStore.deleted ?? {};
 
@@ -103,7 +106,12 @@ const useiCloudSync = (): iCloudSyncHooks => {
       setProgress(80);
 
       await storage.set("notes", mergedData.data.notes);
+      await storage.set("labels", mergedData.data.labels);
+      await storage.set("folders", mergedData.data.folders);
+
       noteStore.retrieve();
+      labelStore.retrieve();
+      folderStore.retrieve();
 
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);

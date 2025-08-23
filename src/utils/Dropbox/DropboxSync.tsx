@@ -111,7 +111,12 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
       setProgress(80);
 
       await storage.set("notes", mergedData.data.notes);
+      await storage.set("labels", mergedData.data.labels);
+      await storage.set("folders", mergedData.data.folders);
+
       noteStore.retrieve();
+      labelStore.retrieve();
+      folderStore.retrieve();
 
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
@@ -366,8 +371,7 @@ async function syncDropboxAssets(
                   directory: FilesystemDirectory.Data,
                   recursive: true,
                 });
-              } catch (e) {
-              }
+              } catch (e) {}
 
               await Filesystem.downloadFile({
                 url: `https://content.dropboxapi.com/2/files/download`,

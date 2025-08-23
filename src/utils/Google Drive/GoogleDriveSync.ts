@@ -11,6 +11,7 @@ import { GoogleDriveAPI } from "./GoogleDriveAPI";
 import { useStorage } from "@/composable/storage";
 import { useNoteStore } from "@/store/note";
 import { useLabelStore } from "@/store/label";
+import { useFolderStore } from "@/store/folder";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -78,6 +79,7 @@ export const useDrive = () => {
 export const useDriveSync = (): DriveSyncHookReturn => {
   const drive = useDrive();
   const storage = useStorage();
+  const folderStore = useFolderStore.getState();
   const noteStore = useNoteStore.getState();
   const labelStore = useLabelStore.getState();
   const [syncState, setSyncState] = useState<SyncState>({
@@ -117,6 +119,7 @@ export const useDriveSync = (): DriveSyncHookReturn => {
       let localData: SyncData = { data: { notes: {} } };
 
       localData.data.notes = noteStore.data ?? {};
+      localData.data.folders = folderStore.data ?? {};
       localData.data.labels = labelStore.labels ?? [];
       localData.data.deletedIds = noteStore.deleted ?? {};
 
@@ -149,7 +152,12 @@ export const useDriveSync = (): DriveSyncHookReturn => {
       setProgress(80);
 
       await storage.set("notes", mergedData.data.notes);
+      await storage.set("labels", mergedData.data.labels);
+      await storage.set("folders", mergedData.data.folders);
+
       noteStore.retrieve();
+      labelStore.retrieve();
+      folderStore.retrieve();
 
       const cleanedData = { ...mergedData };
 

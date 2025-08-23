@@ -10,6 +10,7 @@ import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { useStorage } from "@/composable/storage";
 import { useNoteStore } from "@/store/note";
 import { useLabelStore } from "@/store/label";
+import { useFolderStore } from "@/store/folder";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -42,6 +43,7 @@ const SYNC_FOLDER_NAME = "BeaverNotesSync";
 // Handles syncing of notes, labels, deleted IDs, and assets
 // ─────────────────────────────────────────────────────────────
 const useWebDAVSync = (): WebDAVSyncHookReturn => {
+  const folderStore = useFolderStore.getState();
   const noteStore = useNoteStore.getState();
   const labelStore = useLabelStore.getState();
   const storage = useStorage();
@@ -82,6 +84,7 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
       let localData: SyncData = { data: { notes: {} } };
 
       localData.data.notes = noteStore.data ?? {};
+      localData.data.folders = folderStore.folders ?? {};
       localData.data.labels = labelStore.labels ?? [];
       localData.data.deletedIds = noteStore.deleted ?? {};
 
@@ -103,7 +106,12 @@ const useWebDAVSync = (): WebDAVSyncHookReturn => {
       setProgress(80);
 
       await storage.set("notes", mergedData.data.notes);
+      await storage.set("labels", mergedData.data.labels);
+      await storage.set("folders", mergedData.data.folders);
+
       noteStore.retrieve();
+      labelStore.retrieve();
+      folderStore.retrieve();
 
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);

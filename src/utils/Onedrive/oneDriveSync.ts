@@ -12,6 +12,7 @@ import { mergeData, revertAssetPaths, SyncData } from "../merge";
 import { useStorage } from "@/composable/storage";
 import { useNoteStore } from "@/store/note";
 import { useLabelStore } from "@/store/label";
+import { useFolderStore } from "@/store/folder";
 
 const decodeJwt = (token: string) => {
   try {
@@ -121,6 +122,7 @@ const SYNC_FOLDER_NAME = "BeaverNotesSync";
 // ─────────────────────────────────────────────────────────────
 const useOneDriveSync = (): OneDriveSyncHookReturn => {
   const noteStore = useNoteStore.getState();
+  const folderStore = useFolderStore.getState();
   const labelStore = useLabelStore.getState();
   const storage = useStorage();
   const [syncState, setSyncState] = useState<SyncState>({
@@ -164,6 +166,7 @@ const useOneDriveSync = (): OneDriveSyncHookReturn => {
       let localData: SyncData = { data: { notes: {} } };
 
       localData.data.notes = noteStore.data ?? {};
+      localData.data.folders = folderStore.data ?? {};
       localData.data.labels = labelStore.labels ?? [];
       localData.data.deletedIds = noteStore.deleted ?? {};
 
@@ -191,7 +194,12 @@ const useOneDriveSync = (): OneDriveSyncHookReturn => {
 
 
       await storage.set("notes", mergedData.data.notes);
+      await storage.set("labels", mergedData.data.labels);
+      await storage.set("folders", mergedData.data.folders);
+
       noteStore.retrieve();
+      labelStore.retrieve();
+      folderStore.retrieve();
 
       await storage.set('notes', mergedData.data.notes);
 

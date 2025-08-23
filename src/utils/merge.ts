@@ -97,7 +97,6 @@ export function mergeData(
     mergedDeletedFolderIds
   );
 
-
   const allLabels = [...(localData.labels || []), ...(remoteData.labels || [])];
   const mergedLabels = [...new Set(allLabels)];
 
@@ -109,6 +108,7 @@ export function mergeData(
       folders: mergedFolders,
       labels: mergedLabels,
       deletedIds: mergedDeletedIds,
+      deletedFolderIds: mergedDeletedFolderIds,
     },
   };
 }
