@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Keyboard } from "@capacitor/keyboard";
 import { useNoteStore } from "@/store/note";
 import Mousetrap from "../../utils/mousetrap";
@@ -7,12 +7,14 @@ import Icon from "../ui/Icon";
 import { Capacitor } from "@capacitor/core";
 import { useTranslation } from "@/utils/translations";
 import { useFolderStore } from "@/store/folder";
+import emitter from "tiny-emitter/instance";
 
 const BottomNavBar: React.FC = () => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const folderStore = useFolderStore();
   const noteStore = useNoteStore.getState();
   const router = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (Capacitor.getPlatform() === "web") return;
@@ -36,31 +38,33 @@ const BottomNavBar: React.FC = () => {
   });
 
   useEffect(() => {
-    const fetchTranslations = async () => {
-      const trans = await useTranslation();
-      if (trans) {
-        setTranslations(trans);
-      }
+    const fetchTranslations = () => {
+      useTranslation().then((trans) => {
+        if (trans) setTranslations(trans);
+      });
     };
     fetchTranslations();
   }, []);
 
-  function addNote() {
+  const addNote = useCallback(() => {
     noteStore.add().then(({ id }: { id: string }) => {
       router(`/note/${id}`);
     });
-  }
+  }, [noteStore, router]);
 
-  function addFolder() {
-    folderStore.add().then(({ id }: { id: string }) => {
-      console.log(`${id}`);
-    });
-  }
+  const addFolder = useCallback(() => {
+    folderStore.add();
+  }, [folderStore]);
 
   useEffect(() => {
     Mousetrap.bind("alt+n", (e) => {
       e.preventDefault();
       addNote();
+    });
+
+    Mousetrap.bind("mod+shift+f", (e) => {
+      e.preventDefault();
+      addFolder();
     });
 
     Mousetrap.bind("mod+shift+n", (e) => {
@@ -79,15 +83,28 @@ const BottomNavBar: React.FC = () => {
     });
 
     return () => {
-      Mousetrap.unbind("alt+n");
+      Mousetrap.unbind("mod+n");
       Mousetrap.unbind("mod+shift+n");
       Mousetrap.unbind("mod+shift+w");
       Mousetrap.unbind("mod+shift+a");
+      Mousetrap.unbind("mod+shift+f");
       Mousetrap.unbind("mod+,");
     };
   }, []);
 
+  useEffect(() => {
+    emitter.on("new-note", addNote);
+    emitter.on("new-folder", addFolder);
+
+    return () => {
+      emitter.off("new-note", addNote);
+      emitter.off("new-folder", addFolder);
+    };
+  }, []);
+
   if (keyboardVisible) return null;
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="element-to-hide spacingdiv">
@@ -100,7 +117,9 @@ const BottomNavBar: React.FC = () => {
             >
               <Icon
                 name="HomeLine"
-                className="text-white hover:text-primary h-10 w-10"
+                className={`${
+                  isActive("/") ? "text-secondary" : "text-white"
+                } h-10 w-10`}
               />
             </button>
           </Link>
@@ -112,7 +131,7 @@ const BottomNavBar: React.FC = () => {
           >
             <Icon
               name="FolderAddLine"
-              className="text-white hover:text-primary h-10 w-10"
+              className="text-white hover:text-secondary h-10 w-10"
             />
           </button>
 
@@ -123,7 +142,7 @@ const BottomNavBar: React.FC = () => {
           >
             <Icon
               name="AddFill"
-              className="text-white hover:text-primary h-10 w-10"
+              className="text-white hover:text-secondary h-10 w-10"
             />
           </button>
 
@@ -134,7 +153,9 @@ const BottomNavBar: React.FC = () => {
             >
               <Icon
                 name="ArchiveDrawerLine"
-                className="text-white hover:text-primary h-10 w-10"
+                className={`${
+                  isActive("/archive") ? "text-secondary" : "text-white"
+                } h-10 w-10`}
               />
             </button>
           </Link>
@@ -146,7 +167,9 @@ const BottomNavBar: React.FC = () => {
             >
               <Icon
                 name="Settings4Line"
-                className="text-white hover:text-primary h-10 w-10"
+                className={`${
+                  isActive("/settings") ? "text-secondary" : "text-white"
+                } h-10 w-10`}
               />
             </button>
           </Link>
