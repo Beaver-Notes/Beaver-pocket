@@ -8,8 +8,10 @@ import Icon from "./components/ui/Icon";
 import { Preferences } from "@capacitor/preferences";
 import { clearIndex, indexData } from "./utils/spotsearch";
 import UiSelect from "./components/ui/Select";
+import { useAppStore } from "./store/app";
 
 const Settings: React.FC = () => {
+  const appStore = useAppStore();
   const theme = useTheme();
   const [selectedOption, setSelectedOption] = useState<
     "light" | "dark" | "system"
@@ -30,11 +32,10 @@ const Settings: React.FC = () => {
   const [translations, setTranslations] = useState<Record<string, any>>({
     settings: {},
   });
-
+  const [collapsibleHeading, setCollapsibleHeading] = useCollapsibleHeading();
   const [selectedFont, setSelectedFont] = useState<string>("Arimo");
   const [selectedCodeFont, setSelectedCodeFont] =
     useState<string>("JetBrains Mono");
-  const [collapsibleChecked, setCollapsibleChecked] = useState(false);
   const [indexingChecked, setIndexingChecked] = useState(false);
   const [wd, setwd] = useState<boolean>(false);
   const [selectedLanguage, setSelectedLanguage] = useState("en");
@@ -72,9 +73,6 @@ const Settings: React.FC = () => {
 
       const darkText = await Preferences.get({ key: "selected-dark-text" });
       setClearFontChecked(darkText.value === "#CCCCCC");
-
-      const collapsible = await Preferences.get({ key: "collapsibleHeading" });
-      setCollapsibleChecked(collapsible.value === "true");
 
       const indexing = await Preferences.get({ key: "indexing" });
       setIndexingChecked(indexing.value === "true");
@@ -127,13 +125,15 @@ const Settings: React.FC = () => {
     window.location.reload();
   };
 
-  const toggleCollapsible = async () => {
-    const newValue = !collapsibleChecked;
-    setCollapsibleChecked(newValue);
-    await Preferences.set({
-      key: "collapsibleHeading",
-      value: newValue.toString(),
-    });
+  function useCollapsibleHeading() {
+    const get = () => appStore.setting.collapsibleHeading;
+    const set = (v: boolean) =>
+      appStore.setSettingStorage("collapsibleHeading", v);
+    return [get(), set];
+  }
+
+  const toggleCollapsible = () => {
+    setCollapsibleHeading(!collapsibleHeading);
   };
 
   const toggleIndexing = async () => {
@@ -352,10 +352,10 @@ const Settings: React.FC = () => {
                   >
                     <input
                       type="checkbox"
-                      checked={collapsibleChecked}
+                      checked={collapsibleHeading}
                       onChange={toggleCollapsible}
                       className="peer sr-only"
-                      aria-checked={collapsibleChecked}
+                      aria-checked={collapsibleHeading}
                     />
                     <div className="peer h-8 w-[3.75rem] rounded-full border dark:border-[#353333] dark:bg-[#353333] after:absolute after:left-[2px] rtl:after:right-[22px] after:top-0.5 after:h-7 after:w-7 after:rounded-full after:border after:border-neutral-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full rtl:peer-checked:after:border-white peer-focus:ring-green-300"></div>
                   </label>

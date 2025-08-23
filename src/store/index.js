@@ -3,6 +3,7 @@ import { useNoteStore } from "./note";
 import { useLabelStore } from "./label";
 import { usePasswordStore } from "./passwd";
 import { useFolderStore } from "./folder";
+import { useAppStore } from "./app";
 
 export const useStore = create((set, get) => ({
   inReaderMode: false,
@@ -10,6 +11,7 @@ export const useStore = create((set, get) => ({
   showPrompt: false,
 
   retrieve: async () => {
+    const appStore = useAppStore.getState();
     const noteStore = useNoteStore.getState();
     const labelStore = useLabelStore.getState();
     const folderStore = useFolderStore.getState();
@@ -17,6 +19,7 @@ export const useStore = create((set, get) => ({
 
     try {
       const results = await Promise.allSettled([
+        appStore.retrieve(),
         noteStore.retrieve(),
         labelStore.retrieve(),
         folderStore.retrieve(),

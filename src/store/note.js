@@ -6,7 +6,7 @@ import { useStorage } from "@/composable/storage";
 import { trackChange } from "@/composable/sync";
 import { useFolderStore } from "./folder";
 import { SpotSearch } from "@daniele-rolli/capacitor-spotsearch";
-import { Preferences } from "@capacitor/preferences";
+import { useAppStore } from "./app";
 
 const storage = useStorage();
 
@@ -453,10 +453,10 @@ export const useNoteStore = create((set, get) => ({
 
       console.log("Note decrypted successfully");
 
-      const collapsibleHeading = Preferences.get("collapsible");
-      const isCollapsible = collapsibleHeading === "true";
-
-      if (!isCollapsible) store.convertNote(id);
+      const appStore = useAppStore.getState();
+      if (!appStore.setting.collapsibleHeading) {
+        this.convertNote(id);
+      }
 
       await store.update(id, { content, isLocked: false });
 

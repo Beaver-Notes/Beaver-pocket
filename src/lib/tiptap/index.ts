@@ -4,6 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Video from "./exts/video-block";
 import Audio from "./exts/audio-block";
 import heading from './exts/headings';
+import Code from '@tiptap/extension-code';
 import CollapseHeading from './exts/collapse-heading';
 import Document from "@tiptap/extension-document";
 import Subscript from "@tiptap/extension-subscript";
@@ -82,6 +83,7 @@ const extensions = [
     allowGapCursor: true,
   }),
   CodeBlock,
+  Code.configure({ HTMLAttributes: { class: 'inline-code' } }),
   Placeholder.configure({
     placeholder: translations.tiptap.placeholder,
   }),

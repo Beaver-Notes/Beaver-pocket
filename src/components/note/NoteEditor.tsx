@@ -19,6 +19,7 @@ import { useLabelStore } from "@/store/label";
 import { useNoteStore } from "@/store/note";
 import { Preferences } from "@capacitor/preferences";
 import { EditorView } from "@tiptap/pm/view";
+import { useAppStore } from "@/store/app";
 
 type Props = {
   note: Note;
@@ -28,7 +29,7 @@ type Props = {
 function EditorComponent({ note, translations }: Props) {
   const labelStore = useLabelStore();
   const noteStore = useNoteStore();
-  const [isCollapsibleEnabled, setIsCollapsibleEnabled] = useState(false);
+  const appStore = useAppStore();
   const [isExporting, setIsExporting] = useState(false);
   const titleRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -48,6 +49,15 @@ function EditorComponent({ note, translations }: Props) {
   const [wd, setWd] = useState<boolean>(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const loadPreference = async () => {
+      const expand = await Preferences.get({ key: "expand-editor" });
+      if (expand.value) setWd(expand.value === "true");
+    };
+
+    loadPreference();
+  }, []);
+
   const exts = [
     ...extensions,
     LinkNote(() => note.id ?? ""),
@@ -57,7 +67,11 @@ function EditorComponent({ note, translations }: Props) {
     }),
   ];
 
-  exts.push(isCollapsibleEnabled ? CollapseHeading : heading);
+  if (appStore.setting.collapsibleHeading) {
+    exts.push(CollapseHeading);
+  } else {
+    exts.push(heading);
+  }
 
   const editor = useEditor(
     {
@@ -106,19 +120,6 @@ function EditorComponent({ note, translations }: Props) {
     return () => {
       document.removeEventListener("showFind", toggleFindListener);
     };
-  }, []);
-
-  useEffect(() => {
-    const loadPreference = async () => {
-      const expand = await Preferences.get({ key: "expand-editor" });
-      if (expand.value) setWd(expand.value === "true");
-
-      const collapsible = await Preferences.get({ key: "collapsibleHeading" });
-      if (collapsible.value)
-        setIsCollapsibleEnabled(collapsible.value === "true");
-    };
-
-    loadPreference();
   }, []);
 
   useEffect(() => {
@@ -315,7 +316,7 @@ function EditorComponent({ note, translations }: Props) {
 
     const isMentionURL = target.hasAttribute("data-mention");
 
-     if (isMentionURL) {
+    if (isMentionURL) {
       const labelId = target.dataset.id;
       if (labelId) {
         navigate(`/?label=${encodeURIComponent(labelId)}`);
