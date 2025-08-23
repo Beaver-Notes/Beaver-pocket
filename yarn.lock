@@ -1122,6 +1122,29 @@
     tslib "^2.8.1"
     xml2js "^0.6.2"
 
+"@capacitor/cli@^7.4.3":
+  version "7.4.3"
+  resolved "https://registry.yarnpkg.com/@capacitor/cli/-/cli-7.4.3.tgz#4f8be36a89c2671c2eb681b714f67fcc3b6ebc9c"
+  integrity sha512-SWozpdDgrbQ/ry1nIapugDFvE9z+l22BmU/+fpgL2Zv5487hGdXvCX5+1SluuFBP3IPpx6b4LjsKnBigyJoUWg==
+  dependencies:
+    "@ionic/cli-framework-output" "^2.2.8"
+    "@ionic/utils-subprocess" "^3.0.1"
+    "@ionic/utils-terminal" "^2.3.5"
+    commander "^12.1.0"
+    debug "^4.4.0"
+    env-paths "^2.2.0"
+    fs-extra "^11.2.0"
+    kleur "^4.1.5"
+    native-run "^2.0.1"
+    open "^8.4.0"
+    plist "^3.1.0"
+    prompts "^2.4.2"
+    rimraf "^6.0.1"
+    semver "^7.6.3"
+    tar "^6.1.11"
+    tslib "^2.8.1"
+    xml2js "^0.6.2"
+
 "@capacitor/core@^7.0.0":
   version "7.4.2"
   resolved "https://registry.yarnpkg.com/@capacitor/core/-/core-7.4.2.tgz#9ed8f4fe80a24c51c6969dbf44b70142d1e8eb91"
@@ -1195,6 +1218,13 @@
   version "3.4.0-rc.6"
   resolved "https://registry.yarnpkg.com/@daniele-rolli/capacitor-google-auth/-/capacitor-google-auth-3.4.0-rc.6.tgz#88a274938aaac0b2e65baea78c73b21186ea0b17"
   integrity sha512-2mct3opmx12NE669jLqeHVpYcndOfNj8lQcgzLLLaRyMsbGF817XsZBurgYE4teUjPvTVgsCoD6BaVyB1fo1+g==
+
+"@daniele-rolli/capacitor-scoped-storage@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@daniele-rolli/capacitor-scoped-storage/-/capacitor-scoped-storage-0.0.2.tgz#241993c3a583a6c536ff635f7bf46919a340d604"
+  integrity sha512-YZ88riWjqrOmDcWWnCUD90/9z/4c4tKtQTdH/K8RETWv4caSevu+cF+NsKD0DJiM1W4kr+9xoXzZ28YQuAGtvQ==
+  dependencies:
+    "@capacitor/cli" "^7.4.3"
 
 "@daniele-rolli/capacitor-spotsearch@^0.0.2":
   version "0.0.2"

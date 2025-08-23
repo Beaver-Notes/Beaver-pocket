@@ -31,22 +31,33 @@ function useCommands() {
     {
       id: "new-note",
       title: translations.commands.newNote,
+      icon: "Edit2Line",
       shortcut: [getModifierKey(), "N"],
       handler: () => emitter.emit("new-note"),
     },
     {
+      id: "new-folder",
+      title: translations.commands.newFolder,
+      icon: "FolderAddLine",
+      shortcut: [getModifierKey(), "Shift", "F"],
+      handler: () => emitter.emit("new-folder"),
+    },
+    {
       id: "settings",
+      icon: "SettingsLine",
       title: translations.commands.settings,
       shortcut: [getModifierKey(), ","],
       handler: () => emitter.emit("open-settings"),
     },
     {
       id: "dark-theme",
+      icon: "MoonLine",
       title: translations.commands.darkTheme,
       handler: () => setTheme("dark"),
     },
     {
       id: "light-theme",
+      icon: "SunLine",
       title: translations.commands.lightTheme,
       handler: () => setTheme("light"),
     },

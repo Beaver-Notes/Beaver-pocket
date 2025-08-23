@@ -296,7 +296,8 @@
     "newNote": "Create new note",
     "settings": "Settings",
     "darkTheme": "Dark Theme",
-    "lightTheme": "Light Theme"
+    "lightTheme": "Light Theme",
+    "newFolder":"Create new folder"
   },
   "commandPrompt": {
     "placeholder": "Search file or type '>' to search commands",
