@@ -4,7 +4,8 @@ import { WebDavService } from "@/utils/Webdav/webDavApi";
 import WebDAV from "@/utils/Webdav/WebDAVPlugin";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
-import { forceSyncNow } from "@/utils/sync";
+import { forceSyncNow } from "@/composable/sync";
+import { Preferences } from "@capacitor/preferences";
 
 interface WebdavProps {
   syncStatus: string;
@@ -15,19 +16,26 @@ const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
 const Webdav: React.FC<WebdavProps> = ({ syncStatus, disableClass }) => {
   const [logged, setLogin] = useState<boolean>(false);
-  const [autoSync, setAutoSync] = useState<boolean>(() => {
-    const storedSync = localStorage.getItem("sync");
-    return storedSync === "webdav";
-  });
-  const [insecureMode, setInsecureMode] = useState(() => {
-    const stored = localStorage.getItem("insecureWebDAV");
-    return stored === "true";
-  });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [baseUrl, setBaseUrl] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+  const [autoSync, setAutoSync] = useState<boolean>(false);
+  const [insecureMode, setInsecureMode] = useState<boolean>(false);
+
+  useEffect(() => {
+    const loadPreferences = async () => {
+      const { value: storedSync } = await Preferences.get({ key: "sync" });
+      setAutoSync(storedSync === "webdav");
+
+      const { value: storedInsecure } = await Preferences.get({
+        key: "insecureWebDAV",
+      });
+      setInsecureMode(storedInsecure === "true");
+    };
+    loadPreferences();
+  }, []);
 
   useEffect(() => {
     if (baseUrl.startsWith("http://") && !insecureMode) {
@@ -133,8 +141,8 @@ const Webdav: React.FC<WebdavProps> = ({ syncStatus, disableClass }) => {
   };
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      const storedSync = localStorage.getItem("sync");
+    const handleStorageChange = async () => {
+      const { value: storedSync } = await Preferences.get({ key: "sync" });
       if (storedSync === "webdav" && !autoSync) {
         setAutoSync(true);
       } else if (storedSync !== "webdav" && autoSync) {
@@ -149,17 +157,15 @@ const Webdav: React.FC<WebdavProps> = ({ syncStatus, disableClass }) => {
     };
   }, [autoSync]);
 
-  const handleSyncToggle = () => {
+  const handleSyncToggle = async () => {
     const syncValue = autoSync ? "none" : "webdav";
-    localStorage.setItem("sync", syncValue);
+    await Preferences.set({ key: "sync", value: syncValue });
     setAutoSync(!autoSync);
   };
 
   const handleInsecureToggle = async () => {
-    const currentStored = localStorage.getItem("insecureWebDAV") === "true";
-    const newMode = !currentStored;
-
-    localStorage.setItem("insecureWebDAV", String(newMode));
+    const newMode = !insecureMode;
+    await Preferences.set({ key: "insecureWebDAV", value: String(newMode) });
     setInsecureMode(newMode);
     await WebDAV.setInsecureMode({ insecure: newMode });
   };
@@ -167,23 +173,6 @@ const Webdav: React.FC<WebdavProps> = ({ syncStatus, disableClass }) => {
   const toggleInputContentVisibility = () => {
     setShowInputContent(!showInputContent);
   };
-
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -1,4 +1,4 @@
-import { Note } from "../store/types";
+import { Folder, Note } from "../store/types";
 
 export function revertAssetPaths(
   notes: Record<string, Note>
@@ -56,8 +56,10 @@ export function revertAssetPaths(
 export interface SyncData {
   data: {
     notes: Record<string, Note>;
+    folders?: Record<string, Folder>;
     labels?: string[];
     deletedIds?: Record<string, number>;
+    deletedFolderIds?: Record<string, number>;
   };
 }
 
@@ -75,11 +77,26 @@ export function mergeData(
     }
   }
 
+  const mergedDeletedFolderIds = { ...(localData.deletedFolderIds || {}) };
+  for (const [id, timestamp] of Object.entries(remoteData.deletedFolderIds || {})) {
+    if (!mergedDeletedFolderIds[id] || timestamp > mergedDeletedFolderIds[id]) {
+      mergedDeletedFolderIds[id] = timestamp;
+    }
+  }
+
   const mergedNotes = mergeNotesWithDeletedIds(
     localData.notes || {},
     remoteData.notes || {},
-    mergedDeletedIds
+    mergedDeletedIds,
+    mergedDeletedFolderIds
   );
+
+  const mergedFolders = mergeFoldersWithDeletedIds(
+    localData.folders || {},
+    remoteData.folders || {},
+    mergedDeletedFolderIds
+  );
+
 
   const allLabels = [...(localData.labels || []), ...(remoteData.labels || [])];
   const mergedLabels = [...new Set(allLabels)];
@@ -89,6 +106,7 @@ export function mergeData(
   return {
     data: {
       notes: mergedNotes,
+      folders: mergedFolders,
       labels: mergedLabels,
       deletedIds: mergedDeletedIds,
     },
@@ -98,29 +116,54 @@ export function mergeData(
 export function mergeNotesWithDeletedIds(
   localNotes: Record<string, Note>,
   remoteNotes: Record<string, Note>,
-  deletedIds: Record<string, number>
+  deletedIds: Record<string, number>,
+  deletedFolderIds: Record<string, number>
 ): Record<string, Note> {
   const mergedNotes: Record<string, Note> = {};
 
   // Process local notes
-  for (const [noteId, localNote] of Object.entries(localNotes)) {
+  for (const [noteId, localNoteRaw] of Object.entries(localNotes)) {
     if (deletedIds[noteId]) continue;
-    mergedNotes[noteId] = processNotePaths(noteId, localNote); // ← Fixed: process local!
+
+    let localNote = { ...localNoteRaw }; // <-- now mutable
+
+    // If folder was deleted after note updated → nullify folderId
+    if (localNote.folderId && deletedFolderIds[localNote.folderId]) {
+      const folderDeletionTime = deletedFolderIds[localNote.folderId];
+      const noteUpdateTime = localNote.updatedAt ? new Date(localNote.updatedAt).getTime() : 0;
+
+      if (folderDeletionTime > noteUpdateTime) {
+        localNote.folderId = null; // ✅ safe now
+      }
+    }
+
+    mergedNotes[noteId] = processNotePaths(noteId, localNote);
   }
 
+
   // Process remote notes
-  for (const [noteId, remoteNote] of Object.entries(remoteNotes)) {
+  for (const [noteId, remoteNoteRaw] of Object.entries(remoteNotes)) {
     if (deletedIds[noteId]) continue;
+
+    let remoteNote = { ...remoteNoteRaw };
+
+    if (remoteNote.folderId && deletedFolderIds[remoteNote.folderId]) {
+      const folderDeletionTime = deletedFolderIds[remoteNote.folderId];
+      const noteUpdateTime = remoteNote.updatedAt ? new Date(remoteNote.updatedAt).getTime() : 0;
+
+      if (folderDeletionTime > noteUpdateTime) {
+        remoteNote.folderId = null;
+      }
+    }
 
     const processedRemoteNote = processNotePaths(noteId, remoteNote);
     const existingNote = mergedNotes[noteId];
 
-    if (!existingNote) {
-      mergedNotes[noteId] = processedRemoteNote;
-    } else if (
-      processedRemoteNote.updatedAt &&
-      existingNote.updatedAt &&
-      new Date(processedRemoteNote.updatedAt) > new Date(existingNote.updatedAt)
+    if (
+      !existingNote ||
+      (processedRemoteNote.updatedAt &&
+        existingNote.updatedAt &&
+        new Date(processedRemoteNote.updatedAt) > new Date(existingNote.updatedAt))
     ) {
       mergedNotes[noteId] = processedRemoteNote;
     }
@@ -129,7 +172,51 @@ export function mergeNotesWithDeletedIds(
   return mergedNotes;
 }
 
-function processNotePaths(noteId: string, note: Note): Note {
+export function mergeFoldersWithDeletedIds(
+  localFolders: Record<string, Folder>,
+  remoteFolders: Record<string, Folder>,
+  deletedFolderIds: Record<string, number>
+): Record<string, Folder> {
+  const mergedFolders: Record<string, Folder> = {};
+
+  // Process local folders
+  for (const [folderId, localFolder] of Object.entries(localFolders)) {
+    if (
+      deletedFolderIds[folderId] &&
+      localFolder.updatedAt &&
+      deletedFolderIds[folderId] >= new Date(localFolder.updatedAt).getTime()
+    ) {
+      continue;
+    }
+    mergedFolders[folderId] = localFolder;
+  }
+
+  // Process remote folders
+  for (const [folderId, remoteFolder] of Object.entries(remoteFolders)) {
+    if (
+      deletedFolderIds[folderId] &&
+      remoteFolder.updatedAt &&
+      deletedFolderIds[folderId] >= new Date(remoteFolder.updatedAt).getTime()
+    ) {
+      continue;
+    }
+
+    const existingFolder = mergedFolders[folderId];
+    if (
+      !existingFolder ||
+      (remoteFolder.updatedAt &&
+        existingFolder.updatedAt &&
+        new Date(remoteFolder.updatedAt).getTime() > new Date(existingFolder.updatedAt).getTime())
+    ) {
+      mergedFolders[folderId] = remoteFolder;
+    }
+  }
+
+  return mergedFolders;
+}
+
+
+export function processNotePaths(noteId: string, note: Note): Note {
   const processedNote = { ...note };
 
   if (

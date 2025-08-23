@@ -4,7 +4,8 @@ import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import Icon from "@/components/ui/Icon";
 import { OneDriveAPI } from "@/utils/Onedrive/oneDriveApi";
 import { useTranslation } from "@/utils/translations";
-import { forceSyncNow } from "@/utils/sync";
+import { forceSyncNow } from "@/composable/sync";
+import { Preferences } from "@capacitor/preferences";
 
 interface OneDriveProps {
   syncStatus: string;
@@ -107,23 +108,6 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({
     }
   };
 
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
-
   // Translations
   const [translations, setTranslations] = useState<Record<string, any>>({
     onedrive: {},
@@ -140,14 +124,20 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({
     fetchTranslations();
   }, []);
 
-  const [autoSync, setAutoSync] = useState<boolean>(() => {
-    const storedSync = localStorage.getItem("sync");
-    return storedSync === "onedrive";
-  });
+    const [autoSync, setAutoSync] = useState<boolean>(false);
+  
+    useEffect(() => {
+      const loadPreferences = async () => {
+        const { value: storedSync } = await Preferences.get({ key: "sync" });
+        return storedSync === "onedrive";
+      };
+      loadPreferences();
+    }, []);
+  
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      const storedSync = localStorage.getItem("sync");
+    const handleStorageChange = async () => {
+      const { value: storedSync } = await Preferences.get({ key: "sync" });
       if (storedSync === "onedrive" && !autoSync) {
         setAutoSync(true);
       } else if (storedSync !== "onedrive" && autoSync) {
@@ -162,9 +152,9 @@ const OneDriveAuth: React.FC<OneDriveProps> = ({
     };
   }, [autoSync]);
 
-  const handleSyncToggle = () => {
+  const handleSyncToggle = async () => {
     const syncValue = autoSync ? "none" : "onedrive";
-    localStorage.setItem("sync", syncValue);
+    await Preferences.set({ key: "sync", value: syncValue });
     setAutoSync(!autoSync);
   };
 

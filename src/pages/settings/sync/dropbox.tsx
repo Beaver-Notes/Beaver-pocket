@@ -4,7 +4,8 @@ import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import { Dropbox } from "dropbox";
-import { forceSyncNow } from "@/utils/sync";
+import { forceSyncNow } from "@/composable/sync";
+import { Preferences } from "@capacitor/preferences";
 const CLIENT_ID = import.meta.env.VITE_DROPBOX_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_DROPBOX_CLIENT_SECRET;
 
@@ -242,14 +243,19 @@ const DropboxSync: React.FC<DropboxProps> = ({ syncStatus, disableClass }) => {
     }
   };
 
-  const [autoSync, setAutoSync] = useState<boolean>(() => {
-    const storedSync = localStorage.getItem("sync");
-    return storedSync === "dropbox";
-  });
+  const [autoSync, setAutoSync] = useState<boolean>(false);
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      const storedSync = localStorage.getItem("sync");
+    const loadPreferences = async () => {
+      const { value: storedSync } = await Preferences.get({ key: "sync" });
+      return storedSync === "dropbox";
+    };
+    loadPreferences();
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = async () => {
+      const { value: storedSync } = await Preferences.get({ key: "sync" });
       if (storedSync === "dropbox" && !autoSync) {
         setAutoSync(true);
       } else if (storedSync !== "dropbox" && autoSync) {
@@ -264,9 +270,9 @@ const DropboxSync: React.FC<DropboxProps> = ({ syncStatus, disableClass }) => {
     };
   }, [autoSync]);
 
-  const handleSyncToggle = () => {
+  const handleSyncToggle = async () => {
     const syncValue = autoSync ? "none" : "dropbox";
-    localStorage.setItem("sync", syncValue);
+    await Preferences.set({ key: "sync", value: syncValue });
     setAutoSync(!autoSync);
   };
 

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { driveService } from "@/utils/Google Drive/GoogleOauth";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
-import { forceSyncNow } from "@/utils/sync";
+import { forceSyncNow } from "@/composable/sync";
+import { Preferences } from "@capacitor/preferences";
 
 interface DriveProps {
   syncStatus: string;
@@ -12,9 +13,16 @@ interface DriveProps {
 const GoogleDrive: React.FC<DriveProps> = ({ syncStatus, disableClass }) => {
   const SYNC_FOLDER_NAME = "BeaverNotesSync";
   const [user, setUser] = useState<any | null>(null);
-  const [autoSync, setAutoSync] = useState(
-    () => localStorage.getItem("sync") === "googledrive"
-  );
+  const [autoSync, setAutoSync] = useState<boolean>(false);
+
+  useEffect(() => {
+    const loadPreferences = async () => {
+      const { value: storedSync } = await Preferences.get({ key: "sync" });
+      return storedSync === "googledrive";
+    };
+    loadPreferences();
+  }, []);
+
   const [translations, setTranslations] = useState<Record<string, any>>({
     gdrive: {},
     sync: {},
@@ -80,10 +88,9 @@ const GoogleDrive: React.FC<DriveProps> = ({ syncStatus, disableClass }) => {
     }
   };
 
-  // Toggle sync mode and store in localStorage
-  const handleSyncToggle = () => {
+  const handleSyncToggle = async () => {
     const newValue = autoSync ? "none" : "googledrive";
-    localStorage.setItem("sync", newValue);
+    await Preferences.set({ key: "sync", value: newValue });
     setAutoSync(!autoSync);
   };
 

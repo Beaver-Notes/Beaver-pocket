@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import iCloud from "@/utils/iCloud/iCloud";
-import { forceSyncNow } from "@/utils/sync";
+import { forceSyncNow } from "@/composable/sync";
+import { Preferences } from "@capacitor/preferences";
 
 interface iCloudProps {
   syncStatus: string;
@@ -28,14 +29,19 @@ const iCloudSync: React.FC<iCloudProps> = ({ syncStatus, disableClass }) => {
     fetchTranslations();
   }, []);
 
-  const [autoSync, setAutoSync] = useState<boolean>(() => {
-    const storedSync = localStorage.getItem("sync");
-    return storedSync === "iCloud";
-  });
+  const [autoSync, setAutoSync] = useState<boolean>(false);
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      const storedSync = localStorage.getItem("sync");
+    const loadPreferences = async () => {
+      const { value: storedSync } = await Preferences.get({ key: "sync" });
+      return storedSync === "iCloud";
+    };
+    loadPreferences();
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = async () => {
+      const { value: storedSync } = await Preferences.get({ key: "sync" });
       if (storedSync === "iCloud" && !autoSync) {
         setAutoSync(true);
       } else if (storedSync !== "iCloud" && autoSync) {
@@ -52,7 +58,7 @@ const iCloudSync: React.FC<iCloudProps> = ({ syncStatus, disableClass }) => {
 
   const handleSyncToggle = async () => {
     const syncValue = autoSync ? "none" : "iCloud";
-    localStorage.setItem("sync", syncValue);
+    await Preferences.set({ key: "sync", value: syncValue });
     setAutoSync(!autoSync);
     const { exists } = await iCloud.checkFolderExists({
       folderName: `${SYNC_FOLDER_NAME}`,
@@ -61,23 +67,6 @@ const iCloudSync: React.FC<iCloudProps> = ({ syncStatus, disableClass }) => {
       await iCloud.createFolder({ folderName: `${SYNC_FOLDER_NAME}` });
     }
   };
-
-  const [themeMode] = useState(() => {
-    const storedThemeMode = localStorage.getItem("themeMode");
-    return storedThemeMode || "auto";
-  });
-
-  const [darkMode] = useState(() => {
-    const prefersDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    return themeMode === "auto" ? prefersDarkMode : themeMode === "dark";
-  });
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("themeMode", themeMode);
-  }, [darkMode, themeMode]);
 
   const getIconClass = (status: "syncing" | "idle" | "error") => {
     switch (status) {

@@ -8,7 +8,7 @@ import { mergeData, revertAssetPaths, SyncData } from "../merge";
 import { useStorage } from "@/composable/storage";
 import { useNoteStore } from "@/store/note";
 import { useLabelStore } from "@/store/label";
-
+import { useFolderStore } from "@/store/folder";
 interface SyncState {
   syncInProgress: boolean;
   syncError: string | null;
@@ -40,6 +40,7 @@ const SYNC_FOLDER_NAME = "BeaverNotesSync";
 // Handles syncing of notes, labels, deleted IDs, and assets
 // ─────────────────────────────────────────────────────────────
 const useDropboxSync = (): DropboxSyncHookReturn => {
+  const folderStore = useFolderStore.getState();
   const noteStore = useNoteStore.getState();
   const labelStore = useLabelStore.getState();
   const storage = useStorage();
@@ -84,6 +85,7 @@ const useDropboxSync = (): DropboxSyncHookReturn => {
       let localData: SyncData = { data: { notes: {} } };
 
       localData.data.notes = noteStore.data ?? {};
+      localData.data.folders = folderStore.data ?? {};
       localData.data.labels = labelStore.labels ?? [];
       localData.data.deletedIds = noteStore.deleted ?? {};
 

@@ -1,20 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
-import { useHandleImportData } from "../../utils/importUtils";
 import { useNavigate } from "react-router-dom";
 import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
-import { Zip } from "capa-zip";
 import Icon from "@/components/ui/Icon";
 import { useTranslation } from "@/utils/translations";
 import { ScopedStorage } from "@daniele-rolli/capacitor-scoped-storage";
 import { useStorage } from "@/composable/storage";
+import { processNotePaths } from "@/utils/merge";
+import { useNoteStore } from "@/store/note";
+import { useFolderStore } from "@/store/folder";
+import { useLabelStore } from "@/store/label";
+
+const USE_ALERTS = false;
+const debug = (msg: string, ...rest: any[]) =>
+  USE_ALERTS
+    ? alert(`${msg} ${rest.map(String).join(" ")}`)
+    : console.log(msg, ...rest);
+
+const join = (...parts: string[]) =>
+  parts.filter(Boolean).join("/").replace(/\/+/g, "/");
 
 const Sync: React.FC = () => {
   const storage = useStorage();
+  const noteStore = useNoteStore();
+  const folderStore = useFolderStore();
+  const labelStore = useLabelStore();
   const platform = Capacitor.getPlatform();
-  const { importUtils } = useHandleImportData();
   const navigate = useNavigate();
 
+  /** ---------- EXPORT ---------- */
   async function exportData() {
     const { folder } = await ScopedStorage.pickFolder();
     if (!folder?.id) return;
@@ -47,11 +61,7 @@ const Sync: React.FC = () => {
     ]);
   }
 
-  async function copyDir(
-    folder: { id: string; name?: string },
-    src: string,
-    dest: string
-  ) {
+  async function copyDir(folder: { id: string }, src: string, dest: string) {
     await ScopedStorage.mkdir({ folder, path: dest, recursive: true });
 
     const items = await readDir(src);
@@ -102,63 +112,166 @@ const Sync: React.FC = () => {
     }
   }
 
-  const join = (...parts: string[]) =>
-    parts.filter(Boolean).join("/").replace(/\/+/g, "/");
+  /** ---------- IMPORT ---------- */
 
-  const handleImportData = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
+  async function mergeImportedData(data: any) {
+    const keys = [
+      { key: "notes", dfData: {} },
+      { key: "folders", dfData: {} },
+      { key: "labels", dfData: [] },
+      { key: "lockStatus", dfData: {} },
+      { key: "isLocked", dfData: {} },
+    ];
 
-    if (file) {
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file);
+    for (const { key, dfData } of keys) {
+      debug(`[mergeImportedData] merging ${key}`);
+      const currentData = await storage.get(key, dfData);
+      const importedData = data && data[key] != null ? data[key] : dfData;
 
-      return new Promise((reject) => {
-        fileReader.onload = async () => {
-          const fileDataUrl = fileReader.result as string;
+      let mergedData: any;
+      if (key === "labels") {
+        const mergedArr = [...(currentData ?? []), ...(importedData ?? [])];
+        mergedData = [...new Set(mergedArr)];
+      } else {
+        mergedData = { ...(currentData ?? {}), ...(importedData ?? {}) };
+      }
 
-          // Write file to filesystem under "file-assets/noteId" directory
-          const filePath = `export/${file.name}`;
-          try {
-            await Filesystem.writeFile({
-              path: filePath,
-              data: fileDataUrl.split(",")[1], // Write only base64 data
-              directory: FilesystemDirectory.Data,
-              recursive: true,
-            });
+      await storage.set(key, mergedData);
+      await noteStore.retrieve();
+      await folderStore.retrieve();
+      await labelStore.retrieve();
+      debug(`[mergeImportedData] done ${key}`);
+    }
+  }
 
-            await Zip.unzip({
-              sourceFile: filePath,
-              destinationPath: `export/${file.name
-                .split(".")
-                .slice(0, -1)
-                .join(".")}`,
-            });
+  async function importData() {
+    debug("[importData] pick folder");
+    const { folder } = await ScopedStorage.pickFolder();
+    if (!folder?.id) return false;
 
-            await Filesystem.deleteFile({
-              path: filePath,
-              directory: FilesystemDirectory.Data,
-            });
-          } catch (error) {
-            console.error("Error writing file to filesystem:", error);
-            reject(error); // Reject promise on error
-          }
-        };
+    try {
+      // data.json is always in the picked folder
+      debug("[importData] read data.json");
+      const file = await ScopedStorage.readFile({
+        folder,
+        path: "data.json",
+        encoding: "utf8",
+      });
+      const parsed = JSON.parse(file.data);
+      let data = parsed.data ?? parsed;
 
-        fileReader.onerror = (error) => {
-          console.error("Error reading file:", error);
-          reject(error); // Reject promise on error
-        };
+      if (data?.notes) {
+        const processedNotes: Record<string, any> = {};
+        for (const [noteId, note] of Object.entries(data.notes)) {
+          processedNotes[noteId] = processNotePaths(noteId, note as any);
+        }
+        data.notes = processedNotes;
+      }
+
+      debug("[importData] mergeImportedData START");
+      await mergeImportedData(data);
+      debug("[importData] mergeImportedData DONE");
+      debug("✅ Import data merge complete");
+    } catch (err) {
+      console.error("❌ Failed during import/merge:", err);
+    } finally {
+      try {
+        debug("[importData] restoreAssets START");
+        await restoreAssets(folder);
+        debug("[importData] restoreAssets DONE");
+      } catch (err) {
+        console.error("⚠️ Assets restore failed:", err);
+      }
+    }
+  }
+
+  /** ---------- ASSET RESTORE ---------- */
+  async function ensureLocalDir(path: string) {
+    try {
+      const stat = await Filesystem.stat({
+        path,
+        directory: FilesystemDirectory.Data,
+      });
+      if (stat?.type === "directory") return; // already exists
+    } catch {
+      // not found → create
+      await Filesystem.mkdir({
+        path,
+        directory: FilesystemDirectory.Data,
+        recursive: true,
       });
     }
-    importUtils();
-  };
+  }
 
-  // @ts-ignore
-  const [sortingOption, setSortingOption] = useState("updatedAt");
+  async function restoreAssets(folder: { id: string }) {
+    await ensureLocalDir("note-assets");
+    await ensureLocalDir("file-assets");
 
-  // Translations
+    await Promise.all([
+      restoreDir(folder, "assets", "note-assets"),
+      restoreDir(folder, "file-assets", "file-assets"),
+    ]);
+
+    debug("[restoreAssets] done");
+  }
+
+  async function restoreDir(
+    folder: { id: string; name?: string },
+    src: string,
+    dest: string
+  ) {
+    debug("[restoreDir] src:", src, "-> dest:", dest);
+
+    try {
+      const { entries } = await ScopedStorage.readdir({ folder, path: src });
+      if (!entries?.length) {
+        debug(`[restoreDir] (empty or missing) ${src}`);
+        return;
+      }
+
+      await ensureLocalDir(dest);
+
+      for (const entry of entries) {
+        if (!entry?.name) {
+          debug("[restoreDir] skipping nameless entry", entry);
+          continue;
+        }
+
+        const srcPath = `${src}/${entry.name}`;
+        const destPath = `${dest}/${entry.name}`;
+
+        if (entry.isDir) {
+          // recurse into subfolder
+          await restoreDir(folder, srcPath, destPath);
+        } else {
+          // ensure subdir exists
+          const slash = destPath.lastIndexOf("/");
+          if (slash > -1) {
+            await ensureLocalDir(destPath.slice(0, slash));
+          }
+
+          // copy file
+          const file = await ScopedStorage.readFile({
+            folder,
+            path: srcPath,
+            encoding: "base64",
+          });
+
+          await Filesystem.writeFile({
+            path: destPath,
+            directory: FilesystemDirectory.Data,
+            data: file.data,
+          });
+
+          debug(`[restoreDir] copied file ${srcPath} -> ${destPath}`);
+        }
+      }
+    } catch (err) {
+      debug(`⚠️ Could not restore dir ${src}:`, err);
+    }
+  }
+
+  /** ---------- UI ---------- */
   const [translations, setTranslations] = useState<Record<string, any>>({
     sync: {},
   });
@@ -166,9 +279,7 @@ const Sync: React.FC = () => {
   useEffect(() => {
     const fetchTranslations = async () => {
       const trans = await useTranslation();
-      if (trans) {
-        setTranslations(trans);
-      }
+      if (trans) setTranslations(trans);
     };
     fetchTranslations();
   }, []);
@@ -254,22 +365,16 @@ const Sync: React.FC = () => {
 
                 <div className="flex flex-row gap-2">
                   <div className="flex-1">
-                    <label
-                      htmlFor="file-upload-input"
+                    <button
                       className="w-full flex items-center justify-center h-20  bg-[#F8F8F7] dark:bg-[#2D2C2C] rounded-xl"
+                      onClick={importData}
                       aria-label={translations.sync.importData || "-"}
                     >
                       <Icon
                         name="Download2Line"
                         className="w-12 h-12 text-neutral-800 dark:text-neutral-300"
                       />
-                    </label>
-                    <input
-                      type="file"
-                      onChange={handleImportData}
-                      id="file-upload-input"
-                      className="hidden"
-                    />
+                    </button>
                   </div>
                   <div className="flex-1">
                     <button
