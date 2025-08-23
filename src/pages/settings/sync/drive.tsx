@@ -18,7 +18,7 @@ const GoogleDrive: React.FC<DriveProps> = ({ syncStatus, disableClass }) => {
   useEffect(() => {
     const loadPreferences = async () => {
       const { value: storedSync } = await Preferences.get({ key: "sync" });
-      return storedSync === "googledrive";
+      setAutoSync(storedSync === "googledrive");
     };
     loadPreferences();
   }, []);
