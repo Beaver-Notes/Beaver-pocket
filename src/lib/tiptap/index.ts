@@ -27,7 +27,7 @@ import SearchAndReplace from "@sereneinserenade/tiptap-search-and-replace";
 import Mathblock from "./exts/math-block/Index";
 import CodeBlock from "./exts/code-block";
 import Paper from "./exts/paper-block";
-import iframe from "./exts/embed-block/iframe";
+import Iframe from "./exts/embed-block/iframe";
 import MermaidDiagram from "./exts/mermaid-block";
 import markdownEngine from "./exts/markdown-engine";
 import { Paste } from "./exts/markdown-engine/paste";
@@ -85,7 +85,7 @@ const extensions = [
   CodeBlock,
   Code.configure({ HTMLAttributes: { class: 'inline-code' } }),
   Placeholder.configure({
-    placeholder: translations.tiptap.placeholder,
+    placeholder: translations.editor.tiptapPlaceholder,
   }),
   Highlight.extend({ priority: 1000 }).configure({
     multicolor: true,
@@ -126,7 +126,9 @@ const extensions = [
   SearchAndReplace,
   TrailingNode,
   Mathblock,
-  iframe,
+  Iframe.configure({
+    placeholderText: translations.editor.embedPlaceholder,
+  }),
   Typography,
   blackCallout,
   blueCallout,

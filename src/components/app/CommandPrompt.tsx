@@ -48,9 +48,10 @@ export const CommandPrompt: React.FC<CommandPromptProps> = ({
   });
 
   const isCommand = query.startsWith(">");
-  const queryTerm = useMemo(() => {
-    return (isCommand ? query.slice(1) : query).trim().toLowerCase();
-  }, [query, isCommand]);
+  const queryTerm = useMemo(
+    () => (isCommand ? query.slice(1) : query).trim().toLowerCase(),
+    [query, isCommand]
+  );
 
   const mergeContent = (content: any): string => {
     if (typeof content === "string") return content;
@@ -95,10 +96,8 @@ export const CommandPrompt: React.FC<CommandPromptProps> = ({
     });
   }, [isCommand, queryTerm, noteStore.data, folderStore.data, commands]);
 
-  const formatDate = (timestamp?: string | number) => {
-    if (!timestamp) return "";
-    return dayjs(timestamp).format("YYYY-MM-DD hh:mm");
-  };
+  const formatDate = (timestamp?: string | number) =>
+    timestamp ? dayjs(timestamp).format("YYYY-MM-DD hh:mm") : "";
 
   const clear = () => {
     setShowPrompt(false);
@@ -120,42 +119,46 @@ export const CommandPrompt: React.FC<CommandPromptProps> = ({
     clear();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (items.length === 0) return;
+  // ✅ Global key handling (ArrowUp, ArrowDown, Enter, Escape)
+  useEffect(() => {
+    if (!showPrompt) return;
 
-    switch (e.key) {
-      case "ArrowUp":
-        e.preventDefault();
-        setSelectedIndex((prev) => {
-          const next = prev - 1;
-          return next < 0 ? items.length - 1 : next;
-        });
-        break;
+    const handleGlobalKeys = (e: KeyboardEvent) => {
+      if (items.length === 0) return;
 
-      case "ArrowDown":
-        e.preventDefault();
-        setSelectedIndex((prev) => {
-          const next = prev + 1;
-          return next >= items.length ? 0 : next;
-        });
-        break;
+      switch (e.key) {
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) =>
+            prev - 1 < 0 ? items.length - 1 : prev - 1
+          );
+          break;
 
-      case "Enter":
-        e.preventDefault();
-        selectItem();
-        break;
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev + 1 >= items.length ? 0 : prev + 1));
+          break;
 
-      case "Escape":
-        e.preventDefault();
-        clear();
-        break;
+        case "Enter":
+          e.preventDefault();
+          selectItem();
+          break;
 
-      default:
-        // Allow other keys to pass through normally
-        break;
-    }
-  };
+        case "Escape":
+          e.preventDefault();
+          clear();
+          break;
 
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleGlobalKeys);
+    return () => document.removeEventListener("keydown", handleGlobalKeys);
+  }, [showPrompt, items, selectedIndex]);
+
+  // Load translations once
   useEffect(() => {
     const loadTranslations = async () => {
       const t = await useTranslation();
@@ -166,14 +169,12 @@ export const CommandPrompt: React.FC<CommandPromptProps> = ({
 
   // Focus input when prompt opens
   useEffect(() => {
-    if (showPrompt && inputRef.current) {
-      // Small delay to ensure the prompt is rendered
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 10);
+    if (showPrompt) {
+      requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [showPrompt]);
 
+  // Mousetrap for mod+shift+p
   useEffect(() => {
     Mousetrap.bind("mod+shift+p", () => {
       if (showPrompt) return clear();
@@ -184,12 +185,15 @@ export const CommandPrompt: React.FC<CommandPromptProps> = ({
     };
   }, [showPrompt, setShowPrompt]);
 
-  // Reset selected index when items change
+  const prevItemsRef = useRef<CommandItem[]>([]);
+
   useEffect(() => {
-    setSelectedIndex(0);
+    if (prevItemsRef.current.length !== items.length) {
+      setSelectedIndex(0);
+    }
+    prevItemsRef.current = items;
   }, [items]);
 
-  // Scroll active item into view
   useEffect(() => {
     const scrollToActive = debounce(() => {
       if (items.length <= 6) return;
@@ -212,7 +216,6 @@ export const CommandPrompt: React.FC<CommandPromptProps> = ({
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
           placeholder={translations.commandPrompt.placeholder || "-"}
           className="w-full bg-transparent command-input"
         />
