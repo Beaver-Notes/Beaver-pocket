@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "../../utils/translations";
 import { createPortal } from "react-dom";
 import ImageUploadComponent from "../../composable/ImageUpload";
@@ -52,6 +52,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const searchRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const FindRef = useRef<HTMLDivElement>(null);
+  const [currentTextColor, setCurrentTextColor] = useState();
+  const [currentHighlightColor, setCurrentHighlightColor] = useState();
 
   const [translations, setTranslations] = useState<Record<string, any>>({
     editor: {},
@@ -241,7 +243,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     "bg-[#9B5EE6]/30 dark:bg-[#9B5EE6]/40 dark:text-[color:var(--selected-dark-text)]",
     "bg-[#E67EA4]/30 dark:bg-[#E67EA4]/40 dark:text-[color:var(--selected-dark-text)]",
     "bg-[#E75C5C]/30 dark:bg-[#E75C5C]/40 dark:text-[color:var(--selected-dark-text)]",
-    "bg-[#A3A3A3]/30 dark:bg-[#A3A3A3]/40 dark:text-[color:var(--selected-dark-text)]",
   ];
 
   const textColors = [
@@ -252,7 +253,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     "#9B5EE6",
     "#E67EA4",
     "#E75C5C",
-    "#A3A3A3",
   ];
 
   const setHighlightColor = (color: string) => {
@@ -312,6 +312,30 @@ const Toolbar: React.FC<ToolbarProps> = ({
     },
   ];
 
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateColors = () => {
+      setCurrentTextColor(editor.getAttributes("textStyle")?.color || null);
+      setCurrentHighlightColor(
+        editor.getAttributes("highlight")?.color || null
+      );
+    };
+
+    // Run once initially
+    updateColors();
+
+    // Subscribe to editor updates
+    editor.on("transaction", updateColors);
+    editor.on("selectionUpdate", updateColors);
+
+    // Cleanup on unmount
+    return () => {
+      editor.off("transaction", updateColors);
+      editor.off("selectionUpdate", updateColors);
+    };
+  }, [editor]);
+
   return (
     <div
       className={`print:hidden fixed z-20 bg-white dark:bg-[#232222] dark:text-[color:var(--selected-dark-text)] mx-2 transition overflow-auto no-scrollbar flex justify-center items-center
@@ -368,13 +392,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
           triggerContent={
             <button
               className={`p-1 ${
-                editor?.isActive("highlight")
+                editor?.isActive("heading")
                   ? "text-primary"
                   : "flex items-center rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
               } cursor-pointer flex`}
             >
               <Icon name="Heading" />
-              <Icon name="ArrowDownS" className="w-4 h-4" />
             </button>
           }
           aria-label={translations.accessibility.highlight}
@@ -464,13 +487,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
           modelValue={false}
           triggerContent={
             <button
-              className={`${
+              className={`p-1 ${
                 editor?.isActive("highlight")
-                  ? "p-1 rounded-md text-primary hoverable cursor-pointer text-primary"
-                  : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
-              }`}
+                  ? "text-primary"
+                  : "flex items-center rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer transition duration-200"
+              } cursor-pointer flex ${currentHighlightColor}`}
             >
-              <Icon name="MarkPenLine" />
+              <Icon name="fontColor" style={{ color: currentTextColor }} />
             </button>
           }
           aria-label={translations.accessibility.highlight}
@@ -483,17 +506,28 @@ const Toolbar: React.FC<ToolbarProps> = ({
               {translations.menu.textColor || "Text Color"}
             </p>
             <div className="grid grid-cols-4 gap-2">
+              <button
+                role="menuitem"
+                style={{ backgroundColor: currentHighlightColor }}
+                className={`cursor-pointer rounded border items-center justify-center flex`}
+                onClick={() => {
+                  editor?.chain().focus().unsetColor().run();
+                }}
+              >
+                <Icon name="fontColor" />
+              </button>
               {textColors.map((color, index) => (
                 <button
                   key={color}
                   role="menuitem"
                   aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
-                  className={`w-7 h-7 cursor-pointer rounded${color}`}
+                  style={{ backgroundColor: currentHighlightColor }}
+                  className={`cursor-pointer rounded border items-center justify-center flex`}
                   onClick={() => {
                     setTextColor(color);
                   }}
                 >
-                  <Icon name="fontColor" />
+                  <Icon name="fontColor" style={{ color: color }} />
                 </button>
               ))}
             </div>
@@ -501,12 +535,19 @@ const Toolbar: React.FC<ToolbarProps> = ({
               {translations.menu.highlighterColor || "Highlighter Color"}
             </p>
             <div className="grid grid-cols-4 gap-2">
+              <button
+                role="menuitem"
+                className={`w-7 h-7 cursor-pointer rounded border`}
+                onClick={() => {
+                  editor?.commands.unsetHighlight();
+                }}
+              />
               {highlighterColors.map((color, index) => (
                 <button
                   key={color}
                   role="menuitem"
                   aria-label={`${translations.accessibility.setColor} ${colorsTranslations[index]}`}
-                  className={`w-7 h-7 cursor-pointer ${color}`}
+                  className={`w-7 h-7 cursor-pointer rounded ${color}`}
                   onClick={() => {
                     setHighlightColor(color);
                   }}
@@ -578,13 +619,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
               triggerContent={
                 <button
                   className={`p-1 ${
-                    editor?.isActive("highlight")
+                    editor?.isActive("list")
                       ? "text-primary"
-                      : "flex items-center rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333] transition duration-200"
-                  } cursor-pointer flex`}
+                      : "flex items-center rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer transition duration-200"
+                  } cursor-pointer flex ${currentHighlightColor}`}
                 >
                   <Icon name="ListUnordered" />
-                  <Icon name="ArrowDownS" className="w-4 h-4" />
                 </button>
               }
               aria-label={translations.accessibility.highlight}
