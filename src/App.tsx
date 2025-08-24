@@ -10,7 +10,11 @@ import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { Capacitor } from "@capacitor/core";
 import { useStore } from "@/store/index";
 import { migrateData } from "@/store/storage";
-import { Encoding, Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
+import {
+  Encoding,
+  Filesystem,
+  FilesystemDirectory,
+} from "@capacitor/filesystem";
 import { SplashScreen } from "@capacitor/splash-screen";
 import Dialog from "./components/ui/Dialog";
 import "./assets/css/main.css";
@@ -85,7 +89,6 @@ const App: React.FC = () => {
     };
 
     const onSpotOpen = (ev: any) => {
-      alert("test");
       const id: string | undefined = ev?.id;
       if (!id) return;
       const [, noteId] = id.includes(":") ? id.split(":") : [undefined, id];

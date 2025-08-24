@@ -115,6 +115,7 @@ import ArrowRightSLine from "remixicon-react/ArrowRightSLineIcon";
 import SortAsc from "remixicon-react/SortAscIcon";
 import SortDesc from "remixicon-react/SortDescIcon";
 import CheckLine from "remixicon-react/CheckLineIcon";
+import Save3Line from "remixicon-react/Save3LineIcon";
 
 
 const Forward5Line: React.FC<{ className?: string }> = ({ className }) => (
@@ -408,6 +409,7 @@ export const icons = {
   FolderTransferLine,
   SortAsc,
   SortDesc,
+  Save3Line,
 };
 
 export type IconName = keyof typeof icons;

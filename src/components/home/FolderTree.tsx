@@ -137,8 +137,8 @@ const FolderTree: React.FC<Props> = ({
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-neutral-500">
-            <Icon name="Folder5Fill" className="text-4xl mb-2" />
+          <div className="text-center py-4 text-neutral-500 justify-center flex flex-col items-center">
+            <Icon name="Folder5Fill" className="text-4xl size-8 text-primary mb-2" />
             <p>{translations.folderTree.noFolders || "No folders"}</p>
             <p className="text-sm">
               {translations.folderTree.newFolder ||

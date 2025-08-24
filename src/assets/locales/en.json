@@ -204,7 +204,9 @@
     "deleteTable": "Delete Table",
     "undo": "Undo",
     "redo": "Redo",
-    "untitledNote": "Untitled Note"
+    "untitledNote": "Untitled Note",
+    "placeholder": "Write something... or type \"/\" for commands.",
+    "embedPlaceholder": "Click here to embed a link"
   },
   "archive": {
     "archived": "Archived",
@@ -297,7 +299,7 @@
     "settings": "Settings",
     "darkTheme": "Dark Theme",
     "lightTheme": "Light Theme",
-    "newFolder":"Create new folder"
+    "newFolder": "Create new folder"
   },
   "commandPrompt": {
     "placeholder": "Search file or type '>' to search commands",
@@ -343,9 +345,6 @@
     "drawingBlock": "Drawing Block",
     "textColor": "Text Color",
     "highlighterColor": "Highlighter Color"
-  },
-  "tiptap": {
-    "placeholder": "Write something... or type \"/\" for commands."
   },
   "paperBlock": {
     "thin": "Thin",

@@ -439,7 +439,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
                 reader.readAsText(content.data);
               }
             })
-            .catch(() => alert("Failed to read the file."));
+            .catch(() => console.log("Failed to read shared file"));
         }
       });
     };
@@ -527,12 +527,8 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
     message2: string,
     icon: string
   ) => (
-    <div className="mx-auto text-center">
-      <img
-        src={img}
-        className="max-w-auto sm:w-1/3 mx-auto flex justify-center items-center"
-        alt="No content"
-      />
+    <div className="flex flex-col justify-center min-h-full max-h-screen items-center text-center">
+      <img src={img} className="block mx-auto sm:w-1/3" alt="No content" />
       <p className="py-2 text-lg">
         {message1}{" "}
         <Icon name={icon as IconName} className="inline-block w-5 h-5" />{" "}
@@ -566,7 +562,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
                 </h2>
                 {sortedArchived.length === 0
                   ? emptyState(
-                      "./imgs/Beaver-classic-mac.png",
+                      "./imgs/archive.png",
                       translations.archive.messagePt1 || "No archived notes",
                       translations.archive.messagePt2 || "",
                       "ArchiveDrawerLine"
@@ -592,7 +588,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
                 </p>
                 {sortedAll.length === 0 && sortedBookmarked.length === 0
                   ? emptyState(
-                      "./imgs/Beaver.png",
+                      "./imgs/home.png",
                       translations.home.messagePt1 || "Create your first note",
                       translations.home.messagePt2 || "to get started",
                       "AddFill"

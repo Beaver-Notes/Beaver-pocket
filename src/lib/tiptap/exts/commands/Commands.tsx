@@ -93,37 +93,6 @@ const Commands = forwardRef<CommandsHandle, SlashMenuProps>(
       editor?.chain().setImage({ src: imageUrl }).run();
     };
 
-    const handleAddIframe = () => {
-      const videoUrl = prompt(`${translations.editor.embedUrl}`);
-      if (!videoUrl || videoUrl.trim() === "") {
-        return;
-      }
-
-      let formattedUrl = videoUrl.trim();
-      if (formattedUrl.includes("youtube.com/watch?v=")) {
-        let videoId = formattedUrl.split("v=")[1];
-        const ampersandPosition = videoId.indexOf("&");
-        if (ampersandPosition !== -1) {
-          videoId = videoId.substring(0, ampersandPosition);
-        }
-        formattedUrl = `https://www.youtube.com/embed/${videoId}`;
-      } else if (formattedUrl.includes("youtu.be/")) {
-        let videoId = formattedUrl.split("youtu.be/")[1];
-        const ampersandPosition = videoId.indexOf("?");
-        if (ampersandPosition !== -1) {
-          videoId = videoId.substring(0, ampersandPosition);
-        }
-        formattedUrl = `https://www.youtube.com/embed/${videoId}`;
-      }
-
-      editor
-        ?.chain()
-        .focus()
-        .deleteRange(range)
-        .setIframe({ src: formattedUrl })
-        .run();
-    };
-
     const headingLevels = [1, 2, 3, 4, 5, 6];
     const headingIcons = [
       "Heading1",
@@ -293,7 +262,15 @@ const Commands = forwardRef<CommandsHandle, SlashMenuProps>(
         icon: "PagesLine",
         label: translations.menu.embed || "Embed",
         type: "menu",
-        action: handleAddIframe,
+        action: () => {
+          editor
+            .chain()
+            .focus()
+            .setIframe({
+              src: "",
+            })
+            .run();
+        },
       },
       {
         id: "drawing-block",
