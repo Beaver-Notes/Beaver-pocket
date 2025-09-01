@@ -12,6 +12,7 @@ const iconNames = isAndroid
       { name: "full", cuteName: "Full", img: "AppIcon 4" },
       { name: "space", cuteName: "Space", img: "AppIcon 6" },
       { name: "darkoutline", cuteName: "Dark", img: "AppIcon 7" },
+      { name: "felt", cuteName: "Felt", img: "AppIcon 8" },
     ]
   : [
       { name: "AppIcon 1", cuteName: "Dev", img: "AppIcon 1" },
@@ -21,6 +22,7 @@ const iconNames = isAndroid
       { name: "AppIcon 5", cuteName: "Computer", img: "AppIcon 5" },
       { name: "AppIcon 6", cuteName: "Space", img: "AppIcon 6" },
       { name: "AppIcon 7", cuteName: "Dark", img: "AppIcon 7" },
+      { name: "AppIcon 8", cuteName: "Felt", img: "AppIcon 8" },
     ];
 
 const Icons: React.FC = () => {

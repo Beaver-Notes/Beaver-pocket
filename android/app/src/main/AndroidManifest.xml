@@ -118,6 +118,19 @@
             </intent-filter>
         </activity-alias>
 
+        <activity-alias
+            android:name=".felt"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/felt"
+            android:label="@string/title_activity_main"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
         <activity
             android:name="de.mindlib.sendIntent.SendIntentActivity"
             android:exported="true"

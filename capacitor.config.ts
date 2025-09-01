@@ -34,8 +34,7 @@ const config: CapacitorConfig = {
       forceCodeForRefreshToken: true,
     },
     Keyboard: {
-      //@ts-ignore
-      resize: "none",
+      resize: 'native',
     },
     CapacitorHttp: {
       enabled: true,
