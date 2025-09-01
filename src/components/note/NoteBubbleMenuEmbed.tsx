@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Editor } from "@tiptap/react";
-import { useTranslation } from "@/utils/translations"; 
+import { useTranslation } from "@/utils/translations";
 import Icon from "@/components/ui/Icon";
 
 type EmbedBubbleProps = {
-  editor: Editor;
+  editor: Editor | null;
 };
 
 const normalizeEmbedUrl = (raw: string) => {
@@ -22,8 +22,7 @@ const normalizeEmbedUrl = (raw: string) => {
       const id = u.pathname.replace("/", "");
       if (id) return `https://www.youtube.com/embed/${id}`;
     }
-  } catch {
-  }
+  } catch {}
   return url;
 };
 
@@ -44,7 +43,7 @@ export const EmbedBubble: React.FC<EmbedBubbleProps> = ({ editor }) => {
 
   const syncFromEditor = useCallback(() => {
     try {
-      const attrs = editor.getAttributes("iframe");
+      const attrs = editor?.getAttributes("iframe");
       setEmbedUrl(attrs?.src ?? "");
     } catch {
       setEmbedUrl("");
@@ -54,12 +53,12 @@ export const EmbedBubble: React.FC<EmbedBubbleProps> = ({ editor }) => {
   useEffect(() => {
     syncFromEditor();
 
-    editor.on("selectionUpdate", syncFromEditor);
-    editor.on("transaction", syncFromEditor);
+    editor?.on("selectionUpdate", syncFromEditor);
+    editor?.on("transaction", syncFromEditor);
 
     return () => {
-      editor.off("selectionUpdate", syncFromEditor);
-      editor.off("transaction", syncFromEditor);
+      editor?.off("selectionUpdate", syncFromEditor);
+      editor?.off("transaction", syncFromEditor);
     };
   }, [editor, syncFromEditor]);
 
@@ -67,8 +66,7 @@ export const EmbedBubble: React.FC<EmbedBubbleProps> = ({ editor }) => {
     const normalized = normalizeEmbedUrl(embedUrl);
     if (!normalized) return;
 
-    editor
-      .chain()
+    editor?.chain()
       .focus()
       .deleteSelection()
       .setIframe({ src: normalized })
@@ -78,7 +76,7 @@ export const EmbedBubble: React.FC<EmbedBubbleProps> = ({ editor }) => {
   }, [editor, embedUrl]);
 
   const removeEmbed = useCallback(() => {
-    editor.chain().focus().deleteSelection().run();
+    editor?.chain().focus().deleteSelection().run();
     setEmbedUrl("");
   }, [editor]);
 
@@ -89,7 +87,7 @@ export const EmbedBubble: React.FC<EmbedBubbleProps> = ({ editor }) => {
         applyEmbed();
       } else if (e.key === "Escape") {
         e.preventDefault();
-        editor.commands.focus();
+        editor?.commands.focus();
       }
     },
     [applyEmbed, editor]

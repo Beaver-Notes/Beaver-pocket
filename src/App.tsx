@@ -6,7 +6,6 @@ import BottomNavBar from "./components/app/BottomNavBar";
 import { CommandPrompt } from "./components/app/CommandPrompt";
 import { setStoreRemotePath } from "./store/useDataPath";
 import Mousetrap from "mousetrap";
-import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
 import { Capacitor } from "@capacitor/core";
 import { useStore } from "@/store/index";
 import { migrateData } from "@/store/storage";
@@ -41,13 +40,6 @@ function normalizeFilePath(encodedUrl: any) {
     return "";
   }
 }
-
-const isIPad = (): boolean => {
-  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
-  const isModernIPad =
-    navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
-  return /iPad/.test(ua) || isModernIPad;
-};
 
 const App: React.FC = () => {
   const store = useStore();
@@ -142,12 +134,6 @@ const App: React.FC = () => {
           path: "",
         });
         setStoreRemotePath(Capacitor.convertFileSrc(uri));
-
-        if (isIPad() && platform !== "web") {
-          Keyboard.setResizeMode({ mode: KeyboardResize.None });
-        } else if (platform !== "android" && platform !== "web") {
-          Keyboard.setResizeMode({ mode: KeyboardResize.Native });
-        }
 
         await migrateData();
 
@@ -269,7 +255,7 @@ const App: React.FC = () => {
     return (
       <div className="safe-area">
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primart"></div>
         </div>
       </div>
     );

@@ -204,7 +204,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ node }) => {
           onEnded={audioEnded}
         />
         <button
-          className="bg-primary text-white p-2 rounded-full mr-2"
+          className="bg-primary p-2 rounded-full mr-2"
           onClick={togglePlay}
           aria-label={
             isPlaying
@@ -212,7 +212,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ node }) => {
               : translations.accessibility.pauseAudio
           }
         >
-          {isPlaying ? <Icon name="PauseLine" /> : <Icon name="PlayLine" />}
+          {isPlaying ? (
+            <Icon name="PauseLine" className="text-white" />
+          ) : (
+            <Icon name="PlayFill" className="text-white" />
+          )}
         </button>
         <span
           className="mr-2 text-sm text-neutral-700 dark:text-[color:var(--selected-dark-text)]"

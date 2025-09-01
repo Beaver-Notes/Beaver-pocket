@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "../../utils/translations";
 import { createPortal } from "react-dom";
 import ImageUploadComponent from "../../composable/ImageUpload";
@@ -154,10 +154,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
     };
   }, [editor]);
 
-  const handleMouseDown = (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
+  const handleMouseDown = (event: any) => {
     event.preventDefault();
+    event.stopPropagation();
+
+    if (event.type === "touchstart") {
+      event.preventDefault();
+    }
   };
 
   const handleshowFind = () => {
@@ -338,12 +341,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   return (
     <div
-      className={`print:hidden fixed z-20 bg-white dark:bg-[#232222] dark:text-[color:var(--selected-dark-text)] mx-2 transition overflow-auto no-scrollbar flex justify-center items-center
+      className={`print:hidden fixed z-20 bg-white dark:bg-neutral-800 dark:text-[color:var(--selected-dark-text)] mx-2 transition overflow-x-auto no-scrollbar flex justify-start items-center
     ${focusMode ? "opacity-0 hover:opacity-100" : ""}
     ${isKeyboardVisible ? "pb-4 sm:pb-0" : "pb-6 sm:pb-0"}
     pt-4 sm:pt-6 left-0 right-0 bottom-0 sm:bottom-auto`}
     >
-      <div className="flex items-center justify-center sm:border-b sm:dark:border-b-neutral-600 whitespace-nowrap w-max">
+      <div className="flex items-center justify-start sm:border-b sm:dark:border-b-neutral-600 whitespace-nowrap w-max">
         {/* Back button */}
         <div className="hidden sm:flex items-center">
           <Link
@@ -371,7 +374,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <Icon name="ArrowGoForwardLine" />
           </button>
-          <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
+          <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />
         </div>
         <button
           className={
@@ -432,7 +435,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             ))}
           </>
         </Popover>
-        <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
+        <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />
         <button
           className={
             editor?.isActive("bold")
@@ -491,7 +494,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 editor?.isActive("highlight")
                   ? "text-primary"
                   : "flex items-center rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer transition duration-200"
-              } cursor-pointer flex ${currentHighlightColor}`}
+              } rounded-md cursor-pointer flex ${currentHighlightColor}`}
             >
               <Icon name="fontColor" style={{ color: currentTextColor }} />
             </button>
@@ -558,7 +561,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         </Popover>
         {isTableActive && !isTextSelected && (
           <>
-            <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />{" "}
+            <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
             <button
               className="p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
               onMouseDown={handleMouseDown}
@@ -611,7 +614,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         )}
         {!isTableActive && (
           <>
-            <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />{" "}
+            <hr className="border-r dark:border-r-neutral-600 mx-2 h-6" />
             <Popover
               placement="top"
               trigger="click"
@@ -622,7 +625,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                     editor?.isActive("list")
                       ? "text-primary"
                       : "flex items-center rounded-lg text-black dark:text-[color:var(--selected-dark-text)] cursor-pointer transition duration-200"
-                  } cursor-pointer flex ${currentHighlightColor}`}
+                  } cursor-pointer flex`}
                 >
                   <Icon name="ListUnordered" />
                 </button>
@@ -678,12 +681,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
           </>
         )}
-        <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
+        <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />
         <ImageUploadComponent
           onImageUpload={handleImageUpload}
           noteId={noteId}
           translations={translations}
-        />{" "}
+        />
         <AudioUploadComponent
           onAudioUpload={handleaudioUpload}
           noteId={noteId}
@@ -693,7 +696,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           className={`p-1 ${
             editor?.isActive("link")
               ? "p-1 rounded-md text-primary  cursor-pointer"
-              : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+              : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800"
           }`}
           onMouseDown={handleMouseDown}
           onClick={() => editor?.chain().focus().toggleLink({ href: "" }).run()}
@@ -730,9 +733,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           modelValue={false}
           triggerContent={
             <button
-              className={
-                "p-1 rounded-md text-neutral-800 dark:text-[color:var(--selected-dark-text)]  hoverable cursor-pointer"
-              }
+              className="flex items-center justify-between p-1 rounded-md hoverable bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
               aria-label={translations.accessibility.highlight}
             >
               <Icon name="MoreLine" />
@@ -749,7 +750,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               className={`p-1 ${
                 editor?.isActive("Embed")
                   ? "p-1 rounded-md text-primary  cursor-pointer"
-                  : "p-1 rounded-md dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
+                  : "p-1 rounded-md hoverable dark:text-[color:var(--selected-dark-text)] text-neutral-800 bg-transparent cursor-pointer"
               } cursor-pointer flex-1`}
               onMouseDown={handleMouseDown}
               onClick={handleAddIframe}
@@ -775,7 +776,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </div>
         </Popover>
         <div className="sm:flex items-center hidden">
-          <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
+          <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />
           <button
             className="p-1 hidden sm:block sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333]"
             onMouseDown={handleMouseDown}
@@ -784,7 +785,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <Icon name="ShareLine" />
           </button>
-          <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
+          <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />
           <button
             className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333]"
             onMouseDown={handleMouseDown}
@@ -806,7 +807,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         </div>
         {isTableActive && !isTextSelected && (
           <>
-            <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />{" "}
+            <hr className="w-px border-0 border-r border-r-neutral-300 dark:border-r-neutral-700 mx-2 h-6 bg-transparent" />
             <button
               className="p-1 sm:align-start dark:text-[color:var(--selected-dark-text)] text-neutral-800 rounded-md bg-transparent cursor-pointer hover:bg-neutral-100 dark:hover:bg-[#353333]"
               onMouseDown={handleMouseDown}

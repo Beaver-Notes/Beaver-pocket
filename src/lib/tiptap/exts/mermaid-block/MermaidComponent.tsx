@@ -135,7 +135,7 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
               >
                 <DialogPanel
                   ref={dialogPanelRef}
-                  className="relative w-full landscape:w-2/4 portrait:w-5/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
+                  className="relative w-full landscape:w-2/4 portrait:w-5/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-neutral-800 rounded-xl shadow-xl overflow-hidden"
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
@@ -167,7 +167,7 @@ const MermaidNodeView: React.FC<NodeViewProps> = ({
                         ref={inputRef}
                         value={mermaidContent}
                         onChange={updateContent}
-                        className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"
+                        className="w-full h-full resize-none dark:bg-neutral-800 p-2 rounded focus:outline-none"
                         placeholder={
                           translations.editor.mermaidContent ||
                           "Enter mermaid diagram content"

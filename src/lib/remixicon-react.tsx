@@ -8,7 +8,7 @@ import CalculatorLine from "remixicon-react/CalculatorLineIcon";
 import PieChart2Line from "remixicon-react/PieChart2LineIcon";
 import HardDriveLine from "remixicon-react/HardDrive2LineIcon";
 import EraserLine from "remixicon-react/EraserLineIcon";
-import PlayLine from "remixicon-react/PlayLineIcon";
+import PlayFill from "remixicon-react/PlayFillIcon";
 import PauseLine from "remixicon-react/PauseLineIcon";
 import VolumeUpLine from "remixicon-react/VolumeUpLineIcon";
 import VolumeMuteLine from "remixicon-react/VolumeMuteLineIcon";
@@ -363,7 +363,7 @@ export const icons = {
   MicLine,
   FoldersLine,
   StopCircleLine,
-  PlayLine,
+  PlayFill,
   PauseLine,
   VolumeUpLine,
   VolumeMuteLine,

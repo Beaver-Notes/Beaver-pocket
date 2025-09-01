@@ -108,7 +108,7 @@ const BottomNavBar: React.FC = () => {
 
   return (
     <div className="element-to-hide spacingdiv">
-      <nav className="fixed bottom-6 inset-x-2 bg-neutral-800 p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto z-50">
+      <nav className="fixed bottom-6 inset-x-2 bg-neutral-800 dark:bg-neutral-900 p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto z-50">
         <div className="flex justify-between items-center">
           <Link to="/">
             <button

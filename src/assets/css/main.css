@@ -2,19 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  position: relative;
+  @apply bg-white dark:bg-neutral-800 dark:text-[color:var(--selected-dark-text)];
+  font-family: var(--selected-font);
+}
+
 :root {
   --theme: "light";
   --selected-font: "Arimo", sans-serif;
-  --selected-font-code: "JetBrainsMono", monospace;
+  --selected-font-code: "JetBrains Mono", monospace;
+  -webkit-tap-highlight-color: transparent;
   --selected-dark-text: white;
   @apply dark:text-[color:var(--selected-dark-text)];
+  padding-top: var(--safe-area-inset-top);
 }
 
-body {
-  position: relative;
-  font-family: var(--selected-font);
-  @apply bg-[#FFFFFF] dark:bg-[#232222] dark:text-[color:var(--selected-dark-text)];
+.safe-area {
+  padding-top: var(--safe-area-inset-top);
+  @apply bg-white bg-opacity-95 dark:bg-opacity-95 dark:bg-neutral-800 z-40;
+  position: fixed;
+  top: 0;
+  width: 100%;
 }
+
 .dark * {
   border-color: rgba(255, 255, 255, 0.1);
 }
@@ -99,30 +110,6 @@ kbd {
   display: inline-block;
   min-width: 28px;
   @apply p-1 text-center text-sm rounded-md text-neutral-600 ml-1 dark:text-[color:var(--selected-dark-text)] bg-neutral-100 dark:bg-neutral-600 border;
-}
-
-:root {
-  --selected-font: "Arimo", sans-serif;
-  --selected-font-code: "JetBrains Mono", monospace;
-  -webkit-tap-highlight-color: transparent;
-  --selected-dark-text: white;
-  @apply dark:text-[color:var(--selected-dark-text)];
-  padding-top: var(--safe-area-inset-top);
-}
-
-.safe-area {
-  padding-top: var(--safe-area-inset-top);
-  @apply bg-white bg-opacity-95 dark:bg-opacity-95 dark:bg-[#232222] z-40;
-  position: fixed;
-  top: 0;
-  width: 100%;
-}
-
-body {
-  @apply dark:text-[color:var(--selected-dark-text)] bg-white dark:bg-[#232222];
-  font-family: var(--selected-font);
-  height: 100%;
-  width: 100%;
 }
 
 input[type="checkbox"] {

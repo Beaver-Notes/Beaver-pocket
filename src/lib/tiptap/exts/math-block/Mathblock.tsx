@@ -173,7 +173,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
             >
               <DialogPanel
                 ref={dialogPanelRef}
-                className="relative w-full landscape:w-2/4 portrait:w-5/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-[#232222] rounded-xl shadow-xl overflow-hidden"
+                className="relative w-full landscape:w-2/4 portrait:w-5/5 sm:w-3/5 sm:h-3/4 mt-32 sm:mt-12 h-full bg-white dark:bg-neutral-800 rounded-xl shadow-xl overflow-hidden"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -231,7 +231,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                       id="content-textarea"
                       value={props.node.attrs.content}
                       onChange={(e) => updateContent(e, "content")}
-                      className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"
+                      className="w-full h-full resize-none dark:bg-neutral-800 p-2 rounded focus:outline-none"
                       placeholder={translations.editor.mathContent || "-"}
                     />
                   </div>
@@ -241,7 +241,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                         id="macros-textarea"
                         value={props.node.attrs.macros}
                         onChange={(e) => updateContent(e, "macros")}
-                        className="w-full h-full resize-none dark:bg-[#232222] p-2 rounded focus:outline-none"
+                        className="w-full h-full resize-none bg-neutral-50 dark:bg-neutral-900 p-2 rounded-lg focus:outline-none"
                         placeholder={translations.editor.katexMacros || "-"}
                       />
                     </div>

@@ -1,3 +1,4 @@
+// Popover.tsx
 import React, { useEffect, useRef, useState } from "react";
 import Tippy from "@tippyjs/react";
 
@@ -11,6 +12,11 @@ interface PopoverProps {
   onShow?: () => void;
   onClose?: () => void;
   onTrigger?: () => void;
+  /** NEW: prevent the trigger/content from stealing focus (keeps mobile keyboard open) */
+  preventBlur?: boolean;
+  /** OPTIONAL: called on show to re-focus your editor (e.g. () => editor?.chain().focus().run()) */
+  onKeepFocus?: () => void;
+
   children: React.ReactNode;
   triggerContent: React.ReactNode;
 }
@@ -24,6 +30,8 @@ const Popover: React.FC<PopoverProps> = ({
   onShow,
   onClose,
   onTrigger,
+  preventBlur = true,
+  onKeepFocus,
   children,
   triggerContent,
 }) => {
@@ -32,30 +40,29 @@ const Popover: React.FC<PopoverProps> = ({
   const tippyInstance = useRef<any>(null);
 
   useEffect(() => {
-    if (tippyInstance.current) {
-      if (disabled) {
-        tippyInstance.current.disable();
-      } else {
-        tippyInstance.current.enable();
-      }
-    }
+    if (!tippyInstance.current) return;
+    disabled ? tippyInstance.current.disable() : tippyInstance.current.enable();
   }, [disabled]);
 
   useEffect(() => {
-    if (tippyInstance.current) {
-      if (modelValue) {
-        tippyInstance.current.show();
-      } else {
-        tippyInstance.current.hide();
-      }
-    }
+    if (!tippyInstance.current) return;
+    modelValue ? tippyInstance.current.show() : tippyInstance.current.hide();
   }, [modelValue]);
+
+  const preventFocusLoss = (e: React.SyntheticEvent) => {
+    if (!preventBlur) return;
+    // Prevent the default focus-changing behavior so the editor keeps focus
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
   return (
     <Tippy
       content={
         <div
           className={`i-popover__content bg-white dark:bg-neutral-800 rounded-lg shadow-xl border dark:border-neutral-700 ${padding}`}
+          onMouseDown={preventFocusLoss}
+          onTouchStart={preventFocusLoss}
         >
           {children}
         </div>
@@ -63,22 +70,30 @@ const Popover: React.FC<PopoverProps> = ({
       placement={placement}
       trigger={trigger}
       interactive={true}
-      onShow={() => {
-        setIsShow(true);
-        onShow && onShow();
-      }}
-      onHide={() => {
-        setIsShow(false);
-        onClose && onClose();
-      }}
-      onTrigger={() => {
-        onTrigger && onTrigger();
-      }}
+      hideOnClick={true}
       appendTo={() => document.body}
       role="popover"
       onCreate={(instance) => (tippyInstance.current = instance)}
+      onShow={() => {
+        setIsShow(true);
+        onKeepFocus?.();
+        onShow?.();
+      }}
+      onHide={() => {
+        setIsShow(false);
+        onClose?.();
+      }}
+      onTrigger={() => {
+        onTrigger?.();
+      }}
     >
-      <span ref={targetRef} className="inline-block">
+      <span
+        ref={targetRef}
+        className="inline-block"
+        onMouseDown={preventFocusLoss}
+        onTouchStart={preventFocusLoss}
+        onPointerDown={preventFocusLoss}
+      >
         {triggerContent}
       </span>
     </Tippy>

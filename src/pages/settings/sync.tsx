@@ -10,12 +10,7 @@ import { processNotePaths } from "@/utils/merge";
 import { useNoteStore } from "@/store/note";
 import { useFolderStore } from "@/store/folder";
 import { useLabelStore } from "@/store/label";
-
-const USE_ALERTS = false;
-const debug = (msg: string, ...rest: any[]) =>
-  USE_ALERTS
-    ? alert(`${msg} ${rest.map(String).join(" ")}`)
-    : console.log(msg, ...rest);
+import { usePasswordStore } from "@/store/passwd";
 
 const join = (...parts: string[]) =>
   parts.filter(Boolean).join("/").replace(/\/+/g, "/");
@@ -25,10 +20,11 @@ const Sync: React.FC = () => {
   const noteStore = useNoteStore();
   const folderStore = useFolderStore();
   const labelStore = useLabelStore();
+  const passwordStore = usePasswordStore();
   const platform = Capacitor.getPlatform();
   const navigate = useNavigate();
 
-  /** ---------- EXPORT ---------- */
+  // Export
   async function exportData() {
     const { folder } = await ScopedStorage.pickFolder();
     if (!folder?.id) return;
@@ -36,17 +32,20 @@ const Sync: React.FC = () => {
     const folderName = `Beaver Notes ${new Date().toISOString().slice(0, 10)}`;
     await ScopedStorage.mkdir({ folder, path: folderName, recursive: true });
 
-    // Collect data
     let data: any = await storage.store();
     try {
       data.lockedNotes = JSON.parse(
         localStorage.getItem("lockedNotes") || "{}"
       );
+      await passwordStore.retrieve();
+      if (passwordStore.passwordHash) {
+        data.sharedKey = passwordStore.sharedKey;
+        data.derivedKey = passwordStore.derivedKey;
+      }
     } catch {
       data.lockedNotes = {};
     }
 
-    // Write main export file
     await ScopedStorage.writeFile({
       folder,
       path: `${folderName}/data.json`,
@@ -54,7 +53,6 @@ const Sync: React.FC = () => {
       encoding: "utf8",
     });
 
-    // Copy assets
     await Promise.all([
       copyDir(folder, "note-assets", `${folderName}/assets`),
       copyDir(folder, "file-assets", `${folderName}/file-assets`),
@@ -112,8 +110,7 @@ const Sync: React.FC = () => {
     }
   }
 
-  /** ---------- IMPORT ---------- */
-
+  // Import
   async function mergeImportedData(data: any) {
     const keys = [
       { key: "notes", dfData: {} },
@@ -124,7 +121,6 @@ const Sync: React.FC = () => {
     ];
 
     for (const { key, dfData } of keys) {
-      debug(`[mergeImportedData] merging ${key}`);
       const currentData = await storage.get(key, dfData);
       const importedData = data && data[key] != null ? data[key] : dfData;
 
@@ -140,18 +136,14 @@ const Sync: React.FC = () => {
       await noteStore.retrieve();
       await folderStore.retrieve();
       await labelStore.retrieve();
-      debug(`[mergeImportedData] done ${key}`);
     }
   }
 
   async function importData() {
-    debug("[importData] pick folder");
     const { folder } = await ScopedStorage.pickFolder();
     if (!folder?.id) return false;
 
     try {
-      // data.json is always in the picked folder
-      debug("[importData] read data.json");
       const file = await ScopedStorage.readFile({
         folder,
         path: "data.json",
@@ -168,24 +160,30 @@ const Sync: React.FC = () => {
         data.notes = processedNotes;
       }
 
-      debug("[importData] mergeImportedData START");
+      if (data.sharedKey) {
+        try {
+          await passwordStore.importSharedKey(
+            data.sharedKey,
+            data.derivedKey
+          );
+        } catch (err) {
+          console.error("Failed to import sharedKey:", err);
+        }
+      }
+
       await mergeImportedData(data);
-      debug("[importData] mergeImportedData DONE");
-      debug("✅ Import data merge complete");
     } catch (err) {
-      console.error("❌ Failed during import/merge:", err);
+      console.error("Failed during import/merge:", err);
     } finally {
       try {
-        debug("[importData] restoreAssets START");
         await restoreAssets(folder);
-        debug("[importData] restoreAssets DONE");
       } catch (err) {
-        console.error("⚠️ Assets restore failed:", err);
+        console.error("Assets restore failed:", err);
       }
     }
   }
 
-  /** ---------- ASSET RESTORE ---------- */
+  // Assets
   async function ensureLocalDir(path: string) {
     try {
       const stat = await Filesystem.stat({
@@ -194,7 +192,6 @@ const Sync: React.FC = () => {
       });
       if (stat?.type === "directory") return; // already exists
     } catch {
-      // not found → create
       await Filesystem.mkdir({
         path,
         directory: FilesystemDirectory.Data,
@@ -211,8 +208,6 @@ const Sync: React.FC = () => {
       restoreDir(folder, "assets", "note-assets"),
       restoreDir(folder, "file-assets", "file-assets"),
     ]);
-
-    debug("[restoreAssets] done");
   }
 
   async function restoreDir(
@@ -220,12 +215,9 @@ const Sync: React.FC = () => {
     src: string,
     dest: string
   ) {
-    debug("[restoreDir] src:", src, "-> dest:", dest);
-
     try {
       const { entries } = await ScopedStorage.readdir({ folder, path: src });
       if (!entries?.length) {
-        debug(`[restoreDir] (empty or missing) ${src}`);
         return;
       }
 
@@ -233,7 +225,6 @@ const Sync: React.FC = () => {
 
       for (const entry of entries) {
         if (!entry?.name) {
-          debug("[restoreDir] skipping nameless entry", entry);
           continue;
         }
 
@@ -262,16 +253,13 @@ const Sync: React.FC = () => {
             directory: FilesystemDirectory.Data,
             data: file.data,
           });
-
-          debug(`[restoreDir] copied file ${srcPath} -> ${destPath}`);
         }
       }
     } catch (err) {
-      debug(`⚠️ Could not restore dir ${src}:`, err);
+      console.log(err);
     }
   }
 
-  /** ---------- UI ---------- */
   const [translations, setTranslations] = useState<Record<string, any>>({
     sync: {},
   });

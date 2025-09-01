@@ -121,7 +121,7 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
         </div>
       ) : (
         <div
-          className="flex items-center justify-between p-1 rounded-md  bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
+          className="flex items-center justify-between p-1 rounded-md hoverable bg-transparent cursor-pointer text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
           aria-label={translations.menu.file || "Upload File"} // Use fallback
         >
           <label

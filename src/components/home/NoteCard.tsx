@@ -119,6 +119,8 @@ const NoteCard: React.FC<BookmarkedProps> = ({
     return "";
   }
 
+  // inside NoteCard.tsx
+
   const lockNote = async (note: Note): Promise<void> => {
     try {
       await passwordStore.retrieve();
@@ -142,41 +144,22 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               }
 
               try {
+                // Save password for validation only (bcrypt)
                 if (!passwordStore.passwordHash) {
                   await passwordStore.setSharedKey(password);
-
-                  const encryptionKey =
-                    passwordStore.deriveEncryptionKey(password);
-
-                  if (biometricAvailable.isAvailable) {
-                    await NativeBiometric.setCredentials({
-                      username: "beaver-pocket",
-                      password: encryptionKey,
-                      server: "beaver-pocket",
-                    });
-
-                    await NativeBiometric.getCredentials({
-                      server: "beaver-pocket",
-                    });
-                  }
                 }
 
-                const encryptionKey =
-                  passwordStore.deriveEncryptionKey(password);
-
+                // Save RAW password in biometric store if available
                 if (biometricAvailable.isAvailable) {
                   await NativeBiometric.setCredentials({
                     username: "beaver-pocket",
-                    password: encryptionKey,
-                    server: "beaver-pocket",
-                  });
-
-                  await NativeBiometric.getCredentials({
+                    password, // ✅ raw password
                     server: "beaver-pocket",
                   });
                 }
 
-                await noteStore.lockNote(note.id, encryptionKey);
+                // Lock note with RAW password
+                await noteStore.lockNote(note.id, password);
 
                 const updatedNote = await noteStore.getById(note.id);
                 if (onUpdate && updatedNote) {
@@ -218,13 +201,11 @@ const NoteCard: React.FC<BookmarkedProps> = ({
             server: "beaver-pocket",
           });
 
-          const encryptionKey = creds.password;
+          const rawPassword = creds.password;
+          if (!rawPassword)
+            throw new Error("No password in biometric storage.");
 
-          if (!encryptionKey) {
-            throw new Error("No encryption key found in biometric storage.");
-          }
-
-          await noteStore.lockNote(note.id, encryptionKey);
+          await noteStore.lockNote(note.id, rawPassword);
 
           const updatedNote = await noteStore.getById(note.id);
           if (onUpdate && updatedNote) {
@@ -233,9 +214,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 
           return;
         } catch (error) {
-          alert(error);
-          console.error("Biometric auth or key retrieval failed:", error);
-
+          console.error("Biometric failed:", error);
           await showPasswordPrompt();
           return;
         }
@@ -262,56 +241,46 @@ const NoteCard: React.FC<BookmarkedProps> = ({
             placeholder: translations.card.password || "Enter password",
             okText: translations.card.ok || "OK",
             cancelText: translations.card.cancel || "Cancel",
-            onConfirm: (password: string) => {
-              if (!password) {
-                alert(
-                  translations.card.passwordRequired || "Password required"
-                );
-                resolve(null);
-              } else {
-                resolve(password);
-              }
-            },
+            onConfirm: (password: string) => resolve(password || null),
             onCancel: () => resolve(null),
           });
         });
       };
 
-      let encryptionKey: string | null = null;
+      let password: string | null = null;
 
       if (biometricAvailable.isAvailable) {
         try {
           const verified = await NativeBiometric.verifyIdentity({
             reason:
-              translations.card.biometricReason || "Authenticate to lock note",
+              translations.card.biometricReason ||
+              "Authenticate to unlock note",
             title:
               translations.card.biometricTitle || "Biometric Authentication",
           })
             .then(() => true)
             .catch(() => false);
 
-          if (!verified) return;
-
-          const creds = await NativeBiometric.getCredentials({
-            server: "beaver-pocket",
-          });
-
-          encryptionKey = creds.password;
+          if (verified) {
+            const creds = await NativeBiometric.getCredentials({
+              server: "beaver-pocket",
+            });
+            password = creds.password;
+          }
         } catch (biometricError) {
           console.warn("Biometric failed or cancelled:", biometricError);
         }
       }
 
-      if (!encryptionKey) {
-        const password = await promptForPassword();
+      if (!password) {
+        password = await promptForPassword();
         if (!password) {
           console.log("Unlock cancelled by user.");
           return;
         }
-        encryptionKey = passwordStore.deriveEncryptionKey(password);
       }
 
-      await noteStore.unlockNote(note.id, encryptionKey);
+      await noteStore.unlockNote(note.id, password);
       console.log(`Note (ID: ${note.id}) is unlocked`);
 
       const updatedNote = await noteStore.getById(note.id);
@@ -325,16 +294,15 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   };
 
   return (
-    <div>
+    <div className="h-full">
       <UiCard
-        className="hover:ring-2 ring-secondary group note-card transition flex flex-col"
+        className="hover:ring-2 ring-secondary group note-card transition flex flex-col h-full"
         padding="p-5"
       >
-        <div>
+        <div className="flex flex-col h-full">
           <div className="font-semibold text-lg block line-clamp leading-tight">
             {note.title || translations.card.untitledNote}
           </div>
-
           {note.isLocked ? (
             <div>
               <p></p>
@@ -359,7 +327,6 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               )}
             </div>
           )}
-
           <div
             className="text-neutral-600 block dark:text-[color:var(--selected-dark-text)] flex-1 overflow-hidden overflow-ellipsis"
             style={{ minHeight: "64px" }}
@@ -395,31 +362,33 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between pt-2 mt-auto">
             <div className="flex items-center">
-              <button
-                className={
-                  note.isBookmarked
-                    ? "text-primary opacity-90 hover:opacity-100"
-                    : "hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)] transition"
-                }
-                aria-pressed={note.isBookmarked}
-                aria-label={`Bookmark note ${
-                  note.isBookmarked ? "Remove" : "Add"
-                }`}
-                onClick={() => {
-                  toggleBookmark(note);
-                }}
-              >
-                {note.isBookmarked ? (
-                  <Icon
-                    name="Bookmark3Fill"
-                    className="w-8 h-8 mr-2 text-primary"
-                  />
-                ) : (
-                  <Icon name="Bookmark3Line" className="w-8 h-8 mr-2" />
-                )}
-              </button>
+              {!note.isArchived && (
+                <button
+                  className={
+                    note.isBookmarked
+                      ? "text-primary opacity-90 hover:opacity-100"
+                      : "hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)] transition"
+                  }
+                  aria-pressed={note.isBookmarked}
+                  aria-label={`Bookmark note ${
+                    note.isBookmarked ? "Remove" : "Add"
+                  }`}
+                  onClick={() => {
+                    toggleBookmark(note);
+                  }}
+                >
+                  {note.isBookmarked ? (
+                    <Icon
+                      name="Bookmark3Fill"
+                      className="w-8 h-8 mr-2 text-primary"
+                    />
+                  ) : (
+                    <Icon name="Bookmark3Line" className="w-8 h-8 mr-2" />
+                  )}
+                </button>
+              )}
               <button
                 className="hover:text-neutral-900 dark:hover:text-[color:var(--selected-dark-text)]"
                 aria-pressed={note.isArchived}

@@ -305,7 +305,7 @@ const DraggableItem: React.FC<{
         if (type === ItemTypes.FOLDER) drop(node);
       }}
       data-folder-id={type === ItemTypes.FOLDER ? item.id : undefined}
-      className={`rounded-xl ${dragClass} ${dropClass} ${animClass} ${cursorClass}`}
+      className={`h-full rounded-xl ${dragClass} ${dropClass} ${animClass} ${cursorClass}`}
       style={{
         transformOrigin: "center center",
       }}
@@ -314,7 +314,7 @@ const DraggableItem: React.FC<{
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className={`transition-all duration-200`}>
+      <div className="h-full transition-all duration-200">
         {type === ItemTypes.NOTE ? (
           <NoteCard note={item as Note} onUpdate={onUpdate!} />
         ) : (
@@ -342,7 +342,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
 
   useEffect(() => {
     App.addListener("appUrlOpen", ({ url }) => {
-      const m = url.match(/beaver-pocket:\/\/note\/(.+)$/);
+      const m = url.match(/beaver:\/\/note\/(.+)$/);
       if (m) navigate(`/note/${m[1]}`);
     });
 

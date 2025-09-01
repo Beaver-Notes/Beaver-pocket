@@ -32,6 +32,7 @@ const Settings: React.FC = () => {
   const [translations, setTranslations] = useState<Record<string, any>>({
     settings: {},
   });
+  const [activeColor, setActiveColor] = useState<string>("light");
   const [collapsibleHeading, setCollapsibleHeading] = useCollapsibleHeading();
   const [selectedFont, setSelectedFont] = useState<string>("Arimo");
   const [selectedCodeFont, setSelectedCodeFont] =
@@ -168,13 +169,16 @@ const Settings: React.FC = () => {
       if (cls !== "light" && cls !== "dark") root.classList.remove(cls);
     });
     root.classList.add(color);
+    setActiveColor(color);
     await Preferences.set({ key: "color-scheme", value: color });
   };
 
   useEffect(() => {
     (async () => {
       const savedColor = await Preferences.get({ key: "color-scheme" });
-      setColor(savedColor.value || "light");
+      const color = savedColor.value || "light";
+      setActiveColor(color); // <-- add this
+      setColor(color);
     })();
   }, []);
 
@@ -224,9 +228,18 @@ const Settings: React.FC = () => {
                   {colors.map((color) => (
                     <button
                       key={color.name}
-                      className={`${color.bg} p-2 w-10 h-10 rounded-full focus:ring-primary transition cursor-pointer `}
+                      aria-label={color.name}
+                      aria-pressed={activeColor === color.name}
                       onClick={() => setColor(color.name)}
-                    ></button>
+                      className={`${
+                        color.bg
+                      } p-2 w-10 h-10 rounded-full transition cursor-pointer focus:outline-none
+        ${
+          activeColor === color.name
+            ? "ring-2 ring-primary"
+            : "hover:ring-2 hover:ring-neutral-300 focus:ring-2 focus:ring-primary"
+        }`}
+                    />
                   ))}
                 </div>
               </section>

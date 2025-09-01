@@ -6,9 +6,10 @@ import UiList from "../ui/List";
 import UiListItem from "../ui/ListItem";
 import { useNoteStore } from "@/store/note";
 import { Note } from "@/store/types";
+import { Editor } from "@tiptap/react";
 
 interface Props {
-  editor: any;
+  editor: Editor | null;
 }
 
 const NoteBubbleMenuLink: React.FC<Props> = ({ editor }) => {

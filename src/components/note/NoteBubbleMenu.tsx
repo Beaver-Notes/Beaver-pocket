@@ -4,7 +4,7 @@ import NoteBubbleMenuLink from "./NoteBubbleMenuLink";
 import NoteBubbleMenuEmbed from "./NoteBubbleMenuEmbed";
 
 interface Props {
-  editor: Editor;
+  editor: Editor | null;
 }
 
 const NoteBubbleMenu: React.FC<Props> = ({ editor }) => {

@@ -326,7 +326,7 @@ function EditorComponent({ note, translations }: Props) {
 
   return (
     <div className="relative h-auto" onDragOver={(e) => e.preventDefault()}>
-      <div className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] sm:top-0 sm:bottom-auto print:hidden bg-white dark:bg-[#232222] z-20">
+      <div className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] sm:top-0 sm:bottom-auto print:hidden bg-white dark:bg-neutral-800 z-20">
         <Toolbar
           note={note}
           noteId={note.id}
@@ -338,7 +338,7 @@ function EditorComponent({ note, translations }: Props) {
         />
       </div>
       <div>
-        <div className="sm:hidden bg-white bg-opacity-95 dark:bg-[#232222] w-full no-scrollbar flex justify-between print:hidden">
+        <div className="sm:hidden fixed bg-white bg-opacity-95 dark:bg-neutral-800 w-full no-scrollbar flex justify-between print:hidden z-30">
           <button
             className="p-2 align-start rounded-md text-white bg-transparent cursor-pointer"
             onClick={goBack}
@@ -459,7 +459,7 @@ function EditorComponent({ note, translations }: Props) {
 
       <div
         id="content"
-        className={`inset-x-0 pt-4 sm:pt-20 bottom-16 overflow-auto editor px-4 ${
+        className={`inset-x-0 pt-12 sm:pt-20 bottom-16 overflow-auto editor px-4 ${
           wd ? "sm:px-10 md:px-10 lg:px-30" : "sm:px-10 md:px-20 lg:px-60"
         } text-black dark:text-[color:var(--selected-dark-text)]`}
       >
