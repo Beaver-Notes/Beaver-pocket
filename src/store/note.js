@@ -397,28 +397,42 @@ export const useNoteStore = create((set, get) => ({
   },
 
   lockNote: async (id, password) => {
-    if (!password) return;
+    if (!password) {
+      console.error("No password provided.");
+      return;
+    }
+
     const store = get();
+    const note = store.data[id];
+    if (!note) {
+      console.error("Note not found.");
+      return;
+    }
+
+    if (note.isLocked) {
+      console.log("Note is already locked");
+      return;
+    }
+
     try {
-      const note = store.data[id];
-      if (!note) {
-        throw new Error("Note not found");
-      }
-
-      if (note.isLocked) {
-        console.log("Note is already locked");
-        return;
-      }
-
-      const encrypted = AES.encrypt(
+      const encryptedContent = AES.encrypt(
         JSON.stringify(note.content),
         password
       ).toString();
 
-      await store.update(id, {
-        content: { type: "doc", content: [encrypted] },
+      const updatedNote = {
+        ...note,
+        content: { type: "doc", content: [encryptedContent] },
         isLocked: true,
-      });
+        updatedAt: Date.now(),
+      };
+
+      await storage.set(`notes.${id}`, updatedNote);
+      await trackChange(`notes.${id}`, updatedNote);
+
+      set((s) => ({
+        data: { ...s.data, [id]: updatedNote },
+      }));
 
       console.log(`Note ${id} locked successfully`);
     } catch (error) {
@@ -428,45 +442,72 @@ export const useNoteStore = create((set, get) => ({
   },
 
   unlockNote: async (id, password) => {
-    if (!password) return;
+    if (!password) {
+      console.error("No password provided.");
+      return;
+    }
+
     const store = get();
+    const note = store.data[id];
+    if (!note) {
+      console.error("Note not found.");
+      return;
+    }
+
+    if (!note.isLocked) {
+      console.log("Note is not locked");
+      return;
+    }
+
+    const isEncrypted =
+      typeof note.content?.content?.[0] === "string" &&
+      note.content.content[0].trim().length > 0;
+
+    if (!isEncrypted) {
+      const updatedNote = { ...note, isLocked: false, updatedAt: Date.now() };
+      await storage.set(`notes.${id}`, updatedNote);
+      await trackChange(`notes.${id}`, updatedNote);
+
+      set((s) => ({
+        data: { ...s.data, [id]: updatedNote },
+      }));
+      return;
+    }
+
     try {
-      const note = store.data[id];
-      if (!note) {
-        throw new Error("Note not found");
-      }
+      const decryptedBytes = AES.decrypt(note.content.content[0], password);
+      const decryptedContent = decryptedBytes.toString(Utf8);
 
-      if (!note.isLocked) {
-        console.log("Note is not locked");
-        return;
-      }
-
-      const decrypted = AES.decrypt(note.content.content[0], password).toString(
-        Utf8
-      );
-
-      if (!decrypted) {
+      if (!decryptedContent) {
         throw new Error("Failed to decrypt - invalid password");
       }
 
-      const content = JSON.parse(decrypted);
-
-      console.log("Note decrypted successfully");
+      const updatedNote = {
+        ...note,
+        content: JSON.parse(decryptedContent),
+        isLocked: false,
+        updatedAt: Date.now(),
+      };
 
       const appStore = useAppStore.getState();
       if (!appStore.setting.collapsibleHeading) {
-        this.convertNote(id);
+        get().convertNote(id);
       }
 
-      await store.update(id, { content, isLocked: false });
+      await storage.set(`notes.${id}`, updatedNote);
+      await trackChange(`notes.${id}`, updatedNote);
+
+      set((s) => ({
+        data: { ...s.data, [id]: updatedNote },
+      }));
 
       console.log(`Note ${id} unlocked successfully`);
-    } catch (e) {
-      console.error("Error unlocking note:", e);
-      throw new Error("Failed to unlock note. Please check your password.");
+    } catch (decryptError) {
+      console.error("Failed to decrypt note:", decryptError);
+      throw new Error("Incorrect password");
     }
   },
-
+  
   addLabel: async (id, labelId) => {
     const store = get();
     const note = store.data[id];

@@ -1,113 +1,107 @@
 import { create } from "zustand";
+import CryptoES from "crypto-es";
 import bcrypt from "bcryptjs";
-import CryptoJS from "crypto-js";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 
-const PASSWORD_HASH_KEY = "password_hash";
-const ENCRYPTION_KEY_STORAGE = "encryption_key_storage";
-const SALT_KEY = "encryption_salt";
+const PASSWORD_STORAGE = "password_payload";
+const LEGACY_STORAGE_KEY = "sharedKey";
 
-export const usePasswordStore = create(
-  (set, get) => ({
-    passwordHash: "",
-    encryptionSalt: "",
-    isSecureStorageAvailable: false,
+function deriveKeyFromPassword(password) {
+  const salt = CryptoES.SHA256(password).toString().slice(0, 32);
+  return CryptoES.PBKDF2(password, salt, {
+    keySize: 256 / 32,
+    iterations: 100000,
+    hasher: CryptoES.algo.SHA256,
+  }).toString();
+}
 
-    retrieve: async () => {
-      try {
-        await SecureStoragePlugin.keys();
-        set({ isSecureStorageAvailable: true });
-      } catch {
-        console.warn("Secure storage not available, using fallback");
-      }
+export const usePasswordStore = create((set, get) => ({
+  sharedKey: "",
+  derivedKey: "",
 
-      const { isSecureStorageAvailable } = get();
-      let passwordHash = "";
-      let encryptionSalt = "";
+  async deleteLegacyStorage() {
+    await SecureStoragePlugin.remove({ key: LEGACY_STORAGE_KEY }).catch(
+      () => {}
+    );
+  },
 
-      if (isSecureStorageAvailable) {
-        const hash = await SecureStoragePlugin.get({
-          key: PASSWORD_HASH_KEY,
+  async retrieve() {
+    try {
+      const result = await SecureStoragePlugin.get({
+        key: PASSWORD_STORAGE,
+      }).catch(() => null);
+
+      if (!result?.value) {
+        // fallback: legacy key
+        const legacy = await SecureStoragePlugin.get({
+          key: LEGACY_STORAGE_KEY,
         }).catch(() => null);
-        const salt = await SecureStoragePlugin.get({ key: SALT_KEY }).catch(
-          () => null
-        );
-
-        passwordHash = hash?.value || "";
-        encryptionSalt = salt?.value || "";
+        set({ sharedKey: legacy?.value || "" });
+        return legacy?.value || "";
       }
 
-      set({ passwordHash, encryptionSalt });
-    },
-
-    setSharedKey: async (password) => {
-      const salt = CryptoJS.SHA256(password).toString().slice(0, 32);
-      const hash = await bcrypt.hash(password, await bcrypt.genSalt(12));
-      const encryptionKey = get().deriveEncryptionKey(password);
-
-      set({ passwordHash: hash, encryptionSalt: salt });
-
-      if (get().isSecureStorageAvailable) {
-        await SecureStoragePlugin.set({
-          key: PASSWORD_HASH_KEY,
-          value: hash,
-        });
-        await SecureStoragePlugin.set({ key: SALT_KEY, value: salt });
-        await SecureStoragePlugin.set({
-          key: ENCRYPTION_KEY_STORAGE,
-          value: encryptionKey,
-        });
+      // try parsing stored JSON
+      try {
+        const parsed = JSON.parse(result.value);
+        set({ sharedKey: parsed.hash, derivedKey: parsed.key });
+        return parsed.hash;
+      } catch {
+        // fallback: raw legacy string
+        set({ sharedKey: result.value });
+        return result.value;
       }
-    },
+    } catch (err) {
+      console.error("Error retrieving password:", err);
+      return "";
+    }
+  },
 
-    isValidPassword: async (password) => {
-      const { passwordHash } = get();
-      if (!passwordHash) {
-        await get().retrieve();
-      }
-      return await bcrypt.compare(password, get().passwordHash);
-    },
+  async setSharedKey(password) {
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const derivedKey = deriveKeyFromPassword(password);
 
-    deriveEncryptionKey: (password) => {
-      const salt = CryptoJS.SHA256(password).toString().slice(0, 32);
-      const key = CryptoJS.PBKDF2(password, salt, {
-        keySize: 256 / 32,
-        iterations: 100000,
-        hasher: CryptoJS.algo.SHA256,
-      }).toString();
-      return key;
-    },
+      const payload = JSON.stringify({ hash: hashedPassword, key: derivedKey });
+      await SecureStoragePlugin.set({ key: PASSWORD_STORAGE, value: payload });
+      await get().deleteLegacyStorage();
 
-    resetPassword: async (currentPassword, newPassword) => {
-      const valid = await get().isValidPassword(currentPassword);
-      if (!valid) throw new Error("Invalid current password");
+      set({ sharedKey: hashedPassword, derivedKey });
+    } catch (err) {
+      console.error("Error setting password:", err);
+      throw err;
+    }
+  },
 
-      await get().setSharedKey(newPassword);
+  async isValidPassword(enteredPassword) {
+    try {
+      const { sharedKey, derivedKey } = get();
 
-      return true;
-    },
+      // bcrypt check
+      const validLegacy = await bcrypt.compare(enteredPassword, sharedKey);
+      if (validLegacy) return true;
 
-    resetAllData: async () => {
-      if (get().isSecureStorageAvailable) {
-        await SecureStoragePlugin.remove({ key: PASSWORD_HASH_KEY }).catch(
-          () => {}
-        );
-        await SecureStoragePlugin.remove({ key: SALT_KEY }).catch(() => {});
-        await SecureStoragePlugin.remove({ key: ENCRYPTION_KEY_STORAGE }).catch(
-          () => {}
-        );
-      }
+      // derivedKey check
+      const derived = deriveKeyFromPassword(enteredPassword);
+      return derived === derivedKey;
+    } catch (err) {
+      console.error("Error validating password:", err);
+      return false;
+    }
+  },
 
-      set({
-        passwordHash: "",
-        encryptionSalt: "",
-      });
-    },
-  }),
-  {
-    name: "password-storage",
-    partialize: (state) => ({
-      isSecureStorageAvailable: state.isSecureStorageAvailable,
-    }),
-  }
-);
+  async resetPassword(currentPassword, newPassword) {
+    const isValid = await get().isValidPassword(currentPassword);
+    if (!isValid) throw new Error("Current password is incorrect");
+
+    await get().setSharedKey(newPassword);
+    return true;
+  },
+
+  async importSharedKey(hash, derivedKey = null) {
+    set({ sharedKey: hash, derivedKey });
+
+    const payload = JSON.stringify({ hash, key: derivedKey });
+    await SecureStoragePlugin.set({ key: PASSWORD_STORAGE, value: payload });
+    await get().deleteLegacyStorage();
+  },
+}));
