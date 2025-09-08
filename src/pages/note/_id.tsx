@@ -32,15 +32,16 @@ function Note() {
 
   const unlockNote = async (noteid: any): Promise<void> => {
     try {
-      await passwordStore.retrieve();
+      const existing = await passwordStore.retrieve();
       const biometricAvailable = await NativeBiometric.isAvailable();
 
       const promptForPassword = (): Promise<string | null> => {
         return new Promise((resolve) => {
           emitter.emit("show-dialog", "prompt", {
-            title:
-              translations.card.setPasswordTitle ||
-              "Enter your master password",
+            title: existing
+              ? translations.card.setPasswordTitle ||
+                "Enter your master password"
+              : translations.card.setPasswordTitle || "Set a master password",
             placeholder: translations.card.password || "Enter password",
             okText: translations.card.ok || "OK",
             cancelText: translations.card.cancel || "Cancel",
@@ -59,39 +60,52 @@ function Note() {
         });
       };
 
-      let encryptionKey: string | null = null;
+      let rawPassword: string | null = null;
 
-      if (biometricAvailable.isAvailable) {
+      if (existing && biometricAvailable.isAvailable) {
         try {
           const verified = await NativeBiometric.verifyIdentity({
             reason:
-              translations.card.biometricReason || "Authenticate to lock note",
+              translations.card.biometricReason ||
+              "Authenticate to unlock note",
             title:
               translations.card.biometricTitle || "Biometric Authentication",
           })
             .then(() => true)
             .catch(() => false);
 
-          if (!verified) return;
-
-          const creds = await NativeBiometric.getCredentials({
-            server: "beaver-pocket",
-          });
-
-          encryptionKey = creds.password;
+          if (verified) {
+            const creds = await NativeBiometric.getCredentials({
+              server: "beaver-pocket",
+            });
+            rawPassword = creds.password;
+          }
         } catch (biometricError) {
           console.warn("Biometric failed or cancelled:", biometricError);
         }
       }
 
-      if (!encryptionKey) {
-        const password = await promptForPassword();
-        if (!password) {
+      if (!rawPassword) {
+        rawPassword = await promptForPassword();
+        if (!rawPassword) {
           console.log("Unlock cancelled by user.");
           return;
         }
-        encryptionKey = passwordStore.deriveEncryptionKey(password);
       }
+
+      if (!existing) {
+        await passwordStore.setSharedKey(rawPassword);
+
+        if (biometricAvailable.isAvailable) {
+          await NativeBiometric.setCredentials({
+            username: "beaver-pocket",
+            password: rawPassword,
+            server: "beaver-pocket",
+          });
+        }
+      }
+
+      const encryptionKey = passwordStore.deriveEncryptionKey(rawPassword);
 
       await noteStore.unlockNote(noteid, encryptionKey);
       console.log(`Note (ID: ${noteid}) is unlocked`);

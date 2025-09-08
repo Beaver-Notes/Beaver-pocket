@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { SafeArea } from "@capacitor-community/safe-area";
+import { EdgeToEdge } from "@capawesome/capacitor-android-edge-to-edge-support";
 import { useNavigate, useLocation } from "react-router-dom";
 import Router from "./router";
 import BottomNavBar from "./components/app/BottomNavBar";
@@ -72,7 +73,8 @@ const App: React.FC = () => {
             encoding: Encoding.UTF8,
           });
           if (typeof content.data === "string") {
-            ImportBEA(content.data);
+            const noteId = await ImportBEA(content.data);
+            navigate(`/note/${noteId}`);
           }
         } catch (err) {
           console.error("Error reading file:", err);
@@ -119,15 +121,19 @@ const App: React.FC = () => {
   useEffect(() => {
     const criticalInit = async () => {
       try {
-        SafeArea.enable({
-          config: {
-            customColorsForSystemBars: true,
-            statusBarColor: "#00000000",
-            statusBarContent: "light",
-            navigationBarColor: "#00000000",
-            navigationBarContent: "light",
-          },
-        });
+        if (Capacitor.getPlatform() === "android") {
+          await EdgeToEdge.enable();
+        } else if (Capacitor.getPlatform() === "ios") {
+          await SafeArea.enable({
+            config: {
+              customColorsForSystemBars: true,
+              statusBarColor: "#00000000",
+              statusBarContent: "light",
+              navigationBarColor: "#00000000",
+              navigationBarContent: "light",
+            },
+          });
+        }
 
         const { uri } = await Filesystem.getUri({
           directory: FilesystemDirectory.Data,
@@ -266,8 +272,13 @@ const App: React.FC = () => {
       <div className="safe-area"></div>
       <CommandPrompt showPrompt={showPrompt} setShowPrompt={setShowPrompt} />
       <Router syncStatus={syncStatus} />
-      {shouldShowNavBar && <BottomNavBar />}
+      {shouldShowNavBar && (
+        <div className="fixed left-0 right-0 z-40 bottom-[var(--inset-bottom-effective)]">
+          <BottomNavBar />
+        </div>
+      )}
       <Dialog />
+      <div className="safe-area-bottom" />
     </div>
   );
 };

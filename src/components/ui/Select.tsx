@@ -1,6 +1,6 @@
 // src/components/ui/Select.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
-import Icon from "./Icon"; // your icon component (expects `name` + `className`)
+import Icon from "./Icon";
 import { IconName } from "@/lib/remixicon-react";
 
 export interface SelectOption {
@@ -13,11 +13,11 @@ export interface UiSelectProps {
   modelValue: string | number;
   onChange: (value: string | number) => void;
   label?: string;
-  prependIcon?: string | JSX.Element; // string for Icon name or JSX element
+  prependIcon?: string | JSX.Element;
   placeholder?: string;
   block?: boolean;
   search?: boolean;
-  hidePlaceholderInDropdown?: boolean; // fixed name (was `hidee...` in Vue)
+  hidePlaceholderInDropdown?: boolean;
   options?: (string | SelectOption)[];
   pill?: boolean;
 }
@@ -42,15 +42,12 @@ const UiSelect: React.FC<UiSelectProps> = ({
   const selectButtonRef = useRef<HTMLButtonElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-
-  // store option DOM refs by index to scroll them into view
   const optionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // normalize options
   const allOptions: SelectOption[] = useMemo(() => {
     return options.map((opt) =>
       typeof opt === "string"
@@ -76,13 +73,11 @@ const UiSelect: React.FC<UiSelectProps> = ({
     optionRefs.current[index] = el;
   };
 
-  // keep focused option visible
   useEffect(() => {
-    if (!isOpen) return;
-    if (focusedIndex < 0) return;
+    if (!isOpen || focusedIndex < 0) return;
     const el = optionRefs.current[focusedIndex];
     if (el && el.scrollIntoView) {
-      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
     }
   }, [focusedIndex, isOpen]);
 
@@ -90,19 +85,14 @@ const UiSelect: React.FC<UiSelectProps> = ({
     setIsOpen((prev) => {
       const next = !prev;
       if (next) {
-        // opening
         setSearchQuery("");
         optionRefs.current = [];
         const currentIndex = filteredOptions.findIndex(
           (o) => String(o.value) === String(modelValue)
         );
         setFocusedIndex(Math.max(0, currentIndex));
-        if (search) {
-          // focus the search input on next tick
-          setTimeout(() => searchInputRef.current?.focus(), 0);
-        }
+        if (search) setTimeout(() => searchInputRef.current?.focus(), 0);
       } else {
-        // closing
         optionRefs.current = [];
       }
       return next;
@@ -194,26 +184,17 @@ const UiSelect: React.FC<UiSelectProps> = ({
   };
 
   const handleBlur = () => {
-    // small delay to allow clicks inside the dropdown
     setTimeout(() => {
       const active = document.activeElement;
-      if (
-        dropdownRef.current &&
-        active &&
-        dropdownRef.current.contains(active)
-      ) {
-        return; // focus is still inside the dropdown
-      }
+      if (dropdownRef.current?.contains(active)) return;
       setIsOpen(false);
     }, 150);
   };
 
   const handleClickOutside = (e: MouseEvent) => {
     const target = e.target as Node;
-    const btn = selectButtonRef.current;
-    const dd = dropdownRef.current;
-    if (btn && btn.contains(target)) return;
-    if (dd && dd.contains(target)) return;
+    if (selectButtonRef.current?.contains(target)) return;
+    if (dropdownRef.current?.contains(target)) return;
     setIsOpen(false);
   };
 
@@ -223,20 +204,23 @@ const UiSelect: React.FC<UiSelectProps> = ({
   }, []);
 
   return (
-    <div
-      className={`ui-select cursor-pointer rtl:-rotate-180 ${
-        !block ? "inline-block" : ""
-      }`}
-    >
+    <div className={`ui-select cursor-pointer ${!block ? "inline-block" : ""}`}>
       {label && (
-        <label htmlFor={selectId} className="text-neutral-200 text-sm ml-2">
+        <label
+          htmlFor={selectId}
+          className="text-neutral-200 text-sm ml-2 rtl:ml-0 rtl:mr-2"
+        >
           {label}
         </label>
       )}
 
-      <div className={`ui-select__content flex items-center w-full block transition bg-neutral-50 dark:bg-neutral-750 ${pill ? "rounded-full" : "rounded-lg"} appearance-none focus:outline-none relative`}>
+      <div
+        className={`ui-select__content flex items-center w-full block transition bg-neutral-50 dark:bg-neutral-750 ${
+          pill ? "rounded-full" : "rounded-lg"
+        } appearance-none focus:outline-none relative`}
+      >
         {!!prependIcon && (
-          <span className="absolute text-neutral-600 dark:text-neutral-200 left-0 ml-2">
+          <span className="absolute text-neutral-600 dark:text-neutral-200 left-0 ml-2 rtl:left-auto rtl:right-0 rtl:mr-2 rtl:ml-0">
             {typeof prependIcon === "string" ? (
               <Icon name={prependIcon as IconName} className="" />
             ) : (
@@ -245,12 +229,11 @@ const UiSelect: React.FC<UiSelectProps> = ({
           </span>
         )}
 
-        {/* Button */}
         <button
           id={selectId}
           ref={selectButtonRef}
-          className={`px-4 rtl:rotate-180 pr-8 bg-transparent py-2 z-10 w-full h-full text-left focus:outline-none ${
-            prependIcon ? "pl-8" : ""
+          className={`px-4 pr-8 py-2 z-10 w-full h-full bg-transparent text-left rtl:text-right focus:outline-none ${
+            prependIcon ? "pl-8 rtl:pl-0 rtl:pr-8" : ""
           }`}
           type="button"
           aria-haspopup="listbox"
@@ -269,28 +252,22 @@ const UiSelect: React.FC<UiSelectProps> = ({
           ) : null}
         </button>
 
-        {/* Dropdown Arrow */}
         <Icon
           name="ArrowDownSLine"
-          className={`absolute text-neutral-600 dark:text-neutral-200 mr-2 right-0 rtl:right-auto rtl:left-0 transition-transform duration-200 pointer-events-none ${
+          className={`absolute text-neutral-600 dark:text-neutral-200 mr-2 right-0 rtl:right-auto rtl:left-0 rtl:ml-2 rtl:mr-0 transition-transform duration-200 pointer-events-none ${
             isOpen ? "rotate-180" : ""
           }`}
         />
 
-        {/* Dropdown */}
         <div
           ref={dropdownRef}
-          className={`absolute top-full left-0 right-0 mt-1 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg shadow-lg z-50 max-h-60 overflow-hidden transform transition-all duration-200 ease-out origin-top ${
+          className={`absolute top-full left-0 right-0 mt-1 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg shadow-lg z-50 transform transition-all duration-200 ease-out origin-top ${
             isOpen
               ? "opacity-100 scale-100"
               : "opacity-0 scale-95 pointer-events-none"
           }`}
           role="listbox"
-          aria-activedescendant={
-            focusedIndex >= 0 ? `${selectId}-opt-${focusedIndex}` : undefined
-          }
         >
-          {/* Search Input */}
           {search && (
             <div className="p-2 border-b border-neutral-300 dark:border-neutral-600">
               <input
@@ -305,9 +282,7 @@ const UiSelect: React.FC<UiSelectProps> = ({
             </div>
           )}
 
-          {/* Options */}
-          <div className="max-h-48 overflow-y-auto">
-            {/* Placeholder Option */}
+          <div className="max-h-60 overflow-y-auto pb-2 scroll-pb-2">
             {placeholder && !hidePlaceholderInDropdown && (
               <div
                 id={`${selectId}-placeholder`}
@@ -322,7 +297,6 @@ const UiSelect: React.FC<UiSelectProps> = ({
               </div>
             )}
 
-            {/* Filtered Options */}
             {filteredOptions.map((option, index) => (
               <div
                 id={`${selectId}-opt-${index}`}
@@ -349,7 +323,6 @@ const UiSelect: React.FC<UiSelectProps> = ({
               </div>
             ))}
 
-            {/* No Results */}
             {search && searchQuery && filteredOptions.length === 0 && (
               <div className="px-4 py-2 text-neutral-500 text-center">
                 No options found

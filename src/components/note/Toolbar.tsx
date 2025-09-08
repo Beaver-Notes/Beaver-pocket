@@ -341,12 +341,15 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   return (
     <div
-      className={`print:hidden fixed z-20 bg-white dark:bg-neutral-800 dark:text-[color:var(--selected-dark-text)] mx-2 transition overflow-x-auto no-scrollbar flex justify-start items-center
+      className={`print:hidden fixed z-20 dark:text-[color:var(--selected-dark-text)] px-2 transition overflow-x-auto no-scrollbar flex justify-start items-center
     ${focusMode ? "opacity-0 hover:opacity-100" : ""}
-    ${isKeyboardVisible ? "pb-4 sm:pb-0" : "pb-6 sm:pb-0"}
-    pt-4 sm:pt-6 left-0 right-0 bottom-0 sm:bottom-auto`}
+    ${
+      isKeyboardVisible
+        ? "rounded-full sm:rounded-none mx-2 mb-2 sm:mx-auto sm:mb-auto pb-2 pt-2 sm:pt-6 sm:pb-0 bg-neutral-50 sm:bg-white dark:bg-neutral-750 sm:dark:bg-neutral-800"
+        : "pb-6 pt-4 sm:pt-6 sm:pb-0 bg-white dark:bg-neutral-800"
+    } left-0 right-0 bottom-0 sm:bottom-auto`}
     >
-      <div className="flex items-center justify-start sm:border-b sm:dark:border-b-neutral-600 whitespace-nowrap w-max">
+      <div className="flex items-center justify-start sm:border-t-0 sm:border-b sm:dark:border-b-neutral-600 whitespace-nowrap w-max">
         {/* Back button */}
         <div className="hidden sm:flex items-center">
           <Link

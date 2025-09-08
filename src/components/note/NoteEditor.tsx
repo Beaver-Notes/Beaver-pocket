@@ -293,7 +293,9 @@ function EditorComponent({ note, translations }: Props) {
   const noteEditor = useRef<HTMLDivElement | null>(null);
 
   const focusEditor = (): void => {
-    noteEditor.current?.querySelector<HTMLElement>('*[tabindex="0"]')?.focus();
+    const el =
+      noteEditor.current?.querySelector<HTMLElement>('*[tabindex="0"]');
+    el?.focus({ preventScroll: true });
   };
 
   const disallowedEnter = (
@@ -323,6 +325,26 @@ function EditorComponent({ note, translations }: Props) {
       }
     }
   }
+
+  useEffect(() => {
+  const container = noteEditor.current;
+  if (!container) return;
+
+  const handleTouchStart = (e: TouchEvent) => {
+    const el = container.querySelector<HTMLElement>('*[tabindex="0"]');
+    if (el) {
+      el.focus({ preventScroll: true });
+      e.preventDefault();
+    }
+  };
+
+  container.addEventListener('touchstart', handleTouchStart, { passive: false });
+
+  return () => {
+    container.removeEventListener('touchstart', handleTouchStart);
+  };
+}, []);
+
 
   return (
     <div className="relative h-auto" onDragOver={(e) => e.preventDefault()}>

@@ -16,7 +16,6 @@ import Icon from "@/components/ui/Icon";
 import FolderCard from "@/components/home/HomeFolderCard";
 import folderIcon from "../../../public/imgs/folder.png";
 
-// --- Utilities ---
 const isTouchDevice = () =>
   "ontouchstart" in window || navigator.maxTouchPoints > 0;
 const ItemTypes = { NOTE: "note", FOLDER: "folder" } as const;
@@ -72,7 +71,6 @@ function sortArray<T>(
   return order === "desc" ? sorted.reverse() : sorted;
 }
 
-// --- Custom drag preview layer (pretty ghost while dragging) ---
 const CustomDragLayer: React.FC<{ onUpdate?: (item: any) => void }> = ({
   onUpdate,
 }) => {
@@ -116,7 +114,6 @@ const CustomDragLayer: React.FC<{ onUpdate?: (item: any) => void }> = ({
   );
 };
 
-// --- Drag helpers (autoscroll while dragging near viewport edges) ---
 const useDragEffects = (isDragging: boolean) => {
   const scrollRef = useRef<number | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -183,7 +180,6 @@ const useDragEffects = (isDragging: boolean) => {
   return { stopScroll, isScrolling };
 };
 
-// --- Draggable + droppable wrapper used for Folder and Note cards ---
 const DraggableItem: React.FC<{
   item: Note | Folder;
   type: DragKind;
@@ -212,10 +208,10 @@ const DraggableItem: React.FC<{
     const dy = Math.abs(t.clientY - touchStartRef.current.y);
     const dt = Date.now() - touchStartRef.current.time;
     if (dy > dx && dy > 10 && dt < 300) {
-      setShouldAllowDrag(false); // scrolling
+      setShouldAllowDrag(false);
       isDragIntentRef.current = false;
     } else if (dx > dy || dt > 300) {
-      isDragIntentRef.current = true; // dragging
+      isDragIntentRef.current = true;
       setShouldAllowDrag(true);
     }
   };
@@ -312,8 +308,7 @@ const DraggableItem: React.FC<{
   );
 };
 
-// --- MAIN COMPONENT ---
-const Home: React.FC = () => {
+const FolderPage: React.FC = () => {
   const [query, setQuery] = useState("");
   const { folderId } = useParams<{ folderId?: string }>();
   const navigate = useNavigate();
@@ -324,11 +319,14 @@ const Home: React.FC = () => {
     sortBy === "alphabetical" ? "asc" : "desc"
   );
   const [activeLabel, setActiveLabel] = useState("");
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    home: {},
+    archive: {},
+    index: {},
+  });
 
-  // Get current folder
   const currentFolder = folderId ? folderStore.getById(folderId) : null;
 
-  // Breadcrumb helpers
   const getFolderPath = (fid: string): Folder[] => {
     const path: Folder[] = [];
     let currentId = fid;
@@ -343,14 +341,12 @@ const Home: React.FC = () => {
   };
   const folderPath = folderId ? getFolderPath(folderId) : [];
 
-  // Data
   const notes = Object.values(noteStore.data as Record<string, Note>);
   const allFolders = Object.values(folderStore.data as Record<string, Folder>);
   const childFolders = allFolders.filter(
     (f) => f.parentId === folderId && !folderStore.deletedIds?.[f.id]
   );
 
-  // Circular reference check (reused by DnD drop guards)
   const wouldCreateCircularReference = (
     draggedFolderId: string,
     targetFolderId: string
@@ -365,9 +361,8 @@ const Home: React.FC = () => {
     return checkDesc(targetFolderId, draggedFolderId);
   };
   (folderStore as any).wouldCreateCircularReference =
-    wouldCreateCircularReference; // expose for DraggableItem
+    wouldCreateCircularReference;
 
-  // Full‑text + label search scoped to current folder
   function filterNotesLocal(notesIn: Note[] = [], q: string, label: string) {
     const out = { all: [] as Note[], bookmarked: [] as Note[] };
     const currentFolderId = folderId ?? undefined;
@@ -382,7 +377,7 @@ const Home: React.FC = () => {
         labels,
         folderId: nFolderId,
       } = note as any;
-      if (nFolderId !== currentFolderId) return; // only notes in current folder
+      if (nFolderId !== currentFolderId) return;
       const sortedLabels = [...labels].sort((a, b) => a.localeCompare(b));
       const labelFilter = label ? sortedLabels.includes(label) : true;
       const isMatch = qLower.startsWith("#")
@@ -393,8 +388,11 @@ const Home: React.FC = () => {
           (title?.toLowerCase().includes(qLower) ?? false) ||
           (searchableContent?.includes(qLower) ?? false);
       if (isMatch && labelFilter) {
-        out.all.push(note);
-        if (isBookmarked) out.bookmarked.push(note);
+        if (isBookmarked) {
+          out.bookmarked.push(note);
+        } else {
+          out.all.push(note);
+        }
       }
     });
     return out;
@@ -412,7 +410,6 @@ const Home: React.FC = () => {
     sortBy === "createdAt" ? "asc" : "desc"
   );
 
-  // Capacitor: open/share embedded files (kept from original file)
   useEffect(() => {
     const handleFileEmbedClick = async (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -440,48 +437,41 @@ const Home: React.FC = () => {
       document.removeEventListener("fileEmbedClick", handleFileEmbedClick);
   }, []);
 
-  const [translations, setTranslations] = useState<Record<string, any>>({
-    home: {},
-    archive: {},
-    index: {},
-  });
-
   useEffect(() => {
-    (async () => {
+    const fetchTranslations = async () => {
       const trans = await useTranslation();
       if (trans) setTranslations(trans);
-    })();
+    };
+
+    fetchTranslations();
   }, []);
 
-  // Breadcrumbs + Header
   const renderBreadcrumbs = () => {
     if (!folderId && !currentFolder) return null;
     return (
-      <nav aria-label="Breadcrumb" className="text-sm text-gray-500 mb-2 px-2">
+      <nav aria-label="Breadcrumb" className="text-sm mb-2 px-2">
         <ol className="flex flex-wrap items-center gap-1">
           <li>
             <button
               onClick={() => navigate("/")}
-              className="hover:text-blue-600 font-medium transition-colors"
+              className="hover:text-primary font-medium transition-colors"
             >
               {translations.index?.home || "Home"}
             </button>
           </li>
           {folderPath.map((pathFolder, index) => (
             <React.Fragment key={pathFolder.id}>
-              <li className="mx-1 text-gray-400">/</li>
+              <li className="mx-1">/</li>
               <li>
                 {index < folderPath.length - 1 ? (
                   <button
                     onClick={() => navigate(`/folder/${pathFolder.id}`)}
-                    className="hover:text-blue-600 transition-colors"
+                    className="hover:text-primary transition-colors"
                   >
                     {pathFolder.name}
                   </button>
                 ) : (
-                  <span className="font-medium text-gray-900">
-                    {pathFolder.name}
-                  </span>
+                  <span className="font-medium">{pathFolder.name}</span>
                 )}
               </li>
             </React.Fragment>
@@ -513,7 +503,6 @@ const Home: React.FC = () => {
     );
   };
 
-  // Drop handlers used by DraggableItem
   const handleNoteDrop = useCallback(
     (noteId: string, targetFolderId: string) => {
       noteStore.update(noteId, { folderId: targetFolderId });
@@ -532,7 +521,6 @@ const Home: React.FC = () => {
     [folderStore]
   );
 
-  // --- Render ---
   const hasContent =
     childFolders.length > 0 ||
     sortedAll.length > 0 ||
@@ -541,7 +529,7 @@ const Home: React.FC = () => {
   const renderFolderGrid = () =>
     childFolders.length > 0 && (
       <div className="mb-6">
-        <p className="text-lg md:text-xl font-semibold mb-3 text-gray-600 capitalize">
+        <p className="text-lg md:text-xl font-semibold mb-3 capitalize">
           {translations.index?.folders || "Folders"}
         </p>
         <div className="grid grid-col-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
@@ -578,7 +566,7 @@ const Home: React.FC = () => {
 
       {sortedBookmarked.length > 0 && (
         <div className="mb-6">
-          <p className="text-lg md:text-xl font-semibold mb-3 text-gray-600">
+          <p className="text-lg md:text-xl font-semibold mb-3">
             {translations.home.bookmarked || "Bookmarked"}
           </p>
           {renderNotesGrid(sortedBookmarked)}
@@ -587,7 +575,7 @@ const Home: React.FC = () => {
 
       {(sortedAll.length > 0 || (!hasContent && childFolders.length === 0)) && (
         <div>
-          <p className="text-lg md:text-xl font-semibold mb-3 text-gray-600">
+          <p className="text-lg md:text-xl font-semibold mb-3">
             {sortedAll.length > 0 ? translations.home.all || "All Notes" : ""}
           </p>
 
@@ -598,7 +586,7 @@ const Home: React.FC = () => {
                 className="block mx-auto sm:w-1/3"
                 alt="No content"
               />
-              <p className="text-base md:text-lg text-gray-600 max-w-md mx-auto">
+              <p className="text-base md:text-lg max-w-md mx-auto">
                 {currentFolder
                   ? `This folder is empty. Start adding notes or subfolders to organize your content.`
                   : translations.home.messagePt1 ||
@@ -647,4 +635,4 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home;
+export default FolderPage;

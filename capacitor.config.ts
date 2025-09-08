@@ -33,6 +33,9 @@ const config: CapacitorConfig = {
       ],
       forceCodeForRefreshToken: true,
     },
+    EdgeToEdge: {
+      backgroundColor: "#00000000",
+    },
     Keyboard: {
       resize: 'native',
     },

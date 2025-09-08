@@ -421,8 +421,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   );
 
   useEffect(() => {
-    if (showArchived) return;
-
     const handleSendIntent = () => {
       SendIntent.checkSendIntentReceived().then((result) => {
         if (result?.url) {
@@ -563,7 +561,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
                 {sortedArchived.length === 0
                   ? emptyState(
                       "./imgs/archive.png",
-                      translations.archive.messagePt1 || "No archived notes",
+                      translations.archive.messagePt1 || "",
                       translations.archive.messagePt2 || "",
                       "ArchiveDrawerLine"
                     )

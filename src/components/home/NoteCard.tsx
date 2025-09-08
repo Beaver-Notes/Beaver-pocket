@@ -119,8 +119,6 @@ const NoteCard: React.FC<BookmarkedProps> = ({
     return "";
   }
 
-  // inside NoteCard.tsx
-
   const lockNote = async (note: Note): Promise<void> => {
     try {
       await passwordStore.retrieve();
@@ -144,21 +142,18 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               }
 
               try {
-                // Save password for validation only (bcrypt)
                 if (!passwordStore.passwordHash) {
                   await passwordStore.setSharedKey(password);
                 }
 
-                // Save RAW password in biometric store if available
                 if (biometricAvailable.isAvailable) {
                   await NativeBiometric.setCredentials({
                     username: "beaver-pocket",
-                    password, // ✅ raw password
+                    password,
                     server: "beaver-pocket",
                   });
                 }
 
-                // Lock note with RAW password
                 await noteStore.lockNote(note.id, password);
 
                 const updatedNote = await noteStore.getById(note.id);
@@ -229,15 +224,16 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 
   const unlockNote = async (note: Note): Promise<void> => {
     try {
-      await passwordStore.retrieve();
+      const existing = await passwordStore.retrieve();
       const biometricAvailable = await NativeBiometric.isAvailable();
 
       const promptForPassword = (): Promise<string | null> => {
         return new Promise((resolve) => {
           emitter.emit("show-dialog", "prompt", {
-            title:
-              translations.card.setPasswordTitle ||
-              "Enter your master password",
+            title: existing
+              ? translations.card.setPasswordTitle ||
+                "Enter your master password"
+              : translations.card.setPasswordTitle || "Set a master password",
             placeholder: translations.card.password || "Enter password",
             okText: translations.card.ok || "OK",
             cancelText: translations.card.cancel || "Cancel",
@@ -249,7 +245,8 @@ const NoteCard: React.FC<BookmarkedProps> = ({
 
       let password: string | null = null;
 
-      if (biometricAvailable.isAvailable) {
+      // Try biometrics first if available and a password already exists
+      if (existing && biometricAvailable.isAvailable) {
         try {
           const verified = await NativeBiometric.verifyIdentity({
             reason:
@@ -277,6 +274,19 @@ const NoteCard: React.FC<BookmarkedProps> = ({
         if (!password) {
           console.log("Unlock cancelled by user.");
           return;
+        }
+      }
+
+      // If this is the first time, set the master key before unlocking
+      if (!existing) {
+        await passwordStore.setSharedKey(password);
+
+        if (biometricAvailable.isAvailable) {
+          await NativeBiometric.setCredentials({
+            username: "beaver-pocket",
+            password,
+            server: "beaver-pocket",
+          });
         }
       }
 

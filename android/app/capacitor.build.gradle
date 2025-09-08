@@ -20,6 +20,7 @@ dependencies {
     implementation project(':capacitor-preferences')
     implementation project(':capacitor-share')
     implementation project(':capacitor-splash-screen')
+    implementation project(':capawesome-capacitor-android-edge-to-edge-support')
     implementation project(':capgo-capacitor-native-biometric')
     implementation project(':daniele-rolli-capacitor-google-auth')
     implementation project(':daniele-rolli-capacitor-scoped-storage')

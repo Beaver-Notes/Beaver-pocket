@@ -9,6 +9,8 @@ import { Preferences } from "@capacitor/preferences";
 import { clearIndex, indexData } from "./utils/spotsearch";
 import UiSelect from "./components/ui/Select";
 import { useAppStore } from "./store/app";
+import { Capacitor } from "@capacitor/core";
+import { SpotSearch } from "@daniele-rolli/capacitor-spotsearch";
 
 const Settings: React.FC = () => {
   const appStore = useAppStore();
@@ -143,6 +145,9 @@ const Settings: React.FC = () => {
     await Preferences.set({ key: "indexing", value: newValue.toString() });
 
     try {
+      if (platform !== "android") {
+        await SpotSearch.enableIndexing({ enabled: newValue });
+      }
       if (newValue) {
         await indexData();
       } else {
@@ -152,6 +157,8 @@ const Settings: React.FC = () => {
       console.error("Indexing toggle error:", e);
     }
   };
+
+  const platform = Capacitor.getPlatform();
 
   const colors = [
     { name: "red", bg: "bg-red-500" },
@@ -374,7 +381,11 @@ const Settings: React.FC = () => {
                   </label>
                 </div>
 
-                <div className="flex items-center py-2 dark:border-neutral-600 justify-between">
+                <div
+                  className={`flex items-center py-2 dark:border-neutral-600 justify-between  ${
+                    platform === "android" ? "hidden" : ""
+                  }`}
+                >
                   <p id="clear-font-label" className="block text-lg align-left">
                     Allow Indexing
                   </p>

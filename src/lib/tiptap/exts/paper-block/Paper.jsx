@@ -16,7 +16,7 @@ import paperBlock from ".";
 
 const OverlayPortal = ({ children, onClose }) => {
   return createPortal(
-    <div className="bg-neutral-100 dark:bg-neutral-800 absolute inset-0 z-50">
+    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-800 absolute inset-0 z-50">
       {children}
     </div>,
     document.body

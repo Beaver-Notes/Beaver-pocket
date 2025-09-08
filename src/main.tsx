@@ -34,7 +34,8 @@ async function handleSendIntent(result: any) {
     });
 
     if (typeof content.data === "string") {
-      ImportBEA(content.data);
+      const noteId = await ImportBEA(content.data);
+      window.location.href = `/note/${noteId}`;
     } else if (content.data instanceof Blob) {
       const reader = new FileReader();
       reader.onload = (event) => ImportBEA(event.target?.result as string);

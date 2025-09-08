@@ -20,12 +20,11 @@ body {
 
 .safe-area {
   padding-top: var(--safe-area-inset-top);
-  @apply bg-white bg-opacity-95 dark:bg-opacity-95 dark:bg-neutral-800 z-40;
+  @apply bg-white dark:bg-neutral-800 z-40;
   position: fixed;
   top: 0;
   width: 100%;
 }
-
 .dark * {
   border-color: rgba(255, 255, 255, 0.1);
 }

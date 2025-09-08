@@ -2,8 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-.ProseMirror { position: relative; outline: none; }
+.ProseMirror {
+  position: relative;
+  outline: none;
+}
+
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --inset-bottom-effective: var(--safe-area-inset-bottom);
+}
 
 body {
-   @apply bg-white dark:bg-[#232222];
+  @apply bg-white dark:bg-[#232222];
 }

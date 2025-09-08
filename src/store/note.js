@@ -397,90 +397,101 @@ export const useNoteStore = create((set, get) => ({
   },
 
   lockNote: async (id, password) => {
-    if (!password) {
-      console.error("No password provided.");
-      return;
-    }
-
     const store = get();
     const note = store.data[id];
-    if (!note) {
-      console.error("Note not found.");
-      return;
-    }
+    if (!note) throw new Error("Note not found");
+    if (note.isLocked) return;
 
-    if (note.isLocked) {
-      console.log("Note is already locked");
-      return;
-    }
+    // 1. generate DEK
+    const dek = randomBase64(32);
 
-    try {
-      const encryptedContent = AES.encrypt(
-        JSON.stringify(note.content),
-        password
-      ).toString();
+    // 2. derive KEK from password + salt
+    const salt = randomBase64(16);
+    const kek = usePasswordStore.getState().deriveKEK(password, salt);
 
-      const updatedNote = {
-        ...note,
-        content: { type: "doc", content: [encryptedContent] },
-        isLocked: true,
-        updatedAt: Date.now(),
-      };
+    // 3. wrap DEK
+    const dekNonce = randomBase64(16);
+    const encryptedDEK = AES.encrypt(dek, kek, {
+      iv: enc.Base64.parse(dekNonce),
+    }).toString();
 
-      await storage.set(`notes.${id}`, updatedNote);
-      await trackChange(`notes.${id}`, updatedNote);
+    // 4. encrypt note with DEK
+    const noteNonce = randomBase64(16);
+    const encryptedContent = AES.encrypt(
+      JSON.stringify(note.content),
+      enc.Base64.parse(dek),
+      { iv: enc.Base64.parse(noteNonce) }
+    ).toString();
 
-      set((s) => ({
-        data: { ...s.data, [id]: updatedNote },
-      }));
+    const updatedNote = {
+      ...note,
+      isLocked: true,
+      encryption: {
+        scheme: "pbkdf2-v1",
+        salt,
+        iterations: 100000,
+        encrypted_dek: encryptedDEK,
+        dek_nonce: dekNonce,
+      },
+      content: {
+        ciphertext: encryptedContent,
+        nonce: noteNonce,
+      },
+      updatedAt: Date.now(),
+    };
 
-      console.log(`Note ${id} locked successfully`);
-    } catch (error) {
-      console.error("Error locking note:", error);
-      throw error;
-    }
+    await storage.set(`notes.${id}`, updatedNote);
+    await trackChange(`notes.${id}`, updatedNote);
+
+    set((s) => ({ data: { ...s.data, [id]: updatedNote } }));
   },
 
   unlockNote: async (id, password) => {
-    if (!password) {
-      console.error("No password provided.");
-      return;
-    }
-
     const store = get();
     const note = store.data[id];
-    if (!note) {
-      console.error("Note not found.");
-      return;
-    }
-
-    if (!note.isLocked) {
-      console.log("Note is not locked");
-      return;
-    }
-
-    const isEncrypted =
-      typeof note.content?.content?.[0] === "string" &&
-      note.content.content[0].trim().length > 0;
-
-    if (!isEncrypted) {
-      const updatedNote = { ...note, isLocked: false, updatedAt: Date.now() };
-      await storage.set(`notes.${id}`, updatedNote);
-      await trackChange(`notes.${id}`, updatedNote);
-
-      set((s) => ({
-        data: { ...s.data, [id]: updatedNote },
-      }));
-      return;
-    }
+    if (!note) throw new Error("Note not found");
+    if (!note.isLocked) return;
 
     try {
-      const decryptedBytes = AES.decrypt(note.content.content[0], password);
-      const decryptedContent = decryptedBytes.toString(Utf8);
+      let decryptedContent = null;
 
-      if (!decryptedContent) {
-        throw new Error("Failed to decrypt - invalid password");
+      if (note.encryption?.scheme === "pbkdf2-v1") {
+        // ✅ new scheme
+        const { salt, iterations, encrypted_dek, dek_nonce } = note.encryption;
+        const kek = usePasswordStore
+          .getState()
+          .deriveKEK(password, salt, iterations);
+
+        // unwrap DEK
+        const dek = AES.decrypt(encrypted_dek, kek, {
+          iv: enc.Base64.parse(dek_nonce),
+        }).toString(enc.Utf8);
+        if (!dek) throw new Error("Bad password");
+
+        // decrypt note with DEK
+        decryptedContent = AES.decrypt(
+          note.content.ciphertext,
+          enc.Base64.parse(dek),
+          { iv: enc.Base64.parse(note.content.nonce) }
+        ).toString(enc.Utf8);
+      } else {
+        // ⚠️ legacy raw AES(password)
+        decryptedContent = AES.decrypt(
+          note.content.content?.[0],
+          password
+        ).toString(enc.Utf8);
+
+        if (decryptedContent) {
+          // migrate immediately
+          const parsed = JSON.parse(decryptedContent);
+          const migratedNote = { ...note, content: parsed, isLocked: false };
+          set((s) => ({ data: { ...s.data, [id]: migratedNote } }));
+          await get().lockNote(id, password); // re-lock with new scheme
+          return;
+        }
       }
+
+      if (!decryptedContent) throw new Error("Incorrect password");
 
       const updatedNote = {
         ...note,
@@ -489,25 +500,16 @@ export const useNoteStore = create((set, get) => ({
         updatedAt: Date.now(),
       };
 
-      const appStore = useAppStore.getState();
-      if (!appStore.setting.collapsibleHeading) {
-        get().convertNote(id);
-      }
-
       await storage.set(`notes.${id}`, updatedNote);
       await trackChange(`notes.${id}`, updatedNote);
 
-      set((s) => ({
-        data: { ...s.data, [id]: updatedNote },
-      }));
-
-      console.log(`Note ${id} unlocked successfully`);
-    } catch (decryptError) {
-      console.error("Failed to decrypt note:", decryptError);
+      set((s) => ({ data: { ...s.data, [id]: updatedNote } }));
+    } catch (err) {
+      console.error("Unlock failed:", err);
       throw new Error("Incorrect password");
     }
   },
-  
+
   addLabel: async (id, labelId) => {
     const store = get();
     const note = store.data[id];
