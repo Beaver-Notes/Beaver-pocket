@@ -64,10 +64,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, []);
 
-  const handleClearInput = () => {
-    setSearchQuery("");
-  };
-
   const handleLabelChange = (value: string) => {
     setActiveLabel(value);
     handleLabelFilterChange(value);
@@ -96,15 +92,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="ml-2 w-full bg-transparent text-lg text-neutral-800 dark:text-[color:var(--selected-dark-text)] outline-none placeholder-neutral-400"
             />
-            {searchQuery && (
-              <button
-                onClick={handleClearInput}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 dark:text-[color:var(--selected-dark-text)]"
-                aria-label={translations.filter.clear}
-              >
-                <Icon name="DeleteBackLine" />
-              </button>
-            )}
           </div>
 
           <div className="sm:hidden relative">

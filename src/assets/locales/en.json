@@ -240,6 +240,7 @@
     "warning": "Warning, if you forget your password, you'll lose access to your locked notes, and setting a new password will require knowing the old one.",
     "wrongpasswd": "Incorrect password. Note cannot be unlocked.",
     "untitledNote": "Untitled Note",
+    "untitledFolder": "Untitled Folder",
     "content": "No content..."
   },
   "folderTree": {

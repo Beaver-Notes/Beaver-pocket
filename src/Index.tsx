@@ -18,6 +18,8 @@ import FolderCard from "./components/home/HomeFolderCard";
 import { useNavigate } from "react-router-dom";
 import { App } from "@capacitor/app";
 import { IconName } from "./lib/remixicon-react";
+import { useSelection } from "./composable/selection";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 const isTouchDevice = () =>
   "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -57,16 +59,16 @@ const CustomDragLayer: React.FC<{
         position: "fixed",
         pointerEvents: "none",
         zIndex: 9999,
-        inset: 0, // fills viewport
-        overflow: "hidden", // clip preview so it can't grow the viewport
-        transform, // translate3d prevents layout jank
-        contain: "layout paint size", // isolates layout (helps prevent scrollbars)
+        inset: 0,
+        overflow: "hidden",
+        transform,
+        contain: "layout paint size",
       }}
       className="opacity-90"
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-xl border-2 border-primary shadow-xl"
-        style={{ maxWidth: "min(420px, 90vw)" }} // keep preview from being wider than viewport
+        className="draggable-item bg-white dark:bg-gray-800 rounded-xl border-2 border-primary shadow-xl"
+        style={{ maxWidth: "min(420px, 90vw)" }}
       >
         {itemType === ItemTypes.NOTE ? (
           <NoteCard note={item?.item as Note} onUpdate={onUpdate!} />
@@ -103,7 +105,6 @@ const useDragEffects = (isDragging: boolean) => {
         window.scrollBy(0, direction * speed * 10);
       }, 16);
 
-      // Clear scrolling flag after a delay
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       scrollTimeoutRef.current = setTimeout(() => {
         setIsScrolling(false);
@@ -155,7 +156,20 @@ const DraggableItem: React.FC<{
   onNoteDrop?: (noteId: string, folderId: string) => void;
   onFolderDrop?: (draggedId: string, targetId: string) => void;
   folderStore?: any;
-}> = ({ item, type, onUpdate, onNoteDrop, onFolderDrop, folderStore }) => {
+  selectedItems: Set<string>;
+  isSelecting: boolean;
+  setIsSelecting: (v: boolean) => void;
+  toggleItemSelection: (key: string) => void;
+}> = ({
+  item,
+  type,
+  onUpdate,
+  onNoteDrop,
+  onFolderDrop,
+  folderStore,
+  setIsSelecting,
+  toggleItemSelection,
+}) => {
   const dropTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [preventDrop, setPreventDrop] = useState(false);
 
@@ -165,8 +179,10 @@ const DraggableItem: React.FC<{
   );
   const isDragIntentRef = useRef(false);
   const [shouldAllowDrag, setShouldAllowDrag] = useState(true);
+  const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
     const touch = e.touches[0];
     touchStartRef.current = {
       x: touch.clientX,
@@ -175,6 +191,18 @@ const DraggableItem: React.FC<{
     };
     isDragIntentRef.current = false;
     setShouldAllowDrag(true);
+
+    longPressTimeout.current = setTimeout(async () => {
+      setIsSelecting(true);
+      toggleItemSelection(`${type}-${item.id}`);
+      setShouldAllowDrag(false);
+
+      try {
+        await Haptics.impact({ style: ImpactStyle.Light });
+      } catch (error) {
+        console.log("Haptics not available");
+      }
+    }, 500);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -185,21 +213,25 @@ const DraggableItem: React.FC<{
     const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
     const deltaTime = Date.now() - touchStartRef.current.time;
 
-    // If vertical movement is dominant and happens quickly, it's likely a scroll gesture
-    if (deltaY > deltaX && deltaY > 10 && deltaTime < 300) {
-      setShouldAllowDrag(false);
-      isDragIntentRef.current = false;
+    if (deltaX > 10 || deltaY > 10) {
+      if (longPressTimeout.current) clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
     }
-    // If horizontal movement or held long enough, allow drag
-    else if (deltaX > deltaY || deltaTime > 300) {
+
+    if (deltaX > deltaY || deltaTime > 300) {
       isDragIntentRef.current = true;
       setShouldAllowDrag(true);
     }
   };
 
   const handleTouchEnd = () => {
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+    }
+
     touchStartRef.current = null;
-    // Reset after a short delay to allow for drag operations
+
     setTimeout(() => {
       setShouldAllowDrag(true);
       isDragIntentRef.current = false;
@@ -210,16 +242,22 @@ const DraggableItem: React.FC<{
     type,
     item: { type, id: item.id, item },
     canDrag: () => {
-      // On touch devices, only allow drag if gesture analysis indicates drag intent
       if (isTouchDevice()) {
         return shouldAllowDrag && isDragIntentRef.current;
       }
       return true;
     },
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
-    end: (_draggedItem, monitor) => {
-      if (monitor.didDrop() && "vibrate" in navigator) {
-        navigator.vibrate([50, 50, 50]);
+    end: async (_draggedItem, monitor) => {
+      if (monitor.didDrop()) {
+        try {
+          await Haptics.impact({ style: ImpactStyle.Medium });
+        } catch (error) {
+          // Fallback to vibration API if Haptics not available
+          if ("vibrate" in navigator) {
+            navigator.vibrate([100, 50, 100]);
+          }
+        }
       }
     },
   });
@@ -227,10 +265,8 @@ const DraggableItem: React.FC<{
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: [ItemTypes.NOTE, ItemTypes.FOLDER],
     drop: (dragItem: DragItem, _monitor) => {
-      // Prevent drop if we were recently scrolling
       if (preventDrop) return;
 
-      // Add a small delay to ensure we're not in the middle of a scroll
       if (dropTimeoutRef.current) return;
 
       dropTimeoutRef.current = setTimeout(() => {
@@ -238,7 +274,8 @@ const DraggableItem: React.FC<{
           if (dragItem.type === ItemTypes.NOTE) {
             onNoteDrop?.(dragItem.id, item.id);
           } else if (
-            !folderStore?.wouldCreateCircularReference(dragItem.id, item.id)
+            folderStore &&
+            !folderStore.wouldCreateCircularReference(dragItem.id, item.id)
           ) {
             onFolderDrop?.(dragItem.id, item.id);
           }
@@ -250,7 +287,8 @@ const DraggableItem: React.FC<{
       !preventDrop &&
       type === ItemTypes.FOLDER &&
       (dragItem.type === ItemTypes.NOTE ||
-        !folderStore?.wouldCreateCircularReference(dragItem.id, item.id)),
+        (folderStore &&
+          !folderStore.wouldCreateCircularReference(dragItem.id, item.id))),
     collect: (monitor) => ({
       isOver: monitor.isOver(),
       canDrop: monitor.canDrop(),
@@ -259,7 +297,6 @@ const DraggableItem: React.FC<{
 
   const { isAnimating, stopScroll, isScrolling } = useDragEffects(isDragging);
 
-  // Update preventDrop based on scrolling state
   useEffect(() => {
     setPreventDrop(isScrolling);
   }, [isScrolling]);
@@ -270,11 +307,13 @@ const DraggableItem: React.FC<{
     }
   }, [preview]);
 
-  // Clean up timeout on unmount
   useEffect(() => {
     return () => {
       if (dropTimeoutRef.current) {
         clearTimeout(dropTimeoutRef.current);
+      }
+      if (longPressTimeout.current) {
+        clearTimeout(longPressTimeout.current);
       }
     };
   }, []);
@@ -283,7 +322,6 @@ const DraggableItem: React.FC<{
     ? "opacity-50 transform-gpu transition-all duration-200 ease-out"
     : "";
 
-  // Don't show drop visual feedback if we're preventing drops
   const dropClass =
     isOver && canDrop && !preventDrop ? "ring-2 ring-primary" : "";
 
@@ -326,6 +364,14 @@ const DraggableItem: React.FC<{
 };
 
 const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
+  const {
+    selectedItems,
+    isSelecting,
+    setIsSelecting,
+    toggleItemSelection,
+    exitSelectionMode,
+    clearSelection,
+  } = useSelection();
   const folderStore = useFolderStore();
   const noteStore = useNoteStore();
   const [query, setQuery] = useState("");
@@ -341,64 +387,85 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    App.addListener("appUrlOpen", ({ url }) => {
+    const handleAppUrlOpen = ({ url }: { url: string }) => {
       const m = url.match(/beaver:\/\/note\/(.+)$/);
       if (m) navigate(`/note/${m[1]}`);
-    });
+    };
+
+    // Add listener and handle cleanup properly
+    const appListenerPromise = App.addListener("appUrlOpen", handleAppUrlOpen);
 
     const onSpotOpen = (ev: any) =>
       ev?.detail?.id && navigate(`/note/${ev.detail.id}`);
+
     window.addEventListener("spotsearchOpen", onSpotOpen);
 
     const params = new URLSearchParams(window.location.search);
     const label = params.get("label");
     if (label) setActiveLabel(decodeURIComponent(label));
 
-    return () => window.removeEventListener("spotsearchOpen", onSpotOpen);
+    return () => {
+      appListenerPromise.then((listener) => listener.remove());
+      window.removeEventListener("spotsearchOpen", onSpotOpen);
+    };
   }, [navigate]);
 
   const notes = Object.values(noteStore.data as Record<string, Note>);
 
-  const filterNotes = (
-    notes: Note[] = [],
-    query: string,
-    activeLabel: string
-  ) => {
-    const result = {
-      all: [] as Note[],
-      archived: [] as Note[],
-      bookmarked: [] as Note[],
-    };
+  const filterNotes = useCallback(
+    (notes: Note[] = [], query: string, activeLabel: string) => {
+      const result = {
+        all: [] as Note[],
+        archived: [] as Note[],
+        bookmarked: [] as Note[],
+      };
 
-    notes.forEach((note) => {
-      if (note.folderId !== null && note.folderId !== undefined) return;
-
-      const text = extractNoteText(note.content).toLowerCase();
-      const labels = [...note.labels].sort((a, b) => a.localeCompare(b));
       const queryLower = query.toLowerCase();
 
-      const labelMatch = !activeLabel || labels.includes(activeLabel);
-      const textMatch = queryLower.startsWith("#")
-        ? labels.some((l) => l?.toLowerCase().includes(queryLower.substring(1)))
-        : labels.some((l) => l?.toLowerCase().includes(queryLower)) ||
-          note.title?.toLowerCase().includes(queryLower) ||
-          text.includes(queryLower);
+      notes.forEach((note) => {
+        if (note.folderId !== null && note.folderId !== undefined) return;
 
-      if (textMatch && labelMatch) {
-        if (note.isArchived) result.archived.push(note);
-        else if (note.isBookmarked) result.bookmarked.push(note);
-        else result.all.push(note);
-      }
-    });
-    return result;
-  };
+        const text = extractNoteText(note.content).toLowerCase();
+        const labels = [...note.labels].sort((a, b) => a.localeCompare(b));
 
-  const filterFolders = (folders: Folder[] = [], query: string) => {
+        // Handle untitled notes
+        const normalizedTitle =
+          note.title && note.title.trim() !== ""
+            ? note.title
+            : translations?.card?.untitledNote || "Untitled";
+
+        const labelMatch = !activeLabel || labels.includes(activeLabel);
+        const textMatch = queryLower.startsWith("#")
+          ? labels.some((l) =>
+              l?.toLowerCase().includes(queryLower.substring(1))
+            )
+          : labels.some((l) => l?.toLowerCase().includes(queryLower)) ||
+            normalizedTitle.toLowerCase().includes(queryLower) ||
+            text.includes(queryLower);
+
+        if (textMatch && labelMatch) {
+          if (note.isArchived) result.archived.push(note);
+          else if (note.isBookmarked) result.bookmarked.push(note);
+          else result.all.push(note);
+        }
+      });
+
+      return result;
+    },
+    []
+  );
+  const filterFolders = useCallback((folders: Folder[] = [], query: string) => {
     const queryLower = query.toLowerCase();
-    return folders.filter((folder) =>
-      folder.name.toLowerCase().includes(queryLower)
-    );
-  };
+
+    return folders.filter((folder) => {
+      const normalizedName =
+        folder.name && folder.name.trim() !== ""
+          ? folder.name
+          : translations?.card?.untitledFolder || "Untitled";
+
+      return normalizedName.toLowerCase().includes(queryLower);
+    });
+  }, []);
 
   const handleNoteDrop = useCallback(
     (noteId: string, folderId: string) => {
@@ -410,41 +477,57 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   );
 
   const handleFolderDrop = useCallback(
-    (draggedId: string, targetId: string) => {
+    async (draggedId: string, targetId: string) => {
       if (!folderStore.wouldCreateCircularReference(draggedId, targetId)) {
         folderStore.update(draggedId, { parentId: targetId });
 
-        if ("vibrate" in navigator) navigator.vibrate([80, 40, 80, 40, 80]);
+        try {
+          await Haptics.impact({ style: ImpactStyle.Medium });
+        } catch (error) {
+          console.log("Haptics not available");
+        }
       }
     },
     [folderStore]
   );
 
   useEffect(() => {
-    const handleSendIntent = () => {
-      SendIntent.checkSendIntentReceived().then((result) => {
+    const handleSendIntent = async () => {
+      try {
+        const result = await SendIntent.checkSendIntentReceived();
         if (result?.url) {
           const normalizedUrl = decodeURIComponent(result.url).replace(
             "file%3A%2F%2F",
             "file://"
           );
-          Filesystem.readFile({ path: normalizedUrl, encoding: Encoding.UTF8 })
-            .then((content) => {
-              if (typeof content.data === "string") ImportBEA(content.data);
-              else if (content.data instanceof Blob) {
-                const reader = new FileReader();
-                reader.onload = (e) => ImportBEA(e.target?.result as string);
-                reader.readAsText(content.data);
-              }
-            })
-            .catch(() => console.log("Failed to read shared file"));
+          try {
+            const content = await Filesystem.readFile({
+              path: normalizedUrl,
+              encoding: Encoding.UTF8,
+            });
+            if (typeof content.data === "string") {
+              ImportBEA(content.data);
+            } else if (content.data instanceof Blob) {
+              const reader = new FileReader();
+              reader.onload = (e) => ImportBEA(e.target?.result as string);
+              reader.readAsText(content.data);
+            }
+          } catch (error) {
+            console.log("Failed to read shared file", error);
+          }
         }
-      });
+      } catch (error) {
+        console.log("Failed to check send intent", error);
+      }
     };
 
     const fetchTranslations = async () => {
-      const trans = await useTranslation();
-      if (trans) setTranslations(trans);
+      try {
+        const trans = await useTranslation();
+        if (trans) setTranslations(trans);
+      } catch (error) {
+        console.log("Failed to fetch translations", error);
+      }
     };
 
     window.addEventListener("sendIntentReceived", handleSendIntent);
@@ -477,7 +560,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
 
   const sortedFolders = sortArray({
     data: filteredFolders,
-    key: sortBy === "alphabetical" ? "title" : sortBy,
+    key: sortBy === "alphabetical" ? "name" : sortBy, // Fixed: folders use 'name' property
     order: sortOrder,
   });
 
@@ -513,6 +596,10 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
                 type === ItemTypes.FOLDER ? handleFolderDrop : undefined
               }
               folderStore={type === ItemTypes.FOLDER ? folderStore : undefined}
+              selectedItems={selectedItems}
+              isSelecting={isSelecting}
+              setIsSelecting={setIsSelecting}
+              toggleItemSelection={toggleItemSelection}
             />
           ))}
         </div>
@@ -538,8 +625,48 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   return (
     <DndProvider backend={isTouchDevice() ? TouchBackend : HTML5Backend}>
       <CustomDragLayer />
-      <div className="overflow-x-hidden overflow-y-auto mb-12">
-        <div className="w-full md:pt-4  p-2 py-2 flex flex-col border-neutral-300 overflow-y-auto overflow-x-hidden">
+
+      {/* Selection Toolbar */}
+      {isSelecting && selectedItems.size > 0 && (
+        <div className="fixed top-0 left-0 right-0 bg-blue-500 text-white p-4 z-50 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={exitSelectionMode}
+              className="text-white hover:bg-blue-600 p-2 rounded"
+            >
+              <Icon name="CloseLine" className="w-5 h-5" />
+            </button>
+            <span className="font-medium">
+              {selectedItems.size} item{selectedItems.size > 1 ? "s" : ""}{" "}
+              selected
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                // Handle bulk actions here (delete, archive, etc.)
+                console.log("Bulk action on:", Array.from(selectedItems));
+              }}
+              className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded text-white"
+            >
+              Delete
+            </button>
+            <button
+              onClick={clearSelection}
+              className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded text-white"
+            >
+              Deselect All
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={`overflow-x-hidden overflow-y-auto mb-12 ${
+          isSelecting ? "pt-16" : ""
+        }`}
+      >
+        <div className="w-full md:pt-4 p-2 py-2 flex flex-col border-neutral-300 overflow-y-auto overflow-x-hidden">
           <SearchBar
             searchQuery={query}
             setSearchQuery={setQuery}

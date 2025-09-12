@@ -20,6 +20,7 @@ import CodeBoxLine from "remixicon-react/CodeBoxLineIcon";
 import DeleteBinLine from "remixicon-react/DeleteBinLineIcon";
 import ImageLine from "remixicon-react/ImageLineIcon";
 import ArchiveDrawerLine from "remixicon-react/ArchiveLineIcon";
+import InboxUnarchiveLine from "remixicon-react/InboxUnarchiveLineIcon";
 import ArchiveDrawerFill from "remixicon-react/InboxUnarchiveLineIcon";
 import Download2Line from "remixicon-react/Download2LineIcon";
 import LockClosed from "remixicon-react/LockLineIcon";
@@ -116,7 +117,6 @@ import SortAsc from "remixicon-react/SortAscIcon";
 import SortDesc from "remixicon-react/SortDescIcon";
 import CheckLine from "remixicon-react/CheckLineIcon";
 import Save3Line from "remixicon-react/Save3LineIcon";
-
 
 const Forward5Line: React.FC<{ className?: string }> = ({ className }) => (
   <svg
@@ -370,6 +370,7 @@ export const icons = {
   SpeedLine,
   Forward5Line,
   Backward5Line,
+  InboxUnarchiveLine,
   Spinner,
   iCloud,
   BallPenLine,

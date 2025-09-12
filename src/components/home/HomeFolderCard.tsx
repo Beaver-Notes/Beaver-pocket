@@ -156,7 +156,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
     if (!trimmedName) {
       setNewName(folder.name);
     } else if (trimmedName !== folder.name) {
-      folderStore.updateFolder(folder.id, { name: trimmedName });
+      folderStore.update(folder.id, { name: trimmedName });
     }
     setIsRenaming(false);
   };
@@ -333,7 +333,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
         {!isRenaming ? (
           <Link
             to={`/folder/${folder.id}`}
-            className="flex-1 bg-transparent focus:outline-none font-medium"
+            className="flex-1 bg-transparent focus:outline-none font-medium truncate"
           >
             {folder.name}
           </Link>

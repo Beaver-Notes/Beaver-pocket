@@ -375,6 +375,7 @@ const DropboxSync: React.FC<DropboxProps> = ({ syncStatus, disableClass }) => {
                     value={authorizationCode}
                     onChange={(e) => setAuthorizationCode(e.target.value)}
                     aria-label={translations.dropbox.placeholder}
+                    autoCapitalize="none"
                   />
                   <button
                     className="bg-neutral-200 dark:bg-[#2D2C2C] dark:text-[color:var(--selected-dark-text)] bg-opacity-40 w-full text-black p-3 text-xl font-bold rounded-xl"

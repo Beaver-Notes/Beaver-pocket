@@ -466,12 +466,14 @@ const FolderPage: React.FC = () => {
                 {index < folderPath.length - 1 ? (
                   <button
                     onClick={() => navigate(`/folder/${pathFolder.id}`)}
-                    className="hover:text-primary transition-colors"
+                    className="hover:text-primary transition-colors truncate"
                   >
                     {pathFolder.name}
                   </button>
                 ) : (
-                  <span className="font-medium">{pathFolder.name}</span>
+                  <span className="font-medium truncate truncate">
+                    {pathFolder.name}
+                  </span>
                 )}
               </li>
             </React.Fragment>
@@ -495,7 +497,7 @@ const FolderPage: React.FC = () => {
               style={{ color: currentFolder.color || "#6B7280" }}
             />
           )}
-          <h1 className="text-2xl md:text-3xl font-bold break-words">
+          <h1 className="text-2xl md:text-3xl font-bold break-words truncate">
             {currentFolder.name}
           </h1>
         </div>

@@ -44,6 +44,16 @@ export function truncateText(str, limit) {
   return truncated + (str.length > limit ? "..." : "");
 }
 
+export function parseItemId(itemKey) {
+  if (itemKey.startsWith("note-")) {
+    return { type: "note", id: itemKey.replace(/^note-/, "") };
+  }
+  if (itemKey.startsWith("folder-")) {
+    return { type: "folder", id: itemKey.replace(/^folder-/, "") };
+  }
+  return { type: null, id: null };
+}
+
 export function extractNoteText(content) {
   let text = "";
 

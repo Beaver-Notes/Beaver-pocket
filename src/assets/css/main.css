@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+.draggable-item,
+.note-card,
+.folder-card {
+  user-select: none; /* prevent text selection */
+  -webkit-user-select: none; /* iOS Safari */
+  -webkit-touch-callout: none; /* disable long-press menu */
+  touch-action: none; /* disable default scrolling/gesture conflicts */
+}
+
 body {
   position: relative;
   @apply bg-white dark:bg-neutral-800 dark:text-[color:var(--selected-dark-text)];

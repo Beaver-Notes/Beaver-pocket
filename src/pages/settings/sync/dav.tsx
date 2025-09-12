@@ -237,6 +237,7 @@ const Webdav: React.FC<WebdavProps> = ({ syncStatus, disableClass }) => {
               placeholder="https://server.example"
               onChange={(e) => setBaseUrl(e.target.value)}
               aria-label={translations.accessibility.webdavUrl}
+              autoCapitalize="none"
             />
 
             <input
@@ -246,6 +247,7 @@ const Webdav: React.FC<WebdavProps> = ({ syncStatus, disableClass }) => {
               placeholder={translations.webdav.username}
               onChange={(e) => setUsername(e.target.value)}
               aria-label={translations.webdav.username}
+              autoCapitalize="none"
             />
 
             <div className="relative">
@@ -256,6 +258,7 @@ const Webdav: React.FC<WebdavProps> = ({ syncStatus, disableClass }) => {
                 placeholder={translations.webdav.password}
                 onChange={(e) => setPassword(e.target.value)}
                 aria-label={translations.webdav.password}
+                autoCapitalize="none"
               />
               <button
                 onClick={toggleInputContentVisibility}

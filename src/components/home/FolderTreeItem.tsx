@@ -87,7 +87,7 @@ const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
             <Icon name="Folder5Fill" className="w-5 h-5" />
           )}
         </div>
-        <span className={`${isCurrentFolder ? "text-neutral-800" : ""} flex-1`}>
+        <span className={`${isCurrentFolder ? "text-neutral-800" : ""} flex-1 truncate`}>
           {folder.name}
         </span>
       </div>
