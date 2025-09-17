@@ -7,19 +7,6 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 0,
-      launchAutoHide: false,
-      launchFadeOutDuration: 200,
-      backgroundColor: "#ffffffff",
-      androidSplashResourceName: "splash",
-      androidScaleType: "CENTER_CROP",
-      showSpinner: false,
-      androidSpinnerStyle: "large",
-      iosSpinnerStyle: "small",
-      spinnerColor: "#999999",
-      splashFullScreen: true,
-      splashImmersive: true,
-      layoutName: "launch_screen",
-      useDialog: false,
     },
     GoogleAuth: {
       clientId: process.env.VITE_ANDROID_GOOGLE_CLIENT_ID, // Web app client ID (browser use)
@@ -33,14 +20,14 @@ const config: CapacitorConfig = {
       ],
       forceCodeForRefreshToken: true,
     },
-    EdgeToEdge: {
-      backgroundColor: "#00000000",
-    },
     Keyboard: {
       resize: 'native',
     },
     CapacitorHttp: {
       enabled: true,
+    },
+    EdgeToEdge: {
+      backgroundColor: "#00000000",
     },
   },
   server: {
