@@ -8,6 +8,7 @@ import { useFolderStore } from "@/store/folder";
 import { IconName } from "@/lib/remixicon-react";
 import { Link } from "react-router-dom";
 import FolderTree from "./FolderTree";
+import emitter from "tiny-emitter/instance";
 
 interface Emoji {
   char: string;
@@ -86,18 +87,21 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
     },
   ];
 
-  function deleteFolder() {
-    const isConfirmed = window.confirm(
-      "Are you sure you want to delete this folder and its contents?"
-    );
-
-    if (isConfirmed) {
-      try {
-        folderStore.delete(folder.id, { deleteContents: true });
-      } catch (error) {
-        alert(error);
-      }
-    }
+  async function deleteFolder(folder: { id: string }) {
+    emitter.emit("show-dialog", "", {
+      title: "Delete Folder",
+      body: "Are you sure you want to delete this folder and its contents?",
+      okText: "Delete",
+      okVariant: "danger",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          await folderStore.delete(folder.id, { deleteContents: true });
+        } catch (error) {
+          console.error(error);
+        }
+      },
+    });
   }
 
   useEffect(() => {
@@ -386,7 +390,9 @@ const FolderCard: React.FC<FolderCardProps> = ({ folder }) => {
         <button
           type="button"
           className="hover:text-red-500 dark:hover:text-red-400 "
-          onClick={deleteFolder}
+          onClick={() => {
+            deleteFolder(folder);
+          }}
         >
           <Icon name="DeleteBinLine" />
         </button>

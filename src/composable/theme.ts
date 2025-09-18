@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Preferences } from "@capacitor/preferences";
+import { Capacitor } from "@capacitor/core";
+import { EdgeToEdge } from "@capawesome/capacitor-android-edge-to-edge-support";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 export function useTheme() {
   const [currentTheme, setCurrentTheme] = useState<"light" | "dark" | "system">("system");
@@ -31,8 +34,8 @@ export function useTheme() {
         isSystem && window.matchMedia("(prefers-color-scheme: dark)").matches
           ? "dark"
           : !isSystem && name === "dark"
-            ? "dark"
-            : "light";
+          ? "dark"
+          : "light";
 
       applyThemeClass(resolvedTheme);
 
@@ -42,7 +45,8 @@ export function useTheme() {
         const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
         mediaQueryListener.current = (e) => {
           if (currentTheme === "system") {
-            applyThemeClass(e.matches ? "dark" : "light");
+            const newTheme = e.matches ? "dark" : "light";
+            applyThemeClass(newTheme);
           }
         };
         mediaQuery.addEventListener("change", mediaQueryListener.current);
@@ -56,6 +60,23 @@ export function useTheme() {
     const savedTheme = (value as "light" | "dark" | "system") || "system";
     setTheme(savedTheme, savedTheme === "system");
   }, [setTheme]);
+
+  useEffect(() => {
+    if (Capacitor.getPlatform() === "android") {
+      (async () => {
+        try {
+          await EdgeToEdge.setBackgroundColor({
+            color: isDark() ? "#262626" : "#ffffff",
+          });
+          await StatusBar.setStyle({
+            style: isDark() ? Style.Dark : Style.Light,
+          });
+        } catch (err) {
+          console.warn("Failed to set system UI theme:", err);
+        }
+      })();
+    }
+  }, [currentTheme, isDark]);
 
   useEffect(() => {
     loadTheme();

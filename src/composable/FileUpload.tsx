@@ -86,8 +86,13 @@ const FileUploadComponent: React.FC<FileUploadProps> = ({
     }
   };
 
+  const preventFocusLoss = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
-    <div>
+    <div onMouseDown={preventFocusLoss} onTouchStart={preventFocusLoss}>
       {/* Conditionally render content based on `menu` value */}
       {menu ? (
         <div

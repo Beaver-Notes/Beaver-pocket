@@ -90,15 +90,22 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   }
 
   const handleDeleteNote = async (note: Note) => {
-    const isConfirmed = window.confirm(translations.card.confirmDelete);
+    const translations = await useTranslation();
 
-    if (isConfirmed) {
-      try {
-        await noteStore.delete(note.id);
-      } catch (error) {
-        alert(error);
-      }
-    }
+    emitter.emit("show-dialog", "", {
+      title: translations.card.confirmDeleteTitle ?? "Confirm Delete",
+      body: translations.card.confirmDelete,
+      okText: translations.dialog?.ok ?? "Delete",
+      okVariant: "danger",
+      cancelText: translations.dialog?.cancel ?? "Cancel",
+      onConfirm: async () => {
+        try {
+          await noteStore.delete(note.id);
+        } catch (error) {
+          console.error(error);
+        }
+      },
+    });
   };
 
   const handleClickNote = async (note: Note) => {

@@ -147,7 +147,9 @@ export const UiModal: React.FC<UiModalProps> = ({
               }}
             >
               <div className="flex items-center justify-between">
-                <span className="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">{header}</span>
+                <span className="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                  {header}
+                </span>
                 {!persist && (
                   <button
                     onClick={closeModal}

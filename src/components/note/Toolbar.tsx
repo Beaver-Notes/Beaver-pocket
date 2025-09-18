@@ -325,14 +325,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
       );
     };
 
-    // Run once initially
     updateColors();
 
-    // Subscribe to editor updates
     editor.on("transaction", updateColors);
     editor.on("selectionUpdate", updateColors);
 
-    // Cleanup on unmount
     return () => {
       editor.off("transaction", updateColors);
       editor.off("selectionUpdate", updateColors);
@@ -341,15 +338,34 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   return (
     <div
-      className={`print:hidden fixed z-20 dark:text-[color:var(--selected-dark-text)] px-2 transition overflow-x-auto no-scrollbar flex justify-start items-center
-    ${focusMode ? "opacity-0 hover:opacity-100" : ""}
-    ${
-      isKeyboardVisible
-        ? "rounded-full sm:rounded-none mx-2 mb-2 sm:mx-auto sm:mb-auto pb-2 pt-2 sm:pt-6 sm:pb-0 bg-neutral-50 sm:bg-white dark:bg-neutral-750 sm:dark:bg-neutral-800"
-        : "pb-6 pt-4 sm:pt-6 sm:pb-0 bg-white dark:bg-neutral-800"
-    } left-0 right-0 bottom-0 sm:bottom-auto`}
+      className={`
+      print:hidden fixed z-20 left-0 right-0 bottom-0
+      flex items-center justify-start overflow-x-auto no-scrollbar scroll-smooth
+      px-2 transition
+      dark:text-[color:var(--selected-dark-text)]
+      ${focusMode ? "opacity-0 hover:opacity-100" : ""}
+      ${
+        isKeyboardVisible
+          ? `
+  mx-2 mb-2 pb-2 pt-2 rounded-full shadow-md shadow-xl border
+  sm:mx-auto sm:mb-auto sm:rounded-none sm:shadow-none sm:pb-0 sm:pt-6 
+  sm:border-0 sm:bg-opacity-100 sm:backdrop-blur-none
+  bg-neutral-50 sm:bg-white dark:bg-neutral-750 sm:dark:bg-neutral-800
+`
+          : `
+            pb-6 pt-4 sm:pb-0 sm:pt-6
+            bg-white dark:bg-neutral-800
+          `
+      }
+      sm:bottom-auto
+    `}
     >
-      <div className="flex items-center justify-start sm:border-t-0 sm:border-b sm:dark:border-b-neutral-600 whitespace-nowrap w-max">
+      <div
+        className="
+        flex items-center justify-start whitespace-nowrap w-max
+        sm:border-b sm:dark:border-b-neutral-600 sm:border-t-0
+      "
+      >
         {/* Back button */}
         <div className="hidden sm:flex items-center">
           <Link

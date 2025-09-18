@@ -11,7 +11,7 @@ import SearchBar from "@/components/home/Search";
 import { useTranslation } from "@/utils/translations";
 import { useNoteStore } from "@/store/note";
 import { useFolderStore } from "@/store/folder";
-import NoteCard from "@/components/home/NoteCard";
+import NoteCard from "@/components/home/HomeNoteCard";
 import Icon from "@/components/ui/Icon";
 import FolderCard from "@/components/home/HomeFolderCard";
 import folderIcon from "../../../public/imgs/folder.png";

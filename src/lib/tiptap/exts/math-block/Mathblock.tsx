@@ -17,67 +17,50 @@ interface MathBlockProps extends NodeViewWrapperProps {
 }
 
 const MathBlock: React.FC<MathBlockProps> = (props) => {
-  const contentRef = useRef<HTMLParagraphElement>(null);
-  const [useKatexMacros] = useState(false);
-  const [showSecondTextarea, setShowSecondTextarea] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [startY, setStartY] = useState(0);
+  const [showSecondTextarea, setShowSecondTextarea] = useState(false);
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    editor: {},
+    accessibility: {},
+  });
   const dialogPanelRef = useRef<HTMLDivElement>(null);
 
-  // Render content whenever content or macros change
-  useEffect(() => {
-    renderContent();
-  }, [props.node.attrs.content, props.node.attrs.macros]);
-
+  // Render KaTeX
   const renderContent = () => {
     let macros = {};
-
     try {
       macros = JSON.parse(props.node.attrs.macros || "{}");
-    } catch (error) {
-      console.error("Error parsing macros:", error);
+    } catch (e) {
+      console.error("Error parsing macros:", e);
     }
 
     const mathContent = props.node.attrs.content || "Empty";
+    const processedContent = `\\begin{aligned}${mathContent.replace(
+      /\\\\/g,
+      "\\\\"
+    )}\\end{aligned}`;
 
-    // Automatically wrap in aligned environment for line breaks
-    const processedContent = `
-      \\begin{aligned}
-      ${mathContent.replace(/\\\\/g, "\\\\")}
-      \\end{aligned}
-    `;
-
-    const mathML = katex.renderToString(processedContent, {
+    return katex.renderToString(processedContent, {
       macros,
       displayMode: true,
       throwOnError: false,
       output: "mathml",
     });
-
-    if (contentRef.current) {
-      contentRef.current.innerHTML = mathML;
-    }
   };
 
-  const updateContent = (
-    event: React.ChangeEvent<HTMLTextAreaElement>,
-    key: string
-  ) => {
-    props.updateAttributes({ [key]: event.target.value });
-  };
-
-  const handleContentClick = () => {
-    setShowModal(true);
-  };
-
-  const toggleSecondTextarea = () => {
-    setShowSecondTextarea(!showSecondTextarea);
-  };
-
-  const closeModal = useCallback(() => {
-    setShowModal(false);
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) setTranslations(trans);
+    };
+    fetchTranslations();
   }, []);
+
+  // Modal handlers
+  const handleContentClick = () => setShowModal(true);
+  const closeModal = useCallback(() => setShowModal(false), []);
 
   const handleTouchStart = useCallback(
     (event: React.TouchEvent<HTMLDivElement>) => {
@@ -90,13 +73,9 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
   const handleTouchMove = useCallback(
     (event: React.TouchEvent<HTMLDivElement>) => {
       if (!dragging) return;
-      const currentY = event.touches[0].clientY;
-      const delta = currentY - startY;
-
-      // Limit dragging to positive delta (downwards)
-      if (delta > 0) {
+      const delta = event.touches[0].clientY - startY;
+      if (delta > 0)
         dialogPanelRef.current!.style.transform = `translateY(${delta}px)`;
-      }
     },
     [startY, dragging]
   );
@@ -104,54 +83,43 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
   const handleTouchEnd = useCallback(
     (event: React.TouchEvent<HTMLDivElement>) => {
       if (!dragging) return;
-      const currentY = event.changedTouches[0].clientY;
-      const delta = currentY - startY;
+      const delta = event.changedTouches[0].clientY - startY;
 
-      if (delta > 200) {
-        // User has dragged down enough to close the modal
-        closeModal();
-      } else {
-        // Animate back to original position
+      if (delta > 200) closeModal();
+      else {
         dialogPanelRef.current!.style.transition = "transform 0.3s ease";
         dialogPanelRef.current!.style.transform = "translateY(0)";
       }
 
-      // Reset states
       setDragging(false);
       setStartY(0);
     },
     [startY, dragging, closeModal]
   );
 
-  const [translations, setTranslations] = useState<Record<string, any>>({
-    editor: {},
-    accessibility: {},
-  });
+  const updateContent = (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+    key: string
+  ) => {
+    props.updateAttributes({ [key]: event.target.value });
+  };
 
-  useEffect(() => {
-    const fetchTranslations = async () => {
-      const trans = await useTranslation();
-      if (trans) {
-        setTranslations(trans);
-      }
-    };
-    fetchTranslations();
-  }, []);
+  const toggleSecondTextarea = () => setShowSecondTextarea(!showSecondTextarea);
 
   return (
     <NodeViewWrapper className="math-block-node-view">
       <div
         onClick={handleContentClick}
-        role="button"
-        aria-label={translations.accessibility.editMath}
+        className="overflow-x-auto max-w-full p-2 rounded-lg bg-neutral-50 dark:bg-neutral-900 cursor-text min-h-[2em]"
       >
         <p
-          ref={contentRef}
-          contentEditable={useKatexMacros}
-          suppressContentEditableWarning
-          className="overflow-x-auto whitespace-pre-wrap break-words text-wrap max-w-full katex-block"
+          className="select-none"
+          dangerouslySetInnerHTML={{ __html: renderContent() }}
+          aria-label={translations.accessibility.editMath}
         />
       </div>
+
+      {/* Modal */}
       <Transition show={showModal} as={React.Fragment}>
         <Dialog
           open={showModal}
@@ -194,27 +162,22 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                     <button
                       title="Toggle KaTeX Macros"
                       aria-label={
-                        useKatexMacros
-                          ? `${translations.accessibility.disableKatex}`
-                          : `${translations.accessibility.enableKatex}`
+                        showSecondTextarea
+                          ? translations.accessibility.disableKatex
+                          : translations.accessibility.enableKatex
                       }
                       className={`cursor-pointer ${
-                        useKatexMacros ? "text-primary" : ""
-                      } ${
                         showSecondTextarea
                           ? "text-primary"
                           : "text-neutral-800 dark:text-white"
                       }`}
                       onClick={toggleSecondTextarea}
                     >
-                      <Settings4LineIcon
-                        className="active:text-secondary"
-                        aria-hidden="true"
-                      />
+                      <Settings4LineIcon aria-hidden="true" />
                     </button>
                     <button
                       onClick={closeModal}
-                      className="text-neutral-800 dark:text-[color:var(--selected-dark-text)]  bg-neutral-200 rounded-full hover:text-gray-700 focus:outline-none"
+                      className="text-neutral-800 dark:text-[color:var(--selected-dark-text)] bg-neutral-200 rounded-full hover:text-gray-700 focus:outline-none"
                       aria-label={translations.accessibility.close}
                     >
                       <Icon name="CloseLine" />
@@ -222,10 +185,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
                   </div>
                 </div>
 
-                <div
-                  className="p-4 h-[80vh] flex flex-col"
-                  aria-labelledby="textarea-label"
-                >
+                <div className="p-4 h-[80vh] flex flex-col">
                   <div className="flex-grow">
                     <textarea
                       id="content-textarea"

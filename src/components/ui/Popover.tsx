@@ -51,7 +51,6 @@ const Popover: React.FC<PopoverProps> = ({
 
   const preventFocusLoss = (e: React.SyntheticEvent) => {
     if (!preventBlur) return;
-    // Prevent the default focus-changing behavior so the editor keeps focus
     e.preventDefault();
     e.stopPropagation();
   };
@@ -60,7 +59,7 @@ const Popover: React.FC<PopoverProps> = ({
     <Tippy
       content={
         <div
-          className={`i-popover__content bg-white dark:bg-neutral-800 rounded-lg shadow-xl border dark:border-neutral-700 ${padding}`}
+          className={`i-popover__content bg-white dark:bg-neutral-800 rounded-lg shadow-xl border ${padding}`}
           onMouseDown={preventFocusLoss}
           onTouchStart={preventFocusLoss}
         >
