@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { SafeArea } from "@capacitor-community/safe-area";
-import { EdgeToEdge } from "@capawesome/capacitor-android-edge-to-edge-support";
 import { useNavigate, useLocation } from "react-router-dom";
 import Router from "./router";
 import BottomNavBar from "./components/app/BottomNavBar";
@@ -29,6 +28,8 @@ import { Preferences } from "@capacitor/preferences";
 import { useTheme } from "./composable/theme";
 import { SendIntent } from "send-intent";
 import { ImportBEA } from "./utils/share/BEA";
+import { EdgeToEdge } from "@capawesome/capacitor-android-edge-to-edge-support";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 function normalizeFilePath(encodedUrl: any) {
   try {
@@ -122,7 +123,15 @@ const App: React.FC = () => {
     const criticalInit = async () => {
       try {
         if (Capacitor.getPlatform() === "android") {
-          await EdgeToEdge.enable();
+          const setBackgroundColor = async () => {
+            await EdgeToEdge.setBackgroundColor({
+              color: theme.currentTheme === "light" ? "#ffffff" : "#262626",
+            });
+            await StatusBar.setStyle({
+              style: theme.currentTheme === "light" ? Style.Light : Style.Dark,
+            });
+          };
+          setBackgroundColor();
         } else if (Capacitor.getPlatform() === "ios") {
           await SafeArea.enable({
             config: {

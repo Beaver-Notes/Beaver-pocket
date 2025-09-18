@@ -29,6 +29,7 @@
     "@capacitor/preferences": "^7.0.2",
     "@capacitor/share": "^7.0.0",
     "@capacitor/splash-screen": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.3",
     "@capawesome/capacitor-android-edge-to-edge-support": "^7.2.3",
     "@capgo/capacitor-native-biometric": "^7.1.7",
     "@daniele-rolli/capacitor-google-auth": "^3.4.0-rc.6",

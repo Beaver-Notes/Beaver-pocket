@@ -330,11 +330,10 @@ function EditorComponent({ note, translations }: Props) {
   const container = noteEditor.current;
   if (!container) return;
 
-  const handleTouchStart = (e: TouchEvent) => {
+  const handleTouchStart = () => {
     const el = container.querySelector<HTMLElement>('*[tabindex="0"]');
     if (el) {
       el.focus({ preventScroll: true });
-      e.preventDefault();
     }
   };
 

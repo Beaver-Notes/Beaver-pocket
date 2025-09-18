@@ -34,6 +34,8 @@ PODS:
     - Capacitor
   - CapacitorSplashScreen (7.0.1):
     - Capacitor
+  - CapacitorStatusBar (7.0.3):
+    - Capacitor
   - CapacitorVoiceRecorder (5.0.0):
     - Capacitor
   - CapacitorWebviewPrint (6.0.1):
@@ -85,6 +87,7 @@ DEPENDENCIES:
   - CapacitorSecureStoragePlugin (from `../../node_modules/capacitor-secure-storage-plugin`)
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
+  - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - CapacitorVoiceRecorder (from `../../node_modules/capacitor-voice-recorder`)
   - CapacitorWebviewPrint (from `../../node_modules/capacitor-webview-print`)
   - CapaZip (from `../../node_modules/capa-zip`)
@@ -135,6 +138,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/share"
   CapacitorSplashScreen:
     :path: "../../node_modules/@capacitor/splash-screen"
+  CapacitorStatusBar:
+    :path: "../../node_modules/@capacitor/status-bar"
   CapacitorVoiceRecorder:
     :path: "../../node_modules/capacitor-voice-recorder"
   CapacitorWebviewPrint:
@@ -170,6 +175,7 @@ SPEC CHECKSUMS:
   CapacitorSecureStoragePlugin: 545b51d782d35e61a39231ecf99a966b060a2cbb
   CapacitorShare: e573823f511f260f598d0423c33b1e3d7bbe5fd1
   CapacitorSplashScreen: 1d67815a422a9b61539c94f283c08ed56667c0fc
+  CapacitorStatusBar: 0659ddc7b1713764a05831463d215b177a15d054
   CapacitorVoiceRecorder: d07f0794998ff8c9a6ca3debd70070b286f70cb1
   CapacitorWebviewPrint: f17e654a2ff99367a429c9e01b62ddbdcf62c45d
   CapaZip: a379d937c2db9a882d0be29e63dcb0090e6cd6ae
@@ -187,6 +193,6 @@ SPEC CHECKSUMS:
   SSZipArchive: fe6a26b2a54d5a0890f2567b5cc6de5caa600aef
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
 
-PODFILE CHECKSUM: a242e4351ce87e76a0f8b1b677c3663a6aad4584
+PODFILE CHECKSUM: 2cd9f8b37dd5f0930a2c8d80212d91c1f9789a88
 
 COCOAPODS: 1.16.2

@@ -1,0 +1,4 @@
+<!-- res/values/colors.xml (light) -->
+<resources>
+  <color name="splash_background">#FFFFFF</color>
+</resources>
