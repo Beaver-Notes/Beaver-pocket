@@ -35,6 +35,20 @@ interface HomeProps {
   showArchived?: boolean;
 }
 
+interface DraggableItemProps {
+  item: Note | Folder;
+  type: string;
+  onUpdate?: (item: any) => void;
+  onNoteDrop?: (noteId: string, folderId: string) => void;
+  onFolderDrop?: (draggedId: string, targetId: string) => void;
+  folderStore?: any;
+  selectedItems: Set<string>;
+  isSelecting: boolean;
+  setIsSelecting: (v: boolean) => void;
+  toggleItemSelection: (key: string) => void;
+  navigate: (path: string) => void;
+}
+
 const CustomDragLayer: React.FC<{
   onUpdate?: (item: any) => void;
 }> = ({ onUpdate }) => {
@@ -46,13 +60,10 @@ const CustomDragLayer: React.FC<{
       isDragging: monitor.isDragging(),
     })
   );
-
   if (!isDragging || !currentOffset) {
     return null;
   }
-
   const transform = `translate3d(${currentOffset.x}px, ${currentOffset.y}px, 0)`;
-
   return (
     <div
       style={{
@@ -85,26 +96,20 @@ const useDragEffects = (isDragging: boolean) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   const autoScroll = useCallback((clientY: number) => {
     const threshold = 100;
     const viewportHeight = window.innerHeight;
-
     if (scrollRef.current) clearInterval(scrollRef.current);
-
     if (clientY < threshold || clientY > viewportHeight - threshold) {
       const direction = clientY < threshold ? -1 : 1;
       const speed = Math.max(
         1,
         Math.abs(clientY - (clientY < threshold ? 0 : viewportHeight)) / 20
       );
-
       setIsScrolling(true);
-
       scrollRef.current = setInterval(() => {
         window.scrollBy(0, direction * speed * 10);
       }, 16);
-
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       scrollTimeoutRef.current = setTimeout(() => {
         setIsScrolling(false);
@@ -113,7 +118,6 @@ const useDragEffects = (isDragging: boolean) => {
       setIsScrolling(false);
     }
   }, []);
-
   const stopScroll = useCallback(() => {
     if (scrollRef.current) {
       clearInterval(scrollRef.current);
@@ -125,19 +129,15 @@ const useDragEffects = (isDragging: boolean) => {
     }
     setIsScrolling(false);
   }, []);
-
   useEffect(() => {
     if (!isDragging) return;
-
     setIsAnimating(true);
     const handleMove = (e: MouseEvent | TouchEvent) => {
       const clientY = "touches" in e ? e.touches[0]?.clientY : e.clientY;
       if (clientY) autoScroll(clientY);
     };
-
     document.addEventListener("mousemove", handleMove);
     document.addEventListener("touchmove", handleMove);
-
     return () => {
       document.removeEventListener("mousemove", handleMove);
       document.removeEventListener("touchmove", handleMove);
@@ -145,22 +145,10 @@ const useDragEffects = (isDragging: boolean) => {
       setTimeout(() => setIsAnimating(false), 200);
     };
   }, [isDragging, autoScroll, stopScroll]);
-
   return { isAnimating, stopScroll, isScrolling };
 };
 
-const DraggableItem: React.FC<{
-  item: Note | Folder;
-  type: string;
-  onUpdate?: (item: any) => void;
-  onNoteDrop?: (noteId: string, folderId: string) => void;
-  onFolderDrop?: (draggedId: string, targetId: string) => void;
-  folderStore?: any;
-  selectedItems: Set<string>;
-  isSelecting: boolean;
-  setIsSelecting: (v: boolean) => void;
-  toggleItemSelection: (key: string) => void;
-}> = ({
+const DraggableItem: React.FC<DraggableItemProps> = ({
   item,
   type,
   onUpdate,
@@ -169,10 +157,10 @@ const DraggableItem: React.FC<{
   folderStore,
   setIsSelecting,
   toggleItemSelection,
+  navigate,
 }) => {
   const dropTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [preventDrop, setPreventDrop] = useState(false);
-
   // Touch gesture detection
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(
     null
@@ -180,6 +168,7 @@ const DraggableItem: React.FC<{
   const isDragIntentRef = useRef(false);
   const [shouldAllowDrag, setShouldAllowDrag] = useState(true);
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [isDraggingState, setIsDraggingState] = useState(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
@@ -191,12 +180,10 @@ const DraggableItem: React.FC<{
     };
     isDragIntentRef.current = false;
     setShouldAllowDrag(true);
-
     longPressTimeout.current = setTimeout(async () => {
       setIsSelecting(true);
       toggleItemSelection(`${type}-${item.id}`);
       setShouldAllowDrag(false);
-
       try {
         await Haptics.impact({ style: ImpactStyle.Light });
       } catch (error) {
@@ -207,17 +194,14 @@ const DraggableItem: React.FC<{
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!touchStartRef.current) return;
-
     const touch = e.touches[0];
     const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
     const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
     const deltaTime = Date.now() - touchStartRef.current.time;
-
     if (deltaX > 10 || deltaY > 10) {
       if (longPressTimeout.current) clearTimeout(longPressTimeout.current);
       longPressTimeout.current = null;
     }
-
     if (deltaX > deltaY || deltaTime > 300) {
       isDragIntentRef.current = true;
       setShouldAllowDrag(true);
@@ -229,9 +213,11 @@ const DraggableItem: React.FC<{
       clearTimeout(longPressTimeout.current);
       longPressTimeout.current = null;
     }
-
+    // Check if it was a click (not a drag)
+    if (!isDragIntentRef.current) {
+      handleClick();
+    }
     touchStartRef.current = null;
-
     setTimeout(() => {
       setShouldAllowDrag(true);
       isDragIntentRef.current = false;
@@ -249,6 +235,7 @@ const DraggableItem: React.FC<{
     },
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     end: async (_draggedItem, monitor) => {
+      setIsDraggingState(false);
       if (monitor.didDrop()) {
         try {
           await Haptics.impact({ style: ImpactStyle.Medium });
@@ -262,13 +249,21 @@ const DraggableItem: React.FC<{
     },
   });
 
+  useEffect(() => {
+    setIsDraggingState(isDragging);
+  }, [isDragging]);
+
+  const handleClick = () => {
+    if (!isDraggingState) {
+      navigate(`/${type}/${item.id}`);
+    }
+  };
+
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: [ItemTypes.NOTE, ItemTypes.FOLDER],
     drop: (dragItem: DragItem, _monitor) => {
       if (preventDrop) return;
-
       if (dropTimeoutRef.current) return;
-
       dropTimeoutRef.current = setTimeout(() => {
         if (type === ItemTypes.FOLDER) {
           if (dragItem.type === ItemTypes.NOTE) {
@@ -321,15 +316,12 @@ const DraggableItem: React.FC<{
   const dragClass = isDragging
     ? "opacity-50 transform-gpu transition-all duration-200 ease-out"
     : "";
-
   const dropClass =
     isOver && canDrop && !preventDrop ? "ring-2 ring-primary" : "";
-
   const animClass =
     isAnimating && !isDragging
       ? "transform transition-transform duration-300 ease-out"
       : "";
-
   const cursorClass = isDragging
     ? "cursor-grabbing"
     : canDrop && isOver && !preventDrop
@@ -351,6 +343,7 @@ const DraggableItem: React.FC<{
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onClick={handleClick}
     >
       <div className="h-full transition-all duration-200">
         {type === ItemTypes.NOTE ? (
@@ -391,19 +384,14 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
       const m = url.match(/beaver:\/\/note\/(.+)$/);
       if (m) navigate(`/note/${m[1]}`);
     };
-
     // Add listener and handle cleanup properly
     const appListenerPromise = App.addListener("appUrlOpen", handleAppUrlOpen);
-
     const onSpotOpen = (ev: any) =>
       ev?.detail?.id && navigate(`/note/${ev.detail.id}`);
-
     window.addEventListener("spotsearchOpen", onSpotOpen);
-
     const params = new URLSearchParams(window.location.search);
     const label = params.get("label");
     if (label) setActiveLabel(decodeURIComponent(label));
-
     return () => {
       appListenerPromise.then((listener) => listener.remove());
       window.removeEventListener("spotsearchOpen", onSpotOpen);
@@ -419,21 +407,16 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
         archived: [] as Note[],
         bookmarked: [] as Note[],
       };
-
       const queryLower = query.toLowerCase();
-
       notes.forEach((note) => {
         if (note.folderId !== null && note.folderId !== undefined) return;
-
         const text = extractNoteText(note.content).toLowerCase();
         const labels = [...note.labels].sort((a, b) => a.localeCompare(b));
-
         // Handle untitled notes
         const normalizedTitle =
           note.title && note.title.trim() !== ""
             ? note.title
             : translations?.card?.untitledNote || "Untitled";
-
         const labelMatch = !activeLabel || labels.includes(activeLabel);
         const textMatch = queryLower.startsWith("#")
           ? labels.some((l) =>
@@ -442,27 +425,24 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
           : labels.some((l) => l?.toLowerCase().includes(queryLower)) ||
             normalizedTitle.toLowerCase().includes(queryLower) ||
             text.includes(queryLower);
-
         if (textMatch && labelMatch) {
           if (note.isArchived) result.archived.push(note);
           else if (note.isBookmarked) result.bookmarked.push(note);
           else result.all.push(note);
         }
       });
-
       return result;
     },
     []
   );
+
   const filterFolders = useCallback((folders: Folder[] = [], query: string) => {
     const queryLower = query.toLowerCase();
-
     return folders.filter((folder) => {
       const normalizedName =
         folder.name && folder.name.trim() !== ""
           ? folder.name
           : translations?.card?.untitledFolder || "Untitled";
-
       return normalizedName.toLowerCase().includes(queryLower);
     });
   }, []);
@@ -470,7 +450,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   const handleNoteDrop = useCallback(
     (noteId: string, folderId: string) => {
       noteStore.update(noteId, { folderId });
-
       if ("vibrate" in navigator) navigator.vibrate([100, 50, 100]);
     },
     [noteStore]
@@ -480,7 +459,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
     async (draggedId: string, targetId: string) => {
       if (!folderStore.wouldCreateCircularReference(draggedId, targetId)) {
         folderStore.update(draggedId, { parentId: targetId });
-
         try {
           await Haptics.impact({ style: ImpactStyle.Medium });
         } catch (error) {
@@ -520,7 +498,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
         console.log("Failed to check send intent", error);
       }
     };
-
     const fetchTranslations = async () => {
       try {
         const trans = await useTranslation();
@@ -529,10 +506,8 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
         console.log("Failed to fetch translations", error);
       }
     };
-
     window.addEventListener("sendIntentReceived", handleSendIntent);
     fetchTranslations();
-
     return () =>
       window.removeEventListener("sendIntentReceived", handleSendIntent);
   }, [showArchived]);
@@ -557,7 +532,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   const filteredFolders = query
     ? filterFolders(rootFolders, query)
     : rootFolders;
-
   const sortedFolders = sortArray({
     data: filteredFolders,
     key: sortBy === "alphabetical" ? "name" : sortBy, // Fixed: folders use 'name' property
@@ -600,6 +574,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
               isSelecting={isSelecting}
               setIsSelecting={setIsSelecting}
               toggleItemSelection={toggleItemSelection}
+              navigate={navigate}
             />
           ))}
         </div>
@@ -625,7 +600,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   return (
     <DndProvider backend={isTouchDevice() ? TouchBackend : HTML5Backend}>
       <CustomDragLayer />
-
       {/* Selection Toolbar */}
       {isSelecting && selectedItems.size > 0 && (
         <div className="fixed top-0 left-0 right-0 bg-blue-500 text-white p-4 z-50 flex items-center justify-between">
@@ -660,7 +634,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
           </div>
         </div>
       )}
-
       <div
         className={`overflow-x-hidden overflow-y-auto mb-12 ${
           isSelecting ? "pt-16" : ""
@@ -678,7 +651,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
             activeLabel={activeLabel}
             setSortOrder={setSortOrder}
           />
-
           <div className="py-2 mx-4 mb-10 rounded-md items-center justify-center h-full">
             {showArchived ? (
               <>

@@ -3,42 +3,46 @@ import Component from "./Paper.jsx";
 
 export default Node.create({
   name: "paper",
+
   group: "block",
   atom: true,
-  selectable: true,
-  draggable: true,
-  addAttributes() {
+
+  addOptions() {
     return {
-      lines: {
-        default: [],
-      },
-      height: {
-        default: 800,
-      },
-      paperType: {
-        default: "plain",
-      },
+      ...this.parent?.(),
+      selectable: true,
+      draggable: false,
+      allowGapCursor: true,
     };
   },
-  parseHTML() {
-    return [
-      {
-        tag: 'div[data-type="paper"]',
-      },
-    ];
+
+  addAttributes() {
+    return {
+      lines: { default: [] },
+      height: { default: 400 },
+      paperType: { default: "plain" },
+    };
   },
+
+  parseHTML() {
+    return [{ tag: 'div[data-type="paper"]' }];
+  },
+
   renderHTML({ HTMLAttributes }) {
     return [
       "div",
       mergeAttributes(HTMLAttributes, {
         "data-type": "paper",
+        "data-lines": JSON.stringify(HTMLAttributes.lines),
         style: `height: ${HTMLAttributes.height}px;`,
       }),
     ];
   },
+
   addNodeView() {
     return ReactNodeViewRenderer(Component);
   },
+
   addCommands() {
     return {
       insertPaper:

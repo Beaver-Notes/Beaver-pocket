@@ -340,7 +340,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     <div
       className={`
       print:hidden fixed z-20 left-0 right-0 bottom-0
-      flex items-center justify-start overflow-x-auto no-scrollbar scroll-smooth
+      flex items-center justify-start sm:justify-center overflow-x-auto no-scrollbar scroll-smooth
       px-2 transition
       dark:text-[color:var(--selected-dark-text)]
       ${focusMode ? "opacity-0 hover:opacity-100" : ""}
@@ -348,12 +348,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
         isKeyboardVisible
           ? `
   mx-2 mb-2 pb-2 pt-2 rounded-full shadow-md shadow-xl border
-  sm:mx-auto sm:mb-auto sm:rounded-none sm:shadow-none sm:pb-0 sm:pt-6 
+  sm:mx-auto sm:mb-auto sm:rounded-none sm:shadow-none sm:pb-0 sm:pt-10
   sm:border-0 sm:bg-opacity-100 sm:backdrop-blur-none
   bg-neutral-50 sm:bg-white dark:bg-neutral-750 sm:dark:bg-neutral-800
 `
           : `
-            pb-6 pt-4 sm:pb-0 sm:pt-6
+            pb-6 pt-4 sm:pb-0 sm:pt-10
             bg-white dark:bg-neutral-800
           `
       }
