@@ -23,7 +23,6 @@ import useiCloudSync from "./utils/iCloud/iCloudSync";
 import useOneDriveSync from "./utils/Onedrive/oneDriveSync";
 import useWebDAVSync from "./utils/Webdav/webDavSync";
 import useDriveSync from "./utils/Google Drive/GoogleDriveSync";
-import { useNoteStore } from "./store/note";
 import { Preferences } from "@capacitor/preferences";
 import { useTheme } from "./composable/theme";
 import { SendIntent } from "send-intent";
@@ -52,21 +51,31 @@ const App: React.FC = () => {
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "error">(
     "idle"
   );
-  const noteStore = useNoteStore.getState();
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [notesLoaded, setNotesLoaded] = useState(false);
   const { syncDropbox } = useDropboxSync();
   const { synciCloud } = useiCloudSync();
   const { syncOneDrive } = useOneDriveSync();
   const { syncWebDAV } = useWebDAVSync();
   const { syncDrive } = useDriveSync();
 
+  // Load notes in the background
+  useEffect(() => {
+    const loadNotesEarly = async () => {
+      try {
+        await store.retrieve();
+      } catch (error) {
+        console.error("Error loading notes early:", error);
+      }
+    };
+    loadNotesEarly();
+  }, [store]);
+
+  // Handle send intent and spot search
   useEffect(() => {
     const onSendIntent = () => {
       SendIntent.checkSendIntentReceived().then(async (result) => {
         if (!result?.url) return;
-
         const normalizedUrl = normalizeFilePath(result.url);
         try {
           const content = await Filesystem.readFile({
@@ -82,75 +91,73 @@ const App: React.FC = () => {
         }
       });
     };
-
     const onSpotOpen = (ev: any) => {
       const id: string | undefined = ev?.id;
       if (!id) return;
       const [, noteId] = id.includes(":") ? id.split(":") : [undefined, id];
       navigate(`/note/${noteId}`);
     };
-
     window.addEventListener("sendIntentReceived", onSendIntent);
     window.addEventListener("spotsearchOpen", onSpotOpen);
-
     return () => {
       window.removeEventListener("sendIntentReceived", onSendIntent);
       window.removeEventListener("spotsearchOpen", onSpotOpen);
     };
   }, [navigate]);
 
+  // Initialize theme
   useEffect(() => {
     const initTheme = async () => {
       await theme.loadTheme();
-    };
-    initTheme();
-    const setColor = async (color: string) => {
+      const savedColor = await Preferences.get({ key: "color-scheme" });
       const root = document.documentElement;
       root.classList.forEach((cls) => {
         if (cls !== "light" && cls !== "dark") root.classList.remove(cls);
       });
-      root.classList.add(color);
-      await Preferences.set({ key: "color-scheme", value: color });
+      root.classList.add(savedColor.value || "light");
+      await Preferences.set({
+        key: "color-scheme",
+        value: savedColor.value || "light",
+      });
     };
-
-    (async () => {
-      const savedColor = await Preferences.get({ key: "color-scheme" });
-      setColor(savedColor.value || "light");
-    })();
+    initTheme();
   }, []);
 
+  // Parallelize critical initialization tasks
   useEffect(() => {
     const criticalInit = async () => {
       try {
-        if (Capacitor.getPlatform() === "android") {
-          const setBackgroundColor = async () => {
-            await EdgeToEdge.setBackgroundColor({
-              color: theme.currentTheme === "light" ? "#ffffff" : "#262626",
+        await Promise.all([
+          (async () => {
+            if (Capacitor.getPlatform() === "android") {
+              await EdgeToEdge.setBackgroundColor({
+                color: theme.currentTheme === "light" ? "#ffffff" : "#262626",
+              });
+              await StatusBar.setStyle({
+                style:
+                  theme.currentTheme === "light" ? Style.Light : Style.Dark,
+              });
+            } else if (Capacitor.getPlatform() === "ios") {
+              await SafeArea.enable({
+                config: {
+                  customColorsForSystemBars: true,
+                  statusBarColor: "#00000000",
+                  statusBarContent: "light",
+                  navigationBarColor: "#00000000",
+                  navigationBarContent: "light",
+                },
+              });
+            }
+          })(),
+          (async () => {
+            const { uri } = await Filesystem.getUri({
+              directory: FilesystemDirectory.Data,
+              path: "",
             });
-            await StatusBar.setStyle({
-              style: theme.currentTheme === "light" ? Style.Light : Style.Dark,
-            });
-          };
-          setBackgroundColor();
-        } else if (Capacitor.getPlatform() === "ios") {
-          await SafeArea.enable({
-            config: {
-              customColorsForSystemBars: true,
-              statusBarColor: "#00000000",
-              statusBarContent: "light",
-              navigationBarColor: "#00000000",
-              navigationBarContent: "light",
-            },
-          });
-        }
-
-        const { uri } = await Filesystem.getUri({
-          directory: FilesystemDirectory.Data,
-          path: "",
-        });
-        setStoreRemotePath(Capacitor.convertFileSrc(uri));
-
-        await migrateData();
+            setStoreRemotePath(Capacitor.convertFileSrc(uri));
+            await migrateData();
+          })(),
+        ]);
 
         const { value: selectedDarkText } = await Preferences.get({
           key: "selected-dark-text",
@@ -166,52 +173,29 @@ const App: React.FC = () => {
         setIsInitialized(true);
       }
     };
-    criticalInit();
+
+    const runCriticalInit = async () => {
+      await criticalInit();
+      SplashScreen.hide();
+    };
+
+    runCriticalInit();
   }, [platform]);
 
+  // Check if it's the first time the app is opened
   useEffect(() => {
-    if (!isInitialized || notesLoaded) return;
-    const loadNotesAsync = async () => {
-      try {
-        await store.retrieve();
-        setNotesLoaded(true);
-      } catch (error) {
-        console.error("Error loading notes:", error);
-        setNotesLoaded(true);
+    const checkFirstTime = async () => {
+      const { value } = await Preferences.get({ key: "isFirstTime" });
+      if (value === null || value === "true") {
+        navigate("/welcome");
+        await Preferences.set({ key: "isFirstTime", value: "false" });
       }
-    };
-    const timeoutId = setTimeout(loadNotesAsync, 50);
-    return () => clearTimeout(timeoutId);
-  }, [isInitialized, notesLoaded]);
-
-  useEffect(() => {
-    if (isInitialized && notesLoaded) {
-      const hideSplash = async () => {
-        try {
-          await SplashScreen.hide();
-        } catch (error) {
-          console.error("Error hiding splash screen:", error);
-        }
-      };
-      const timeoutId = setTimeout(hideSplash, 100);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isInitialized, notesLoaded]);
-
-  useEffect(() => {
-    const checkFirstTime = () => {
-      (async () => {
-        const { value } = await Preferences.get({ key: "isFirstTime" });
-        if (value === null || value === "true") {
-          navigate("/welcome");
-          await Preferences.set({ key: "isFirstTime", value: "false" });
-        }
-      })();
     };
     const timeoutId = setTimeout(checkFirstTime, 100);
     return () => clearTimeout(timeoutId);
   }, [navigate]);
 
+  // Handle sync
   const handleSync = async () => {
     setSyncStatus("syncing");
     try {
@@ -231,7 +215,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!isInitialized) return;
     const loadNotesFromStorage = async () => {
-      await noteStore.retrieve();
+      await store.retrieve();
     };
     document.addEventListener("reload", loadNotesFromStorage);
     document.addEventListener("sync", handleSync);
@@ -266,14 +250,9 @@ const App: React.FC = () => {
     );
   }, [location.pathname]);
 
+  // Render nothing until the WebView is ready
   if (!isInitialized) {
-    return (
-      <div className="safe-area">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primart"></div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

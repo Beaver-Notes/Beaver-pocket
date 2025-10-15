@@ -331,7 +331,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
                   {note.labels.map((label) => (
                     <button
                       key={label}
-                      className="inline-block hover:underline cursor-pointer"
+                      className="text-md inline-block hover:underline cursor-pointer p-0.5 bg-primary/10 dark:bg-primary/20 rounded-md text-sm"
                       aria-label={`${translations.accessibility.label} ${label}`}
                       onClick={() => {
                         setActiveLabel(label);

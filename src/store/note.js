@@ -7,6 +7,7 @@ import { trackChange } from "@/composable/sync";
 import { useFolderStore } from "./folder";
 import { SpotSearch } from "@daniele-rolli/capacitor-spotsearch";
 import { useAppStore } from "./app";
+import { Filesystem, FilesystemDirectory } from "@capacitor/filesystem";
 
 const storage = useStorage();
 
@@ -333,6 +334,33 @@ export const useNoteStore = create((set, get) => ({
 
     await trackChange(`notes.${id}`, null);
     await trackChange("deletedIds", deletedIds);
+
+    async function folderExists(path) {
+      try {
+        await Filesystem.readdir({
+          path,
+          directory: FilesystemDirectory.Data,
+        });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    try {
+      for (const folder of ["file-assets", "note-assets"]) {
+        const target = `${folder}/${id}`;
+        if (await folderExists(target)) {
+          await Filesystem.rmdir({
+            path: target,
+            directory: FilesystemDirectory.Data,
+            recursive: true,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Filesystem deletion error:", error);
+    }
 
     if (isIndexingEnabled) {
       await SpotSearch.deleteItems({ ids: [id] });

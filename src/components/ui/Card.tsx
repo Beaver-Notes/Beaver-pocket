@@ -14,6 +14,7 @@ const UiCard: React.FC<CardProps> = ({
   tag = "div",
   className = "",
   children,
+  style,
   ...props
 }) => {
   const Component = tag as ElementType;
@@ -26,7 +27,14 @@ const UiCard: React.FC<CardProps> = ({
     `${baseClasses} ${padding} ${hoverClasses} ${className}`.trim();
 
   return (
-    <Component className={combinedClasses} {...props}>
+    <Component
+      className={combinedClasses}
+      style={{
+        touchAction: "pan-y",
+        ...style,
+      }}
+      {...props}
+    >
       {children}
     </Component>
   );

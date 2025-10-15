@@ -13,6 +13,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
      func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
           
           (window?.rootViewController as? CAPBridgeViewController)?.bridge?.webView?.allowsBackForwardNavigationGestures = false
+          let capacitorVC = window?.rootViewController as? CAPBridgeViewController
+                 capacitorVC?.view.backgroundColor = UIColor(named: "AppBackgroundColor")
           return true
      }
      

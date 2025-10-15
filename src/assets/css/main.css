@@ -23,6 +23,7 @@ body {
   --selected-font-code: "JetBrains Mono", monospace;
   -webkit-tap-highlight-color: transparent;
   --selected-dark-text: white;
+  background-color: var(--app-background-color);
   @apply dark:text-[color:var(--selected-dark-text)];
   padding-top: var(--safe-area-inset-top);
 }
