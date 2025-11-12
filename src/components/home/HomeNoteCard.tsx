@@ -313,7 +313,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
   return (
     <div className="h-full">
       <UiCard
-        className="hover:ring-2 ring-secondary group note-card transition flex flex-col h-full"
+        className="group note-card transition flex flex-col h-full"
         padding="p-5"
       >
         <div className="flex flex-col h-full">
@@ -379,7 +379,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between pt-2 mt-auto">
+          <div className="flex items-center justify-between pb-0 mt-auto">
             <div className="flex items-center">
               {!note.isArchived && (
                 <button
@@ -456,7 +456,7 @@ const NoteCard: React.FC<BookmarkedProps> = ({
                 <Icon name="FolderTransferLine" className="w-8 h-8 mr-2" />
               </button>
               <button
-                className="text-[#52525C] py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
+                className="py-2 hover:text-red-500 dark:text-[color:var(--selected-dark-text)] w-auto"
                 aria-label="Delete note"
                 onClick={() => {
                   handleDeleteNote(note);

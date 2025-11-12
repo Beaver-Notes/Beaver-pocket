@@ -51,10 +51,16 @@ const Popover: React.FC<PopoverProps> = ({
 
   const preventFocusLoss = (e: React.SyntheticEvent) => {
     if (!preventBlur) return;
+
+    const target = e.target as HTMLElement;
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
   };
-
+  
   return (
     <Tippy
       content={

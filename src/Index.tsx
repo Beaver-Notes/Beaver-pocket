@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { DndProvider, useDrag, useDrop, useDragLayer } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
@@ -46,7 +52,7 @@ interface HomeProps {
 const CustomDragLayer: React.FC<{
   onUpdate?: (item: any) => void;
   selectedItems: Set<string>;
-}> = ({ onUpdate, selectedItems }) => {
+}> = ({ onUpdate }) => {
   const { itemType, isDragging, item, currentOffset } = useDragLayer(
     (monitor) => ({
       item: monitor.getItem(),
@@ -86,7 +92,6 @@ const CustomDragLayer: React.FC<{
             <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg">
               {draggedItems.size}
             </div>
-            <Icon name="File" className="w-16 h-16 mx-auto mb-2 text-primary" />
             <p className="font-semibold text-lg">
               {draggedItems.size} items selected
             </p>
@@ -204,7 +209,6 @@ const DraggableItem: React.FC<{
   const [{ isDragging }, drag, preview] = useDrag({
     type,
     item: () => {
-      // If dragging a selected item, include all selected items
       if (isSelected && selectedItems.size > 1) {
         return {
           type,
@@ -237,7 +241,6 @@ const DraggableItem: React.FC<{
 
       dropTimeoutRef.current = setTimeout(() => {
         if (type === ItemTypes.FOLDER) {
-          // Handle multi-item drop
           if (dragItem.selectedItems && dragItem.selectedItems.size > 1) {
             onMultiDrop?.(Array.from(dragItem.selectedItems), item.id);
           } else if (dragItem.type === ItemTypes.NOTE) {
@@ -255,9 +258,8 @@ const DraggableItem: React.FC<{
     canDrop: (dragItem: DragItem) => {
       if (preventDrop || type !== ItemTypes.FOLDER) return false;
 
-      // Check if multi-drop is valid
       if (dragItem.selectedItems && dragItem.selectedItems.size > 1) {
-        return true; // We'll validate individual items in the drop handler
+        return true;
       }
 
       return (
@@ -295,7 +297,6 @@ const DraggableItem: React.FC<{
     };
   }, []);
 
-  // Handle taps in selection mode
   const handleClick = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       if (isSelecting) {
@@ -308,12 +309,8 @@ const DraggableItem: React.FC<{
     [isSelecting, itemKey, toggleItemSelection]
   );
 
-  // Long press for selection mode - doesn't interfere with drag
-  // Long press for selection mode - doesn't interfere with drag
   useEffect(() => {
-    const element = document.querySelector(
-      `[data-item-id="${type}-${item.id}"]`
-    );
+    const element = document.querySelector(`[data-item-id="${itemKey}"]`);
     if (!element) return;
 
     let touchMoved = false;
@@ -323,17 +320,15 @@ const DraggableItem: React.FC<{
       touchMoved = false;
       longPressTriggered = false;
 
-      // Start long press timer
       if (longPressTimeout.current) {
         clearTimeout(longPressTimeout.current);
       }
 
       longPressTimeout.current = setTimeout(() => {
         if (!touchMoved) {
-          // Trigger selection mode immediately on long press
           longPressTriggered = true;
           setIsSelecting(true);
-          toggleItemSelection(`${type}-${item.id}`);
+          toggleItemSelection(itemKey);
           Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
         }
       }, 500);
@@ -348,7 +343,6 @@ const DraggableItem: React.FC<{
     };
 
     const handleTouchEnd = (e: Event) => {
-      // If long press was triggered, prevent the click event
       if (longPressTriggered) {
         e.preventDefault();
         e.stopPropagation();
@@ -360,8 +354,7 @@ const DraggableItem: React.FC<{
       }
     };
 
-    const handleClick = (e: Event) => {
-      // Prevent click if long press was triggered
+    const handleClickEvent = (e: Event) => {
       if (longPressTriggered) {
         e.preventDefault();
         e.stopPropagation();
@@ -373,7 +366,7 @@ const DraggableItem: React.FC<{
     element.addEventListener("touchmove", handleTouchMove, { passive: true });
     element.addEventListener("touchend", handleTouchEnd as EventListener);
     element.addEventListener("touchcancel", handleTouchEnd as EventListener);
-    element.addEventListener("click", handleClick as EventListener, {
+    element.addEventListener("click", handleClickEvent as EventListener, {
       capture: true,
     });
 
@@ -385,11 +378,11 @@ const DraggableItem: React.FC<{
         "touchcancel",
         handleTouchEnd as EventListener
       );
-      element.removeEventListener("click", handleClick as EventListener, {
+      element.removeEventListener("click", handleClickEvent as EventListener, {
         capture: true,
       });
     };
-  }, [item.id, type, setIsSelecting, toggleItemSelection]);
+  }, [itemKey, setIsSelecting, toggleItemSelection]);
 
   const dragClass = isDragging
     ? "opacity-50 transform-gpu transition-all duration-200 ease-out"
@@ -403,7 +396,7 @@ const DraggableItem: React.FC<{
       ? "transform transition-transform duration-300 ease-out"
       : "";
 
-  const selectionClass = isSelected ? "ring-4 ring-blue-500 ring-offset-2" : "";
+  const selectionClass = isSelected ? "ring-2 ring-secondary" : "";
 
   const cursorClass = isSelecting
     ? "cursor-pointer"
@@ -430,11 +423,6 @@ const DraggableItem: React.FC<{
       onClick={handleClick}
       onTouchEnd={handleClick}
     >
-      {isSelected && (
-        <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center z-10 shadow-lg">
-          <Icon name="CheckLine" className="w-4 h-4" />
-        </div>
-      )}
       <div className="h-full transition-all duration-200">
         {type === ItemTypes.NOTE ? (
           <NoteCard note={item as Note} onUpdate={onUpdate!} />
@@ -453,7 +441,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
     setIsSelecting,
     toggleItemSelection,
     exitSelectionMode,
-    clearSelection,
   } = useSelection();
   const folderStore = useFolderStore();
   const noteStore = useNoteStore();
@@ -468,6 +455,20 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
     archive: {},
   });
   const navigate = useNavigate();
+
+  // Analyze selection type
+  const selectionType = useMemo(() => {
+    const items = Array.from(selectedItems);
+    if (items.length === 0) return null;
+
+    const hasNotes = items.some((key) => key.startsWith("note-"));
+    const hasFolders = items.some((key) => key.startsWith("folder-"));
+
+    if (hasNotes && hasFolders) return "mixed";
+    if (hasNotes) return "notes";
+    if (hasFolders) return "folders";
+    return null;
+  }, [selectedItems]);
 
   useEffect(() => {
     const handleAppUrlOpen = ({ url }: { url: string }) => {
@@ -555,7 +556,6 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   const handleNoteDrop = useCallback(
     (noteId: string, folderId: string) => {
       noteStore.update(noteId, { folderId });
-
       if ("vibrate" in navigator) navigator.vibrate([100, 50, 100]);
     },
     [noteStore]
@@ -595,11 +595,48 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
         console.log("Haptics not available");
       }
 
-      // Exit selection mode after drop
       exitSelectionMode();
     },
     [noteStore, folderStore, exitSelectionMode]
   );
+
+  const handleBulkDelete = useCallback(() => {
+    Array.from(selectedItems).forEach((key) => {
+      const [type, id] = key.split("-");
+      if (type === ItemTypes.NOTE) {
+        noteStore.delete(id);
+      } else if (type === ItemTypes.FOLDER) {
+        folderStore.delete(id);
+      }
+    });
+    exitSelectionMode();
+  }, [selectedItems, noteStore, folderStore, exitSelectionMode]);
+
+  const handleBulkArchive = useCallback(() => {
+    Array.from(selectedItems).forEach((key) => {
+      const [type, id] = key.split("-");
+      if (type === ItemTypes.NOTE) {
+        const note = noteStore.data[id];
+        if (note) {
+          noteStore.update(id, { isArchived: !note.isArchived });
+        }
+      }
+    });
+    exitSelectionMode();
+  }, [selectedItems, noteStore, exitSelectionMode]);
+
+  const handleBulkBookmark = useCallback(() => {
+    Array.from(selectedItems).forEach((key) => {
+      const [type, id] = key.split("-");
+      if (type === ItemTypes.NOTE) {
+        const note = noteStore.data[id];
+        if (note) {
+          noteStore.update(id, { isBookmarked: !note.isBookmarked });
+        }
+      }
+    });
+    exitSelectionMode();
+  }, [selectedItems, noteStore, exitSelectionMode]);
 
   useEffect(() => {
     const handleSendIntent = async () => {
@@ -684,7 +721,7 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
               ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
               : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3"
           } ${
-            type === ItemTypes.NOTE && title === translations.home.bookmarked
+            type === ItemTypes.NOTE && title === translations.home?.bookmarked
               ? "mb-8"
               : ""
           }`}
@@ -741,45 +778,65 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
       options={isTouchDevice() ? touchBackendOptions : undefined}
     >
       <CustomDragLayer selectedItems={selectedItems} />
-      {/* Selection Toolbar */}
+
+      {/* Selection Toolbar with type-aware actions */}
       {isSelecting && selectedItems.size > 0 && (
-        <div className="fixed top-0 left-0 right-0 bg-blue-500 text-white p-4 z-50 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={exitSelectionMode}
-              className="text-white hover:bg-blue-600 p-2 rounded"
-            >
-              <Icon name="CloseLine" className="w-5 h-5" />
-            </button>
-            <span className="font-medium">
-              {selectedItems.size} item{selectedItems.size > 1 ? "s" : ""}{" "}
-              selected
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => {
-                // Handle bulk actions here (delete, archive, etc.)
-                console.log("Bulk action on:", Array.from(selectedItems));
-              }}
-              className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded text-white"
-            >
-              Delete
-            </button>
-            <button
-              onClick={clearSelection}
-              className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded text-white"
-            >
-              Deselect All
-            </button>
+        <div className="fixed border-neutral-800 bottom-6 inset-x-2 bg-neutral-750 p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto z-50">
+          <div className="flex justify-between justify-center align-center items-center gap-2">
+            <div>
+              <div className="p-3 rounded-full text-white text-sm font-medium">
+                {selectedItems.size}{" "}
+                {selectionType === "notes"
+                  ? "note"
+                  : selectionType === "folders"
+                  ? "folder"
+                  : "item"}
+                {selectedItems.size > 1 ? "s" : ""}
+              </div>
+            </div>
+
+            <div>
+              {/* Note-specific actions */}
+              {selectionType === "notes" && (
+                <>
+                  <button
+                    onClick={handleBulkBookmark}
+                    className="p-2 hover:bg-neutral-700 rounded-full text-white transition-colors"
+                    title="Toggle Bookmark"
+                  >
+                    <Icon name="Bookmark3Fill" className="size-6" />
+                  </button>
+                  <button
+                    onClick={handleBulkArchive}
+                    className="p-2 hover:bg-neutral-700 rounded-full text-white transition-colors"
+                    title="Toggle Archive"
+                  >
+                    <Icon name="ArchiveDrawerLine" className="size-6" />
+                  </button>
+                </>
+              )}
+
+              {/* Common actions */}
+              <button
+                onClick={handleBulkDelete}
+                className="p-2 rounded-full text-white transition-colors"
+                title="Delete"
+              >
+                <Icon name="DeleteBinLine" className="size-6" />
+              </button>
+              <button
+                onClick={exitSelectionMode}
+                className="p-2 hover:bg-neutral-700 rounded-full text-white transition-colors"
+                title="Cancel"
+              >
+                <Icon name="CloseLine" className="size-6" />
+              </button>
+            </div>
           </div>
         </div>
       )}
-      <div
-        className={`overflow-x-hidden overflow-y-auto mb-12 ${
-          isSelecting ? "pt-16" : ""
-        }`}
-      >
+
+      <div className="overflow-x-hidden overflow-y-auto mb-12">
         <div className="w-full md:pt-4 p-2 py-2 flex flex-col border-neutral-300 overflow-y-auto overflow-x-hidden">
           <SearchBar
             searchQuery={query}
@@ -797,13 +854,13 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
             {showArchived ? (
               <>
                 <h2 className="text-3xl font-bold mb-4">
-                  {translations.archive.archived || "Archived"}
+                  {translations.archive?.archived || "Archived"}
                 </h2>
                 {sortedArchived.length === 0
                   ? emptyState(
                       "./imgs/archive.png",
-                      translations.archive.messagePt1 || "",
-                      translations.archive.messagePt2 || "",
+                      translations.archive?.messagePt1 || "",
+                      translations.archive?.messagePt2 || "",
                       "ArchiveDrawerLine"
                     )
                   : renderGrid(sortedArchived, ItemTypes.NOTE)}
@@ -819,17 +876,17 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
                   sortedBookmarked,
                   ItemTypes.NOTE,
                   sortedBookmarked.length > 0
-                    ? translations.home.bookmarked || "Bookmarked"
+                    ? translations.home?.bookmarked || "Bookmarked"
                     : undefined
                 )}
                 <p className="text-2xl font-bold mb-4">
-                  {translations.home.all || "All Notes"}
+                  {translations.home?.all || "All Notes"}
                 </p>
                 {sortedAll.length === 0 && sortedBookmarked.length === 0
                   ? emptyState(
                       "./imgs/home.png",
-                      translations.home.messagePt1 || "Create your first note",
-                      translations.home.messagePt2 || "to get started",
+                      translations.home?.messagePt1 || "Create your first note",
+                      translations.home?.messagePt2 || "to get started",
                       "AddFill"
                     )
                   : renderGrid(sortedAll, ItemTypes.NOTE)}
