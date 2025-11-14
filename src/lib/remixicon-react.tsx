@@ -63,7 +63,7 @@ import ListOrdered from "remixicon-react/ListOrderedIcon";
 import DoubleQuotesL from "remixicon-react/DoubleQuotesRIcon";
 import Link from "remixicon-react/LinkMIcon";
 import LinkUnlink from "remixicon-react/LinkUnlinkIcon";
-import Settings4Line from "remixicon-react/SettingsLineIcon";
+import Settings4Line from "remixicon-react/Settings4LineIcon";
 import HomeLine from "remixicon-react/HomeLineIcon";
 import ArrowUp from "remixicon-react/ArrowUpLineIcon";
 import ArrowDown from "remixicon-react/ArrowDownLineIcon";

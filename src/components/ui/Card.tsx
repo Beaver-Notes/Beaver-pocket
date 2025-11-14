@@ -24,7 +24,7 @@ const UiCard: React.FC<CardProps> = ({
   const hoverClasses = hover ? "hover:shadow-xl hover:-translate-y-1" : "";
 
   const combinedClasses =
-    `${baseClasses} ${padding} ${hoverClasses} ${className}`.trim();
+    ` ${className} ${baseClasses} ${padding} ${hoverClasses}`.trim();
 
   return (
     <Component

@@ -166,7 +166,7 @@ const BottomNavBar: React.FC = () => {
               className="w-12 h-12 flex items-center justify-center"
             >
               <Icon
-                name="Settings4Line"
+                name="SettingsLine"
                 className={`${
                   isActive("/settings") ? "text-secondary" : "text-white"
                 } h-10 w-10`}
