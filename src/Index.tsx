@@ -456,6 +456,28 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   });
   const navigate = useNavigate();
 
+  const allSelectedNotes = useMemo(() => {
+    return Array.from(selectedItems)
+      .filter((key) => key.startsWith("note-"))
+      .map((key) => key.slice("note-".length))
+      .map((id) => noteStore.data[id])
+      .filter(Boolean) as Note[];
+  }, [selectedItems, noteStore.data]);
+
+  const allBookmarked = useMemo(
+    () =>
+      allSelectedNotes.length > 0 &&
+      allSelectedNotes.every((n) => n.isBookmarked),
+    [allSelectedNotes]
+  );
+
+  const allArchived = useMemo(
+    () =>
+      allSelectedNotes.length > 0 &&
+      allSelectedNotes.every((n) => n.isArchived),
+    [allSelectedNotes]
+  );
+
   // Analyze selection type
   const selectionType = useMemo(() => {
     const items = Array.from(selectedItems);
@@ -601,40 +623,53 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
   );
 
   const handleBulkDelete = useCallback(() => {
-    Array.from(selectedItems).forEach((key) => {
-      const [type, id] = key.split("-");
-      if (type === ItemTypes.NOTE) {
+    for (const key of selectedItems) {
+      let type: string;
+      let id: string;
+
+      if (key.startsWith("note-")) {
+        type = "note";
+        id = key.slice("note-".length);
         noteStore.delete(id);
-      } else if (type === ItemTypes.FOLDER) {
+      } else if (key.startsWith("folder-")) {
+        type = "folder";
+        id = key.slice("folder-".length);
         folderStore.delete(id);
       }
-    });
+    }
+
     exitSelectionMode();
   }, [selectedItems, noteStore, folderStore, exitSelectionMode]);
 
   const handleBulkArchive = useCallback(() => {
-    Array.from(selectedItems).forEach((key) => {
-      const [type, id] = key.split("-");
-      if (type === ItemTypes.NOTE) {
-        const note = noteStore.data[id];
-        if (note) {
-          noteStore.update(id, { isArchived: !note.isArchived });
-        }
+    for (const key of selectedItems) {
+      if (!key.startsWith("note-")) continue;
+
+      const id = key.slice("note-".length);
+      const note = noteStore.data[id];
+      if (note) {
+        noteStore.update(id, { isArchived: !note.isArchived });
+      } else {
+        console.warn("Note not found for key:", key, "parsed id:", id);
       }
-    });
+    }
+
     exitSelectionMode();
   }, [selectedItems, noteStore, exitSelectionMode]);
 
-  const handleBulkBookmark = useCallback(() => {
-    Array.from(selectedItems).forEach((key) => {
-      const [type, id] = key.split("-");
-      if (type === ItemTypes.NOTE) {
-        const note = noteStore.data[id];
-        if (note) {
-          noteStore.update(id, { isBookmarked: !note.isBookmarked });
-        }
+  const handleBulkBookmark = useCallback(async () => {
+    for (const key of selectedItems) {
+      if (!key.startsWith("note-")) continue;
+
+      const id = key.slice("note-".length);
+      const note = noteStore.data[id];
+      if (!note) {
+        continue;
       }
-    });
+
+      await noteStore.update(id, { isBookmarked: !note.isBookmarked });
+    }
+
     exitSelectionMode();
   }, [selectedItems, noteStore, exitSelectionMode]);
 
@@ -804,14 +839,22 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
                     className="p-2 hover:bg-neutral-700 rounded-full text-white transition-colors"
                     title="Toggle Bookmark"
                   >
-                    <Icon name="Bookmark3Fill" className="size-6" />
+                    <Icon
+                      name={allBookmarked ? "Bookmark3Fill" : "Bookmark3Line"}
+                      className="size-8"
+                    />
                   </button>
                   <button
                     onClick={handleBulkArchive}
                     className="p-2 hover:bg-neutral-700 rounded-full text-white transition-colors"
                     title="Toggle Archive"
                   >
-                    <Icon name="ArchiveDrawerLine" className="size-6" />
+                    <Icon
+                      name={
+                        allArchived ? "ArchiveDrawerFill" : "ArchiveDrawerLine"
+                      }
+                      className="size-8"
+                    />
                   </button>
                 </>
               )}
@@ -822,14 +865,14 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
                 className="p-2 rounded-full text-white transition-colors"
                 title="Delete"
               >
-                <Icon name="DeleteBinLine" className="size-6" />
+                <Icon name="DeleteBinLine" className="size-8" />
               </button>
               <button
                 onClick={exitSelectionMode}
                 className="p-2 hover:bg-neutral-700 rounded-full text-white transition-colors"
                 title="Cancel"
               >
-                <Icon name="CloseLine" className="size-6" />
+                <Icon name="CloseLine" className="size-8" />
               </button>
             </div>
           </div>
