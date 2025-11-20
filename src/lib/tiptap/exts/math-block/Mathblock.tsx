@@ -155,7 +155,7 @@ const MathBlock: React.FC<MathBlockProps> = (props) => {
           style={{
             transition: dragging ? "none" : undefined,
           }}
-          className="flex flex-col h-[80vh]"
+          className="flex flex-col h-[80vh] sm:h-2/3"
         >
           <div className="p-4 flex-grow flex flex-col space-y-2">
             <div

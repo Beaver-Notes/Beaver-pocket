@@ -147,13 +147,13 @@ export default function Sheet({
       />
 
       {/* Sheet */}
-      <div className="z-[999] fixed inset-0 flex items-end justify-center pointer-events-none">
+      <div className="z-[999] fixed inset-0 flex items-end sm:items-center justify-center pointer-events-none">
         <div
           ref={sheetRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? "sheet-title" : undefined}
-          className="pointer-events-auto w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-2xl shadow-xl"
+          className="pointer-events-auto w-full max-w-xl bg-white dark:bg-neutral-900 rounded-t-2xl sm:rounded-2xl shadow-xl"
           style={{
             transform: isOpen ? "translateY(0)" : "translateY(100%)",
             transition: "transform 0.3s ease-out",
