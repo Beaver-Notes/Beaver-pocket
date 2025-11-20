@@ -1,5 +1,6 @@
 import React from "react";
-import { BubbleMenu, Editor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
+import { Editor } from "@tiptap/react";
 import NoteBubbleMenuLink from "./NoteBubbleMenuLink";
 import NoteBubbleMenuEmbed from "./NoteBubbleMenuEmbed";
 
@@ -10,7 +11,7 @@ interface Props {
 const NoteBubbleMenu: React.FC<Props> = ({ editor }) => {
   return (
     <BubbleMenu
-      editor={editor}
+      editor={editor ?? undefined}
       shouldShow={({ editor }) =>
         editor.isActive("link") || editor.isActive("iframe")
       }
