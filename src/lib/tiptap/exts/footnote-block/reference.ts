@@ -154,6 +154,7 @@ const FootnoteReference = Node.create({
       {
         find: /(^|\s)\[\^(\d+)\]$/, // Adjust regex to match [^1] only at the end of a line or surrounded by whitespace
         type: this.type,
+        undoable: true,
         handler({ range, match, chain }) {
           const start = range.from;
           const end = range.to;

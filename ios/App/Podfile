@@ -24,7 +24,7 @@ def capacitor_pods
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
   pod 'CapgoCapacitorNativeBiometric', :path => '../../node_modules/@capgo/capacitor-native-biometric'
   pod 'DanieleRolliCapacitorGoogleAuth', :path => '../../node_modules/@daniele-rolli/capacitor-google-auth'
-  pod 'DanieleRolliCapacitorScopedStorage', :path => '../../../capacitor-scoped-storage'
+  pod 'DanieleRolliCapacitorScopedStorage', :path => '../../node_modules/@daniele-rolli/capacitor-scoped-storage'
   pod 'DanieleRolliCapacitorSpotsearch', :path => '../../node_modules/@daniele-rolli/capacitor-spotsearch'
   pod 'RecognizebvCapacitorPluginMsauth', :path => '../../node_modules/@recognizebv/capacitor-plugin-msauth'
   pod 'CapaZip', :path => '../../node_modules/capa-zip'

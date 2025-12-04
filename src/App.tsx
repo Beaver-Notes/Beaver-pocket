@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { SafeArea } from "@capacitor-community/safe-area";
 import { useNavigate, useLocation } from "react-router-dom";
 import Router from "./router";
 import BottomNavBar from "./components/app/BottomNavBar";
@@ -136,16 +135,6 @@ const App: React.FC = () => {
               await StatusBar.setStyle({
                 style:
                   theme.currentTheme === "light" ? Style.Light : Style.Dark,
-              });
-            } else if (Capacitor.getPlatform() === "ios") {
-              await SafeArea.enable({
-                config: {
-                  customColorsForSystemBars: true,
-                  statusBarColor: "#00000000",
-                  statusBarContent: "light",
-                  navigationBarColor: "#00000000",
-                  navigationBarContent: "light",
-                },
               });
             }
           })(),

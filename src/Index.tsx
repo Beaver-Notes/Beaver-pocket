@@ -299,7 +299,7 @@ const DraggableItem: React.FC<{
 
   const handleClick = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
-      if (isSelecting) {
+      if (isSelecting && !touchMoved) {
         e.preventDefault();
         e.stopPropagation();
         toggleItemSelection(itemKey);
@@ -309,6 +309,8 @@ const DraggableItem: React.FC<{
     [isSelecting, itemKey, toggleItemSelection]
   );
 
+  const touchMoved = useRef(false);
+  
   useEffect(() => {
     const element = document.querySelector(`[data-item-id="${itemKey}"]`);
     if (!element) return;
@@ -417,7 +419,7 @@ const DraggableItem: React.FC<{
       className={`h-full rounded-xl relative ${dragClass} ${dropClass} ${animClass} ${selectionClass} ${cursorClass}`}
       style={{
         transformOrigin: "center center",
-        touchAction: isSelecting ? "none" : "pan-y",
+        touchAction: "pan-y",
       }}
       onDragEnd={stopScroll}
       onClick={handleClick}
@@ -624,16 +626,11 @@ const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
 
   const handleBulkDelete = useCallback(() => {
     for (const key of selectedItems) {
-      let type: string;
-      let id: string;
-
       if (key.startsWith("note-")) {
-        type = "note";
-        id = key.slice("note-".length);
+        const id = key.slice("note-".length);
         noteStore.delete(id);
       } else if (key.startsWith("folder-")) {
-        type = "folder";
-        id = key.slice("folder-".length);
+        const id = key.slice("folder-".length);
         folderStore.delete(id);
       }
     }

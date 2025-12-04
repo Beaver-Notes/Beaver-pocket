@@ -36,7 +36,7 @@ const Footnote = ListItem.extend({
     return [
       {
         tag: 'li',
-        getAttrs(node) {
+        getAttrs(node: { getAttribute: (arg0: string) => any; }) {
           const id = node.getAttribute('data-id');
           if (id) {
             return {
@@ -49,7 +49,7 @@ const Footnote = ListItem.extend({
       },
     ];
   },
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ HTMLAttributes }: { HTMLAttributes: Record<string, any> }) {
     return [
       'li',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
@@ -61,7 +61,7 @@ const Footnote = ListItem.extend({
     return {
       focusFootnote:
         (id: string) =>
-        ({ editor, chain }) => {
+        ({ editor, chain }: { editor: any; chain: any }) => {
           const matchedFootnote = editor.$node('footnote', {
             'data-id': id,
           });
@@ -84,7 +84,7 @@ const Footnote = ListItem.extend({
   addKeyboardShortcuts() {
     return {
       // when the user presses tab, adjust the text selection to be at the end of the next footnote
-      Tab: ({ editor }) => {
+      Tab: ({ editor }: { editor: any }) => {
         try {
           const { selection } = editor.state;
           const pos = editor.$pos(selection.anchor);
@@ -118,7 +118,7 @@ const Footnote = ListItem.extend({
         }
       },
       // inverse of the tab command - place the text selection at the end of the previous footnote
-      'Shift-Tab': ({ editor }) => {
+      'Shift-Tab': ({ editor }: { editor: any }) => {
         const { selection } = editor.state;
         const startPos = selection.$from.start(2);
         if (Number.isNaN(startPos)) return false;

@@ -93,7 +93,9 @@ function EditorComponent({ note, translations }: Props) {
 
         const labels = new Set<string>();
         const labelEls =
-          editor.options.element?.querySelectorAll("[data-mention]") ?? [];
+          editor.options.element instanceof Element
+            ? editor.options.element.querySelectorAll("[data-mention]")
+            : [];
 
         labelEls.forEach((el) => {
           const labelId = (el as HTMLElement).dataset.id;
