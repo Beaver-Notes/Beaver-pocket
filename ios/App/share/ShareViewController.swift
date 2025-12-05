@@ -40,7 +40,7 @@ class ShareViewController: UIViewController {
                     value: $0.url?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? ""),
             ]
         }.flatMap({ $0 })
-        var urlComps = URLComponents(string: "beaver-pocket://")!
+        var urlComps = URLComponents(string: "beaver://")!
         urlComps.queryItems = queryItems
         openURL(urlComps.url!)
     }

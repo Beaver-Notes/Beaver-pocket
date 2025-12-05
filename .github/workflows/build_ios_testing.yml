@@ -1,0 +1,122 @@
+name: Build iOS Testing
+
+on:
+  push:
+    branches:
+      - testing
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    env:
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+      BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+      BUILD_PROVISION_PROFILE_SHARE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_SHARE_BASE64 }}
+      BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up XCode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Create .env file
+        env:
+          VITE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
+          VITE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
+          VITE_IOS_GOOGLE_CLIENT_ID: ${{ secrets.IOS_GOOGLE_CLIENT_ID }}
+          VITE_ANDROID_GOOGLE_CLIENT_ID: ${{ secrets.ANDROID_GOOGLE_CLIENT_ID }}
+          VITE_ONEDRIVE_CLIENT_ID: ${{ secrets.ONEDRIVE_CLIENT_ID }}
+          VITE_ONEDRIVE_ANDROID_HASH: ${{ secrets.ONEDRIVE_ANDROID_HASH }}
+        run: |
+          cat <<EOF > .env
+          VITE_DROPBOX_CLIENT_ID=${VITE_DROPBOX_CLIENT_ID}
+          VITE_DROPBOX_CLIENT_SECRET=${VITE_DROPBOX_CLIENT_SECRET}
+          VITE_IOS_GOOGLE_CLIENT_ID=${VITE_IOS_GOOGLE_CLIENT_ID}
+          VITE_ANDROID_GOOGLE_CLIENT_ID=${VITE_ANDROID_GOOGLE_CLIENT_ID}
+          VITE_ONEDRIVE_CLIENT_ID=${VITE_ONEDRIVE_CLIENT_ID}
+          VITE_ONEDRIVE_ANDROID_HASH=${VITE_ONEDRIVE_ANDROID_HASH}
+          EOF
+
+      - name: Install app dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build project (JS/TS)
+        run: yarn build
+
+      - name: Capacitor sync
+        run: npx cap sync
+
+      - name: Install main provisioning profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$BUILD_PROVISION_PROFILE_BASE64" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
+
+      - name: Install share extension provisioning profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$BUILD_PROVISION_PROFILE_SHARE_BASE64" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/build_share.mobileprovision
+
+      - name: Install signing certificate
+        run: |
+          echo "$BUILD_CERTIFICATE_BASE64" | base64 -d > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" ios-build.keychain
+          security default-keychain -s ios-build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" ios-build.keychain
+          security import certificate.p12 -k ios-build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" ios-build.keychain
+
+      - name: Install Pods
+        run: |
+          cd ios/App
+          pod install
+
+      - name: Build archive with xcodebuild
+        run: |
+          xcodebuild -workspace './ios/App/App.xcworkspace' \
+            -scheme App \
+            -destination 'generic/platform=iOS' \
+            -archivePath App.xcarchive \
+            -allowProvisioningUpdates \
+            archive
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath App.xcarchive \
+            -exportOptionsPlist ./archive.plist \
+            -exportPath output
+
+      - name: Upload release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-ios
+          path: output/
+          retention-days: 60
+
+      - name: "Upload app to TestFlight"
+        uses: apple-actions/upload-testflight-build@v3
+        with:
+          app-path: "output/App.ipa"
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+
+      # Optional: Cleanup keychain after build (uncomment if needed)
+      #- name: Clean up keychain and provisioning profile
+      #  if: ${{ always() }}
+      #  run: |
+      #    security delete-keychain ios-build.keychain
+      #    rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
+      #    rm ~/Library/MobileDevice/Provisioning\ Profiles/build_share.mobileprovision

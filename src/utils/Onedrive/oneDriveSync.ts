@@ -1,23 +1,24 @@
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
 import { useState } from "react";
-import { Plugins } from "@capacitor/core";
+import { MsAuthPlugin } from "@recognizebv/capacitor-plugin-msauth";
 import {
   Filesystem,
   FilesystemDirectory,
-  FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { OneDriveAPI } from "./oneDriveApi";
 import { base64ToBlob } from "../../utils/base64";
 import mime from "mime";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
-
-const { MsAuthPlugin } = Plugins;
+import { useStorage } from "@/composable/storage";
+import { useNoteStore } from "@/store/note";
+import { useLabelStore } from "@/store/label";
+import { useFolderStore } from "@/store/folder";
 
 const decodeJwt = (token: string) => {
   try {
     const payload = token.split(".")[1];
-    const decodedPayload = atob(payload); // Decode base64 string
-    return JSON.parse(decodedPayload); // Parse the JSON
+    const decodedPayload = atob(payload);
+    return JSON.parse(decodedPayload);
   } catch (error) {
     console.error("Failed to decode JWT:", error);
     return null;
@@ -27,7 +28,7 @@ const decodeJwt = (token: string) => {
 const refreshAccessToken = async (): Promise<string | null> => {
   try {
     const result = await MsAuthPlugin.login({
-      clientId: import.meta.env.VITE_ONEDRIDE_CLIENT_ID,
+      clientId: import.meta.env.VITE_ONEDRIVE_CLIENT_ID,
       tenant: "common",
       keyHash: import.meta.env.VITE_ONEDRIVE_ANDROID_HASH,
       scopes: ["Files.ReadWrite", "User.Read"],
@@ -35,10 +36,9 @@ const refreshAccessToken = async (): Promise<string | null> => {
 
     const tokenData = decodeJwt(result.accessToken);
     const expirationTime = tokenData?.exp
-      ? tokenData.exp * 1000 // Convert `exp` from seconds to milliseconds
-      : Date.now() + 3600 * 1000; // Default to 1 hour if `exp` is missing
+      ? tokenData.exp * 1000
+      : Date.now() + 3600 * 1000;
 
-    // Save the access token and expiration time to secure storage
     await SecureStoragePlugin.set({
       key: "onedrive_access_token",
       value: result.accessToken,
@@ -81,6 +81,11 @@ const getValidAccessToken = async (): Promise<string | null> => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────
+// OneDrive Auth Hook
+// Handles authentication and token renewal 
+// ─────────────────────────────────────────────────────────────
+
 export const useOneDrive = () => {
   return { getValidAccessToken, refreshAccessToken };
 };
@@ -109,10 +114,17 @@ interface AssetSyncLog {
   }[];
 }
 
-const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
+// ─────────────────────────────────────────────────────────────
+// Dropbox Sync Hook
+// Handles syncing of notes, labels, deleted IDs, and assets
+// ─────────────────────────────────────────────────────────────
+const useOneDriveSync = (): OneDriveSyncHookReturn => {
+  const noteStore = useNoteStore.getState();
+  const folderStore = useFolderStore.getState();
+  const labelStore = useLabelStore.getState();
+  const storage = useStorage();
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
     syncError: null,
@@ -144,25 +156,19 @@ const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
         await onedrive.filesGetMetadata(`/${SYNC_FOLDER_NAME}`);
       } catch (error: any) {
         if (error.status === 409) {
-          // Folder doesn't exist, create it
           await onedrive.createFolder(`/${SYNC_FOLDER_NAME}`);
         } else {
           throw error;
         }
       }
 
-      // Read local data
+
       let localData: SyncData = { data: { notes: {} } };
-      try {
-        const localFileData = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: FilesystemDirectory.Data,
-          encoding: FilesystemEncoding.UTF8,
-        });
-        localData = JSON.parse(localFileData.data as string);
-      } catch {
-        // No local data, use empty object
-      }
+
+      localData.data.notes = noteStore.data ?? {};
+      localData.data.folders = folderStore.data ?? {};
+      localData.data.labels = labelStore.labels ?? [];
+      localData.data.deletedIds = noteStore.deleted ?? {};
 
       let remoteData: SyncData = { data: { notes: {} } };
       try {
@@ -174,32 +180,29 @@ const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
         ).fileBlob.text();
         remoteData = JSON.parse(remoteMetadataText);
       } catch {
-        // No remote data, use empty object
+        // Use empty object
       }
 
       setProgress(20);
 
-      // Merge notes
       const mergedData = await mergeData(localData, remoteData);
 
-      // Sync assets and collect logs
       await syncOnedriveAssets(onedrive, SYNC_FOLDER_NAME, accessToken);
 
-      // Log asset sync results
 
       setProgress(80);
 
-      // Write merged data
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify(mergedData),
-        directory: FilesystemDirectory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
 
-      setNotesState(mergedData.data.notes);
+      await storage.set("notes", mergedData.data.notes);
+      await storage.set("labels", mergedData.data.labels);
+      await storage.set("folders", mergedData.data.folders);
 
-      // Reverse paths before uploading
+      noteStore.retrieve();
+      labelStore.retrieve();
+      folderStore.retrieve();
+
+      await storage.set('notes', mergedData.data.notes);
+
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
 
@@ -230,6 +233,10 @@ const useOneDriveSync = (setNotesState: any): OneDriveSyncHookReturn => {
   return { syncOneDrive, syncState, progress };
 };
 
+// ─────────────────────────────────────────────────────────────
+// Asset Synchronization Function
+// Handles two-way sync of asset folders between device and OneDrive
+// ─────────────────────────────────────────────────────────────
 async function syncOnedriveAssets(
   onedrive: OneDriveAPI,
   syncFolderName: string,
@@ -251,7 +258,6 @@ async function syncOnedriveAssets(
     const remoteRootPath = `/${syncFolderName}/${assetType.remote}`;
 
     try {
-      // Ensure local root folder exists
       try {
         await Filesystem.mkdir({
           path: localRootPath,
@@ -264,13 +270,11 @@ async function syncOnedriveAssets(
         );
       }
 
-      // Ensure remote root folder exists
       let remoteRootExists = true;
       try {
         await onedrive.filesGetMetadata(remoteRootPath);
       } catch (error: any) {
         if (error.status === 409) {
-          // Folder doesn't exist, create it
           try {
             await onedrive.createFolder(remoteRootPath);
           } catch (e) {
@@ -293,30 +297,26 @@ async function syncOnedriveAssets(
         console.error(
           `Cannot proceed with sync for ${assetType.local} - remote folder issue`
         );
-        continue; // Skip to next asset type
+        continue;
       }
 
-      // Get list of note ID subfolders from Dropbox
       let remoteSubfolders: string[] = [];
       try {
         const remoteFoldersResponse = await onedrive.listContents(
           remoteRootPath
         );
 
-        // Filter for folders (since OneDrive API distinguishes files from folders differently)
         remoteSubfolders = remoteFoldersResponse
-          .filter((entry) => entry.mimeType === "folder") // Check for folders
+          .filter((entry) => entry.mimeType === "folder")
           .map((entry) => entry.name);
       } catch (error: any) {
         console.error(
           `Error listing remote folders in ${remoteRootPath}:`,
           error
         );
-        // Continue even with errors - use an empty array
         remoteSubfolders = [];
       }
 
-      // Get list of note ID subfolders locally
       let localSubfolders: { files: { name: string }[] } = { files: [] };
       try {
         localSubfolders = await Filesystem.readdir({
@@ -327,13 +327,10 @@ async function syncOnedriveAssets(
         console.error(
           `No local subfolders found for ${localRootPath} or directory doesn't exist`
         );
-        // Continue with empty array
       }
 
-      // Convert localSubfolders.files to an array of folder names
       const localFolderNames = localSubfolders.files.map((file) => file.name);
 
-      // Process all unique noteIds from both local and remote
       const allNoteIds = [
         ...new Set([...localFolderNames, ...remoteSubfolders]),
       ];
@@ -342,7 +339,6 @@ async function syncOnedriveAssets(
         const localFolderPath = `${localRootPath}/${noteId}`;
         const remoteFolderPath = `${remoteRootPath}/${noteId}`;
 
-        // Ensure local subfolder exists
         if (!localFolderNames.includes(noteId)) {
           try {
             await Filesystem.mkdir({
@@ -355,11 +351,9 @@ async function syncOnedriveAssets(
               `Error creating local folder ${localFolderPath}:`,
               error
             );
-            // Continue anyway - the folder might already exist or be created during file writes
           }
         }
 
-        // Check if remote subfolder exists and create if needed
         let remoteSubfolderExists = remoteSubfolders.includes(noteId);
         if (!remoteSubfolderExists) {
           try {
@@ -367,19 +361,15 @@ async function syncOnedriveAssets(
             remoteSubfolderExists = true;
           } catch (error: any) {
             if (error.status === 409) {
-              // 409 means the folder already exists, which is fine
               remoteSubfolderExists = true;
             } else {
               console.error(
                 `Error creating remote folder ${remoteFolderPath}:`,
                 error
               );
-              // Continue anyway - we'll try to list files in case the folder exists but had another error
             }
           }
         }
-
-        // List local files in subfolder
         let localFiles: { files: { name: string }[] } = { files: [] };
         try {
           localFiles = await Filesystem.readdir({
@@ -390,21 +380,16 @@ async function syncOnedriveAssets(
           console.error(
             `No local files found in ${localFolderPath} or directory doesn't exist yet`
           );
-          // Continue with empty array
         }
-
-        // List remote files in subfolder
         let remoteFiles: string[] = [];
         try {
           const remoteFilesResponse = await onedrive.listContents(
             remoteFolderPath
           );
           remoteFiles = remoteFilesResponse
-            .filter((entry) => entry.mimeType !== "folder") // Only include files
+            .filter((entry) => entry.mimeType !== "folder")
             .map((entry) => entry.name);
         } catch (error: any) {
-          // If status is 409, it means folder not found - we can skip
-          // Any other error, log it but try to continue
           if (error.status !== 409) {
             console.error(
               `Error listing remote files for ${remoteFolderPath}:`,
@@ -413,23 +398,19 @@ async function syncOnedriveAssets(
           } else {
             console.error(`Remote folder ${remoteFolderPath} doesn't exist`);
           }
-          // We'll continue with an empty array
         }
 
-        // Download new files from Dropbox - only if we found remote files
         if (remoteFiles.length > 0) {
           const filesToDownload = remoteFiles.filter(
             (file) =>
               !localFiles.files.some((localFile) => localFile.name === file)
           );
 
-          // Replace the existing download code block with this
           for (const file of filesToDownload) {
             const remoteFilePath = `${remoteFolderPath}/${file}`;
             const localFilePath = `${localFolderPath}/${file}`;
 
             try {
-              // Ensure local directory exists before writing file
               try {
                 await Filesystem.mkdir({
                   path: localFolderPath,
@@ -437,7 +418,6 @@ async function syncOnedriveAssets(
                   recursive: true,
                 });
               } catch (e) {
-                // Ignore error if directory already exists
               }
 
               await Filesystem.downloadFile({
@@ -463,7 +443,6 @@ async function syncOnedriveAssets(
           }
         }
 
-        // Upload new local files to Dropbox - only if we have local files
         if (localFiles.files.length > 0 && remoteSubfolderExists) {
           const filesToUpload = localFiles.files.filter(
             (localFile) => !remoteFiles.includes(localFile.name)
@@ -483,17 +462,14 @@ async function syncOnedriveAssets(
                 throw new Error("File data is empty");
               }
 
-              // Detect MIME type
               const fileType =
                 mime.getType(file.name) || "application/octet-stream";
 
-              // Convert to Blob and create File object
               const blob = base64ToBlob(String(fileData.data), fileType);
               const uploadedFile = new File([blob], file.name, {
                 type: fileType,
               });
 
-              // Upload the file
               await onedrive.uploadFile(remoteFilePath, uploadedFile);
 
               syncLog.uploaded.push(

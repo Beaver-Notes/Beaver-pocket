@@ -1,41 +1,40 @@
 PODS:
-  - AashuDubeyCapacitorStatusbarSafeArea (3.0.0):
-    - Capacitor
-  - AppAuth (1.7.5):
-    - AppAuth/Core (= 1.7.5)
-    - AppAuth/ExternalUserAgent (= 1.7.5)
-  - AppAuth/Core (1.7.5)
-  - AppAuth/ExternalUserAgent (1.7.5):
+  - AppAuth (1.7.6):
+    - AppAuth/Core (= 1.7.6)
+    - AppAuth/ExternalUserAgent (= 1.7.6)
+  - AppAuth/Core (1.7.6)
+  - AppAuth/ExternalUserAgent (1.7.6):
     - AppAuth/Core
-  - Capacitor (6.2.1):
+  - Capacitor (7.4.4):
     - CapacitorCordova
-  - CapacitorApp (6.0.2):
+  - CapacitorApp (7.1.0):
     - Capacitor
-  - CapacitorBrowser (6.0.5):
+  - CapacitorBrowser (7.0.2):
     - Capacitor
-  - CapacitorCommunityAppIcon (5.0.0):
+  - CapacitorCommunityAppIcon (6.0.0):
     - Capacitor
-  - CapacitorCordova (6.2.1)
-  - CapacitorDevice (6.0.2):
+  - CapacitorCommunitySafeArea (7.0.0-beta.4):
     - Capacitor
-  - CapacitorFilesystem (6.0.2):
+  - CapacitorCordova (7.4.4)
+  - CapacitorDevice (7.0.2):
     - Capacitor
-  - CapacitorHaptics (6.0.2):
+  - CapacitorFilesystem (7.1.4):
     - Capacitor
-  - CapacitorKeyboard (6.0.3):
+    - IONFilesystemLib (~> 1.0.1)
+  - CapacitorHaptics (7.0.2):
     - Capacitor
-  - CapacitorNativeBiometric (0.0.1):
+  - CapacitorKeyboard (7.0.3):
     - Capacitor
-  - CapacitorPreferences (6.0.3):
+  - CapacitorPreferences (7.0.2):
     - Capacitor
   - CapacitorSecureStoragePlugin (0.10.0):
     - Capacitor
     - SwiftKeychainWrapper
-  - CapacitorShare (6.0.3):
+  - CapacitorShare (7.0.2):
     - Capacitor
-  - CapacitorSplashScreen (6.0.3):
+  - CapacitorSplashScreen (7.0.3):
     - Capacitor
-  - CapacitorStatusBar (6.0.2):
+  - CapacitorStatusBar (7.0.3):
     - Capacitor
   - CapacitorVoiceRecorder (5.0.0):
     - Capacitor
@@ -44,17 +43,24 @@ PODS:
   - CapaZip (7.0.3):
     - Capacitor
     - SSZipArchive
-  - CodetrixStudioCapacitorGoogleAuth (0.0.1):
+  - CapgoCapacitorNativeBiometric (7.1.13):
     - Capacitor
-    - GoogleSignIn (~> 6.2.4)
-  - GoogleSignIn (6.2.4):
-    - AppAuth (~> 1.5)
-    - GTMAppAuth (~> 1.3)
-    - GTMSessionFetcher/Core (< 3.0, >= 1.1)
-  - GTMAppAuth (1.3.1):
-    - AppAuth/Core (~> 1.6)
-    - GTMSessionFetcher/Core (< 3.0, >= 1.5)
-  - GTMSessionFetcher/Core (2.3.0)
+  - DanieleRolliCapacitorGoogleAuth (0.0.1):
+    - Capacitor
+    - GoogleSignIn (~> 7.0)
+  - DanieleRolliCapacitorScopedStorage (0.0.2):
+    - Capacitor
+  - DanieleRolliCapacitorSpotsearch (0.0.3):
+    - Capacitor
+  - GoogleSignIn (7.1.0):
+    - AppAuth (< 2.0, >= 1.7.3)
+    - GTMAppAuth (< 5.0, >= 4.1.1)
+    - GTMSessionFetcher/Core (~> 3.3)
+  - GTMAppAuth (4.1.1):
+    - AppAuth/Core (~> 1.7)
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3)
+  - GTMSessionFetcher/Core (3.5.0)
+  - IONFilesystemLib (1.0.1)
   - MSAL (1.2.5):
     - MSAL/app-lib (= 1.2.5)
   - MSAL/app-lib (1.2.5)
@@ -67,17 +73,16 @@ PODS:
   - SwiftKeychainWrapper (4.0.1)
 
 DEPENDENCIES:
-  - "AashuDubeyCapacitorStatusbarSafeArea (from `../../node_modules/@aashu-dubey/capacitor-statusbar-safe-area`)"
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorBrowser (from `../../node_modules/@capacitor/browser`)"
   - "CapacitorCommunityAppIcon (from `../../node_modules/@capacitor-community/app-icon`)"
+  - "CapacitorCommunitySafeArea (from `../../node_modules/@capacitor-community/safe-area`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorDevice (from `../../node_modules/@capacitor/device`)"
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
-  - CapacitorNativeBiometric (from `../../node_modules/capacitor-native-biometric`)
   - "CapacitorPreferences (from `../../node_modules/@capacitor/preferences`)"
   - CapacitorSecureStoragePlugin (from `../../node_modules/capacitor-secure-storage-plugin`)
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
@@ -86,7 +91,10 @@ DEPENDENCIES:
   - CapacitorVoiceRecorder (from `../../node_modules/capacitor-voice-recorder`)
   - CapacitorWebviewPrint (from `../../node_modules/capacitor-webview-print`)
   - CapaZip (from `../../node_modules/capa-zip`)
-  - "CodetrixStudioCapacitorGoogleAuth (from `../../node_modules/@codetrix-studio/capacitor-google-auth`)"
+  - "CapgoCapacitorNativeBiometric (from `../../node_modules/@capgo/capacitor-native-biometric`)"
+  - "DanieleRolliCapacitorGoogleAuth (from `../../node_modules/@daniele-rolli/capacitor-google-auth`)"
+  - "DanieleRolliCapacitorScopedStorage (from `../../node_modules/@daniele-rolli/capacitor-scoped-storage`)"
+  - "DanieleRolliCapacitorSpotsearch (from `../../node_modules/@daniele-rolli/capacitor-spotsearch`)"
   - "RecognizebvCapacitorPluginMsauth (from `../../node_modules/@recognizebv/capacitor-plugin-msauth`)"
   - SendIntent (from `../../node_modules/send-intent`)
 
@@ -96,13 +104,12 @@ SPEC REPOS:
     - GoogleSignIn
     - GTMAppAuth
     - GTMSessionFetcher
+    - IONFilesystemLib
     - MSAL
     - SSZipArchive
     - SwiftKeychainWrapper
 
 EXTERNAL SOURCES:
-  AashuDubeyCapacitorStatusbarSafeArea:
-    :path: "../../node_modules/@aashu-dubey/capacitor-statusbar-safe-area"
   Capacitor:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorApp:
@@ -111,6 +118,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/browser"
   CapacitorCommunityAppIcon:
     :path: "../../node_modules/@capacitor-community/app-icon"
+  CapacitorCommunitySafeArea:
+    :path: "../../node_modules/@capacitor-community/safe-area"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorDevice:
@@ -121,8 +130,6 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/haptics"
   CapacitorKeyboard:
     :path: "../../node_modules/@capacitor/keyboard"
-  CapacitorNativeBiometric:
-    :path: "../../node_modules/capacitor-native-biometric"
   CapacitorPreferences:
     :path: "../../node_modules/@capacitor/preferences"
   CapacitorSecureStoragePlugin:
@@ -139,44 +146,53 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/capacitor-webview-print"
   CapaZip:
     :path: "../../node_modules/capa-zip"
-  CodetrixStudioCapacitorGoogleAuth:
-    :path: "../../node_modules/@codetrix-studio/capacitor-google-auth"
+  CapgoCapacitorNativeBiometric:
+    :path: "../../node_modules/@capgo/capacitor-native-biometric"
+  DanieleRolliCapacitorGoogleAuth:
+    :path: "../../node_modules/@daniele-rolli/capacitor-google-auth"
+  DanieleRolliCapacitorScopedStorage:
+    :path: "../../node_modules/@daniele-rolli/capacitor-scoped-storage"
+  DanieleRolliCapacitorSpotsearch:
+    :path: "../../node_modules/@daniele-rolli/capacitor-spotsearch"
   RecognizebvCapacitorPluginMsauth:
     :path: "../../node_modules/@recognizebv/capacitor-plugin-msauth"
   SendIntent:
     :path: "../../node_modules/send-intent"
 
 SPEC CHECKSUMS:
-  AashuDubeyCapacitorStatusbarSafeArea: a33a5d9dd9f08c0aa68e7ee6c261767c67694a9a
-  AppAuth: 501c04eda8a8d11f179dbe8637b7a91bb7e5d2fa
-  Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
-  CapacitorApp: e1e6b7d05e444d593ca16fd6d76f2b7c48b5aea7
-  CapacitorBrowser: b468ac2db928e594b4d319727f3874743f9bcf96
-  CapacitorCommunityAppIcon: 8b88021902a5c3e9d836a69348e286104d61aaea
-  CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
-  CapacitorDevice: 9efd479d71d1baad74b75df531184c3f730eaa48
-  CapacitorFilesystem: a6b43788d8f9489fc95fb761f3d0d37d0bceaddf
-  CapacitorHaptics: 4fc15afe22b123d093e6ace24d95e8e3b1f261b9
-  CapacitorKeyboard: e89189ad398b815b6ff7e52271f0fb4f911a0a0a
-  CapacitorNativeBiometric: 78cf21304251a512e4597437325b5e9b0cd9f7b3
-  CapacitorPreferences: f3eadae2369ac3ab8e21743a2959145b0d1286a3
+  AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
+  Capacitor: 358dd1c3fdd71d969547b17e159fd8a7736cb45f
+  CapacitorApp: 26587c2ce485d88ddb39adb21cac64f8e481afe3
+  CapacitorBrowser: 22541e48442de44dc629c214388290d6eecc6ae9
+  CapacitorCommunityAppIcon: a937eb756114f0f1aa2de894d23b63db02d042e6
+  CapacitorCommunitySafeArea: 560c9558f0912d57283d150a9247ee0688120b30
+  CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
+  CapacitorDevice: 81ae78d5d1942707caad79276badd458bf6ec603
+  CapacitorFilesystem: f9bd850c41e048180e5dc0cbb90f2033ede9d2cc
+  CapacitorHaptics: b3fb2869e72c4466e18ce9ccbeb60a3d8723b3d4
+  CapacitorKeyboard: 62f36104f26d53d8b3a2a43f2a69fe714f1777d5
+  CapacitorPreferences: 65107ed7437d96ee72583df5763985e3c0ff2bc2
   CapacitorSecureStoragePlugin: 545b51d782d35e61a39231ecf99a966b060a2cbb
-  CapacitorShare: d2a742baec21c8f3b92b361a2fbd2401cdd8288e
-  CapacitorSplashScreen: fd8bf1bf9081d9aa8817b7cd37d740d1bdaf2fb2
-  CapacitorStatusBar: b16799a26320ffa52f6c8b01737d5a95bbb8f3eb
+  CapacitorShare: be166411fa995ead2d39b104aa0aae56d8615c66
+  CapacitorSplashScreen: e388b8e0ed0e982a9d3a40417f478e7a018a8763
+  CapacitorStatusBar: 0659ddc7b1713764a05831463d215b177a15d054
   CapacitorVoiceRecorder: d07f0794998ff8c9a6ca3debd70070b286f70cb1
   CapacitorWebviewPrint: f17e654a2ff99367a429c9e01b62ddbdcf62c45d
   CapaZip: a379d937c2db9a882d0be29e63dcb0090e6cd6ae
-  CodetrixStudioCapacitorGoogleAuth: 9dcfabfb7dd804ad6231a1513bc6e81e620cbec6
-  GoogleSignIn: 5651ce3a61e56ca864160e79b484cd9ed3f49b7a
-  GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
-  GTMSessionFetcher: 3a63d75eecd6aa32c2fc79f578064e1214dfdec2
+  CapgoCapacitorNativeBiometric: ede2c497c810fcad523b4e3d1895f989d33fe72b
+  DanieleRolliCapacitorGoogleAuth: 81cccde64d5785237c4b0eba77cd50b8996edf91
+  DanieleRolliCapacitorScopedStorage: 0526430f0a03dc275edbab75dc9fe780cc293e3c
+  DanieleRolliCapacitorSpotsearch: 7828336a3c988f20b2063dabd32df3c859203d9f
+  GoogleSignIn: d4281ab6cf21542b1cfaff85c191f230b399d2db
+  GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
+  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  IONFilesystemLib: 89258b8e3e85465da93127d25d7ce37f977e8a6f
   MSAL: 5149daaa19228c2c27d81987634da15b50981cef
   RecognizebvCapacitorPluginMsauth: d49e9ada44f0423af62bec31a2a40dcc4e7c63f2
   SendIntent: 20ca8a9cb829cfc599b1a01c4663bff2890ba452
   SSZipArchive: fe6a26b2a54d5a0890f2567b5cc6de5caa600aef
   SwiftKeychainWrapper: 807ba1d63c33a7d0613288512399cd1eda1e470c
 
-PODFILE CHECKSUM: 7caad2ac6535f5d1d059412f62f2f850b1c45f9f
+PODFILE CHECKSUM: 806c0c20a6df8767bdc474d586a905811a473cc3
 
 COCOAPODS: 1.16.2

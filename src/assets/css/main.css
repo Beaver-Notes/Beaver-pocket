@@ -2,6 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
+.draggable-item,
+.note-card,
+.folder-card {
+  user-select: none; /* prevent text selection */
+  -webkit-user-select: none; /* iOS Safari */
+  -webkit-touch-callout: none; /* disable long-press menu */
+  touch-action: none; /* disable default scrolling/gesture conflicts */
+}
+
+body {
+  position: relative;
+  @apply bg-white dark:bg-neutral-800 dark:text-[color:var(--selected-dark-text)];
+  font-family: var(--selected-font);
+}
+
+:root {
+  --theme: "light";
+  --selected-font: "Arimo", sans-serif;
+  --selected-font-code: "JetBrains Mono", monospace;
+  -webkit-tap-highlight-color: transparent;
+  --selected-dark-text: white;
+  background-color: var(--app-background-color);
+  @apply dark:text-[color:var(--selected-dark-text)];
+  padding-top: var(--safe-area-inset-top);
+}
+
+.safe-area {
+  padding-top: var(--safe-area-inset-top);
+  @apply bg-white dark:bg-neutral-800 z-40;
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+.dark * {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+button,
+input,
+textarea,
+select {
+  &:focus {
+    outline: none;
+  }
+}
+
+option {
+  @apply dark:bg-neutral-700 dark:text-[color:var(--selected-dark-text)];
+}
+
+.v-remixicon {
+  display: inline-block;
+}
+
+.tippy-box[data-theme~="tooltip-theme"] {
+  background-color: #191919;
+  color: white;
+  @apply px-2 py-1 text-sm text-neutral-200 rounded-md;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-[#d8d9d9] dark:bg-[#424546];
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#9ed6f4] dark:bg-[#2c6685];
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.text-overflow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-security-text input {
+  -webkit-text-security: none !important;
+}
+
 @layer utilities {
   /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
@@ -26,32 +119,6 @@ kbd {
   display: inline-block;
   min-width: 28px;
   @apply p-1 text-center text-sm rounded-md text-neutral-600 ml-1 dark:text-[color:var(--selected-dark-text)] bg-neutral-100 dark:bg-neutral-600 border;
-}
-
-:root {
-  --selected-font: "Arimo", sans-serif;
-  --selected-font-code: "JetBrains Mono", monospace;
-  -webkit-tap-highlight-color: transparent;
-  --selected-dark-text: white;
-  @apply dark:text-[color:var(--selected-dark-text)];
-  padding-top: constant(safe-area-inset-top) !important;
-  padding-top: env(safe-area-inset-top) !important;
-}
-
-.safe-area {
-  padding-top: constant(safe-area-inset-top) !important;
-  padding-top: env(safe-area-inset-top) !important;
-  @apply bg-white bg-opacity-95 dark:bg-opacity-95 dark:bg-[#232222] z-40;
-  position: fixed;
-  top: 0;
-  width: 100%;
-}
-
-body {
-  @apply dark:text-[color:var(--selected-dark-text)] bg-white dark:bg-[#232222];
-  font-family: var(--selected-font);
-  height: 100%;
-  width: 100%;
 }
 
 input[type="checkbox"] {
@@ -85,4 +152,16 @@ input[type="checkbox"]:checked::before {
 
 .view {
   height: 80vh;
+}
+
+.dark * {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.contenteditable.title-placeholder:empty::before {
+  content: attr(data-placeholder);
+  color: #aaa;
+  pointer-events: none;
+  user-select: none;
+  display: block;
 }

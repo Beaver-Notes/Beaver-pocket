@@ -16,7 +16,7 @@ import {
 import { useTransformHelpers } from "./helpers/transformHelper";
 import { useSelectionHelper } from "./helpers/selectionHelper";
 import { recognizeShape, createShape, distance } from "./helpers/shapesHelper";
-import { renderHelper } from "./helpers/renderHelper";
+import { renderHelper, renderCurrentStroke } from "./helpers/renderHelper";
 import DrawingToolBar from "./DrawingToolbar";
 import { usePointerHelper } from "./helpers/pointerHelper";
 
@@ -25,13 +25,32 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
   const currentPointsRef = useRef([]);
   const animationFrameRef = useRef(null);
 
+  useEffect(() => {
+    const hideKeyboardOnShow = async () => {
+      const showListener = await Keyboard.addListener(
+        "keyboardWillShow",
+        async () => {
+          await Keyboard.hide();
+        }
+      );
+
+      return () => {
+        showListener.remove();
+      };
+    };
+
+    hideKeyboardOnShow();
+  }, []);
+
   const [state, setState] = useState(() => {
-    const initialLines = convertLegacyLines(node.attrs.lines || []).map(
-      (line, index) => ({
-        ...line,
-        id: `line_${index}`,
-      })
-    );
+    const initialLines = (
+      node.attrs.linesV2?.length
+        ? node.attrs.linesV2
+        : convertLegacyLines(node.attrs.lines || [])
+    ).map((line, index) => ({
+      ...line,
+      id: `line_${index}`,
+    }));
 
     return {
       lines: initialLines,
@@ -227,47 +246,16 @@ const DrawingComponent = ({ node, updateAttributes, onClose }) => {
             />
           )}
           {renderSelectionOverlay(selectedElement, handleTransformStart)}
-          {isDrawing &&
-            currentStrokePoints.length > 1 &&
-            (() => {
-              const settings = getSettings();
-              const stroke = getStroke(
-                currentPointsRef.current,
-                getStrokeOptions(settings)
-              );
-              const pathData = getSvgPathFromStroke(stroke);
-
-              if (tool === "eraser") {
-                const shortStroke = currentPointsRef.current.slice(-5);
-                const shortPathData = shortStroke
-                  .map((point, index) =>
-                    index === 0
-                      ? `M ${point[0]},${point[1]}`
-                      : `L ${point[0]},${point[1]}`
-                  )
-                  .join(" ");
-
-                return (
-                  <path
-                    d={shortPathData}
-                    fill="none"
-                    stroke="rgba(150, 150, 150, 0.8)"
-                    strokeWidth={eraserSettings.size}
-                    strokeLinecap="round"
-                  />
-                );
-              }
-
-              return (
-                <path
-                  d={pathData}
-                  fill={settings.color}
-                  stroke="none"
-                  strokeWidth="0"
-                  opacity={tool === "highlighter" ? 0.4 : 1}
-                />
-              );
-            })()}
+          {renderCurrentStroke({
+            isDrawing,
+            currentPoints: currentPointsRef.current,
+            tool,
+            getStroke,
+            getStrokeOptions,
+            getSettings,
+            getSvgPathFromStroke,
+            eraserSettings,
+          })}
         </svg>
       </div>
 

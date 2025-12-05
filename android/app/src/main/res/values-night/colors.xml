@@ -1,0 +1,4 @@
+<!-- res/values-night/colors.xml (dark) -->
+<resources>
+  <color name="splash_background">#262626</color>
+</resources>

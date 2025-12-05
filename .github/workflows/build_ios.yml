@@ -1,4 +1,4 @@
-name: Build iOS
+name: Build iOS Release
 
 on:
   push:
@@ -15,6 +15,12 @@ jobs:
       BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
       BUILD_PROVISION_PROFILE_SHARE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_SHARE_BASE64 }}
       BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+      VITE_DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
+      VITE_DROPBOX_CLIENT_SECRET: ${{ secrets.DROPBOX_CLIENT_SECRET }}
+      VITE_IOS_GOOGLE_CLIENT_ID: ${{ secrets.IOS_GOOGLE_CLIENT_ID }}
+      VITE_ANDROID_GOOGLE_CLIENT_ID: ${{ secrets.ANDROID_GOOGLE_CLIENT_ID }}
+      VITE_ONEDRIVE_CLIENT_ID: ${{ secrets.ONEDRIVE_CLIENT_ID }}
+      VITE_ONEDRIVE_ANDROID_HASH: ${{ secrets.ONEDRIVE_ANDROID_HASH }}
 
     steps:
       - name: Checkout source
@@ -30,6 +36,17 @@ jobs:
         with:
           node-version: 20
           cache: yarn
+
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          VITE_DROPBOX_CLIENT_ID=${VITE_DROPBOX_CLIENT_ID}
+          VITE_DROPBOX_CLIENT_SECRET=${VITE_DROPBOX_CLIENT_SECRET}
+          VITE_IOS_GOOGLE_CLIENT_ID=${VITE_IOS_GOOGLE_CLIENT_ID}
+          VITE_ANDROID_GOOGLE_CLIENT_ID=${VITE_ANDROID_GOOGLE_CLIENT_ID}
+          VITE_ONEDRIVE_CLIENT_ID=${VITE_ONEDRIVE_CLIENT_ID}
+          VITE_ONEDRIVE_ANDROID_HASH=${VITE_ONEDRIVE_ANDROID_HASH}
+          EOF
 
       - name: Install app dependencies
         run: yarn install --frozen-lockfile
@@ -59,7 +76,7 @@ jobs:
           security import certificate.p12 -k ios-build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" ios-build.keychain
 
-      - name: Install PODS
+      - name: Install Pods
         run: |
           cd ios/App
           pod install
@@ -87,7 +104,7 @@ jobs:
           path: output/
           retention-days: 60
 
-      # Optional: Cleanup keychain after build (uncomment if needed)
+      # Optional: Cleanup keychain after build
       #- name: Clean up keychain and provisioning profile
       #  if: ${{ always() }}
       #  run: |

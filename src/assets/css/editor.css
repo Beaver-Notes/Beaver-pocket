@@ -37,7 +37,13 @@
   margin-bottom: 1em !important;
 }
 .ProseMirror p {
+  margin-top: 0.5em !important;
+  margin-bottom: 0.5em !important;
   @apply dark:text-[color:var(--selected-dark-text)];
+}
+.ProseMirror li {
+  margin-top: 0.25em !important;
+  margin-bottom: 0.25em !important;
 }
 .ProseMirror strong {
   color: inherit !important;
@@ -58,6 +64,9 @@
 .ProseMirror .math-block {
   @apply dark:bg-neutral-800;
 }
+.ProseMirror hr {
+  @apply dark:bg-neutral-600;
+}
 .math-node .math-src {
   @apply dark:text-purple-400 text-purple-500 !important;
 }
@@ -73,6 +82,9 @@ img.ProseMirror-selectednode {
   &:focus {
     outline: none;
   }
+  li::marker {
+    @apply dark:text-[color:var(--selected-dark-text)];
+  }
   li[data-checked="false"] {
     @apply dark:text-[color:var(--selected-dark-text)];
   }
@@ -80,16 +92,12 @@ img.ProseMirror-selectednode {
     @apply text-neutral-500 line-through dark:text-[color:var(--selected-dark-text)];
   }
   ul li {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
     @apply pr-[1.25em] rtl:pr-[1.25em] !important;
     &::before {
       top: 0.45em !important;
     }
   }
   ol li {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
     @apply pr-[1.25em] rtl:pr-[1.25em] !important;
   }
   li ul {
@@ -114,8 +122,8 @@ img.ProseMirror-selectednode {
       input[type="checkbox"] {
         appearance: none;
         -webkit-appearance: none;
-        width: 18px;
-        height: 18px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         border: 2px solid #ccc;
         outline: none;
@@ -131,7 +139,7 @@ img.ProseMirror-selectednode {
 
       /* Optional: You can add a custom background or other styles for the checked state */
       input[type="checkbox"]:checked::before {
-        content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(255, 255, 255, 0.8)'%3E%3C/path%3E%3C/svg%3E");
+        content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='20' height='20'%3E%3Cpath d='M10.0007 15.1709L19.1931 5.97852L20.6073 7.39273L10.0007 17.9993L3.63672 11.6354L5.05093 10.2212L10.0007 15.1709Z' fill='rgba(255, 255, 255, 0.8)'%3E%3C/path%3E%3C/svg%3E");
         display: block;
         width: 100%;
         height: 100%;

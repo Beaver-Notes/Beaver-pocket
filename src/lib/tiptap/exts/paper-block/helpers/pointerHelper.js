@@ -1,4 +1,4 @@
-// usePointerHelper.js
+// pointerHelper.jsx
 import { useRef, useCallback, useEffect } from "react";
 import { getStroke } from "perfect-freehand";
 import {
@@ -34,18 +34,153 @@ export function usePointerHelper({
   const longPressTimeout = useRef(null);
   const isLongPress = useRef(false);
   const startPos = useRef({ x: 0, y: 0 });
+  const activePointers = useRef(new Set());
+  const primaryPointerId = useRef(null);
+  const isMultiTouch = useRef(false);
+  const touchStartTime = useRef(null);
+  const drawingCancelled = useRef(false);
+
   const LONG_PRESS_DURATION = 500;
   const MOVE_CANCEL_THRESHOLD = 5;
+  const MULTI_TOUCH_CANCEL_DELAY = 100;
+
+  const resetPointerStates = useCallback(() => {
+    activePointers.current.clear();
+    primaryPointerId.current = null;
+    isMultiTouch.current = false;
+    drawingCancelled.current = false;
+    isLongPress.current = false;
+    touchStartTime.current = null;
+
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current);
+      longPressTimeout.current = null;
+    }
+
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+  }, []);
+
+  const handleTouchStart = useCallback(
+    (e) => {
+      const touchCount = e.touches.length;
+
+      if (touchCount === 1) {
+        touchStartTime.current = Date.now();
+        isMultiTouch.current = false;
+        drawingCancelled.current = false;
+      } else if (touchCount === 2) {
+        isMultiTouch.current = true;
+
+        if (isDrawing && !drawingCancelled.current) {
+          drawingCancelled.current = true;
+          console.log("Multi-touch detected, cancelling drawing");
+
+          setState((prev) => ({
+            ...prev,
+            isDrawing: false,
+            currentStrokePoints: [],
+          }));
+          currentPointsRef.current = [];
+
+          resetPointerStates();
+        }
+
+        return;
+      }
+
+      if (touchCount === 1 && svgRef?.current?.contains(e.target)) {
+        e.preventDefault();
+      }
+    },
+    [isDrawing, setState, svgRef, resetPointerStates]
+  );
+
+  const handleTouchMove = useCallback(
+    (e) => {
+      const touchCount = e.touches.length;
+
+      if (touchCount >= 2) {
+        isMultiTouch.current = true;
+        return;
+      }
+
+      if (
+        touchCount === 1 &&
+        svgRef?.current?.contains(e.target) &&
+        !isMultiTouch.current
+      ) {
+        e.preventDefault();
+      }
+    },
+    [svgRef]
+  );
+
+  const handleTouchEnd = useCallback((e) => {
+    const touchCount = e.touches.length;
+
+    if (touchCount === 0) {
+      setTimeout(() => {
+        isMultiTouch.current = false;
+        drawingCancelled.current = false;
+      }, 50);
+    }
+  }, []);
 
   const handlePointerDown = useCallback(
     (e) => {
-      if (isPalmTouch(e) || !isPenInput(e)) return;
+      console.log(
+        "Pointer down - tool:",
+        tool,
+        "pointerId:",
+        e.pointerId,
+        "pointerType:",
+        e.pointerType
+      );
+
+      activePointers.current.add(e.pointerId);
+
+      if (e.pointerType === "touch" && isMultiTouch.current) {
+        console.log("Multi-touch mode active, ignoring pointer down");
+        return;
+      }
+
+      if (activePointers.current.size > 1) {
+        console.log("Multiple pointers detected, ignoring additional pointer");
+        if (e.pointerType === "touch") {
+          isMultiTouch.current = true;
+          if (isDrawing) {
+            drawingCancelled.current = true;
+            setState((prev) => ({
+              ...prev,
+              isDrawing: false,
+              currentStrokePoints: [],
+            }));
+            currentPointsRef.current = [];
+          }
+        }
+        return;
+      }
+
+      if (
+        tool !== "select" &&
+        (isPalmTouch(e, svgRef?.current, false) || !isPenInput(e))
+      ) {
+        console.log("Palm touch or invalid input detected, ignoring");
+        activePointers.current.delete(e.pointerId);
+        return;
+      }
+
+      primaryPointerId.current = e.pointerId;
 
       e.preventDefault();
       const svgElem = e.currentTarget;
       svgElem.setPointerCapture(e.pointerId);
 
       if (tool === "select") {
+        console.log("Handling selection start");
         handleSelectionStart(e);
         return;
       }
@@ -58,18 +193,20 @@ export function usePointerHelper({
       const [x, y] = getPointerCoordinates(e, svg);
       startPos.current = { x, y };
       isLongPress.current = false;
+      drawingCancelled.current = false;
 
       if (longPressTimeout.current) {
         clearTimeout(longPressTimeout.current);
         longPressTimeout.current = null;
       }
 
-      // Only start long press timer if not eraser
       if (tool !== "eraser") {
         longPressTimeout.current = setTimeout(() => {
-          isLongPress.current = true;
-          longPressTimeout.current = null;
-          console.log("Long press triggered");
+          if (!drawingCancelled.current && !isMultiTouch.current) {
+            isLongPress.current = true;
+            longPressTimeout.current = null;
+            console.log("Long press triggered");
+          }
         }, LONG_PRESS_DURATION);
       }
 
@@ -78,6 +215,8 @@ export function usePointerHelper({
         isDrawing: true,
         currentStrokePoints: [[x, y]],
       }));
+
+      currentPointsRef.current = [[x, y]];
 
       if (y > height - 50) {
         setState((prev) => {
@@ -95,13 +234,14 @@ export function usePointerHelper({
       updateAttributes,
       isPalmTouch,
       isPenInput,
+      svgRef,
+      isDrawing,
+      setState,
     ]
   );
 
   const handlePointerMove = useCallback(
     (e) => {
-      if (isPalmTouch(e) || !isPenInput(e)) return;
-
       if (tool === "select") {
         if (transformState) {
           handleTransformMove(e);
@@ -111,7 +251,35 @@ export function usePointerHelper({
         return;
       }
 
-      if (!isDrawing) return;
+      if (e.pointerId !== primaryPointerId.current) return;
+
+      if (isMultiTouch.current || drawingCancelled.current) return;
+
+      if (activePointers.current.size > 1) {
+        if (e.pointerType === "touch") {
+          isMultiTouch.current = true;
+          if (isDrawing && !drawingCancelled.current) {
+            drawingCancelled.current = true;
+            setState((prev) => ({
+              ...prev,
+              isDrawing: false,
+              currentStrokePoints: [],
+            }));
+            currentPointsRef.current = [];
+          }
+        }
+        return;
+      }
+
+      if (tool !== "select" && isPalmTouch(e, svgRef?.current, true)) {
+        console.log("Palm touch detected during move, canceling");
+        handlePointerCancel(e);
+        return;
+      }
+
+      if (tool !== "select" && !isPenInput(e)) return;
+
+      if (!isDrawing || drawingCancelled.current) return;
 
       const svg = svgRef.current;
       const [x, y] = getPointerCoordinates(e, svg);
@@ -121,7 +289,6 @@ export function usePointerHelper({
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist > MOVE_CANCEL_THRESHOLD) {
-        // User moved — cancel long press timer (only if not eraser)
         if (tool !== "eraser" && longPressTimeout.current) {
           clearTimeout(longPressTimeout.current);
           longPressTimeout.current = null;
@@ -133,12 +300,16 @@ export function usePointerHelper({
         if (
           tool !== "eraser" &&
           !longPressTimeout.current &&
-          !isLongPress.current
+          !isLongPress.current &&
+          !drawingCancelled.current &&
+          !isMultiTouch.current
         ) {
           longPressTimeout.current = setTimeout(() => {
-            isLongPress.current = true;
-            longPressTimeout.current = null;
-            console.log("Long press triggered after stopping movement");
+            if (!drawingCancelled.current && !isMultiTouch.current) {
+              isLongPress.current = true;
+              longPressTimeout.current = null;
+              console.log("Long press triggered after stopping movement");
+            }
           }, LONG_PRESS_DURATION);
           startPos.current = { x, y };
         }
@@ -146,12 +317,17 @@ export function usePointerHelper({
 
       currentPointsRef.current.push([x, y]);
 
-      if (!animationFrameRef.current) {
+      if (!animationFrameRef.current && !drawingCancelled.current) {
         animationFrameRef.current = requestAnimationFrame(() => {
-          const interpolated = interpolatePoints(currentPointsRef.current, {
-            smoothness: 0.7, // same smoothness as doodle
-          });
-          setState((prev) => ({ ...prev, currentStrokePoints: interpolated }));
+          if (!drawingCancelled.current) {
+            const interpolated = interpolatePoints(currentPointsRef.current, {
+              smoothness: 0.7,
+            });
+            setState((prev) => ({
+              ...prev,
+              currentStrokePoints: interpolated,
+            }));
+          }
           animationFrameRef.current = null;
         });
       }
@@ -175,12 +351,24 @@ export function usePointerHelper({
       updateAttributes,
       handleTransformMove,
       handleSelectionMove,
+      svgRef,
+      setState,
     ]
   );
 
   const handlePointerUp = useCallback(
     (e) => {
-      if (isPalmTouch(e)) return;
+      console.log("Pointer up - tool:", tool, "pointerId:", e.pointerId);
+
+      activePointers.current.delete(e.pointerId);
+
+      if (e.pointerId !== primaryPointerId.current) return;
+
+      if (e.pointerId === primaryPointerId.current) {
+        primaryPointerId.current = null;
+      }
+
+      if (tool !== "select" && isPalmTouch(e, svgRef?.current, true)) return;
 
       e.preventDefault();
 
@@ -195,6 +383,7 @@ export function usePointerHelper({
       }
 
       if (tool === "select") {
+        console.log("Handling selection end or transform end");
         if (transformState) {
           handleTransformEnd();
         } else {
@@ -203,7 +392,16 @@ export function usePointerHelper({
         return;
       }
 
-      // No long press behavior for eraser
+      if (drawingCancelled.current || isMultiTouch.current) {
+        setState((prev) => ({
+          ...prev,
+          isDrawing: false,
+          currentStrokePoints: [],
+        }));
+        currentPointsRef.current = [];
+        return;
+      }
+
       if (isLongPress.current && tool !== "eraser") {
         const points = currentPointsRef.current;
         isLongPress.current = false;
@@ -321,42 +519,81 @@ export function usePointerHelper({
       nextLineId,
       eraserSettings.size,
       isPalmTouch,
+      svgRef,
+      setState,
     ]
   );
 
   const handlePointerLeave = useCallback(
     (e) => {
-      if (isPalmTouch(e)) return;
+      activePointers.current.delete(e.pointerId);
+
+      if (tool !== "select" && isPalmTouch(e, svgRef?.current)) return;
+      if (e.pointerId !== primaryPointerId.current) return;
+
       e.preventDefault();
       handlePointerUp(e);
     },
-    [handlePointerUp, isPalmTouch]
+    [handlePointerUp, isPalmTouch, svgRef, tool]
   );
 
   const handlePointerCancel = useCallback(
     (e) => {
-      if (isPalmTouch(e)) return;
-      e.preventDefault();
-      if (longPressTimeout.current) {
-        clearTimeout(longPressTimeout.current);
-        longPressTimeout.current = null;
+      console.log("Pointer cancel - tool:", tool, "pointerId:", e.pointerId);
+
+      activePointers.current.delete(e.pointerId);
+
+      if (e.pointerId === primaryPointerId.current) {
+        primaryPointerId.current = null;
       }
+
+      if (tool !== "select" && isPalmTouch(e, svgRef?.current)) return;
+
+      e.preventDefault();
+
+      resetPointerStates();
+
       setState((prev) => ({
         ...prev,
         isDrawing: false,
         currentStrokePoints: [],
       }));
       currentPointsRef.current = [];
+      drawingCancelled.current = true;
     },
-    [isPalmTouch]
+    [isPalmTouch, svgRef, tool, resetPointerStates, setState]
   );
 
   useEffect(() => {
+    const svgElement = svgRef.current;
+    if (!svgElement) return;
+
+    svgElement.addEventListener("touchstart", handleTouchStart, {
+      passive: false,
+    });
+    svgElement.addEventListener("touchmove", handleTouchMove, {
+      passive: false,
+    });
+    svgElement.addEventListener("touchend", handleTouchEnd, { passive: true });
+
     return () => {
-      if (animationFrameRef.current)
-        cancelAnimationFrame(animationFrameRef.current);
+      if (svgElement) {
+        svgElement.removeEventListener("touchstart", handleTouchStart);
+        svgElement.removeEventListener("touchmove", handleTouchMove);
+        svgElement.removeEventListener("touchend", handleTouchEnd);
+      }
     };
-  }, []);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, svgRef]);
+
+  useEffect(() => {
+    return () => {
+      resetPointerStates();
+    };
+  }, [resetPointerStates]);
+
+  useEffect(() => {
+    resetPointerStates();
+  }, [tool, resetPointerStates]);
 
   return {
     handlePointerDown,

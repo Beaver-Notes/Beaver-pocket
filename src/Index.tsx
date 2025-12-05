@@ -1,0 +1,942 @@
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import { DndProvider, useDrag, useDrop, useDragLayer } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { TouchBackend } from "react-dnd-touch-backend";
+import { getEmptyImage } from "react-dnd-html5-backend";
+import { sortArray, extractNoteText } from "@/utils/helper";
+import { Folder, Note } from "./store/types";
+import { Filesystem, Encoding } from "@capacitor/filesystem";
+import SearchBar from "./components/home/Search";
+import { useTranslation } from "./utils/translations";
+import { SendIntent } from "send-intent";
+import { ImportBEA } from "./utils/share/BEA";
+import { useNoteStore } from "./store/note";
+import { useFolderStore } from "./store/folder";
+import NoteCard from "./components/home/HomeNoteCard";
+import Icon from "./components/ui/Icon";
+import FolderCard from "./components/home/HomeFolderCard";
+import { useNavigate } from "react-router-dom";
+import { App } from "@capacitor/app";
+import { IconName } from "./lib/remixicon-react";
+import { useSelection } from "./composable/selection";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+
+const isTouchDevice = () =>
+  "ontouchstart" in window || navigator.maxTouchPoints > 0;
+const ItemTypes = { NOTE: "note", FOLDER: "folder" };
+
+const touchBackendOptions = {
+  enableMouseEvents: true,
+  delayTouchStart: 200,
+  ignoreContextMenu: true,
+  enableTouchEvents: true,
+};
+
+interface DragItem {
+  type: string;
+  id: string;
+  item: Note | Folder;
+  selectedItems?: Set<string>;
+}
+
+interface HomeProps {
+  showArchived?: boolean;
+}
+
+const CustomDragLayer: React.FC<{
+  onUpdate?: (item: any) => void;
+  selectedItems: Set<string>;
+}> = ({ onUpdate }) => {
+  const { itemType, isDragging, item, currentOffset } = useDragLayer(
+    (monitor) => ({
+      item: monitor.getItem(),
+      itemType: monitor.getItemType(),
+      currentOffset: monitor.getSourceClientOffset(),
+      isDragging: monitor.isDragging(),
+    })
+  );
+
+  if (!isDragging || !currentOffset) {
+    return null;
+  }
+
+  const transform = `translate3d(${currentOffset.x}px, ${currentOffset.y}px, 0)`;
+  const draggedItems = item?.selectedItems || new Set();
+  const isMultiDrag = draggedItems.size > 1;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        pointerEvents: "none",
+        zIndex: 9999,
+        inset: 0,
+        overflow: "hidden",
+        transform,
+        contain: "layout paint size",
+      }}
+      className="opacity-90"
+    >
+      <div
+        className="draggable-item bg-white dark:bg-gray-800 rounded-xl border-2 border-primary shadow-xl"
+        style={{ maxWidth: "min(420px, 90vw)" }}
+      >
+        {isMultiDrag ? (
+          <div className="p-8 text-center relative">
+            <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm shadow-lg">
+              {draggedItems.size}
+            </div>
+            <p className="font-semibold text-lg">
+              {draggedItems.size} items selected
+            </p>
+          </div>
+        ) : itemType === ItemTypes.NOTE ? (
+          <NoteCard note={item?.item as Note} onUpdate={onUpdate!} />
+        ) : (
+          <FolderCard folder={item?.item as Folder} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+const useDragEffects = (isDragging: boolean) => {
+  const scrollRef = useRef<NodeJS.Timeout | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const autoScroll = useCallback((clientY: number) => {
+    const threshold = 100;
+    const viewportHeight = window.innerHeight;
+
+    if (scrollRef.current) clearInterval(scrollRef.current);
+
+    if (clientY < threshold || clientY > viewportHeight - threshold) {
+      const direction = clientY < threshold ? -1 : 1;
+      const speed = Math.max(
+        1,
+        Math.abs(clientY - (clientY < threshold ? 0 : viewportHeight)) / 20
+      );
+
+      setIsScrolling(true);
+
+      scrollRef.current = setInterval(() => {
+        window.scrollBy(0, direction * speed * 10);
+      }, 16);
+
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 100);
+    } else {
+      setIsScrolling(false);
+    }
+  }, []);
+
+  const stopScroll = useCallback(() => {
+    if (scrollRef.current) {
+      clearInterval(scrollRef.current);
+      scrollRef.current = null;
+    }
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = null;
+    }
+    setIsScrolling(false);
+  }, []);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    setIsAnimating(true);
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      const clientY = "touches" in e ? e.touches[0]?.clientY : e.clientY;
+      if (clientY) autoScroll(clientY);
+    };
+
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("touchmove", handleMove);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("touchmove", handleMove);
+      stopScroll();
+      setTimeout(() => setIsAnimating(false), 200);
+    };
+  }, [isDragging, autoScroll, stopScroll]);
+
+  return { isAnimating, stopScroll, isScrolling };
+};
+
+const DraggableItem: React.FC<{
+  item: Note | Folder;
+  type: string;
+  onUpdate?: (item: any) => void;
+  onNoteDrop?: (noteId: string, folderId: string) => void;
+  onFolderDrop?: (draggedId: string, targetId: string) => void;
+  onMultiDrop?: (itemKeys: string[], targetId: string) => void;
+  folderStore?: any;
+  selectedItems: Set<string>;
+  isSelecting: boolean;
+  setIsSelecting: (v: boolean) => void;
+  toggleItemSelection: (key: string) => void;
+}> = ({
+  item,
+  type,
+  onUpdate,
+  onNoteDrop,
+  onFolderDrop,
+  onMultiDrop,
+  folderStore,
+  selectedItems,
+  isSelecting,
+  setIsSelecting,
+  toggleItemSelection,
+}) => {
+  const dropTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [preventDrop, setPreventDrop] = useState(false);
+  const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+  const itemKey = `${type}-${item.id}`;
+  const isSelected = selectedItems.has(itemKey);
+
+  const [{ isDragging }, drag, preview] = useDrag({
+    type,
+    item: () => {
+      if (isSelected && selectedItems.size > 1) {
+        return {
+          type,
+          id: item.id,
+          item,
+          selectedItems: new Set(selectedItems),
+        };
+      }
+      return { type, id: item.id, item };
+    },
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+    end: async (_draggedItem, monitor) => {
+      if (monitor.didDrop()) {
+        try {
+          await Haptics.impact({ style: ImpactStyle.Medium });
+        } catch (error) {
+          if ("vibrate" in navigator) {
+            navigator.vibrate([100, 50, 100]);
+          }
+        }
+      }
+    },
+  });
+
+  const [{ isOver, canDrop }, drop] = useDrop({
+    accept: [ItemTypes.NOTE, ItemTypes.FOLDER],
+    drop: (dragItem: DragItem, _monitor) => {
+      if (preventDrop) return;
+      if (dropTimeoutRef.current) return;
+
+      dropTimeoutRef.current = setTimeout(() => {
+        if (type === ItemTypes.FOLDER) {
+          if (dragItem.selectedItems && dragItem.selectedItems.size > 1) {
+            onMultiDrop?.(Array.from(dragItem.selectedItems), item.id);
+          } else if (dragItem.type === ItemTypes.NOTE) {
+            onNoteDrop?.(dragItem.id, item.id);
+          } else if (
+            folderStore &&
+            !folderStore.wouldCreateCircularReference(dragItem.id, item.id)
+          ) {
+            onFolderDrop?.(dragItem.id, item.id);
+          }
+        }
+        dropTimeoutRef.current = null;
+      }, 50);
+    },
+    canDrop: (dragItem: DragItem) => {
+      if (preventDrop || type !== ItemTypes.FOLDER) return false;
+
+      if (dragItem.selectedItems && dragItem.selectedItems.size > 1) {
+        return true;
+      }
+
+      return (
+        dragItem.type === ItemTypes.NOTE ||
+        (folderStore &&
+          !folderStore.wouldCreateCircularReference(dragItem.id, item.id))
+      );
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+  });
+
+  const { isAnimating, stopScroll, isScrolling } = useDragEffects(isDragging);
+
+  useEffect(() => {
+    setPreventDrop(isScrolling);
+  }, [isScrolling]);
+
+  useEffect(() => {
+    if (!isTouchDevice()) {
+      preview(getEmptyImage(), { captureDraggingState: true });
+    }
+  }, [preview]);
+
+  useEffect(() => {
+    return () => {
+      if (dropTimeoutRef.current) {
+        clearTimeout(dropTimeoutRef.current);
+      }
+      if (longPressTimeout.current) {
+        clearTimeout(longPressTimeout.current);
+      }
+    };
+  }, []);
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      if (isSelecting && !touchMoved) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleItemSelection(itemKey);
+        Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+      }
+    },
+    [isSelecting, itemKey, toggleItemSelection]
+  );
+
+  const touchMoved = useRef(false);
+  
+  useEffect(() => {
+    const element = document.querySelector(`[data-item-id="${itemKey}"]`);
+    if (!element) return;
+
+    let touchMoved = false;
+    let longPressTriggered = false;
+
+    const handleTouchStart = () => {
+      touchMoved = false;
+      longPressTriggered = false;
+
+      if (longPressTimeout.current) {
+        clearTimeout(longPressTimeout.current);
+      }
+
+      longPressTimeout.current = setTimeout(() => {
+        if (!touchMoved) {
+          longPressTriggered = true;
+          setIsSelecting(true);
+          toggleItemSelection(itemKey);
+          Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+        }
+      }, 500);
+    };
+
+    const handleTouchMove = () => {
+      touchMoved = true;
+      if (longPressTimeout.current) {
+        clearTimeout(longPressTimeout.current);
+        longPressTimeout.current = null;
+      }
+    };
+
+    const handleTouchEnd = (e: Event) => {
+      if (longPressTriggered) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      if (longPressTimeout.current) {
+        clearTimeout(longPressTimeout.current);
+        longPressTimeout.current = null;
+      }
+    };
+
+    const handleClickEvent = (e: Event) => {
+      if (longPressTriggered) {
+        e.preventDefault();
+        e.stopPropagation();
+        longPressTriggered = false;
+      }
+    };
+
+    element.addEventListener("touchstart", handleTouchStart, { passive: true });
+    element.addEventListener("touchmove", handleTouchMove, { passive: true });
+    element.addEventListener("touchend", handleTouchEnd as EventListener);
+    element.addEventListener("touchcancel", handleTouchEnd as EventListener);
+    element.addEventListener("click", handleClickEvent as EventListener, {
+      capture: true,
+    });
+
+    return () => {
+      element.removeEventListener("touchstart", handleTouchStart);
+      element.removeEventListener("touchmove", handleTouchMove);
+      element.removeEventListener("touchend", handleTouchEnd as EventListener);
+      element.removeEventListener(
+        "touchcancel",
+        handleTouchEnd as EventListener
+      );
+      element.removeEventListener("click", handleClickEvent as EventListener, {
+        capture: true,
+      });
+    };
+  }, [itemKey, setIsSelecting, toggleItemSelection]);
+
+  const dragClass = isDragging
+    ? "opacity-50 transform-gpu transition-all duration-200 ease-out"
+    : "";
+
+  const dropClass =
+    isOver && canDrop && !preventDrop ? "ring-2 ring-primary" : "";
+
+  const animClass =
+    isAnimating && !isDragging
+      ? "transform transition-transform duration-300 ease-out"
+      : "";
+
+  const selectionClass = isSelected ? "ring-2 ring-secondary" : "";
+
+  const cursorClass = isSelecting
+    ? "cursor-pointer"
+    : isDragging
+    ? "cursor-grabbing"
+    : canDrop && isOver && !preventDrop
+    ? "cursor-copy"
+    : "cursor-grab";
+
+  return (
+    <div
+      ref={(node) => {
+        drag(node);
+        if (type === ItemTypes.FOLDER) drop(node);
+      }}
+      data-item-id={itemKey}
+      data-folder-id={type === ItemTypes.FOLDER ? item.id : undefined}
+      className={`h-full rounded-xl relative ${dragClass} ${dropClass} ${animClass} ${selectionClass} ${cursorClass}`}
+      style={{
+        transformOrigin: "center center",
+        touchAction: "pan-y",
+      }}
+      onDragEnd={stopScroll}
+      onClick={handleClick}
+      onTouchEnd={handleClick}
+    >
+      <div className="h-full transition-all duration-200">
+        {type === ItemTypes.NOTE ? (
+          <NoteCard note={item as Note} onUpdate={onUpdate!} />
+        ) : (
+          <FolderCard folder={item as Folder} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+const Home: React.FC<HomeProps> = ({ showArchived = false }) => {
+  const {
+    selectedItems,
+    isSelecting,
+    setIsSelecting,
+    toggleItemSelection,
+    exitSelectionMode,
+  } = useSelection();
+  const folderStore = useFolderStore();
+  const noteStore = useNoteStore();
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"createdAt" | string>("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
+    sortBy === "alphabetical" ? "asc" : "desc"
+  );
+  const [activeLabel, setActiveLabel] = useState("");
+  const [translations, setTranslations] = useState<Record<string, any>>({
+    home: {},
+    archive: {},
+  });
+  const navigate = useNavigate();
+
+  const allSelectedNotes = useMemo(() => {
+    return Array.from(selectedItems)
+      .filter((key) => key.startsWith("note-"))
+      .map((key) => key.slice("note-".length))
+      .map((id) => noteStore.data[id])
+      .filter(Boolean) as Note[];
+  }, [selectedItems, noteStore.data]);
+
+  const allBookmarked = useMemo(
+    () =>
+      allSelectedNotes.length > 0 &&
+      allSelectedNotes.every((n) => n.isBookmarked),
+    [allSelectedNotes]
+  );
+
+  const allArchived = useMemo(
+    () =>
+      allSelectedNotes.length > 0 &&
+      allSelectedNotes.every((n) => n.isArchived),
+    [allSelectedNotes]
+  );
+
+  // Analyze selection type
+  const selectionType = useMemo(() => {
+    const items = Array.from(selectedItems);
+    if (items.length === 0) return null;
+
+    const hasNotes = items.some((key) => key.startsWith("note-"));
+    const hasFolders = items.some((key) => key.startsWith("folder-"));
+
+    if (hasNotes && hasFolders) return "mixed";
+    if (hasNotes) return "notes";
+    if (hasFolders) return "folders";
+    return null;
+  }, [selectedItems]);
+
+  useEffect(() => {
+    const handleAppUrlOpen = ({ url }: { url: string }) => {
+      const m = url.match(/beaver:\/\/note\/(.+)$/);
+      if (m) navigate(`/note/${m[1]}`);
+    };
+
+    const appListenerPromise = App.addListener("appUrlOpen", handleAppUrlOpen);
+
+    const onSpotOpen = (ev: any) =>
+      ev?.detail?.id && navigate(`/note/${ev.detail.id}`);
+
+    window.addEventListener("spotsearchOpen", onSpotOpen);
+
+    const params = new URLSearchParams(window.location.search);
+    const label = params.get("label");
+    if (label) setActiveLabel(decodeURIComponent(label));
+
+    return () => {
+      appListenerPromise.then((listener) => listener.remove());
+      window.removeEventListener("spotsearchOpen", onSpotOpen);
+    };
+  }, [navigate]);
+
+  const notes = Object.values(noteStore.data as Record<string, Note>);
+
+  const filterNotes = useCallback(
+    (notes: Note[] = [], query: string, activeLabel: string) => {
+      const result = {
+        all: [] as Note[],
+        archived: [] as Note[],
+        bookmarked: [] as Note[],
+      };
+
+      const queryLower = query.toLowerCase();
+
+      notes.forEach((note) => {
+        if (note.folderId !== null && note.folderId !== undefined) return;
+
+        const text = extractNoteText(note.content).toLowerCase();
+        const labels = [...note.labels].sort((a, b) => a.localeCompare(b));
+
+        const normalizedTitle =
+          note.title && note.title.trim() !== ""
+            ? note.title
+            : translations?.card?.untitledNote || "Untitled";
+
+        const labelMatch = !activeLabel || labels.includes(activeLabel);
+        const textMatch = queryLower.startsWith("#")
+          ? labels.some((l) =>
+              l?.toLowerCase().includes(queryLower.substring(1))
+            )
+          : labels.some((l) => l?.toLowerCase().includes(queryLower)) ||
+            normalizedTitle.toLowerCase().includes(queryLower) ||
+            text.includes(queryLower);
+
+        if (textMatch && labelMatch) {
+          if (note.isArchived) result.archived.push(note);
+          else if (note.isBookmarked) result.bookmarked.push(note);
+          else result.all.push(note);
+        }
+      });
+
+      return result;
+    },
+    [translations]
+  );
+
+  const filterFolders = useCallback(
+    (folders: Folder[] = [], query: string) => {
+      const queryLower = query.toLowerCase();
+
+      return folders.filter((folder) => {
+        const normalizedName =
+          folder.name && folder.name.trim() !== ""
+            ? folder.name
+            : translations?.card?.untitledFolder || "Untitled";
+
+        return normalizedName.toLowerCase().includes(queryLower);
+      });
+    },
+    [translations]
+  );
+
+  const handleNoteDrop = useCallback(
+    (noteId: string, folderId: string) => {
+      noteStore.update(noteId, { folderId });
+      if ("vibrate" in navigator) navigator.vibrate([100, 50, 100]);
+    },
+    [noteStore]
+  );
+
+  const handleFolderDrop = useCallback(
+    async (draggedId: string, targetId: string) => {
+      if (!folderStore.wouldCreateCircularReference(draggedId, targetId)) {
+        folderStore.update(draggedId, { parentId: targetId });
+
+        try {
+          await Haptics.impact({ style: ImpactStyle.Medium });
+        } catch (error) {
+          console.log("Haptics not available");
+        }
+      }
+    },
+    [folderStore]
+  );
+
+  const handleMultiDrop = useCallback(
+    async (itemKeys: string[], targetFolderId: string) => {
+      itemKeys.forEach((key) => {
+        const [type, id] = key.split("-");
+        if (type === ItemTypes.NOTE) {
+          noteStore.update(id, { folderId: targetFolderId });
+        } else if (type === ItemTypes.FOLDER) {
+          if (!folderStore.wouldCreateCircularReference(id, targetFolderId)) {
+            folderStore.update(id, { parentId: targetFolderId });
+          }
+        }
+      });
+
+      try {
+        await Haptics.impact({ style: ImpactStyle.Medium });
+      } catch (error) {
+        console.log("Haptics not available");
+      }
+
+      exitSelectionMode();
+    },
+    [noteStore, folderStore, exitSelectionMode]
+  );
+
+  const handleBulkDelete = useCallback(() => {
+    for (const key of selectedItems) {
+      if (key.startsWith("note-")) {
+        const id = key.slice("note-".length);
+        noteStore.delete(id);
+      } else if (key.startsWith("folder-")) {
+        const id = key.slice("folder-".length);
+        folderStore.delete(id);
+      }
+    }
+
+    exitSelectionMode();
+  }, [selectedItems, noteStore, folderStore, exitSelectionMode]);
+
+  const handleBulkArchive = useCallback(() => {
+    for (const key of selectedItems) {
+      if (!key.startsWith("note-")) continue;
+
+      const id = key.slice("note-".length);
+      const note = noteStore.data[id];
+      if (note) {
+        noteStore.update(id, { isArchived: !note.isArchived });
+      } else {
+        console.warn("Note not found for key:", key, "parsed id:", id);
+      }
+    }
+
+    exitSelectionMode();
+  }, [selectedItems, noteStore, exitSelectionMode]);
+
+  const handleBulkBookmark = useCallback(async () => {
+    for (const key of selectedItems) {
+      if (!key.startsWith("note-")) continue;
+
+      const id = key.slice("note-".length);
+      const note = noteStore.data[id];
+      if (!note) {
+        continue;
+      }
+
+      await noteStore.update(id, { isBookmarked: !note.isBookmarked });
+    }
+
+    exitSelectionMode();
+  }, [selectedItems, noteStore, exitSelectionMode]);
+
+  useEffect(() => {
+    const handleSendIntent = async () => {
+      try {
+        const result = await SendIntent.checkSendIntentReceived();
+        if (result?.url) {
+          const normalizedUrl = decodeURIComponent(result.url).replace(
+            "file%3A%2F%2F",
+            "file://"
+          );
+          try {
+            const content = await Filesystem.readFile({
+              path: normalizedUrl,
+              encoding: Encoding.UTF8,
+            });
+            if (typeof content.data === "string") {
+              ImportBEA(content.data);
+            } else if (content.data instanceof Blob) {
+              const reader = new FileReader();
+              reader.onload = (e) => ImportBEA(e.target?.result as string);
+              reader.readAsText(content.data);
+            }
+          } catch (error) {
+            console.log("Failed to read shared file", error);
+          }
+        }
+      } catch (error) {
+        console.log("Failed to check send intent", error);
+      }
+    };
+
+    const fetchTranslations = async () => {
+      try {
+        const trans = await useTranslation();
+        if (trans) setTranslations(trans);
+      } catch (error) {
+        console.log("Failed to fetch translations", error);
+      }
+    };
+
+    window.addEventListener("sendIntentReceived", handleSendIntent);
+    fetchTranslations();
+
+    return () =>
+      window.removeEventListener("sendIntentReceived", handleSendIntent);
+  }, [showArchived]);
+
+  const filteredNotes = filterNotes(notes, query, activeLabel);
+  const sortedAll = sortArray({
+    data: filteredNotes.all,
+    key: sortBy === "alphabetical" ? "title" : sortBy,
+    order: sortOrder,
+  });
+  const sortedBookmarked = sortArray({
+    data: filteredNotes.bookmarked,
+    key: sortBy === "alphabetical" ? "title" : sortBy,
+    order: sortOrder,
+  });
+  const sortedArchived = sortArray({
+    data: filteredNotes.archived,
+    key: sortBy === "alphabetical" ? "title" : sortBy,
+    order: sortOrder,
+  });
+  const rootFolders = folderStore.rootFolders(useFolderStore.getState());
+  const filteredFolders = query
+    ? filterFolders(rootFolders, query)
+    : rootFolders;
+
+  const sortedFolders = sortArray({
+    data: filteredFolders,
+    key: sortBy === "alphabetical" ? "name" : sortBy,
+    order: sortOrder,
+  });
+
+  const renderGrid = (items: any[], type: string, title?: string) =>
+    items.length > 0 && (
+      <>
+        {title && <p className="text-2xl font-bold mb-4">{title}</p>}
+        <div
+          className={`grid py-2 gap-2 rounded-md items-center justify-center ${
+            type === ItemTypes.FOLDER
+              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3"
+          } ${
+            type === ItemTypes.NOTE && title === translations.home?.bookmarked
+              ? "mb-8"
+              : ""
+          }`}
+        >
+          {items.map((item) => (
+            <DraggableItem
+              key={item.id}
+              item={item}
+              type={type}
+              onUpdate={
+                type === ItemTypes.NOTE
+                  ? (updated) => noteStore.update(item.id, updated)
+                  : undefined
+              }
+              onNoteDrop={
+                type === ItemTypes.FOLDER ? handleNoteDrop : undefined
+              }
+              onFolderDrop={
+                type === ItemTypes.FOLDER ? handleFolderDrop : undefined
+              }
+              onMultiDrop={
+                type === ItemTypes.FOLDER ? handleMultiDrop : undefined
+              }
+              folderStore={type === ItemTypes.FOLDER ? folderStore : undefined}
+              selectedItems={selectedItems}
+              isSelecting={isSelecting}
+              setIsSelecting={setIsSelecting}
+              toggleItemSelection={toggleItemSelection}
+            />
+          ))}
+        </div>
+      </>
+    );
+
+  const emptyState = (
+    img: string,
+    message1: string,
+    message2: string,
+    icon: string
+  ) => (
+    <div className="flex flex-col justify-center min-h-full max-h-screen items-center text-center">
+      <img src={img} className="block mx-auto sm:w-1/3" alt="No content" />
+      <p className="py-2 text-lg">
+        {message1}{" "}
+        <Icon name={icon as IconName} className="inline-block w-5 h-5" />{" "}
+        {message2}
+      </p>
+    </div>
+  );
+
+  return (
+    <DndProvider
+      backend={isTouchDevice() ? TouchBackend : HTML5Backend}
+      options={isTouchDevice() ? touchBackendOptions : undefined}
+    >
+      <CustomDragLayer selectedItems={selectedItems} />
+
+      {/* Selection Toolbar with type-aware actions */}
+      {isSelecting && selectedItems.size > 0 && (
+        <div className="fixed border-neutral-800 bottom-6 inset-x-2 bg-neutral-750 p-3 shadow-lg rounded-full w-[calc(100%-1rem)] sm:w-[calc(100%-10rem)] lg:w-[50%] xl:w-[40%] mx-auto z-50">
+          <div className="flex justify-between justify-center align-center items-center gap-2">
+            <div>
+              <div className="p-3 rounded-full text-white text-sm font-medium">
+                {selectedItems.size}{" "}
+                {selectionType === "notes"
+                  ? "note"
+                  : selectionType === "folders"
+                  ? "folder"
+                  : "item"}
+                {selectedItems.size > 1 ? "s" : ""}
+              </div>
+            </div>
+
+            <div>
+              {/* Note-specific actions */}
+              {selectionType === "notes" && (
+                <>
+                  <button
+                    onClick={handleBulkBookmark}
+                    className="p-2 hover:bg-neutral-700 rounded-full text-white transition-colors"
+                    title="Toggle Bookmark"
+                  >
+                    <Icon
+                      name={allBookmarked ? "Bookmark3Fill" : "Bookmark3Line"}
+                      className="size-8"
+                    />
+                  </button>
+                  <button
+                    onClick={handleBulkArchive}
+                    className="p-2 hover:bg-neutral-700 rounded-full text-white transition-colors"
+                    title="Toggle Archive"
+                  >
+                    <Icon
+                      name={
+                        allArchived ? "ArchiveDrawerFill" : "ArchiveDrawerLine"
+                      }
+                      className="size-8"
+                    />
+                  </button>
+                </>
+              )}
+
+              {/* Common actions */}
+              <button
+                onClick={handleBulkDelete}
+                className="p-2 rounded-full text-white transition-colors"
+                title="Delete"
+              >
+                <Icon name="DeleteBinLine" className="size-8" />
+              </button>
+              <button
+                onClick={exitSelectionMode}
+                className="p-2 hover:bg-neutral-700 rounded-full text-white transition-colors"
+                title="Cancel"
+              >
+                <Icon name="CloseLine" className="size-8" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="overflow-x-hidden overflow-y-auto mb-12">
+        <div className="w-full md:pt-4 p-2 py-2 flex flex-col border-neutral-300 overflow-y-auto overflow-x-hidden">
+          <SearchBar
+            searchQuery={query}
+            setSearchQuery={setQuery}
+            handleLabelFilterChange={setActiveLabel}
+            setSortingOption={setSortBy}
+            sortingOptions={sortBy}
+            sortOrder={sortOrder}
+            setActiveLabel={setActiveLabel}
+            activeLabel={activeLabel}
+            setSortOrder={setSortOrder}
+          />
+
+          <div className="py-2 mx-4 mb-10 rounded-md items-center justify-center h-full">
+            {showArchived ? (
+              <>
+                <h2 className="text-3xl font-bold mb-4">
+                  {translations.archive?.archived || "Archived"}
+                </h2>
+                {sortedArchived.length === 0
+                  ? emptyState(
+                      "./imgs/archive.png",
+                      translations.archive?.messagePt1 || "",
+                      translations.archive?.messagePt2 || "",
+                      "ArchiveDrawerLine"
+                    )
+                  : renderGrid(sortedArchived, ItemTypes.NOTE)}
+              </>
+            ) : (
+              <>
+                {renderGrid(
+                  sortedFolders,
+                  ItemTypes.FOLDER,
+                  sortedFolders.length > 0 ? "Folders" : undefined
+                )}
+                {renderGrid(
+                  sortedBookmarked,
+                  ItemTypes.NOTE,
+                  sortedBookmarked.length > 0
+                    ? translations.home?.bookmarked || "Bookmarked"
+                    : undefined
+                )}
+                <p className="text-2xl font-bold mb-4">
+                  {translations.home?.all || "All Notes"}
+                </p>
+                {sortedAll.length === 0 && sortedBookmarked.length === 0
+                  ? emptyState(
+                      "./imgs/home.png",
+                      translations.home?.messagePt1 || "Create your first note",
+                      translations.home?.messagePt2 || "to get started",
+                      "AddFill"
+                    )
+                  : renderGrid(sortedAll, ItemTypes.NOTE)}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </DndProvider>
+  );
+};
+
+export default Home;

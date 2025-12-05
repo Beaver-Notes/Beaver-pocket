@@ -16,6 +16,7 @@
     "lockedNote": "Locked note",
     "Suggestion": "Filtered  suggestions",
     "select": "Select ",
+    "label": "Label",
     "filterednotes": "Filtered notes",
     "insertRowAfter": "Insert row after",
     "insertRowBefore": "Insert row before",
@@ -111,7 +112,8 @@
     "autoSync": "Auto Sync",
     "logout": "Logout",
     "placeholder": "Paste authorization code here",
-    "icon": "Dropbox icon"
+    "icon": "Dropbox icon",
+    "sync": "Sync Now"
   },
   "gdrive": {
     "import": "Import",
@@ -119,12 +121,14 @@
     "autoSync": "Auto Sync",
     "logout": "Logout",
     "login": "Login",
-    "refreshingToken": "Access token expired, refreshing..."
+    "refreshingToken": "Access token expired, refreshing...",
+    "sync": "Sync Now"
   },
   "icloud": {
     "import": "Import",
     "export": "Export",
-    "autoSync": "Auto Sync"
+    "autoSync": "Auto Sync",
+    "sync": "Sync Now"
   },
   "webdav": {
     "login": "Login",
@@ -133,7 +137,13 @@
     "export": "Export",
     "import": "Import",
     "autoSync": "Auto Sync",
-    "insecureMode": "Insecure mode"
+    "insecureMode": "Insecure mode",
+    "sync": "Sync Now",
+    "advancedSettings": "Advanced Settings",
+    "insicureMode": "Insecure mode",
+    "uploadCertificate": "Upload Certificate",
+    "insicureModeInfo": "Enable 'Insecure Mode' to allow HTTP connections.",
+    "insecureModeWaring": "Insecure mode is enabled. This allows HTTP connections, which might expose your data. Proceed with caution."
   },
   "onedrive": {
     "import": "Import",
@@ -141,7 +151,8 @@
     "login": "Login",
     "logout": "Logout",
     "autoSync": "Auto Sync",
-    "refreshingToken": "Access token expired, refreshing..."
+    "refreshingToken": "Access token expired, refreshing...",
+    "sync": "Sync Now"
   },
   "welcome": {
     "welcomeTitle": "🎉 Welcome to Beaver Pocket",
@@ -192,26 +203,53 @@
     "ReadingMode": "Reading Mode",
     "deleteTable": "Delete Table",
     "undo": "Undo",
-    "redo": "Redo"
+    "redo": "Redo",
+    "untitledNote": "Untitled Note",
+    "placeholder": "Write something... or type \"/\" for commands.",
+    "embedPlaceholder": "Click here to embed a link"
   },
   "archive": {
     "archived": "Archived",
     "messagePt1": "No notes have been Archived. Click",
     "messagePt2": "to archive a note.",
-    "unlocktoedit": "Unlock to edit",
-    "noContent": "No content..."
+    "unlocktoedit": "Unlock to edit"
   },
   "card": {
-    "unlocktoedit": "Unlock to edit",
-    "noContent": "No content...",
+    "biometricLockReason": "Authenticate to lock note",
+    "biometricUnlockReason": "Authenticate to unlock note",
+    "biometricTitle": "Note Security",
+    "enableBiometric": "Would you like to enable biometric authentication for faster access?",
+    "biometricEnabled": "Biometric authentication enabled!",
+    "biometricFailed": "Failed to enable biometric authentication",
+    "lockToggleError": "Failed to toggle note lock",
+    "lockError": "Failed to lock note",
     "confirmDelete": "Are you sure you want to delete this note?",
-    "bookmarkError": "The following error accured while bookmarking a note:",
-    "archiveError": "The following error accured while archiving a note:",
-    "wrongpasswd": "Incorrect password. Note cannot be unlocked.",
-    "lockerror": "Note cannot be unlocked.",
     "enterpasswd": "Enter the Password",
-    "biometricReason": "Lock/Unlock notes",
-    "biometricTitle": "Lock/Unlock with Biometrics"
+    "islocked": "This note is locked",
+    "cancel": "Cancel",
+    "keyfail": "Password setup cancelled. Note cannot be locked.",
+    "lock": "Lock",
+    "nokey": "No shared key set up for this note",
+    "removebookmark": "Remove bookmark",
+    "setkey": "Set Key",
+    "setupkey": "Set Up a New Shared Key",
+    "unarchive": "Unarchive",
+    "unarchived": "Unarchived",
+    "unlock": "Unlock",
+    "unlocktoedit": "Unlock to edit",
+    "warning": "Warning, if you forget your password, you'll lose access to your locked notes, and setting a new password will require knowing the old one.",
+    "wrongpasswd": "Incorrect password. Note cannot be unlocked.",
+    "untitledNote": "Untitled Note",
+    "untitledFolder": "Untitled Folder",
+    "content": "No content..."
+  },
+  "folderTree": {
+    "noFolders": "No folders available",
+    "newFolder": "Create a folder first to organize your notes",
+    "cancel": "Cancel",
+    "move": "Move",
+    "moveToFolder": "Move Note to Folder",
+    "root": "Root"
   },
   "filter": {
     "searchNotes": "Search Notes",
@@ -251,17 +289,22 @@
     "Highlight": "Highlight",
     "Inlinecode": "Inline code",
     "Headings": "Headings (1-6)",
-    "Orderedlist": "Ordered list",
+    "orderedList": "Ordered list",
     "Bulletlist": "Bullet list",
     "Blockquote": "Blockquote",
     "Blockcode": "Block code",
     "Previousnote": "Previous notes"
   },
-  "commandprompt": {
+  "commands": {
     "newNote": "Create new note",
     "settings": "Settings",
-    "theme": "Change Theme",
-    "placeholder": "Search file or type '>' to search commands"
+    "darkTheme": "Dark Theme",
+    "lightTheme": "Light Theme",
+    "newFolder": "Create new folder"
+  },
+  "commandPrompt": {
+    "placeholder": "Search file or type '>' to search commands",
+    "untitledNote": "Untitled Note"
   },
   "about": {
     "title": "About",
@@ -278,6 +321,8 @@
     "legal": "Legal"
   },
   "menu": {
+    "noData": "No data",
+    "Add": "Add",
     "file": "File",
     "image": "Image",
     "video": "Video",
@@ -287,7 +332,7 @@
     "code": "Code Block",
     "table": "Table",
     "bulletList": "Bullet List",
-    "orderedlist": "Ordered List",
+    "orderedList": "Ordered list",
     "checklist": "Checklist",
     "blackCallout": "Black Callout",
     "blueCallout": "Blue Callout",
@@ -301,9 +346,6 @@
     "drawingBlock": "Drawing Block",
     "textColor": "Text Color",
     "highlighterColor": "Highlighter Color"
-  },
-  "tiptap": {
-    "placeholder": "Write something... or type \"/\" for commands."
   },
   "paperBlock": {
     "thin": "Thin",
@@ -320,5 +362,10 @@
     "undo": "Undo",
     "redo": "Redo",
     "clicktoDraw": "Click to draw"
+  },
+  "link": {
+    "placeholder": "URL or type @ to link a note",
+    "shortcut": "Press Alt + Click to open the link",
+    "untitlednote": "Untitled note"
   }
 }

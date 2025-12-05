@@ -103,7 +103,7 @@
     "unlocktoedit": "Entsperren zum Bearbeiten",
     "wrongpasswd": "Falsches Passwort. Notiz kann nicht entsperrt werden."
   },
-  "commandprompt": {
+  "commands": {
     "newNote": "Neue Notiz erstellen",
     "placeholder": "Datei suchen oder '>' eingeben, um nach Befehlen zu suchen",
     "settings": "Einstellungen",

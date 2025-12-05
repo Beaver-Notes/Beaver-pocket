@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "@/utils/translations";
 import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
 
 const CodeBlockComponent = ({ node, updateAttributes, extension }) => {
@@ -19,11 +20,18 @@ const CodeBlockComponent = ({ node, updateAttributes, extension }) => {
   }, [node.attrs.language]);
 
   const [translations, setTranslations] = useState({
-    accessibility: {
-      selectcodeLanguage: "accessibility.selectcodeLanguage"
-    },
+    accessibility: {},
   });
 
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      const trans = await useTranslation();
+      if (trans) {
+        setTranslations(trans);
+      }
+    };
+    fetchTranslations();
+  }, []);
 
   return (
     <NodeViewWrapper className="relative">

@@ -9,15 +9,18 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.6.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         def googleClientId = project.hasProperty("GOOGLE_CLIENT_ID") ? project.GOOGLE_CLIENT_ID : System.getenv("GOOGLE_CLIENT_ID") ?: ""
         buildConfigField "String", "SERVER_CLIENT_ID", "\"${googleClientId}\""
         def onedriveSha1 = project.hasProperty("ONEDRIVE_SHA1") ? project.ONEDRIVE_SHA1 : System.getenv("ONEDRIVE_SHA1") ?: ""
+        buildConfigField "String", "ONEDRIVE_SHA1", "\"${onedriveSha1}\""
 
-        manifestPlaceholders = [
-            ONEDRIVE_SHA1: onedriveSha1        
-        ]
+        manifestPlaceholders = [ONEDRIVE_SHA1: onedriveSha1]
+        
+        ext {
+            recognizebvMSALVersion = '5.3.0'
+        }
 
         signingConfigs {
             debug {
@@ -51,6 +54,8 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.18.0")
+    implementation("io.opentelemetry:opentelemetry-context:1.18.0")
 }
 
 apply from: 'capacitor.build.gradle'

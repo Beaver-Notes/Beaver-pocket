@@ -6,9 +6,7 @@ const config: CapacitorConfig = {
   webDir: "dist",
   plugins: {
     SplashScreen: {
-      launchShowDuration: 300,
       launchAutoHide: false,
-      launchFadeOutDuration: 300,
       backgroundColor: "#ffffffff",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
@@ -34,11 +32,13 @@ const config: CapacitorConfig = {
       forceCodeForRefreshToken: true,
     },
     Keyboard: {
-      //@ts-ignore
-      resize: "none",
+      resize: 'native',
     },
     CapacitorHttp: {
       enabled: true,
+    },
+    EdgeToEdge: {
+      backgroundColor: "#00000000",
     },
   },
   server: {

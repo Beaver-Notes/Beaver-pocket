@@ -3,11 +3,14 @@ import { WebDavService } from "./webDavApi";
 import {
   Filesystem,
   FilesystemDirectory,
-  FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { base64Encode, blobToBase64, blobToString } from "../base64";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
 import { SecureStoragePlugin } from "capacitor-secure-storage-plugin";
+import { useStorage } from "@/composable/storage";
+import { useNoteStore } from "@/store/note";
+import { useLabelStore } from "@/store/label";
+import { useFolderStore } from "@/store/folder";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -33,10 +36,17 @@ interface AssetSyncLog {
   }[];
 }
 
-const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
+// ─────────────────────────────────────────────────────────────
+// Webdav Sync Hook
+// Handles syncing of notes, labels, deleted IDs, and assets
+// ─────────────────────────────────────────────────────────────
+const useWebDAVSync = (): WebDAVSyncHookReturn => {
+  const folderStore = useFolderStore.getState();
+  const noteStore = useNoteStore.getState();
+  const labelStore = useLabelStore.getState();
+  const storage = useStorage();
   const [progress, setProgress] = useState<number>(0);
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
@@ -64,54 +74,51 @@ const useWebDAVSync = (setNotesState: any): WebDAVSyncHookReturn => {
     setProgress(0);
 
     try {
-      await webDavService.createFolder(`${SYNC_FOLDER_NAME}`);
+      const folderPath = `${SYNC_FOLDER_NAME}`;
+
+      const exists = await webDavService.folderExists(folderPath);
+      if (!exists) {
+        await webDavService.createFolder(folderPath);
+      }
 
       let localData: SyncData = { data: { notes: {} } };
-      try {
-        const localFileData = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: FilesystemDirectory.Data,
-          encoding: FilesystemEncoding.UTF8,
-        });
-        localData = JSON.parse(localFileData.data as string);
-      } catch {
-        // No local data, use empty object
-      }
+
+      localData.data.notes = noteStore.data ?? {};
+      localData.data.folders = folderStore.folders ?? {};
+      localData.data.labels = labelStore.labels ?? [];
+      localData.data.deletedIds = noteStore.deleted ?? {};
 
       let remoteData: SyncData = { data: { notes: {} } };
       try {
-        const fileData = await webDavService.get(
-          `${SYNC_FOLDER_NAME}/data.json`
-        );
+        const fileData = await webDavService.get(`${folderPath}/data.json`);
         const fileString = await blobToString(fileData);
         remoteData = JSON.parse(fileString);
       } catch {
-        // No remote data, use empty object
+        // Use empty object
       }
 
       setProgress(20);
 
       const mergedData = await mergeData(localData, remoteData);
 
-      await syncWebDAVAssets(SYNC_FOLDER_NAME, webDavService);
+      await syncWebDAVAssets(folderPath, webDavService);
 
       setProgress(80);
 
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify(mergedData),
-        directory: FilesystemDirectory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
+      await storage.set("notes", mergedData.data.notes);
+      await storage.set("labels", mergedData.data.labels);
+      await storage.set("folders", mergedData.data.folders);
 
-      setNotesState(mergedData.data.notes);
+      noteStore.retrieve();
+      labelStore.retrieve();
+      folderStore.retrieve();
 
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
 
       const base64Data = base64Encode(JSON.stringify(cleanedData));
 
-      await webDavService.upload(`${SYNC_FOLDER_NAME}/data.json`, base64Data);
+      await webDavService.upload(`${folderPath}/data.json`, base64Data);
 
       setSyncState((prev) => ({
         ...prev,
@@ -154,6 +161,11 @@ async function getFolderMetadata(
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Asset Synchronization Function
+// Handles two-way sync of asset folders between device and WebDAV
+// ─────────────────────────────────────────────────────────────
+
 async function syncWebDAVAssets(
   syncFolderName: string,
   webDavService: WebDavService
@@ -174,17 +186,22 @@ async function syncWebDAVAssets(
     const remoteRootPath = `${syncFolderName}/${assetType.remote}`;
 
     try {
-      try {
-        await Filesystem.mkdir({
-          path: localRootPath,
-          directory: FilesystemDirectory.Data,
-          recursive: true,
-        });
-      } catch (error) {
-        console.error(
-          `Local root folder ${localRootPath} already exists or couldn't be created`
-        );
+      async function ensureDir(path: string) {
+        try {
+          await Filesystem.stat({
+            path,
+            directory: FilesystemDirectory.Data,
+          });
+        } catch {
+          await Filesystem.mkdir({
+            path,
+            directory: FilesystemDirectory.Data,
+            recursive: true,
+          });
+        }
       }
+
+      await ensureDir(localRootPath);
 
       let remoteRootExists = true;
       try {
@@ -208,7 +225,7 @@ async function syncWebDAVAssets(
         console.error(
           `Cannot proceed with sync for ${assetType.local} - remote folder issue`
         );
-        continue; // Skip to next asset type
+        continue;
       }
 
       let remoteSubfolders: string[] = [];
@@ -216,14 +233,13 @@ async function syncWebDAVAssets(
         const remoteFolderResponse = await webDavService.getDirectoryContent(
           remoteRootPath
         );
+
         remoteSubfolders = remoteFolderResponse
           .filter((file) => file.type === "directory")
           .map((file) => file.name);
+
       } catch (error: any) {
-        console.error(
-          `Error listing remote folders in ${remoteRootPath}:`,
-          error
-        );
+        console.error(`Error listing remote folders in ${remoteRootPath}:`, error);
         remoteSubfolders = [];
       }
 
@@ -234,20 +250,17 @@ async function syncWebDAVAssets(
           directory: FilesystemDirectory.Data,
         });
       } catch (error) {
-        console.error(
-          `No local subfolders found for ${localRootPath} or directory doesn't exist`
-        );
+        console.error(`No local subfolders found for ${localRootPath}`);
       }
 
       const localFolderNames = localSubfolders.files.map((file) => file.name);
+      const allNoteIds = [...new Set([...localFolderNames, ...remoteSubfolders])];
 
-      const allNoteIds = [
-        ...new Set([...localFolderNames, ...remoteSubfolders]),
-      ];
 
       for (const noteId of allNoteIds) {
         const localFolderPath = `${localRootPath}/${noteId}`;
         const remoteFolderPath = `${remoteRootPath}/${noteId}`;
+
 
         if (!localFolderNames.includes(noteId)) {
           try {
@@ -261,7 +274,6 @@ async function syncWebDAVAssets(
               `Error creating local folder ${localFolderPath}:`,
               error
             );
-            // Continue anyway - the folder might already exist or be created during file writes
           }
         }
 
@@ -272,16 +284,28 @@ async function syncWebDAVAssets(
             remoteSubfolderExists = true;
           } catch (error: any) {
             if (error.status === 409) {
-              // 409 means the folder already exists, which is fine
               remoteSubfolderExists = true;
             } else {
               console.error(
                 `Error creating remote folder ${remoteFolderPath}:`,
                 error
               );
-              // Continue anyway - we'll try to list files in case the folder exists but had another error
             }
           }
+        }
+
+        let remoteFiles: string[] = [];
+        try {
+          const remoteFilesResponse = await webDavService.getDirectoryContent(
+            remoteFolderPath
+          );
+
+          remoteFiles = remoteFilesResponse
+            .filter((file) => file.type === "file")
+            .map((file) => file.name);
+
+        } catch (error: any) {
+          console.error(`Remote folder ${remoteFolderPath} doesn't exist or error:`, error);
         }
 
         let localFiles: { files: { name: string }[] } = { files: [] };
@@ -291,21 +315,7 @@ async function syncWebDAVAssets(
             directory: FilesystemDirectory.Data,
           });
         } catch (error) {
-          console.error(
-            `No local files found in ${localFolderPath} or directory doesn't exist yet`
-          );
-        }
-
-        let remoteFiles: string[] = [];
-        try {
-          const remoteFilesResponse = await webDavService.getDirectoryContent(
-            remoteFolderPath
-          );
-          remoteFiles = remoteFilesResponse
-            .filter((file) => file.type === "file")
-            .map((file) => file.name);
-        } catch (error: any) {
-          console.error(`Remote folder ${remoteFolderPath} doesn't exist`);
+          console.error(`No local files found in ${localFolderPath}`);
         }
 
         if (remoteFiles.length > 0) {
@@ -325,7 +335,7 @@ async function syncWebDAVAssets(
                   directory: FilesystemDirectory.Data,
                   recursive: true,
                 });
-              } catch (e) {}
+              } catch (e) { }
 
               const fileData = await webDavService.get(remoteFilePath);
               const fileBase64String = await blobToBase64(fileData);

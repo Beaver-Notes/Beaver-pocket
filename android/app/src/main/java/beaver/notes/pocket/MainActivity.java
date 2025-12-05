@@ -3,6 +3,8 @@ package beaver.notes.pocket;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 import android.content.pm.ActivityInfo;
+import androidx.core.content.ContextCompat;
+
 import com.codetrixstudio.capacitor.GoogleAuth.GoogleAuth;
 import nl.recognize.msauthplugin.MsAuthPlugin;
 
@@ -13,7 +15,11 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(MsAuthPlugin.class);
         registerPlugin(WebDAVPlugin.class);
         super.onCreate(savedInstanceState);
-        if(getResources().getBoolean(R.bool.portrait_only)){
+
+        int color = ContextCompat.getColor(this, R.color.splash_background);
+        getWindow().getDecorView().setBackgroundColor(color);
+
+        if (getResources().getBoolean(R.bool.portrait_only)) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
     }

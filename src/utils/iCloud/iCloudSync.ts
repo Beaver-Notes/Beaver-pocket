@@ -11,9 +11,12 @@ import {
   Directory,
   Filesystem,
   FilesystemDirectory,
-  FilesystemEncoding,
 } from "@capacitor/filesystem";
 import { mergeData, revertAssetPaths, SyncData } from "../merge";
+import { useStorage } from "@/composable/storage";
+import { useNoteStore } from "@/store/note";
+import { useLabelStore } from "@/store/label";
+import { useFolderStore } from "@/store/folder";
 
 interface SyncState {
   syncInProgress: boolean;
@@ -39,10 +42,17 @@ interface AssetSyncLog {
   }[];
 }
 
-const STORAGE_PATH = "notes/data.json";
 const SYNC_FOLDER_NAME = "BeaverNotesSync";
 
-const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
+// ─────────────────────────────────────────────────────────────
+// iCloud Sync Hook
+// Handles syncing of notes, labels, deleted IDs, and assets
+// ─────────────────────────────────────────────────────────────
+const useiCloudSync = (): iCloudSyncHooks => {
+  const noteStore = useNoteStore.getState();
+  const folderStore = useFolderStore.getState();
+  const labelStore = useLabelStore.getState();
+  const storage = useStorage();
   const [progress, setProgress] = useState(0);
   const [syncState, setSyncState] = useState<SyncState>({
     syncInProgress: false,
@@ -60,19 +70,20 @@ const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
     }));
     setProgress(0);
     try {
-      await iCloud.createFolder({ folderName: `${SYNC_FOLDER_NAME}` });
+      const { exists } = await iCloud.checkFolderExists({
+        folderName: `${SYNC_FOLDER_NAME}`,
+      });
+      if (!exists) {
+        await iCloud.createFolder({ folderName: `${SYNC_FOLDER_NAME}` });
+      }
+
 
       let localData: SyncData = { data: { notes: {} } };
-      try {
-        const localFileData = await Filesystem.readFile({
-          path: STORAGE_PATH,
-          directory: FilesystemDirectory.Data,
-          encoding: FilesystemEncoding.UTF8,
-        });
-        localData = JSON.parse(localFileData.data as string);
-      } catch {
-        // No local data, use empty object
-      }
+
+      localData.data.notes = noteStore.data ?? {};
+      localData.data.folders = folderStore.data ?? {};
+      localData.data.labels = labelStore.labels ?? [];
+      localData.data.deletedIds = noteStore.deleted ?? {};
 
       let remoteData: SyncData = { data: { notes: {} } };
       try {
@@ -94,14 +105,13 @@ const useiCloudSync = (setNotesState: any): iCloudSyncHooks => {
 
       setProgress(80);
 
-      await Filesystem.writeFile({
-        path: STORAGE_PATH,
-        data: JSON.stringify(mergedData),
-        directory: FilesystemDirectory.Data,
-        encoding: FilesystemEncoding.UTF8,
-      });
+      await storage.set("notes", mergedData.data.notes);
+      await storage.set("labels", mergedData.data.labels);
+      await storage.set("folders", mergedData.data.folders);
 
-      setNotesState(mergedData.data.notes);
+      noteStore.retrieve();
+      labelStore.retrieve();
+      folderStore.retrieve();
 
       const cleanedData = { ...mergedData };
       cleanedData.data.notes = await revertAssetPaths(mergedData.data.notes);
@@ -153,6 +163,10 @@ async function getFolderMetadata(folderPath: string) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Asset Synchronization Function
+// Handles two-way sync of asset folders between device and iCloud
+// ─────────────────────────────────────────────────────────────
 async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
   const assetTypes = [
     { local: "note-assets", remote: "assets" },
@@ -322,7 +336,7 @@ async function synciCloudAssets(syncFolderName: string): Promise<AssetSyncLog> {
                   directory: FilesystemDirectory.Data,
                   recursive: true,
                 });
-              } catch (e) {}
+              } catch (e) { }
 
               const { fileData: base64FileData } = await iCloud.downloadFile({
                 fileName: remoteFilePath,

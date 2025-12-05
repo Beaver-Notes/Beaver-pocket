@@ -1,6 +1,6 @@
 // transformHelper.js
 import { useCallback } from "react";
-import { getPointerCoordinates, transformPoints } from "./drawHelper"
+import { getPointerCoordinates, transformPoints } from "./drawHelper";
 
 const TRANSFORM_MOVE_THRESHOLD = 2;
 
@@ -14,7 +14,8 @@ export function useTransformHelpers({
 }) {
   const handleTransformStart = useCallback(
     (e, corner) => {
-      if (!selectedElement || isPalmTouch(e)) return;
+      if (!selectedElement) return;
+
       const svg = svgRef.current;
       const [x, y] = getPointerCoordinates(e, svg);
 
@@ -31,112 +32,128 @@ export function useTransformHelpers({
         isDrawing: true,
       }));
     },
-    [selectedElement, isPalmTouch, svgRef, setState]
+    [selectedElement, svgRef, setState]
   );
 
   const handleTransformMove = useCallback(
     (e) => {
-      if (!transformState || !selectedElement || isPalmTouch(e)) return;
+      if (!transformState || !selectedElement) return;
+
       const svg = svgRef.current;
       const [currentX, currentY] = getPointerCoordinates(e, svg);
+
       const dx = currentX - transformState.startX;
       const dy = currentY - transformState.startY;
+      const { originalBounds, corner } = transformState;
 
-      if (
-        Math.abs(dx) < TRANSFORM_MOVE_THRESHOLD &&
-        Math.abs(dy) < TRANSFORM_MOVE_THRESHOLD
-      ) {
-        return;
+      let newBounds = { ...originalBounds };
+
+      // Calculate new bounds based on which corner is being dragged
+      switch (corner) {
+        case "nw":
+          newBounds.x = originalBounds.x + dx;
+          newBounds.y = originalBounds.y + dy;
+          newBounds.width = originalBounds.width - dx;
+          newBounds.height = originalBounds.height - dy;
+          break;
+        case "ne":
+          newBounds.y = originalBounds.y + dy;
+          newBounds.width = originalBounds.width + dx;
+          newBounds.height = originalBounds.height - dy;
+          break;
+        case "sw":
+          newBounds.x = originalBounds.x + dx;
+          newBounds.width = originalBounds.width - dx;
+          newBounds.height = originalBounds.height + dy;
+          break;
+        case "se":
+          newBounds.width = originalBounds.width + dx;
+          newBounds.height = originalBounds.height + dy;
+          break;
+        case "move":
+          newBounds.x = originalBounds.x + dx;
+          newBounds.y = originalBounds.y + dy;
+          break;
       }
 
+      // Prevent negative dimensions for resize operations
+      if (corner !== "move" && (newBounds.width < 10 || newBounds.height < 10))
+        return;
+
+      // Calculate scale factors (only for resize, not move)
+      let scaleX = 1;
+      let scaleY = 1;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (corner !== "move") {
+        scaleX = newBounds.width / originalBounds.width;
+        scaleY = newBounds.height / originalBounds.height;
+        offsetX = newBounds.x - originalBounds.x;
+        offsetY = newBounds.y - originalBounds.y;
+      } else {
+        // For move operation, just translate
+        offsetX = dx;
+        offsetY = dy;
+      }
+
+      // Transform the lines
+      const transformedLines = transformState.originalLines.map((line) => {
+        const transformedPoints = line.points.map(([px, py]) => {
+          if (corner === "move") {
+            // Simple translation for move
+            return [px + offsetX, py + offsetY];
+          } else {
+            // Scale and translate for resize
+            // Normalize point relative to original bounds
+            const normalizedX = (px - originalBounds.x) / originalBounds.width;
+            const normalizedY = (py - originalBounds.y) / originalBounds.height;
+
+            // Apply to new bounds
+            const newX = newBounds.x + normalizedX * newBounds.width;
+            const newY = newBounds.y + normalizedY * newBounds.height;
+
+            return [newX, newY];
+          }
+        });
+
+        return { ...line, points: transformedPoints };
+      });
+
+      // Update both the selected element AND the main lines array in real-time
       setState((prev) => {
-        if (!prev.selectedElement) return prev;
-
-        let newBounds = { ...prev.selectedElement.bounds };
-
-        if (transformState.corner === "move") {
-          newBounds.x = transformState.originalBounds.x + dx;
-          newBounds.y = transformState.originalBounds.y + dy;
-        } else {
-          const minSize = 10;
-
-          if (transformState.corner.includes("n")) {
-            const newHeight = transformState.originalBounds.height - dy;
-            if (newHeight > minSize) {
-              newBounds.y = transformState.originalBounds.y + dy;
-              newBounds.height = newHeight;
-            }
-          }
-          if (transformState.corner.includes("s")) {
-            const newHeight = transformState.originalBounds.height + dy;
-            if (newHeight > minSize) {
-              newBounds.height = newHeight;
-            }
-          }
-          if (transformState.corner.includes("w")) {
-            const newWidth = transformState.originalBounds.width - dx;
-            if (newWidth > minSize) {
-              newBounds.x = transformState.originalBounds.x + dx;
-              newBounds.width = newWidth;
-            }
-          }
-          if (transformState.corner.includes("e")) {
-            const newWidth = transformState.originalBounds.width + dx;
-            if (newWidth > minSize) {
-              newBounds.width = newWidth;
-            }
-          }
-        }
+        const updatedLines = prev.lines.map((line) => {
+          const transformedLine = transformedLines.find(
+            (l) => l.id === line.id
+          );
+          return transformedLine || line;
+        });
 
         return {
           ...prev,
+          lines: updatedLines,
           selectedElement: {
-            ...prev.selectedElement,
+            ...selectedElement,
             bounds: newBounds,
+            lines: transformedLines,
           },
         };
       });
     },
-    [transformState, selectedElement, isPalmTouch, svgRef, setState]
+    [transformState, selectedElement, svgRef, setState]
   );
 
   const handleTransformEnd = useCallback(() => {
     if (!transformState || !selectedElement) return;
 
-    const transformType = transformState.corner === "move" ? "move" : "resize";
-
-    const transformedLines = lines.map((line) => {
-      if (transformState.lineIds.includes(line.id)) {
-        const transformedPoints = transformPoints(
-          line.points,
-          transformState.originalBounds,
-          selectedElement.bounds,
-          transformType
-        );
-
-        return { ...line, points: transformedPoints };
-      }
-      return line;
-    });
-
-    const transformedSelectedLines = transformedLines.filter((line) =>
-      transformState.lineIds.includes(line.id)
-    );
-
     setState((prev) => ({
       ...prev,
-      lines: transformedLines,
-      undoStack: [...prev.undoStack, prev.lines],
-      isDrawing: false,
-      selectedElement: {
-        type: "group",
-        lines: transformedSelectedLines,
-        bounds: selectedElement.bounds,
-        lineIds: transformState.lineIds,
-      },
+      undoStack: [...prev.undoStack, transformState.originalLines],
+      redoStack: [],
       transformState: null,
+      isDrawing: false,
     }));
-  }, [transformState, selectedElement, lines, setState]);
+  }, [transformState, selectedElement, setState]);
 
   return {
     handleTransformStart,
