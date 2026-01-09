@@ -3,14 +3,14 @@
 <div align="center">
 <img src="https://raw.githubusercontent.com/Beaver-Notes/beaver-website/main/src/assets/logo.png" alt="Beaver Logo" width="100">
 
-<p><b>Build your knowledge one log at a time</b></p>
-<p>Developed with love ❤️ in 🇪🇺</p>
+<h3><b>Fast. Private. Local-first.</b></h3>
+<p>Notes stay on your device. No sign-ups, no tracking, no unnecessary complexity.</p>
 
 [Website](https://beavernotes.com) | [Blog](https://blog.beavernotes.com) | [Docs](https://docs.beavernotes.com) | [Downloads](https://beavernotes.com/#/Download) | [Mastodon](https://mastodon.social/@Beavernotes) | [Reddit](https://www.reddit.com/r/BeaverNotes/) | [Bluesky](https://bsky.app/profile/beavernotes.com)
 
 </div>
 
-Beaver Pocket is a privacy-focused note-taking app built for Android and iOS. **Your notes** are securely stored **on your device**, ensuring complete privacy and **control over your data**.
+Beaver Pocket is a privacy-focused notes app built for Android and iOS. **Your notes** are stored **on device**, ensuring complete privacy and **control over your data**.
 
 ![Beaver Pocket demo](https://github.com/user-attachments/assets/0acaffb5-cbf1-4c13-ad97-9ab4eaae7a12)
 
