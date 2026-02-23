@@ -4,7 +4,7 @@
 <img src="https://raw.githubusercontent.com/Beaver-Notes/beaver-website/main/src/assets/logo.png" alt="Beaver Logo" width="100">
 
 <h3><b>Fast. Private. Local-first.</b></h3>
-<p>Notes stay on your device. No sign-ups, no tracking, no unnecessary complexity.</p>
+<p>Local by default, cloud when you want it. No tracking, no bloat.</p>
 
 [Website](https://beavernotes.com) | [Blog](https://blog.beavernotes.com) | [Docs](https://docs.beavernotes.com) | [Downloads](https://beavernotes.com/#/Download) | [Mastodon](https://mastodon.social/@Beavernotes) | [Reddit](https://www.reddit.com/r/BeaverNotes/) | [Bluesky](https://bsky.app/profile/beavernotes.com)
 
